@@ -34,9 +34,21 @@ class ExampleQWidget(QWidget):
         print("napari has", len(self.viewer.layers), "layers")
 
 
-@magic_factory
-def example_magic_widget(img_layer: "napari.layers.Image"):
-    print(f"you have selected {img_layer}")
+@magic_factory(
+    call_button="Run MT cut detection",
+    layout="vertical",
+    mitoses_path=dict(
+        widget_type="FileEdit",
+        label="Mitoses saved path: ",
+    ),
+)
+def micro_tubules_cut_detection(
+    img_layer: "napari.layers.Image", mitoses_path: str
+):
+    raw_video = img_layer.data
+    # print first value
+    print(raw_video.shape)
+    print(raw_video[0, 0, 0, 0])
 
 
 # Uses the `autogenerate: true` flag in the plugin manifest

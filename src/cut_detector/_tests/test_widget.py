@@ -1,6 +1,6 @@
 import numpy as np
 
-from cut_detector import ExampleQWidget, example_magic_widget
+from cut_detector import ExampleQWidget, micro_tubules_cut_detection
 
 
 # make_napari_viewer is a pytest fixture that returns a napari viewer object
@@ -21,12 +21,12 @@ def test_example_q_widget(make_napari_viewer, capsys):
     assert captured.out == "napari has 1 layers\n"
 
 
-def test_example_magic_widget(make_napari_viewer, capsys):
+def test_micro_tubules_cut_detection(make_napari_viewer, capsys):
     viewer = make_napari_viewer()
     layer = viewer.add_image(np.random.random((100, 100)))
 
     # this time, our widget will be a MagicFactory or FunctionGui instance
-    my_widget = example_magic_widget()
+    my_widget = micro_tubules_cut_detection()
 
     # if we "call" this object, it'll execute our function
     my_widget(viewer.layers[0])

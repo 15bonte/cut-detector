@@ -17,23 +17,23 @@ contributions:
     - id: cut-detector.make_qwidget
       python_name: cut_detector._widget:ExampleQWidget
       title: Make example QWidget
-    - id: cut-detector.make_magic_widget
-      python_name: cut_detector._widget:example_magic_widget
-      title: Make example magic widget
+    - id: cut-detector.micro_tubules_cut_detection
+      python_name: cut_detector._widget:micro_tubules_cut_detection
+      title: Micro tubules cut detection
     - id: cut-detector.make_func_widget
       python_name: cut_detector._widget:example_function_widget
       title: Make example function widget
   readers:
     - command: cut-detector.get_reader
       accepts_directories: false
-      filename_patterns: ['*.npy']
+      filename_patterns: ["*.npy"]
   writers:
     - command: cut-detector.write_multiple
-      layer_types: ['image*','labels*']
+      layer_types: ["image*", "labels*"]
       filename_extensions: []
     - command: cut-detector.write_single_image
-      layer_types: ['image']
-      filename_extensions: ['.npy']
+      layer_types: ["image"]
+      filename_extensions: [".npy"]
   sample_data:
     - command: cut-detector.make_sample_data
       display_name: Cut Detector
@@ -41,8 +41,8 @@ contributions:
   widgets:
     - command: cut-detector.make_qwidget
       display_name: Example QWidget
-    - command: cut-detector.make_magic_widget
-      display_name: Example Magic Widget
+    - command: cut-detector.micro_tubules_cut_detection
+      display_name: Micro Tubules Cut Detection
     - command: cut-detector.make_func_widget
       autogenerate: true
       display_name: Example Function Widget
