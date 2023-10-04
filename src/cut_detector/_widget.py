@@ -23,14 +23,17 @@ if TYPE_CHECKING:
     xml_model_dir=dict(
         widget_type="FileEdit",
         label=".xml models directory: ",
+        mode="d",
     ),
     mitoses_save_dir=dict(
         widget_type="FileEdit",
         label="Mitoses saved path: ",
+        mode="d",
     ),
     tracks_save_dir=dict(
         widget_type="FileEdit",
         label="Tracks saved path: ",
+        mode="d",
     ),
 )
 def mitosis_track_generation(
@@ -51,6 +54,7 @@ def mitosis_track_generation(
     mitoses_path=dict(
         widget_type="FileEdit",
         label="Mitoses saved path: ",
+        mode="d",
     ),
 )
 def mid_body_detection(img_layer: "napari.layers.Image", mitoses_path: str):
@@ -63,6 +67,7 @@ def mid_body_detection(img_layer: "napari.layers.Image", mitoses_path: str):
     mitoses_path=dict(
         widget_type="FileEdit",
         label="Mitoses saved path: ",
+        mode="d",
     ),
 )
 def micro_tubules_cut_detection(img_layer: "napari.layers.Image", mitoses_path: str):
