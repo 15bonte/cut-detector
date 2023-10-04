@@ -2,47 +2,19 @@ name: cut-detector
 display_name: Cut Detector
 contributions:
   commands:
-    - id: cut-detector.get_reader
-      python_name: cut_detector._reader:napari_get_reader
-      title: Open data with Cut Detector
-    - id: cut-detector.write_multiple
-      python_name: cut_detector._writer:write_multiple
-      title: Save multi-layer data with Cut Detector
-    - id: cut-detector.write_single_image
-      python_name: cut_detector._writer:write_single_image
-      title: Save image data with Cut Detector
-    - id: cut-detector.make_sample_data
-      python_name: cut_detector._sample_data:make_sample_data
-      title: Load sample data from Cut Detector
-    - id: cut-detector.make_qwidget
-      python_name: cut_detector._widget:ExampleQWidget
-      title: Make example QWidget
+    - id: cut-detector.mitosis_track_generation
+      python_name: cut_detector._widget:mitosis_track_generation
+      title: 2 - Mitosis Track Generation
+    - id: cut-detector.mid_body_detection
+      python_name: cut_detector._widget:mid_body_detection
+      title: 3 - Mid-body Detection
     - id: cut-detector.micro_tubules_cut_detection
       python_name: cut_detector._widget:micro_tubules_cut_detection
-      title: Micro tubules cut detection
-    - id: cut-detector.make_func_widget
-      python_name: cut_detector._widget:example_function_widget
-      title: Make example function widget
-  readers:
-    - command: cut-detector.get_reader
-      accepts_directories: false
-      filename_patterns: ["*.npy"]
-  writers:
-    - command: cut-detector.write_multiple
-      layer_types: ["image*", "labels*"]
-      filename_extensions: []
-    - command: cut-detector.write_single_image
-      layer_types: ["image"]
-      filename_extensions: [".npy"]
-  sample_data:
-    - command: cut-detector.make_sample_data
-      display_name: Cut Detector
-      key: unique_id.1
+      title: 4 - Micro Tubules Cut Detection
   widgets:
-    - command: cut-detector.make_qwidget
-      display_name: Example QWidget
+    - command: cut-detector.mitosis_track_generation
+      display_name: 2 - Mitosis Track Generation
+    - command: cut-detector.mid_body_detection
+      display_name: 3 - Mid-body Detection
     - command: cut-detector.micro_tubules_cut_detection
-      display_name: Micro Tubules Cut Detection
-    - command: cut-detector.make_func_widget
-      autogenerate: true
-      display_name: Example Function Widget
+      display_name: 4 - Micro Tubules Cut Detection
