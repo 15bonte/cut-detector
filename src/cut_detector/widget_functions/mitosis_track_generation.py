@@ -1,10 +1,11 @@
 import os
 from typing import Optional, Union
+import pickle
 import numpy as np
 import xmltodict
-import pickle
 
 from cut_detector.constants.tracking import MIN_TRACK_SPOTS
+from cut_detector.models.tools import get_model_path
 from cut_detector.utils.cell_division_detection.tools import (
     plot_predictions_evolution,
     pre_process_spots,
@@ -21,12 +22,15 @@ def perform_mitosis_track_generation(
     xml_model_dir: str,
     mitoses_save_dir: str,
     tracks_save_dir: str,
-    metaphase_model_path: str,
-    hmm_metaphase_parameters_file: str,
+    metaphase_model_path: Optional[str] = get_model_path("metaphase_model"),
+    hmm_metaphase_parameters_file: Optional[str] = get_model_path("hmm_metaphase_parameters"),
     predictions_file: Optional[str] = None,
     only_predictions_update: bool = False,
     plot_evolution: bool = False,
 ) -> Union[list[MitosisTrack], None]:
+    """
+    Perform mitosis track generation.
+    """
     # Create save_dir if not exists
     if not os.path.exists(mitoses_save_dir):
         os.makedirs(mitoses_save_dir)
