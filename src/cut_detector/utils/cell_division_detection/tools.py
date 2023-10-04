@@ -61,16 +61,13 @@ def plot_predictions_evolution(
             detected_tracks[frame] += 1
 
     data_spots = [detected_spots[0]] + [
-        detected_spots[i] if i in detected_spots else 0
-        for i in range(min_frame, max_frame)
+        detected_spots[i] if i in detected_spots else 0 for i in range(min_frame, max_frame)
     ]
     data_tracks = [detected_tracks[0]] + [
-        detected_tracks[i] if i in detected_tracks else 0
-        for i in range(min_frame, max_frame)
+        detected_tracks[i] if i in detected_tracks else 0 for i in range(min_frame, max_frame)
     ]
     data_mitoses = [detected_mitoses[0]] + [
-        detected_mitoses[i] if i in detected_mitoses else 0
-        for i in range(min_frame, max_frame)
+        detected_mitoses[i] if i in detected_mitoses else 0 for i in range(min_frame, max_frame)
     ]
 
     _, ax = plt.subplots(1, 1, figsize=(15, 5))
@@ -115,9 +112,7 @@ def plot_predictions_evolution(
     plt.show()
 
 
-def predict_metaphase_spots(
-    metaphase_model_path: str, nuclei_crops: list[np.array]
-) -> list[int]:
+def predict_metaphase_spots(metaphase_model_path: str, nuclei_crops: list[np.array]) -> list[int]:
     """
     Run CNN model to predict metaphase spots
 
@@ -134,16 +129,16 @@ def predict_metaphase_spots(
     # Custom class to avoid loading images from folder
     class MetaphaseCnnDatasetFiles(MetaphaseCnnDataSet):
         def __init__(self, data_list, *args, **kwargs):
-            self.data_list = data_list  # not pythonic, but needed as super init calls generate_raw_images
+            self.data_list = (
+                data_list  # not pythonic, but needed as super init calls generate_raw_images
+            )
             super().__init__(*args, **kwargs)
 
         def generate_raw_images(self, filename):
             idx = int(filename.split(".")[0])
             nucleus_image = normalize_array(self.data_list[idx], None)  # C, H, W
             nucleus_image = np.moveaxis(nucleus_image, 0, -1)  # H, W, C
-            return DatasetOutput(
-                input=nucleus_image, target_array=np.asarray([0, 1, 0])
-            )
+            return DatasetOutput(input=nucleus_image, target_array=np.asarray([0, 1, 0]))
 
     # Metaphase model parameters
     model_parameters = MetaphaseCnnModelParams()
@@ -155,10 +150,15 @@ def predict_metaphase_spots(
     # Model definition
     # Load pretrained model
     model = MetaphaseCnn(nb_classes=model_parameters.nb_classes)
+
+    map_location = None
+    if not torch.cuda.is_available():
+        map_location = torch.device("cpu")
+        print("No GPU found, using CPU.")
     model.load_state_dict(
         torch.load(
             metaphase_model_path,
-            map_location=None if torch.cuda.is_available() else torch.device("cpu"),
+            map_location=map_location,
         )
     )
 
@@ -206,8 +206,7 @@ def correct_sequence(orig_sequence: list[int]) -> list[int]:
     for idx in range(1, len(metaphase_index)):
         if (
             metaphase_index[idx] - metaphase_index[idx - 1] != 1
-            and metaphase_index[idx] - metaphase_index[idx - 1]
-            < MINIMUM_METAPHASE_INTERVAL
+            and metaphase_index[idx] - metaphase_index[idx - 1] < MINIMUM_METAPHASE_INTERVAL
         ):
             corrected_sequence[
                 [i for i in range(metaphase_index[idx - 1], metaphase_index[idx])]
@@ -237,9 +236,7 @@ def update_predictions_file(
 
     # Retrieve predictions
     predictions = {
-        int(track.track_id): [
-            int(spot.predicted_phase) for spot in track.track_spots.values()
-        ]
+        int(track.track_id): [int(spot.predicted_phase) for spot in track.track_spots.values()]
         for track in tracks
     }
     predictions_data[video_name] = predictions
@@ -325,8 +322,7 @@ def get_tracks_to_merge(raw_tracks: list[TrackMateTrack]) -> list[MitosisTrack]:
         contemporary_spots = [
             raw_track.track_spots[track_first_frame]
             for raw_track in raw_tracks
-            if track_first_frame in raw_track.track_spots
-            and raw_track.track_id != track.track_id
+            if track_first_frame in raw_track.track_spots and raw_track.track_id != track.track_id
         ]
 
         # Keep only stuck spots
@@ -352,9 +348,7 @@ def get_tracks_to_merge(raw_tracks: list[TrackMateTrack]) -> list[MitosisTrack]:
         # Order remaining spots by overlap
         selected_spot = sorted(
             metaphase_spots,
-            key=lambda x: get_track_from_id(
-                raw_tracks, x.track_id
-            ).compute_metaphase_iou(track),
+            key=lambda x: get_track_from_id(raw_tracks, x.track_id).compute_metaphase_iou(track),
         )[-1]
 
         # Mother cell spot is spot in metaphase for corresponding track
@@ -363,9 +357,7 @@ def get_tracks_to_merge(raw_tracks: list[TrackMateTrack]) -> list[MitosisTrack]:
         # Check if it should be merged to existing split (division into 3 cells)
         triple_division = False
         for mitosis_track in mitosis_tracks:
-            if mitosis_track.is_same_mitosis(
-                mother_cell_spot.track_id, mother_cell_spot.frame
-            ):
+            if mitosis_track.is_same_mitosis(mother_cell_spot.track_id, mother_cell_spot.frame):
                 mitosis_track.add_daughter_track(track.track_id)
                 triple_division = True
                 break
@@ -373,9 +365,7 @@ def get_tracks_to_merge(raw_tracks: list[TrackMateTrack]) -> list[MitosisTrack]:
         # If not, create new split
         if not triple_division:
             mitosis_tracks.append(
-                MitosisTrack(
-                    mother_cell_spot.track_id, track.track_id, mother_cell_spot.frame
-                )
+                MitosisTrack(mother_cell_spot.track_id, track.track_id, mother_cell_spot.frame)
             )
 
     # Return dictionaries of tracks to merge

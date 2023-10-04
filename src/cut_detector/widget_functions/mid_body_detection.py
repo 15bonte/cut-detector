@@ -34,7 +34,9 @@ def perform_mid_body_detection(
     video_exported_tracks_dir = os.path.join(exported_tracks_dir, video_name)
     for state_path in os.listdir(video_exported_tracks_dir):
         # Load mitosis track
-        with open(os.path.join(video_exported_tracks_dir, state_path), "rb") as f:
+        with open(
+            os.path.join(video_exported_tracks_dir, state_path), "rb"
+        ) as f:
             trackmate_track = pickle.load(f)
 
         # Add trackmate track to list
@@ -50,10 +52,14 @@ def perform_mid_body_detection(
         )  # (T, H, W, C), (T, H, W)
 
         # Search for mid-body in mitosis movie
-        mitosis_track.update_mid_body_spots(mitosis_movie, mask_movie, trackmate_tracks)
+        mitosis_track.update_mid_body_spots(
+            mitosis_movie, mask_movie, trackmate_tracks
+        )
 
         # Save updated mitosis track
-        daughter_track_ids = ",".join([str(d) for d in mitosis_track.daughter_track_ids])
+        daughter_track_ids = ",".join(
+            [str(d) for d in mitosis_track.daughter_track_ids]
+        )
         state_path = f"{video_name}_mitosis_{mitosis_track.id}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.bin"
         save_path = os.path.join(
             exported_mitoses_dir,
@@ -72,8 +78,12 @@ def perform_mid_body_detection(
                 f"{video_name}_mitosis_{mitosis_track.id}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.tiff",
             )
             # Transpose to match  T, C, H, W
-            final_mitosis_movie = np.transpose(final_mitosis_movie, (0, 3, 1, 2))
-            OmeTiffWriter.save(final_mitosis_movie, image_save_path, dim_order="TCYX")
+            final_mitosis_movie = np.transpose(
+                final_mitosis_movie, (0, 3, 1, 2)
+            )
+            OmeTiffWriter.save(
+                final_mitosis_movie, image_save_path, dim_order="TCYX"
+            )
 
         # Save mitosis summary
         mitosis_track.generate_mitosis_summary(
