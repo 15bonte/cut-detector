@@ -10,11 +10,11 @@ def get_model_path(model_name: str) -> None:
     if model_name == "metaphase_model":
         return os.path.join(CURRENT_DIR, "metaphase_cnn", "metaphase_cnn.pt")
     if model_name == "hmm_metaphase_parameters":
-        return os.path.join(CURRENT_DIR, "hmm_metaphase_parameters.json")
+        return os.path.join(CURRENT_DIR, "hmm_metaphase_parameters.npz")
     if model_name == "hmm_bridges_parameters":
-        return os.path.join(CURRENT_DIR, "hmm_bridges_parameters.json")
+        return os.path.join(CURRENT_DIR, "hmm_bridges_parameters.npz")
     if model_name == "svc_scaler":
-        return os.path.join(CURRENT_DIR, "svc_scaler.pkl")
+        return os.path.join(CURRENT_DIR, "svc_bridges", "scaler.pkl")
     if model_name == "svc_model":
-        return os.path.join(CURRENT_DIR, "svc_model.pkl")
+        return os.path.join(CURRENT_DIR, "svc_bridges", "model.pkl")
     raise ValueError(f"Unknown model name: {model_name}")
