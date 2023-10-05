@@ -6,12 +6,15 @@ see: https://napari.org/stable/plugins/guides.html?#widgets
 
 Replace code below according to your needs.
 """
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from magicgui import magic_factory
 
 from cut_detector.utils.tools import re_organize_channels
+
+from cut_detector.widget_functions.mid_body_detection import perform_mid_body_detection
 from cut_detector.widget_functions.mitosis_track_generation import perform_mitosis_track_generation
+from cut_detector.widget_functions.mt_cut_detection import perform_mt_cut_detection
 
 if TYPE_CHECKING:
     import napari
@@ -27,12 +30,12 @@ if TYPE_CHECKING:
     ),
     mitoses_save_dir=dict(
         widget_type="FileEdit",
-        label="Mitoses saved path: ",
+        label="Directory to save .bin mitoses: ",
         mode="d",
     ),
     tracks_save_dir=dict(
         widget_type="FileEdit",
-        label="Tracks saved path: ",
+        label="Directory to save .bin tracks: ",
         mode="d",
     ),
 )
@@ -51,24 +54,49 @@ def mitosis_track_generation(
 @magic_factory(
     call_button="Run Mid-body Detection",
     layout="vertical",
-    mitoses_path=dict(
+    exported_mitoses_dir=dict(
         widget_type="FileEdit",
-        label="Mitoses saved path: ",
+        label="Saved .bin mitoses directory: ",
+        mode="d",
+    ),
+    exported_tracks_dir=dict(
+        widget_type="FileEdit",
+        label="Saved .bin tracks directory: ",
+        mode="d",
+    ),
+    save_check_box=dict(widget_type="CheckBox", text="Save cell divisions movies?", value=False),
+    save_dir=dict(
+        widget_type="FileEdit",
+        label="If checked, directory to save division movies: ",
         mode="d",
     ),
 )
-def mid_body_detection(img_layer: "napari.layers.Image", mitoses_path: str):
+def mid_body_detection(
+    img_layer: "napari.layers.Image",
+    exported_mitoses_dir: str,
+    exported_tracks_dir: str,
+    save_check_box: bool,
+    save_dir: str,
+):
     raw_video = re_organize_channels(img_layer.data)  # TXYC
+    perform_mid_body_detection(
+        raw_video,
+        img_layer.name,
+        exported_mitoses_dir,
+        exported_tracks_dir,
+        save_dir if save_check_box else None,
+    )
 
 
 @magic_factory(
     call_button="Run MT Cut Detection",
     layout="vertical",
-    mitoses_path=dict(
+    exported_mitoses_dir=dict(
         widget_type="FileEdit",
-        label="Mitoses saved path: ",
+        label="Saved .bin mitoses directory: ",
         mode="d",
     ),
 )
-def micro_tubules_cut_detection(img_layer: "napari.layers.Image", mitoses_path: str):
+def micro_tubules_cut_detection(img_layer: "napari.layers.Image", exported_mitoses_dir: str):
     raw_video = re_organize_channels(img_layer.data)  # TXYC
+    perform_mt_cut_detection(raw_video, img_layer.name, exported_mitoses_dir)

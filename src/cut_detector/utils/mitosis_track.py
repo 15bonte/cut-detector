@@ -650,8 +650,12 @@ class MitosisTrack:
             self.mid_body_spots[frame] = spot
 
     def generate_mitosis_summary(
-        self, raw_tracks: list[TrackMateTrack], save_path: str, save=False
+        self, raw_tracks: list[TrackMateTrack], save_path: str
     ) -> None:
+        """
+        Unused so far.
+        Might be improved with all useful information, saved to csv...
+        """
         mitosis_summary = {}
 
         mother_track, daughter_tracks = self._get_mother_daughters_tracks(raw_tracks)
@@ -673,12 +677,8 @@ class MitosisTrack:
                 mitosis_summary[idx + 1] = "interphase"
 
         # Save mitosis summary
-        if save:
-            with open(
-                save_path,
-                "w",
-            ) as f:
-                json.dump(mitosis_summary, f)
+        with open( save_path, "w") as f:
+            json.dump(mitosis_summary, f)
 
     def is_possible_match(self, other_track: MitosisTrack) -> bool:
         """

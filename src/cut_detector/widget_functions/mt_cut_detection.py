@@ -1,6 +1,8 @@
 import os
 import pickle
+from typing import Optional
 import numpy as np
+from cut_detector.models.tools import get_model_path
 
 from cut_detector.utils.mitosis_track import MitosisTrack
 
@@ -9,9 +11,9 @@ def perform_mt_cut_detection(
     raw_video: np.ndarray,
     video_name: str,
     exported_mitoses_dir: str,
-    scaler_path: str,
-    model_path: str,
-    hmm_bridges_parameters_file: str,
+    scaler_path: Optional[str] = get_model_path("svc_scaler"),
+    model_path: Optional[str] = get_model_path("svc_model"),
+    hmm_bridges_parameters_file: Optional[str] = get_model_path("hmm_bridges_parameters"),
 ):
     mitosis_tracks: list[MitosisTrack] = []
     # Iterate over "bin" files in exported_mitoses_dir
