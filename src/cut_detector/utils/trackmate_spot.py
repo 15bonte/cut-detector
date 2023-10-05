@@ -5,7 +5,7 @@ import numpy as np
 from shapely.geometry.polygon import Polygon
 from shapely import distance
 
-from cut_detector.constants.tracking import MAX_SPOT_DISTANCE_FOR_SPLIT
+from ..constants.tracking import MAX_SPOT_DISTANCE_FOR_SPLIT
 
 
 class TrackMateSpot:

@@ -5,13 +5,14 @@ from scipy.signal import find_peaks
 from skimage.feature import graycomatrix, graycoprops
 import matplotlib.pyplot as plt
 
-from cut_detector.utils.bridges_classification.bridges_classification_parameters import (
+from ...constants.bridges import IMAGE_SIZE
+from ...utils.hidden_markov_models import HiddenMarkovModel
+
+
+from .bridges_classification_parameters import (
     BridgesClassificationParameters,
 )
-from cut_detector.utils.bridges_classification.template_type import TemplateType
-from cut_detector.constants.bridges import IMAGE_SIZE
-
-from cut_detector.utils.hidden_markov_models import HiddenMarkovModel
+from .template_type import TemplateType
 
 
 def get_bridge_class(

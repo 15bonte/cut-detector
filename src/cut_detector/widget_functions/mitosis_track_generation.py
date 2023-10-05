@@ -4,16 +4,16 @@ import pickle
 import numpy as np
 import xmltodict
 
-from cut_detector.constants.tracking import MIN_TRACK_SPOTS
-from cut_detector.models.tools import get_model_path
-from cut_detector.utils.cell_division_detection.tools import (
+from ..constants.tracking import MIN_TRACK_SPOTS
+from ..models.tools import get_model_path
+from ..utils.cell_division_detection.tools import (
     plot_predictions_evolution,
     pre_process_spots,
     get_tracks_to_merge,
 )
-from cut_detector.utils.mitosis_track import MitosisTrack
-from cut_detector.utils.trackmate_frame_spots import TrackMateFrameSpots
-from cut_detector.utils.trackmate_track import TrackMateTrack
+from ..utils.mitosis_track import MitosisTrack
+from ..utils.trackmate_frame_spots import TrackMateFrameSpots
+from ..utils.trackmate_track import TrackMateTrack
 
 
 def perform_mitosis_track_generation(

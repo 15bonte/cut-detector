@@ -1,6 +1,6 @@
 from pydantic.dataclasses import dataclass
 
-from cut_detector.utils.bridges_classification.template_type import TemplateType
+from .template_type import TemplateType
 
 
 @dataclass

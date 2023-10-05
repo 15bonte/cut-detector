@@ -11,20 +11,12 @@ import xmltodict
 from munch import Munch
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
-
 from scipy.optimize import linear_sum_assignment
 from scipy import ndimage
+from bigfish import stack, detection, plot
 
-from cut_detector.utils.tools import display_progress
-from cut_detector.utils.bridges_classification.bridges_classification_parameters import (
-    BridgesClassificationParameters,
-)
-
-from cut_detector.constants.annotations import NAMES_DICTIONARY, MARGIN
-from cut_detector.utils.mid_body_spot import MidBodySpot
-from cut_detector.utils.mid_body_track import MidBodyTrack
-from cut_detector.utils.trackmate_track import TrackMateTrack
-from cut_detector.constants.tracking import (
+from ..constants.annotations import NAMES_DICTIONARY, MARGIN
+from ..constants.tracking import (
     CYTOKINESIS_DURATION,
     FRAMES_AROUND_METAPHASE,
     METAPHASE_INDEX,
@@ -35,11 +27,19 @@ from cut_detector.constants.tracking import (
     WEIGHT_MKLP_INTENSITY_FACTOR,
     WEIGHT_SIR_INTENSITY_FACTOR,
 )
-from cut_detector.utils.box_dimensions_dln import BoxDimensionsDln
-from cut_detector.utils.box_dimensions import BoxDimensions
-from cut_detector.utils.bridges_classification.tools import get_bridge_class, apply_hmm
-from cut_detector.utils.bridges_classification.impossible_detection import ImpossibleDetection
-from cut_detector.utils.image_tools import resize_image, smart_cropping
+
+from .tools import display_progress
+from .bridges_classification.bridges_classification_parameters import (
+    BridgesClassificationParameters,
+)
+from .mid_body_spot import MidBodySpot
+from .mid_body_track import MidBodyTrack
+from .trackmate_track import TrackMateTrack
+from .box_dimensions_dln import BoxDimensionsDln
+from .box_dimensions import BoxDimensions
+from .bridges_classification.tools import get_bridge_class, apply_hmm
+from .bridges_classification.impossible_detection import ImpossibleDetection
+from .image_tools import resize_image, smart_cropping
 
 
 def spot_detection(
@@ -68,9 +68,6 @@ def spot_detection(
     image_mklp = image[:, :, mid_body_channel]  #
 
     if mode == "bigfish":
-        print("Mode 'bigfish' is deprecated to avoid installing bigfish.")
-        from bigfish import stack, detection
-
         # Spots detection with bigfish functions
         filtered_image = stack.log_filter(image_mklp, sigma=threshold_1)
         filtered_image = image_mklp
@@ -120,9 +117,6 @@ def spot_detection(
             os.makedirs(path_output)
         # Count number of files in directory
         nb_files = len(os.listdir(path_output))
-        print("Deprecated to avoid installing bigfish-quant.")
-        from bigfish import stack, detection, plot
-
         plot.plot_detection(
             filtered_image,
             spots,
@@ -649,9 +643,7 @@ class MitosisTrack:
             frame = rel_frame + self.min_frame
             self.mid_body_spots[frame] = spot
 
-    def generate_mitosis_summary(
-        self, raw_tracks: list[TrackMateTrack], save_path: str
-    ) -> None:
+    def generate_mitosis_summary(self, raw_tracks: list[TrackMateTrack], save_path: str) -> None:
         """
         Unused so far.
         Might be improved with all useful information, saved to csv...
@@ -677,7 +669,7 @@ class MitosisTrack:
                 mitosis_summary[idx + 1] = "interphase"
 
         # Save mitosis summary
-        with open( save_path, "w") as f:
+        with open(save_path, "w") as f:
             json.dump(mitosis_summary, f)
 
     def is_possible_match(self, other_track: MitosisTrack) -> bool:

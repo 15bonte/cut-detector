@@ -1,8 +1,3 @@
-# Cellpose parameters
-FLOW_THRESHOLD = 0.0
-CELLPROB_THRESHOLD = 0.0
-AUGMENT = True
-
 # Tracking parameters (ratio of average spot size)
 LINKING_MAX_DISTANCE_RATIO = 1
 GAP_CLOSING_MAX_DISTANCE_RATIO = 1 / 2

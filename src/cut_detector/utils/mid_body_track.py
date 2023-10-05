@@ -1,7 +1,7 @@
 import numpy as np
 
-from cut_detector.utils.mid_body_spot import MidBodySpot
-from cut_detector.constants.tracking import MID_BODY_LINKING_MAX_DISTANCE
+from .mid_body_spot import MidBodySpot
+from ..constants.tracking import MID_BODY_LINKING_MAX_DISTANCE
 
 
 class MidBodyTrack:
@@ -22,9 +22,7 @@ class MidBodyTrack:
         if spot.child_spot is not None:
             self.add_spot(spot.child_spot)
 
-    def get_expected_distance(
-        self, expected_positions: dict[int, list[int]]
-    ) -> float:
+    def get_expected_distance(self, expected_positions: dict[int, list[int]]) -> float:
         """
         Compute the average distance between mid-body expected positions and current
         track positions.
@@ -34,9 +32,7 @@ class MidBodyTrack:
             if frame not in self.spots:
                 continue
             distances.append(
-                np.linalg.norm(
-                    np.array(self.spots[frame].position) - np.array(position)
-                )
+                np.linalg.norm(np.array(self.spots[frame].position) - np.array(position))
             )
         # If there are no frames in common, for sure track is not the right one
         if len(distances) == 0:

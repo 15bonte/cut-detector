@@ -2,9 +2,9 @@ import os
 import pickle
 from typing import Optional
 import numpy as np
-from cut_detector.models.tools import get_model_path
 
-from cut_detector.utils.mitosis_track import MitosisTrack
+from ..models.tools import get_model_path
+from ..utils.mitosis_track import MitosisTrack
 
 
 def perform_mt_cut_detection(

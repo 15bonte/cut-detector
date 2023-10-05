@@ -1,4 +1,4 @@
-from cut_detector.utils.trackmate_spot import TrackMateSpot
+from .trackmate_spot import TrackMateSpot
 
 
 class TrackMateFrameSpots:

@@ -15,20 +15,19 @@ from cnn_framework.utils.data_loader_generators.data_loader_generator import (
 from cnn_framework.utils.data_sets.dataset_output import DatasetOutput
 from cnn_framework.utils.enum import PredictMode
 
-from cut_detector.utils.mitosis_track import MitosisTrack
-from cut_detector.utils.trackmate_frame_spots import TrackMateFrameSpots
-from cut_detector.utils.trackmate_spot import TrackMateSpot
-from cut_detector.utils.trackmate_track import TrackMateTrack
-from cut_detector.utils.hidden_markov_models import HiddenMarkovModel
-from cut_detector.constants.tracking import MINIMUM_METAPHASE_INTERVAL
+from ...constants.tracking import MINIMUM_METAPHASE_INTERVAL
 
-from cut_detector.utils.cell_division_detection.metaphase_cnn_data_set import (
+from ..mitosis_track import MitosisTrack
+from ..trackmate_frame_spots import TrackMateFrameSpots
+from ..trackmate_spot import TrackMateSpot
+from ..trackmate_track import TrackMateTrack
+from ..hidden_markov_models import HiddenMarkovModel
+
+from .metaphase_cnn_data_set import (
     MetaphaseCnnDataSet,
 )
-from cut_detector.utils.cell_division_detection.metaphase_cnn import MetaphaseCnn
-from cut_detector.utils.cell_division_detection.metaphase_cnn_model_params import (
-    MetaphaseCnnModelParams,
-)
+from .metaphase_cnn import MetaphaseCnn
+from .metaphase_cnn_model_params import MetaphaseCnnModelParams
 
 
 def plot_predictions_evolution(

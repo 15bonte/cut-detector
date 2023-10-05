@@ -7,7 +7,7 @@
 
 import torch
 
-from cut_detector.utils.tools import display_progress
+from .tools import display_progress
 
 
 class HiddenMarkovModel(object):

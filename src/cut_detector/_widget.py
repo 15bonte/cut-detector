@@ -6,15 +6,15 @@ see: https://napari.org/stable/plugins/guides.html?#widgets
 
 Replace code below according to your needs.
 """
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from magicgui import magic_factory
 
-from cut_detector.utils.tools import re_organize_channels
+from .utils.tools import re_organize_channels
 
-from cut_detector.widget_functions.mid_body_detection import perform_mid_body_detection
-from cut_detector.widget_functions.mitosis_track_generation import perform_mitosis_track_generation
-from cut_detector.widget_functions.mt_cut_detection import perform_mt_cut_detection
+from .widget_functions.mid_body_detection import perform_mid_body_detection
+from .widget_functions.mitosis_track_generation import perform_mitosis_track_generation
+from .widget_functions.mt_cut_detection import perform_mt_cut_detection
 
 if TYPE_CHECKING:
     import napari

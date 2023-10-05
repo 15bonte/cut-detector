@@ -3,16 +3,16 @@ from typing import Optional, Tuple
 from scipy.spatial import ConvexHull, Delaunay
 import numpy as np
 
-from cut_detector.utils.box_dimensions import BoxDimensions
-from cut_detector.utils.box_dimensions_dln import BoxDimensionsDln
-from cut_detector.utils.trackmate_spot import TrackMateSpot
-from cut_detector.utils.trackmate_frame_spots import TrackMateFrameSpots
-from cut_detector.constants.tracking import (
+from ..constants.tracking import (
     FRAMES_AROUND_METAPHASE,
     INTERPHASE_INDEX,
     METAPHASE_INDEX,
     MAX_FRAME_GAP,
 )
+from .box_dimensions import BoxDimensions
+from .box_dimensions_dln import BoxDimensionsDln
+from .trackmate_spot import TrackMateSpot
+from .trackmate_frame_spots import TrackMateFrameSpots
 
 
 def get_whole_box_dimensions_dln(

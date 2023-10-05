@@ -1,4 +1,4 @@
-from cut_detector.utils.box_dimensions import BoxDimensions
+from .box_dimensions import BoxDimensions
 
 
 class BoxDimensionsDln(BoxDimensions):

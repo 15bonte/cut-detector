@@ -4,7 +4,7 @@ from typing import Optional
 import numpy as np
 from aicsimageio.writers import OmeTiffWriter
 
-from cut_detector.utils.mitosis_track import MitosisTrack
+from ..utils.mitosis_track import MitosisTrack
 
 
 def perform_mid_body_detection(
