@@ -9,7 +9,7 @@
 
 Automatic Cut Detector
 
-----------------------------------
+---
 
 This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookiecutter-napari-plugin] template.
 
@@ -27,12 +27,9 @@ You can install `cut-detector` via [pip]:
 
     pip install cut-detector
 
-
-
 To install latest development version :
 
     pip install git+https://github.com/15bonte/cut-detector.git
-
 
 ## Contributing
 
@@ -58,10 +55,14 @@ If you encounter any problems, please [file an issue] along with a detailed desc
 [Apache Software License 2.0]: http://www.apache.org/licenses/LICENSE-2.0
 [Mozilla Public License 2.0]: https://www.mozilla.org/media/MPL/2.0/index.txt
 [cookiecutter-napari-plugin]: https://github.com/napari/cookiecutter-napari-plugin
-
 [file an issue]: https://github.com/15bonte/cut-detector/issues
-
 [napari]: https://github.com/napari/napari
 [tox]: https://tox.readthedocs.io/en/latest/
 [pip]: https://pypi.org/project/pip/
 [PyPI]: https://pypi.org/
+
+conda create -n global python=3.9
+pip install cellpose
+pip uninstall torch
+
+conda install pytorch==1.12.1 torchvision torchaudio pytorch-cuda=11.6 -c pytorch -c nvidia
