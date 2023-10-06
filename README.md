@@ -1,4 +1,4 @@
-# cut_detector
+# Cut Detector
 
 [![License BSD-3](https://img.shields.io/pypi/l/cut_detector.svg?color=green)](https://github.com/15bonte/cut_detector/raw/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/cut_detector.svg?color=green)](https://pypi.org/project/cut_detector)
@@ -23,13 +23,50 @@ https://napari.org/stable/plugins/index.html
 
 ## Installation
 
-You can install `cut_detector` via [pip]:
+### Conda environment
+
+It is highly recommended to create a dedicated conda environment, by following these few steps:
+
+1. Install an [Anaconda] distribution of Python. Note you might need to use an anaconda prompt if you did not add anaconda to the path.
+2. Open an anaconda prompt and create a new environment with :
+
+```
+   conda create --name cut_detector python=3.9
+```
+
+3. Run
+
+```
+conda activate cut_detector
+```
+
+to activate the newly created environment.
+
+### Cellpose needed ?
+
+This package relies on [cellpose] to perform segmentation. This package can be installed using
+
+### GPU
+
+We highly recommend to use GPU to speed up segmentation. To use your NVIDIA GPU, the first step is to download the dedicated driver from [NVIDIA].
+
+Next we need to remove the CPU version of torch:
+
+```
+pip uninstall torch
+```
+
+The GPU version of torch to be installed can be found [here](https://pytorch.org/get-started/locally/). You may choose the CUDA version supported by your GPU, and install it with conda. This package has been developed with the version 11.6, installed with this command:
+
+```
+conda install pytorch==1.12.1 torchvision torchaudio pytorch-cuda=11.6 -c pytorch -c nvidia
+```
+
+### Package installation
+
+Finally, you can install `cut_detector` and its dependencies via [pip]:
 
     pip install cut_detector
-
-To install latest development version :
-
-    pip install git+https://github.com/15bonte/cut_detector.git
 
 ## Contributing
 
@@ -60,9 +97,6 @@ If you encounter any problems, please [file an issue] along with a detailed desc
 [tox]: https://tox.readthedocs.io/en/latest/
 [pip]: https://pypi.org/project/pip/
 [PyPI]: https://pypi.org/
-
-conda create -n global python=3.9
-pip install cellpose
-pip uninstall torch
-
-conda install pytorch==1.12.1 torchvision torchaudio pytorch-cuda=11.6 -c pytorch -c nvidia
+[Anaconda]: (https://www.anaconda.com/products/distribution)
+[cellpose]: (https://github.com/MouseLand/cellpose/tree/main)
+[NVIDIA]: (https://www.nvidia.com/Download/index.aspx?lang=en-us)
