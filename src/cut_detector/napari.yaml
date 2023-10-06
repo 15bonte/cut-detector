@@ -2,6 +2,9 @@ name: cut-detector
 display_name: Cut Detector
 contributions:
   commands:
+    - id: cut-detector.segmentation_tracking
+      python_name: cut_detector._widget:segmentation_tracking
+      title: 1 - Segmentation & Tracking
     - id: cut-detector.mitosis_track_generation
       python_name: cut_detector._widget:mitosis_track_generation
       title: 2 - Mitosis Track Generation
@@ -12,6 +15,8 @@ contributions:
       python_name: cut_detector._widget:micro_tubules_cut_detection
       title: 4 - Micro Tubules Cut Detection
   widgets:
+    - command: cut-detector.segmentation_tracking
+      display_name: 1 - Segmentation & Tracking
     - command: cut-detector.mitosis_track_generation
       display_name: 2 - Mitosis Track Generation
     - command: cut-detector.mid_body_detection

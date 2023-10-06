@@ -1,16 +1,28 @@
 import os
 import sys
+from typing import Optional
+import imagej
+import scyjava as sj
+from cellpose import models
+
+from ..models.tools import get_model_path
 from ..constants.tracking import (
     GAP_CLOSING_MAX_DISTANCE_RATIO,
     LINKING_MAX_DISTANCE_RATIO,
     MAX_FRAME_GAP,
 )
-import imagej
-import scyjava as sj
-from cellpose import models
 
 
-def perform_tracking(video_path: str, fiji_path: str, save_folder: str, model_path: str):
+def perform_tracking(
+    video_path: str,
+    fiji_path: str,
+    save_folder: str,
+    model_path: Optional[str] = None,
+) -> None:
+    # Load default model if necessary
+    if model_path is None:
+        model_path = get_model_path("segmentation_model")
+
     # Create save directory if it doesn't exist
     if not os.path.exists(save_folder):
         os.makedirs(save_folder)
@@ -21,8 +33,10 @@ def perform_tracking(video_path: str, fiji_path: str, save_folder: str, model_pa
     importer_options = sj.jimport("loci.plugins.in.ImporterOptions")
 
     # Import TrackMate via scyjava
-    model = sj.jimport("fiji.plugin.trackmate.Model")  # class in charge of storing the data
-    settings = sj.jimport(
+    track_mate_model = sj.jimport(
+        "fiji.plugin.trackmate.Model"
+    )  # class in charge of storing the data
+    track_mate_settings = sj.jimport(
         "fiji.plugin.trackmate.Settings"
     )  # class storing the fields that will configure TrackMate and pilot how the data is created
     track_mate = sj.jimport("fiji.plugin.trackmate.TrackMate")
@@ -40,8 +54,12 @@ def perform_tracking(video_path: str, fiji_path: str, save_folder: str, model_pa
         "fiji.plugin.trackmate.cellpose.CellposeSettings.PretrainedModel"
     )
     tracker_keys = sj.jimport("fiji.plugin.trackmate.tracking.TrackerKeys")
-    track_analyzer_provider = sj.jimport("fiji.plugin.trackmate.providers.TrackAnalyzerProvider")
-    edge_analyzer_provider = sj.jimport("fiji.plugin.trackmate.providers.EdgeAnalyzerProvider")
+    track_mate_track_analyzer_provider = sj.jimport(
+        "fiji.plugin.trackmate.providers.TrackAnalyzerProvider"
+    )
+    track_mate_edge_analyzer_provider = sj.jimport(
+        "fiji.plugin.trackmate.providers.EdgeAnalyzerProvider"
+    )
 
     # Skip if file already exists
     video_file_name = os.path.basename(video_path).split(".")[0]
@@ -59,7 +77,6 @@ def perform_tracking(video_path: str, fiji_path: str, save_folder: str, model_pa
 
     # Swap Z and T dimensions if necessary
     dims = imp.getDimensions()
-    print(dims)
     if imp.dims[-1] == "Z":
         imp.setDimensions(sj.to_java(dims[2]), sj.to_java(dims[4]), sj.to_java(dims[3]))
         print("Swapping Z and T dimensions")
@@ -68,14 +85,13 @@ def perform_tracking(video_path: str, fiji_path: str, save_folder: str, model_pa
     average_spot_size = models.CellposeModel(pretrained_model=[model_path]).diam_labels
 
     # Create model object
-    model = model()
+    model = track_mate_model()
 
     # Send all messages to ImageJ log window.
     model.setLogger(logger.IJ_LOGGER)
 
     # Prepare settings object
-
-    settings = settings(imp)
+    settings = track_mate_settings(imp)
 
     # Configure detector - We use the Strings for the keys
     settings.detectorFactory = cellpose_detector_factory()
@@ -108,12 +124,12 @@ def perform_tracking(video_path: str, fiji_path: str, save_folder: str, model_pa
     settings.initialSpotFilterValue = -1.0
 
     # Add useful track analyzers
-    trackAnalyzerProvider = track_analyzer_provider()
-    settings.addTrackAnalyzer(trackAnalyzerProvider.getFactory("Track duration"))
-    settings.addTrackAnalyzer(trackAnalyzerProvider.getFactory("Track index"))
+    track_analyzer_provider = track_mate_track_analyzer_provider()
+    settings.addTrackAnalyzer(track_analyzer_provider.getFactory("Track duration"))
+    settings.addTrackAnalyzer(track_analyzer_provider.getFactory("Track index"))
 
-    edgeAnalyzerProvider = edge_analyzer_provider()
-    settings.addEdgeAnalyzer(edgeAnalyzerProvider.getFactory("Edge target"))
+    edge_analyzer_provider = track_mate_edge_analyzer_provider()
+    settings.addEdgeAnalyzer(edge_analyzer_provider.getFactory("Edge target"))
 
     # Instantiate plugin
     trackmate = track_mate(model, settings)

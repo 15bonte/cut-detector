@@ -7,7 +7,7 @@
 
 import torch
 
-from .tools import display_progress
+from cnn_framework.utils.display_tools import display_progress
 
 
 class HiddenMarkovModel(object):

@@ -14,6 +14,7 @@ from sklearn.svm import SVC
 from scipy.optimize import linear_sum_assignment
 from scipy import ndimage
 from bigfish import stack, detection, plot
+from cnn_framework.utils.display_tools import display_progress
 
 from ..constants.annotations import NAMES_DICTIONARY, MARGIN
 from ..constants.tracking import (
@@ -28,7 +29,6 @@ from ..constants.tracking import (
     WEIGHT_SIR_INTENSITY_FACTOR,
 )
 
-from .tools import display_progress
 from .bridges_classification.bridges_classification_parameters import (
     BridgesClassificationParameters,
 )

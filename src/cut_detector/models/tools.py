@@ -7,6 +7,8 @@ def get_model_path(model_name: str) -> None:
     """
     Returns absolute path to model file.
     """
+    if model_name == "segmentation_model":
+        return os.path.join(CURRENT_DIR, "segmentation_model")
     if model_name == "metaphase_model":
         return os.path.join(CURRENT_DIR, "metaphase_cnn", "metaphase_cnn.pt")
     if model_name == "hmm_metaphase_parameters":
