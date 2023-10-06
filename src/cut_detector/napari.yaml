@@ -1,30 +1,30 @@
-name: cut-detector
+name: cut_detector
 display_name: Cut Detector
 contributions:
   commands:
-    - id: cut-detector.segmentation_tracking
+    - id: cut_detector.segmentation_tracking
       python_name: cut_detector._widget:segmentation_tracking
       title: 1 - Segmentation & Tracking
-    - id: cut-detector.mitosis_track_generation
+    - id: cut_detector.mitosis_track_generation
       python_name: cut_detector._widget:mitosis_track_generation
       title: 2 - Mitosis Track Generation
-    - id: cut-detector.mid_body_detection
+    - id: cut_detector.mid_body_detection
       python_name: cut_detector._widget:mid_body_detection
       title: 3 - Mid-body Detection
-    - id: cut-detector.micro_tubules_cut_detection
+    - id: cut_detector.micro_tubules_cut_detection
       python_name: cut_detector._widget:micro_tubules_cut_detection
       title: 4 - Micro Tubules Cut Detection
-    - id: cut-detector.results_saving
+    - id: cut_detector.results_saving
       python_name: cut_detector._widget:results_saving
       title: 5 - Results Saving
   widgets:
-    - command: cut-detector.segmentation_tracking
+    - command: cut_detector.segmentation_tracking
       display_name: 1 - Segmentation & Tracking
-    - command: cut-detector.mitosis_track_generation
+    - command: cut_detector.mitosis_track_generation
       display_name: 2 - Mitosis Track Generation
-    - command: cut-detector.mid_body_detection
+    - command: cut_detector.mid_body_detection
       display_name: 3 - Mid-body Detection
-    - command: cut-detector.micro_tubules_cut_detection
+    - command: cut_detector.micro_tubules_cut_detection
       display_name: 4 - Micro Tubules Cut Detection
-    - command: cut-detector.results_saving
+    - command: cut_detector.results_saving
       display_name: 5 - Results Saving

@@ -1,11 +1,11 @@
-# cut-detector
+# cut_detector
 
-[![License BSD-3](https://img.shields.io/pypi/l/cut-detector.svg?color=green)](https://github.com/15bonte/cut-detector/raw/main/LICENSE)
-[![PyPI](https://img.shields.io/pypi/v/cut-detector.svg?color=green)](https://pypi.org/project/cut-detector)
-[![Python Version](https://img.shields.io/pypi/pyversions/cut-detector.svg?color=green)](https://python.org)
-[![tests](https://github.com/15bonte/cut-detector/workflows/tests/badge.svg)](https://github.com/15bonte/cut-detector/actions)
-[![codecov](https://codecov.io/gh/15bonte/cut-detector/branch/main/graph/badge.svg)](https://codecov.io/gh/15bonte/cut-detector)
-[![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/cut-detector)](https://napari-hub.org/plugins/cut-detector)
+[![License BSD-3](https://img.shields.io/pypi/l/cut_detector.svg?color=green)](https://github.com/15bonte/cut_detector/raw/main/LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/cut_detector.svg?color=green)](https://pypi.org/project/cut_detector)
+[![Python Version](https://img.shields.io/pypi/pyversions/cut_detector.svg?color=green)](https://python.org)
+[![tests](https://github.com/15bonte/cut_detector/workflows/tests/badge.svg)](https://github.com/15bonte/cut_detector/actions)
+[![codecov](https://codecov.io/gh/15bonte/cut_detector/branch/main/graph/badge.svg)](https://codecov.io/gh/15bonte/cut_detector)
+[![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/cut_detector)](https://napari-hub.org/plugins/cut_detector)
 
 Automatic Cut Detector
 
@@ -23,13 +23,13 @@ https://napari.org/stable/plugins/index.html
 
 ## Installation
 
-You can install `cut-detector` via [pip]:
+You can install `cut_detector` via [pip]:
 
-    pip install cut-detector
+    pip install cut_detector
 
 To install latest development version :
 
-    pip install git+https://github.com/15bonte/cut-detector.git
+    pip install git+https://github.com/15bonte/cut_detector.git
 
 ## Contributing
 
@@ -39,7 +39,7 @@ the coverage at least stays the same before you submit a pull request.
 ## License
 
 Distributed under the terms of the [BSD-3] license,
-"cut-detector" is free and open source software
+"cut_detector" is free and open source software
 
 ## Issues
 
@@ -55,7 +55,7 @@ If you encounter any problems, please [file an issue] along with a detailed desc
 [Apache Software License 2.0]: http://www.apache.org/licenses/LICENSE-2.0
 [Mozilla Public License 2.0]: https://www.mozilla.org/media/MPL/2.0/index.txt
 [cookiecutter-napari-plugin]: https://github.com/napari/cookiecutter-napari-plugin
-[file an issue]: https://github.com/15bonte/cut-detector/issues
+[file an issue]: https://github.com/15bonte/cut_detector/issues
 [napari]: https://github.com/napari/napari
 [tox]: https://tox.readthedocs.io/en/latest/
 [pip]: https://pypi.org/project/pip/
