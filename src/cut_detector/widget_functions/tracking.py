@@ -1,6 +1,7 @@
 import os
 import sys
 from typing import Optional
+import torch
 import imagej
 import scyjava as sj
 from cellpose import models
@@ -101,7 +102,7 @@ def perform_tracking(
     settings.detectorSettings["CELLPOSE_MODEL_FILEPATH"] = model_path
     settings.detectorSettings["CELLPOSE_MODEL"] = pretrained_model.CUSTOM
     settings.detectorSettings["CELL_DIAMETER"] = sj.to_java(0.0, type="double")
-    settings.detectorSettings["USE_GPU"] = True
+    settings.detectorSettings["USE_GPU"] = True if torch.cuda.is_available() else False
     settings.detectorSettings["SIMPLIFY_CONTOURS"] = True
 
     # Configure tracker
