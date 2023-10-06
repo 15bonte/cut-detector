@@ -14,6 +14,9 @@ contributions:
     - id: cut-detector.micro_tubules_cut_detection
       python_name: cut_detector._widget:micro_tubules_cut_detection
       title: 4 - Micro Tubules Cut Detection
+    - id: cut-detector.results_saving
+      python_name: cut_detector._widget:results_saving
+      title: 5 - Results Saving
   widgets:
     - command: cut-detector.segmentation_tracking
       display_name: 1 - Segmentation & Tracking
@@ -23,3 +26,5 @@ contributions:
       display_name: 3 - Mid-body Detection
     - command: cut-detector.micro_tubules_cut_detection
       display_name: 4 - Micro Tubules Cut Detection
+    - command: cut-detector.results_saving
+      display_name: 5 - Results Saving

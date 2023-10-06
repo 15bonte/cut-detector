@@ -18,6 +18,7 @@ from .widget_functions.tracking import perform_tracking
 from .widget_functions.mid_body_detection import perform_mid_body_detection
 from .widget_functions.mitosis_track_generation import perform_mitosis_track_generation
 from .widget_functions.mt_cut_detection import perform_mt_cut_detection
+from .widget_functions.save_results import perform_results_saving
 
 if TYPE_CHECKING:
     import napari
@@ -146,3 +147,21 @@ def mid_body_detection(
 def micro_tubules_cut_detection(img_layer: "napari.layers.Image", exported_mitoses_dir: str):
     raw_video = re_organize_channels(img_layer.data)  # TXYC
     perform_mt_cut_detection(raw_video, img_layer.name, exported_mitoses_dir)
+
+
+@magic_factory(
+    call_button="Save results",
+    layout="vertical",
+    exported_mitoses_dir=dict(
+        widget_type="FileEdit",
+        label="Saved .bin mitoses directory: ",
+        mode="d",
+    ),
+    results_save_dir=dict(
+        widget_type="FileEdit",
+        label="Directory to save .bin mitoses: ",
+        mode="d",
+    ),
+)
+def results_saving(exported_mitoses_dir: str, results_save_dir: str):
+    perform_results_saving(exported_mitoses_dir, save_dir=results_save_dir)
