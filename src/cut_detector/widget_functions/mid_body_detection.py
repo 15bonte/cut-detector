@@ -4,6 +4,8 @@ from typing import Optional
 import numpy as np
 from aicsimageio.writers import OmeTiffWriter
 
+from ..factories.mid_body_detection_factory import MidBodyDetectionFactory
+
 from ..utils.mitosis_track import MitosisTrack
 
 
@@ -40,6 +42,7 @@ def perform_mid_body_detection(
         trackmate_tracks.append(trackmate_track)
 
     # Generate movie for each mitosis and save
+    mid_body_detector = MidBodyDetectionFactory()
     for i, mitosis_track in enumerate(mitosis_tracks):
         print(f"\nGenerate mitosis movies ({i+1}/{len(mitosis_tracks)})...")
 
@@ -49,7 +52,9 @@ def perform_mid_body_detection(
         )  # (T, H, W, C), (T, H, W)
 
         # Search for mid-body in mitosis movie
-        mitosis_track.update_mid_body_spots(mitosis_movie, mask_movie, trackmate_tracks)
+        mid_body_detector.update_mid_body_spots(
+            mitosis_track, mitosis_movie, mask_movie, trackmate_tracks
+        )
 
         # Save updated mitosis track
         daughter_track_ids = ",".join([str(d) for d in mitosis_track.daughter_track_ids])

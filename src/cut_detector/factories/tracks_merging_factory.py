@@ -42,6 +42,9 @@ class TracksMergingFactory:
     def __init__(self) -> None:
         self.min_track_spots = 10  # minimum spots in track to consider it
         self.minimum_metaphase_interval = 10  # minimum distance between two metaphases
+        self.max_spot_distance_for_split = (
+            20  # maximum distance between two spots to consider them
+        )
 
     def read_trackmate_xml(self, xml_model_path: str, raw_video_shape: np.ndarray) -> None:
         """
@@ -71,8 +74,7 @@ class TracksMergingFactory:
 
         return trackmate_tracks, raw_spots
 
-    @staticmethod
-    def get_tracks_to_merge(raw_tracks: list[TrackMateTrack]) -> list[MitosisTrack]:
+    def get_tracks_to_merge(self, raw_tracks: list[TrackMateTrack]) -> list[MitosisTrack]:
         """
         Plug tracks occurring at frame>0 to closest metaphase.
         """
@@ -97,7 +99,10 @@ class TracksMergingFactory:
             # Keep only stuck spots
             first_spot = track.track_spots[track_first_frame]
             stuck_spots: list[TrackMateSpot] = list(
-                filter(lambda x: x.is_stuck_to(first_spot), contemporary_spots)
+                filter(
+                    lambda x: x.is_stuck_to(first_spot, self.max_spot_distance_for_split),
+                    contemporary_spots,
+                )
             )
 
             # Keep only spots with metaphase frame close to track first frame

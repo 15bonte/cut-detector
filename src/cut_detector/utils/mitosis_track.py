@@ -11,22 +11,15 @@ import xmltodict
 from munch import Munch
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
-from scipy.optimize import linear_sum_assignment
 from scipy import ndimage
-from bigfish import stack, detection, plot
-from cnn_framework.utils.display_tools import display_progress
+
 
 from ..constants.annotations import NAMES_DICTIONARY, MARGIN
 from ..constants.tracking import (
     CYTOKINESIS_DURATION,
     FRAMES_AROUND_METAPHASE,
     METAPHASE_INDEX,
-    MID_BODY_LINKING_MAX_DISTANCE,
-    MINIMUM_MID_BODY_TRACK_LENGTH,
-    H_MAXIMA_THRESHOLD,
     MINIMUM_DISTANCE_TO_BORDER,
-    WEIGHT_MKLP_INTENSITY_FACTOR,
-    WEIGHT_SIR_INTENSITY_FACTOR,
 )
 
 from .bridges_classification.bridges_classification_parameters import (
@@ -40,264 +33,6 @@ from .box_dimensions import BoxDimensions
 from .bridges_classification.tools import get_bridge_class, apply_hmm
 from .bridges_classification.impossible_detection import ImpossibleDetection
 from .image_tools import resize_image, smart_cropping
-
-
-def spot_detection(
-    image: np.array,
-    mask: np.array,
-    mid_body_channel: int,
-    sir_channel: int,
-    threshold_1=2,
-    threshold_2=1,
-    path_output: Optional[str] = None,
-    mode="bigfish",
-    frame=-1,
-) -> list[MidBodySpot]:
-    """
-    Mode 'bigfish'
-        threshold_1: sigma for log filter
-        threshold_2: threshold for spots detection
-
-    Mode 'h_maxima'
-        threshold_1: threshold for h_maxima
-        threshold_2: unused
-
-    """
-
-    image_sir = image[:, :, sir_channel]
-    image_mklp = image[:, :, mid_body_channel]  #
-
-    if mode == "bigfish":
-        # Spots detection with bigfish functions
-        filtered_image = stack.log_filter(image_mklp, sigma=threshold_1)
-        filtered_image = image_mklp
-        # Filter out spots which are not maximal or outside convex hull
-        spots_mask = (filtered_image > 0) * mask
-        # If mask is empty, skip frame
-        if np.sum(spots_mask) == 0:
-            spots = np.array([], dtype=np.int64).reshape((0, filtered_image.ndim))
-        else:
-            spots, _ = detection.spots_thresholding(
-                filtered_image, spots_mask.astype(np.bool), threshold=threshold_2
-            )
-
-    elif mode == "h_maxima":
-        # Perform opening followed by closing to remove small spots
-        filtered_image = opening(image_mklp, footprint=np.ones((3, 3)))
-        # Get local maxima using h_maxima
-        local_maxima = extrema.h_maxima(filtered_image, threshold_1)
-        # Label spot regions
-        labeled_local_maxima, nb_labels = ndimage.label(local_maxima, structure=np.ones((3, 3)))
-        # Remove inconsistent labels
-        # Threshold is computed as 99th percentile of image
-        filtering_threshold = np.quantile(image_mklp.flatten(), 0.99)
-        for label in range(1, nb_labels + 1):
-            # Labels intensity in original image has to be higher than threshold
-            if image_mklp[np.where(labeled_local_maxima == label)].mean() < filtering_threshold:
-                labeled_local_maxima[labeled_local_maxima == label] = 0
-        # Re-label accordingly
-        labeled_local_maxima, nb_labels = ndimage.label(
-            labeled_local_maxima > 0, structure=np.ones((3, 3))
-        )
-        # Get center of mass to locate spots
-        spots = ndimage.center_of_mass(local_maxima, labeled_local_maxima, range(1, nb_labels + 1))
-        spots = np.asarray(spots, dtype=np.int64)
-
-        # Here, do something to retrieve mid_body area and/or circularity...
-
-        if len(spots) == 0:
-            spots = np.array([], dtype=np.int64).reshape((0, filtered_image.ndim))
-
-    else:
-        raise ValueError(f"Unknown mode: {mode}")
-
-    if path_output is not None:
-        # Check if directory exists
-        if not os.path.exists(path_output):
-            os.makedirs(path_output)
-        # Count number of files in directory
-        nb_files = len(os.listdir(path_output))
-        plot.plot_detection(
-            filtered_image,
-            spots,
-            contrast=True,
-            path_output=os.path.join(path_output, f"spot_detection_{nb_files+1}.png"),
-            show=False,
-        )
-
-    # Convert spots to MidBodySpot objects (switch (y, x) to (x, y))
-    mid_body_spots = [
-        MidBodySpot(
-            frame,
-            (position[1], position[0]),
-            intensity=get_average_intensity(position, image_mklp),
-            sir_intensity=get_average_intensity(position, image_sir),
-        )
-        for position in spots
-    ]
-
-    return mid_body_spots
-
-
-def get_average_intensity(position: tuple(int, int), image: np.array, margin=1) -> int:
-    """
-    Parameters
-    ----------
-    position: (y, x)
-    image: (H, W)
-    margin: int
-
-    Returns
-    ----------
-    average_intensity: int
-    """
-    # Get associated crop
-    crop = smart_cropping(
-        image, margin, position[1], position[0], position[1] + 1, position[0] + 1
-    )
-
-    # Return average intensity
-    return int(np.mean(crop))
-
-
-def detect_mid_body_spots(
-    mitosis_movie: np.array,
-    mask_movie: Optional[np.array] = None,
-    mid_body_channel=1,
-    sir_channel=0,
-    path_output: Optional[str] = None,
-    mode="h_maxima",
-) -> dict[int, list[MidBodySpot]]:
-    """
-    Parameters
-    ----------
-    mitosis_movie: (T, H, W, C)
-    mask_movie: (T, H, W)
-
-    Returns
-    ----------
-    spots_dictionary: dict[int, list[MidBodySpot]]
-    """
-
-    # Default mask is all ones
-    if mask_movie is None:
-        mask_movie = np.ones(mitosis_movie.shape[:-1])
-
-    # Detect spots in each frame
-    spots_dictionary = {}
-    nb_frames = mitosis_movie.shape[0]
-    for frame in range(nb_frames):
-        display_progress(
-            "Detect mid-body spots...",
-            frame + 1,
-            nb_frames,
-            additional_message=f"Frame {frame + 1}/{nb_frames}",
-        )
-
-        mitosis_frame = mitosis_movie[frame, :, :, :].squeeze()  # H, W, C
-        mask_frame = mask_movie[frame, :, :].squeeze()  # H, W
-        spots = spot_detection(
-            mitosis_frame,
-            mask_frame,
-            mid_body_channel,
-            sir_channel,
-            threshold_1=H_MAXIMA_THRESHOLD,
-            threshold_2=None,
-            path_output=path_output,
-            mode=mode,
-            frame=frame,
-        )
-
-        # Update dictionary
-        spots_dictionary[frame] = spots
-
-    return spots_dictionary
-
-
-def update_spots_hereditary(spots1: list[MidBodySpot], spots2: list[MidBodySpot]) -> None:
-    """
-    Link spots together using Hungarian algorithm.
-    """
-    # Ignore empty spots list
-    if len(spots1) == 0 or len(spots2) == 0:
-        return
-
-    # Create cost matrix
-    # https://imagej.net/plugins/trackmate/algorithms
-    cost_matrix = np.zeros((len(spots1) + len(spots2), len(spots1) + len(spots2)))
-    max_cost = 0
-    for i, spot1 in enumerate(spots1):
-        for j, spot2 in enumerate(spots2):
-            intensity_penalty = (
-                3
-                * WEIGHT_MKLP_INTENSITY_FACTOR
-                * np.abs(spot1.intensity - spot2.intensity)
-                / (spot1.intensity + spot2.intensity)
-            )
-            sir_intensity_penalty = (
-                3
-                * WEIGHT_SIR_INTENSITY_FACTOR
-                * np.abs(spot1.sir_intensity - spot2.sir_intensity)
-                / (spot1.sir_intensity + spot2.sir_intensity)
-            )
-            penalty = 1 + intensity_penalty + sir_intensity_penalty
-            distance = np.linalg.norm(np.array(spot1.position) - np.array(spot2.position))
-            if distance > MID_BODY_LINKING_MAX_DISTANCE:
-                cost_matrix[i, j] = np.inf
-            else:
-                # Compared to original TrackMate algorithm, remove square to penalize no attribution to the closest spot
-                cost_matrix[i, j] = (penalty * distance) ** 1
-                max_cost = max(max_cost, cost_matrix[i, j])
-
-    min_cost = 0 if np.max(cost_matrix) == 0 else np.min(cost_matrix[np.nonzero(cost_matrix)])
-
-    cost_matrix[len(spots1) :, : len(spots2)] = max_cost * 1.05  # bottom left
-    cost_matrix[: len(spots1), len(spots2) :] = max_cost * 1.05  # top right
-    cost_matrix[len(spots1) :, len(spots2) :] = min_cost  # bottom right
-
-    # Hungarian algorithm
-    row_ind, col_ind = linear_sum_assignment(cost_matrix)
-
-    # Update parent and child spots
-    for i, j in zip(row_ind, col_ind):
-        if i < len(spots1) and j < len(spots2):
-            spots1[i].child_spot = spots2[j]
-            spots2[j].parent_spot = spots1[i]
-
-
-def generate_tracks_from_spots(
-    spots_candidates: dict[int, list[MidBodySpot]]
-) -> list[MidBodyTrack]:
-    """
-    Use spots linked together to generate tracks.
-
-    Parameters
-    ----------
-    spots_candidates : {frame: [MidBodySpot]}
-
-    Returns
-    ----------
-    tracks: [MidBodyTrack]
-
-    """
-
-    # Update parent and child spots
-    for frame in spots_candidates.keys():
-        # Ignore if no spot detected in next frame
-        if not frame + 1 in spots_candidates:
-            continue
-        update_spots_hereditary(spots_candidates[frame], spots_candidates[frame + 1])
-
-    tracks = []
-    for spots in spots_candidates.values():
-        for spot in spots:
-            if spot.track_id is None:
-                # Create new track
-                track_id = len(tracks)
-                new_track = MidBodyTrack(track_id)
-                new_track.add_spot(spot)
-                tracks.append(new_track)
-    return tracks
 
 
 class MitosisTrack:
@@ -343,7 +78,7 @@ class MitosisTrack:
     def add_daughter_track(self, daughter_track_id: int) -> None:
         self.daughter_track_ids.append(daughter_track_id)
 
-    def _get_mother_daughters_tracks(
+    def get_mother_daughters_tracks(
         self, tracks: list[TrackMateTrack]
     ) -> Tuple[TrackMateTrack, list[TrackMateTrack]]:
         mother_track = [track for track in tracks if track.track_id == self.mother_track_id][0]
@@ -359,7 +94,7 @@ class MitosisTrack:
         self, trackmate_tracks: list[TrackMateTrack], mitosis_tracks: list[MitosisTrack]
     ) -> None:
         # Get all tracks involved in current mitosis
-        mother_track, daughter_tracks = self._get_mother_daughters_tracks(trackmate_tracks)
+        mother_track, daughter_tracks = self.get_mother_daughters_tracks(trackmate_tracks)
 
         # Get min and max frame of current mitosis
         # Min is the metaphase frame minus FRAMES_AROUND_METAPHASE, protected against frames before start of mother track
@@ -421,7 +156,7 @@ class MitosisTrack:
 
     def update_key_events_frame(self, trackmate_tracks: list[TrackMateTrack]) -> None:
         # Get all tracks involved in current mitosis
-        mother_track, daughter_tracks = self._get_mother_daughters_tracks(trackmate_tracks)
+        mother_track, daughter_tracks = self.get_mother_daughters_tracks(trackmate_tracks)
 
         # Store first metaphase frame
         for frame in range(self.metaphase_frame, mother_track.start, -1):
@@ -441,7 +176,7 @@ class MitosisTrack:
         """
 
         min_frame, max_frame = self.min_frame, self.max_frame
-        mother_track, daughter_tracks = self._get_mother_daughters_tracks(trackmate_tracks)
+        mother_track, daughter_tracks = self.get_mother_daughters_tracks(trackmate_tracks)
 
         previous_box_dimensions_dln = None
         for frame in range(min_frame, max_frame + 1):
@@ -510,139 +245,6 @@ class MitosisTrack:
 
         return mitosis_movie, mask_movie
 
-    def _select_best_track(
-        self,
-        mid_body_tracks: list[MidBodyTrack],
-        trackmate_tracks: list[TrackMateTrack],
-        mitosis_movie: np.array,
-        sir_channel=0,
-    ) -> MidBodyTrack:
-        """
-        Select best track from mid-body tracks.
-        """
-        mother_track, daughter_tracks = self._get_mother_daughters_tracks(trackmate_tracks)
-        # NB: only first daughter is considered
-        daughter_track = daughter_tracks[0]
-
-        expected_positions = {}
-        for frame in range(daughter_track.start, daughter_track.start + CYTOKINESIS_DURATION):
-            # If one cell does not exist anymore, stop
-            if frame not in daughter_track.track_spots or frame not in mother_track.track_spots:
-                continue
-            # Compute mid-body expected relative position at current frame
-            closest_points = []
-            min_distance = np.inf
-            for mother_point in mother_track.track_spots[frame].spot_points:
-                position_mother = [
-                    int(mother_point[0]) - self.position.min_x,
-                    int(mother_point[1]) - self.position.min_y,
-                ]
-                for daughter_point in daughter_track.track_spots[frame].spot_points:
-                    position_daugther = [
-                        int(daughter_point[0]) - self.position.min_x,
-                        int(daughter_point[1]) - self.position.min_y,
-                    ]
-                    distance = np.linalg.norm(
-                        [a - b for a, b in zip(position_mother, position_daugther)]
-                    )
-                    if distance < min_distance:
-                        min_distance = distance
-                        closest_points = [(position_mother, position_daugther)]
-                    if distance == min_distance:
-                        closest_points.append((position_mother, position_daugther))
-
-            mid_body_position = np.mean(closest_points, axis=0)
-            mid_body_position = np.mean(mid_body_position, axis=0)
-            expected_positions[frame - self.min_frame] = mid_body_position
-
-        # Remove wrong tracks by keeping only tracks with at least minimum_track_length points
-        mid_body_tracks = [
-            track for track in mid_body_tracks if track.length > MINIMUM_MID_BODY_TRACK_LENGTH
-        ]
-
-        # Compute mean intensity on sir-tubulin channel for each track
-        image_sir = mitosis_movie[:, :, :, sir_channel]
-        sir_intensity_track = [0 for _ in mid_body_tracks]
-        for idx, track in enumerate(mid_body_tracks):
-            abs_track_frames = [frame + self.min_frame for frame in list(track.spots.keys())]
-            abs_min_frame = self.key_events_frame["cytokinesis"]  # Cytokinesis start
-            abs_max_frame = abs_min_frame + int(CYTOKINESIS_DURATION / 2)
-            if abs_min_frame > abs_track_frames[-1] or abs_max_frame < abs_track_frames[0]:
-                sir_intensity_track[idx] = -np.inf
-            frame_count = 0
-            for frame in range(abs_min_frame, abs_max_frame + 1):
-                if frame not in abs_track_frames:
-                    continue
-                frame_count += 1
-                track_position = track.spots[frame - self.min_frame].position
-                sir_intensity_track[idx] += image_sir[
-                    frame - self.min_frame, track_position[1], track_position[0]
-                ]
-
-            if frame_count < (abs_max_frame - abs_min_frame + 1) / 2:
-                sir_intensity_track[idx] = -np.inf
-            else:
-                sir_intensity_track[idx] /= frame_count
-
-        # Get list of expected distances
-        expected_distances = []
-        for track in mid_body_tracks:
-            val = track.get_expected_distance(expected_positions)
-            expected_distances.append(val)
-
-        # Assert lists have same length for next function
-        assert len(expected_distances) == len(mid_body_tracks)
-        assert len(sir_intensity_track) == len(mid_body_tracks)
-
-        # function to sort tracks by expected distance and intensity
-        def func_sir_intensity(track):
-            a = expected_distances[mid_body_tracks.index(track)]
-            b = sir_intensity_track[mid_body_tracks.index(track)]
-            return a - 0.5 * b
-
-        # Remove tracks with infinite func value
-        fun_values = []
-        final_tracks = []
-        for track in mid_body_tracks:
-            fun_values.append(func_sir_intensity(track))
-            if func_sir_intensity(track) != np.inf:
-                final_tracks.append(track)
-
-        # Sort tracks by func value
-        sorted_tracks = sorted(final_tracks, key=func_sir_intensity)
-        return sorted_tracks[0] if len(sorted_tracks) > 0 else None
-
-    def update_mid_body_spots(
-        self,
-        mitosis_movie: np.array,
-        mask_movie: np.array,
-        tracks: list[TrackMateTrack],
-        path_output: Optional[str] = None,
-    ) -> None:
-        """
-        Get spots of best mitosis track.
-
-        Parameters
-        ----------
-        mitosis_movie: (T, H, W, C)
-        mask_movie: (T, H, W)
-
-        """
-
-        spots_candidates = detect_mid_body_spots(
-            mitosis_movie, mask_movie=mask_movie, path_output=path_output
-        )
-        mid_body_tracks = generate_tracks_from_spots(spots_candidates)
-        kept_track = self._select_best_track(mid_body_tracks, tracks, mitosis_movie)
-
-        if kept_track is None:
-            return
-
-        # Keep only spots of best mitosis track
-        for rel_frame, spot in kept_track.spots.items():
-            frame = rel_frame + self.min_frame
-            self.mid_body_spots[frame] = spot
-
     def generate_mitosis_summary(self, raw_tracks: list[TrackMateTrack], save_path: str) -> None:
         """
         Unused so far.
@@ -650,7 +252,7 @@ class MitosisTrack:
         """
         mitosis_summary = {}
 
-        mother_track, daughter_tracks = self._get_mother_daughters_tracks(raw_tracks)
+        mother_track, daughter_tracks = self.get_mother_daughters_tracks(raw_tracks)
         daughters_first_frame = min([track.start for track in daughter_tracks])
 
         for idx, frame in enumerate(range(self.min_frame, self.max_frame + 1)):

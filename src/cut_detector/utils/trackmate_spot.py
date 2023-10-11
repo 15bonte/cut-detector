@@ -5,8 +5,6 @@ import numpy as np
 from shapely.geometry.polygon import Polygon
 from shapely import distance
 
-from ..constants.tracking import MAX_SPOT_DISTANCE_FOR_SPLIT
-
 
 class TrackMateSpot:
     """
@@ -66,9 +64,7 @@ class TrackMateSpot:
     def distance_to(self, other_spot: TrackMateSpot):
         return np.sqrt((self.x - other_spot.x) ** 2 + (self.y - other_spot.y) ** 2)
 
-    def is_stuck_to(
-        self, other_spot: TrackMateSpot, maximum_stuck_distance=MAX_SPOT_DISTANCE_FOR_SPLIT
-    ):
+    def is_stuck_to(self, other_spot: TrackMateSpot, maximum_stuck_distance: float):
         """
         Distance between two spots hulls.
         """

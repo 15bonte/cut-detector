@@ -1,7 +1,6 @@
 import numpy as np
 
 from .mid_body_spot import MidBodySpot
-from ..constants.tracking import MID_BODY_LINKING_MAX_DISTANCE
 
 
 class MidBodyTrack:
@@ -22,7 +21,9 @@ class MidBodyTrack:
         if spot.child_spot is not None:
             self.add_spot(spot.child_spot)
 
-    def get_expected_distance(self, expected_positions: dict[int, list[int]]) -> float:
+    def get_expected_distance(
+        self, expected_positions: dict[int, list[int]], max_distance: float
+    ) -> float:
         """
         Compute the average distance between mid-body expected positions and current
         track positions.
@@ -38,6 +39,6 @@ class MidBodyTrack:
         if len(distances) == 0:
             return np.inf
         mean_distance = np.mean(distances)
-        if mean_distance > MID_BODY_LINKING_MAX_DISTANCE:
+        if mean_distance > max_distance:
             return np.inf
         return mean_distance
