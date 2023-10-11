@@ -6,8 +6,6 @@ MAX_FRAME_GAP = 3
 # Metaphase links
 FRAMES_AROUND_METAPHASE = 10  # look for metaphase candidate spots in this range
 MAX_SPOT_DISTANCE_FOR_SPLIT = 20  # look for metaphase candidate spots in that distance
-MIN_TRACK_SPOTS = 10  # minimum spots in track to consider it
-MINIMUM_METAPHASE_INTERVAL = 10  # Minimum distance between two metaphases
 
 INTERPHASE_INDEX = 0  # interphase index for CNN classification model
 METAPHASE_INDEX = 1  # metaphase index for CNN classification model
