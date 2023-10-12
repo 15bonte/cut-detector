@@ -37,14 +37,19 @@ def get_track_from_id(tracks: list[TrackMateTrack], track_id: int) -> TrackMateT
 class TracksMergingFactory:
     """
     Class to merge TrackMate tracks into mitosis tracks.
+
+    Args:
+        min_track_spots (int): Minimum spots in track to consider it.
+        minimum_metaphase_interval (int): Minimum distance between two metaphases.
+        max_spot_distance_for_split (int): Maximum distance between two spots to consider them.
     """
 
-    def __init__(self) -> None:
-        self.min_track_spots = 10  # minimum spots in track to consider it
-        self.minimum_metaphase_interval = 10  # minimum distance between two metaphases
-        self.max_spot_distance_for_split = (
-            20  # maximum distance between two spots to consider them
-        )
+    def __init__(
+        self, min_track_spots=10, minimum_metaphase_interval=10, max_spot_distance_for_split=20
+    ) -> None:
+        self.min_track_spots = min_track_spots
+        self.minimum_metaphase_interval = minimum_metaphase_interval
+        self.max_spot_distance_for_split = max_spot_distance_for_split
 
     def read_trackmate_xml(self, xml_model_path: str, raw_video_shape: np.ndarray) -> None:
         """

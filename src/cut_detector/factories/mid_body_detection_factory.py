@@ -18,33 +18,42 @@ from ..utils.trackmate_track import TrackMateTrack
 
 class MidBodyDetectionFactory:
     """
-    Class to merge TrackMate tracks into mitosis tracks.
+    Class to perform mid-body detection, tracking and filtering.
+
+    Args:
+        weight_mklp_intensity_factor (float): Weight of intensity in spot dist calculation
+            (cf TrackMate).
+        weight_sir_intensity_factor (float): Weight of sir intensity in spot distance calculation.
+        mid_body_linking_max_distance (int): Maximum distance between two mid-bodies to link them.
+
+        h_maxima_threshold (float): Threshold for h_maxima detection (default).
+
+        sigma (float): Sigma for bigfish detection (unused).
+        threshold (float): Threshold for bigfish detection (unused).
+
+        cytokinesis_duration (int): Number of frames to look for mid-body in between cells.
+        minimum_mid_body_track_length (int): Minimum spots in mid-body track to consider it.
     """
 
-    def __init__(self) -> None:
-        """
-        NB: shared constants are not defined here.
-        """
-        self.weight_mklp_intensity_factor = (
-            10  # weight of intensity in spot dist calculation (cf TrackMate)
-        )
-        self.weight_sir_intensity_factor = (
-            3.33  # weight of sir intensity in spot distance calculation
-        )
-        self.mid_body_linking_max_distance = (
-            100  # maximum distance between two mid-bodies to link them
-        )
-
-        # Detection using h-maxima (default)
-        self.h_maxima_threshold = 5
-        # Detection using big fish (unsued)
-        self.sigma = 2
-        self.threshold = 1
-
-        self.cytokinesis_duration = (
-            CYTOKINESIS_DURATION  # number of frames to look for mid-body in between cells
-        )
-        self.minimum_mid_body_track_length = 10  # minimum spots in mid-body track to consider it
+    def __init__(
+        self,
+        weight_mklp_intensity_factor=10.0,
+        weight_sir_intensity_factor=3.33,
+        mid_body_linking_max_distance=100,
+        h_maxima_threshold=5.0,
+        sigma=2.0,
+        threshold=1.0,
+        cytokinesis_duration=CYTOKINESIS_DURATION,
+        minimum_mid_body_track_length=10,
+    ) -> None:
+        self.weight_mklp_intensity_factor = weight_mklp_intensity_factor
+        self.weight_sir_intensity_factor = weight_sir_intensity_factor
+        self.mid_body_linking_max_distance = mid_body_linking_max_distance
+        self.h_maxima_threshold = h_maxima_threshold
+        self.sigma = sigma
+        self.threshold = threshold
+        self.cytokinesis_duration = cytokinesis_duration
+        self.minimum_mid_body_track_length = minimum_mid_body_track_length
 
     def update_mid_body_spots(
         self,
