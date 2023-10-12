@@ -242,7 +242,7 @@ class MidBodyDetectionFactory:
         return mid_body_spots
 
     @staticmethod
-    def _get_average_intensity(position: tuple(int, int), image: np.array, margin=1) -> int:
+    def _get_average_intensity(position: tuple[int], image: np.array, margin=1) -> int:
         """
         Parameters
         ----------

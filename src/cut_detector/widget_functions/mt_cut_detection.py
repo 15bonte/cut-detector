@@ -49,4 +49,4 @@ def perform_mt_cut_detection(
         with open(save_path, "wb") as f:
             pickle.dump(mitosis_track, f)
 
-    print("\nDone.")
+    print("\nProcess finished with success!")

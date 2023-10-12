@@ -37,7 +37,7 @@ def box_plot_cut_differences(
 def plot_cut_distributions(
     first_cut_times: list[int],
     first_cut_times_gt: list[int],
-    p_value: float,
+    p_value: Optional[float],
     show: bool,
     save_dir: Optional[str],
 ) -> None:
@@ -63,7 +63,7 @@ def plot_cut_distributions(
 
     # Quartiles and median
     predicted_median = np.median(first_cut_times)
-    gt_median = np.median(first_cut_times_gt)
+    gt_median = np.median(first_cut_times_gt) if len(first_cut_times_gt) else None
     predicted_q1 = np.percentile(first_cut_times, 25)
     predicted_q3 = np.percentile(first_cut_times, 75)
     plt.axvline(
@@ -78,7 +78,8 @@ def plot_cut_distributions(
         color="r",
         linestyle="-",
         linewidth=0.5,
-        label=f"Detected median: {predicted_median} vs {gt_median} Ground truth median",
+        label=f"Detected median: {predicted_median}"
+        + (f"vs {gt_median} Ground truth median" if gt_median else ""),
     )
     plt.axvline(
         x=predicted_q3,
@@ -89,10 +90,14 @@ def plot_cut_distributions(
     )
 
     # add t test result to legend
-    plt.legend(loc="lower right", title=f"t test p-value: {p_value:.2f}")
+    if p_value is not None:
+        plt.legend(loc="lower right", title=f"t test p-value: {p_value:.2f}")
+    else:
+        plt.legend(loc="lower right")
 
     plt.title(
-        f"Proportion of MT cuts over time ({len(first_cut_times)} predicted mitoses - {len(first_cut_times_gt)} ground truth mitoses)"
+        f"Proportion of MT cuts over time ({len(first_cut_times)} predicted mitoses"
+        + (f"- {len(first_cut_times_gt)} ground truth mitoses)" if len(first_cut_times_gt) else "")
     )
     plt.xlabel("Time (min)")
     plt.ylabel("Proportion of first cut")
@@ -108,6 +113,9 @@ def perform_t_test(cut_differences: list[int]) -> float:
     """
     Compute t-test of the differences, which is supposed to be 0.
     """
+    if len(cut_differences) == 0:
+        return None
+
     t_result = ttest_1samp(cut_differences, 0)
     p_value = t_result.pvalue
 
@@ -116,9 +124,7 @@ def perform_t_test(cut_differences: list[int]) -> float:
 
     # Check if the result is statistically significant (e.g., using a significance level of 0.05)
     if p_value < ALPHA:
-        print(
-            "Reject the null hypothesis: There is a statistically significant difference."
-        )
+        print("Reject the null hypothesis: There is a statistically significant difference.")
     else:
         print(
             "Fail to reject the null hypothesis: There is no statistically significant difference."
@@ -127,22 +133,18 @@ def perform_t_test(cut_differences: list[int]) -> float:
     return p_value
 
 
-def print_weird_mitoses(
-    selected_tracks: list[MitosisTrack], min_acceptable_frame=13
-) -> None:
+def print_weird_mitoses(selected_tracks: list[MitosisTrack], min_acceptable_frame=13) -> None:
     """
     Print useful information about weird mitoses.
     """
     ordered_tracks = [
         track
         for track in selected_tracks
-        if track.key_events_frame["first_mt_cut"]
-        - track.key_events_frame["cytokinesis"]
+        if track.key_events_frame["first_mt_cut"] - track.key_events_frame["cytokinesis"]
         <= min_acceptable_frame
     ]
     ordered_tracks.sort(
-        key=lambda x: x.key_events_frame["first_mt_cut"]
-        - x.key_events_frame["cytokinesis"]
+        key=lambda x: x.key_events_frame["first_mt_cut"] - x.key_events_frame["cytokinesis"]
     )
 
     print("Weird mitoses (early cut):")
@@ -154,17 +156,13 @@ def print_weird_mitoses(
         print(f"Key events frame: {mitosis_track.key_events_frame}")
         print(
             "video frame cut",
-            mitosis_track.key_events_frame["first_mt_cut"]
-            - mitosis_track.min_frame
-            + 1,
+            mitosis_track.key_events_frame["first_mt_cut"] - mitosis_track.min_frame + 1,
         )
         if mitosis_track.gt_key_events_frame is not None:
             print(f"GT key events frame: {mitosis_track.gt_key_events_frame}")
             print(
                 "video frame cut",
-                mitosis_track.gt_key_events_frame["first_mt_cut"]
-                - mitosis_track.min_frame
-                + 1,
+                mitosis_track.gt_key_events_frame["first_mt_cut"] - mitosis_track.min_frame + 1,
             )
 
 
@@ -178,14 +176,14 @@ def print_analysis_summary(
     for cut_id, count in mitosis_results_summary.items():
         print(f"    - {count} mitoses in category {ImpossibleDetection(cut_id).name}")
 
+    if len(first_cut_times_gt) == 0:
+        return
     print(f"\n Among the {len(first_cut_times_gt)} mitoses annotated, there are:")
     for cut_id, count in gt_mitosis_results_summary.items():
         print(f"    - {count} mitoses in category {ImpossibleDetection(cut_id).name}")
 
 
-def save_csv_results(
-    mitosis_tracks: list[MitosisTrack], save_dir: Optional[str] = None
-) -> None:
+def save_csv_results(mitosis_tracks: list[MitosisTrack], save_dir: Optional[str] = None) -> None:
     if save_dir is None:
         return
 
@@ -324,3 +322,5 @@ def perform_results_saving(
     # Plot results
     box_plot_cut_differences(cut_differences, show, save_dir)
     plot_cut_distributions(first_cut_times, first_cut_times_gt, p_value, show, save_dir)
+
+    print("\nProcess finished with success!")
