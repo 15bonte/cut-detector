@@ -21,6 +21,8 @@ def box_plot_cut_differences(
     """
     Plot box plot of cut differences
     """
+    if len(cut_differences) == 0:
+        return
 
     plt.figure()
     plt.boxplot(cut_differences)
@@ -96,8 +98,8 @@ def plot_cut_distributions(
         plt.legend(loc="lower right")
 
     plt.title(
-        f"Proportion of MT cuts over time ({len(first_cut_times)} predicted mitoses"
-        + (f"- {len(first_cut_times_gt)} ground truth mitoses)" if len(first_cut_times_gt) else "")
+        f"Proportion of MT cuts over time - {len(first_cut_times)} predicted mitoses"
+        + (f"- {len(first_cut_times_gt)} ground truth mitoses" if len(first_cut_times_gt) else "")
     )
     plt.xlabel("Time (min)")
     plt.ylabel("Proportion of first cut")
