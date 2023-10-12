@@ -124,7 +124,7 @@ class MidBodyDetectionFactory:
 
             mitosis_frame = mitosis_movie[frame, :, :, :].squeeze()  # H, W, C
             mask_frame = mask_movie[frame, :, :].squeeze()  # H, W
-            spots = self._spot_detection(
+            spots = self.spot_detection(
                 mitosis_frame,
                 mask_frame,
                 mid_body_channel,
@@ -139,7 +139,7 @@ class MidBodyDetectionFactory:
 
         return spots_dictionary
 
-    def _spot_detection(
+    def spot_detection(
         self,
         image: np.array,
         mask: np.array,

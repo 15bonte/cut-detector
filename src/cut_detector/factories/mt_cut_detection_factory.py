@@ -129,7 +129,7 @@ class MtCutDetectionFactory:
 
         return False
 
-    def get_circle_data(
+    def _get_circle_data(
         self,
         radius: int,
         image: np.ndarray,
@@ -200,7 +200,7 @@ class MtCutDetectionFactory:
 
         return circle_positions, intensities, mean_intensity, peaks, norm_peaks
 
-    def get_peaks(
+    def _get_peaks(
         self,
         all_positions: list[list[tuple[int]]],
         all_intensities: list[list[float]],
@@ -305,7 +305,7 @@ class MtCutDetectionFactory:
         return final_peaks, peaks_intensity
 
     @staticmethod
-    def get_haralick_features(
+    def _get_haralick_features(
         list_intensity: list[float],
         properties=None,  # avoid list as default value
     ) -> np.ndarray:
@@ -331,7 +331,7 @@ class MtCutDetectionFactory:
             [graycoprops(haralick_features, property)[0][0] for property in properties]
         )
 
-    def plot_circles(
+    def _plot_circles(
         self,
         filename,
         image,
@@ -412,7 +412,7 @@ class MtCutDetectionFactory:
         all_positions, all_intensities, all_mean_intensity = [], [], []
         all_peaks, all_norm_peaks = [], []
         for radius in list_radius:
-            positions, intensities, mean_intensity, peaks, norm_peaks = self.get_circle_data(
+            positions, intensities, mean_intensity, peaks, norm_peaks = self._get_circle_data(
                 radius, image
             )
             all_positions.append(positions)
@@ -422,16 +422,16 @@ class MtCutDetectionFactory:
             all_norm_peaks.append(norm_peaks)
 
         # Get peaks data
-        final_peaks, peaks_intensity = self.get_peaks(
+        final_peaks, peaks_intensity = self._get_peaks(
             all_positions, all_intensities, all_peaks, all_norm_peaks
         )
 
         # Get useful Haralick features from middle center circle
-        haralick_features = self.get_haralick_features(all_intensities[0])
+        haralick_features = self._get_haralick_features(all_intensities[0])
 
         # Plot if enabled
         if plot_enabled:
-            self.plot_circles(
+            self._plot_circles(
                 filename,
                 image,
                 final_peaks,

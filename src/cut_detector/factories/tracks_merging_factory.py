@@ -204,7 +204,7 @@ class TracksMergingFactory:
             nuclei_crops = nuclei_crops + current_nuclei_crops
 
         # Apply CNN model to get metaphase spots, once for all
-        predictions = self.predict_metaphase_spots(metaphase_model_path, nuclei_crops)
+        predictions = self._predict_metaphase_spots(metaphase_model_path, nuclei_crops)
 
         # Load HMM parameters and create model
         if not only_predictions_update:
@@ -232,7 +232,7 @@ class TracksMergingFactory:
         self.update_predictions_file(trackmate_tracks, predictions_file, video_name)
 
     @staticmethod
-    def predict_metaphase_spots(
+    def _predict_metaphase_spots(
         metaphase_model_path: str, nuclei_crops: list[np.array]
     ) -> list[int]:
         """
