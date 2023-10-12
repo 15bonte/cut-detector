@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 
 [tool.setuptools_scm]
-write_to = "src/cut-detector/_version.py"
+write_to = "src/cut_detector/_version.py"
 
 [tool.black]
 line-length = 79
