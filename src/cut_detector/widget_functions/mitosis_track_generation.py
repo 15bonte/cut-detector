@@ -4,6 +4,9 @@ import pickle
 import numpy as np
 from matplotlib import pyplot as plt
 
+from cnn_framework.utils.display_tools import display_progress
+
+
 from ..utils.trackmate_frame_spots import TrackMateFrameSpots
 from ..utils.trackmate_track import TrackMateTrack
 from ..factories.tracks_merging_factory import TracksMergingFactory
@@ -125,8 +128,6 @@ def perform_mitosis_track_generation(
         xml_model_path, raw_video.shape
     )
 
-    print("\nPreprocess spots...")
-
     # Get dictionary of TrackMate spots (from xml file) for each track and detect metaphase spots
     tracks_merging_factory.pre_process_spots(
         trackmate_tracks,
@@ -172,6 +173,13 @@ def perform_mitosis_track_generation(
         with open(save_path, "wb") as f:
             pickle.dump(mitosis_track, f)
 
+        display_progress(
+            "Mitosis tracks generation:",
+            i + 1,
+            len(mitosis_tracks),
+            additional_message=f"Frame {i + 1}/{len(mitosis_tracks)}",
+        )
+
     # Save updated trackmate tracks
     for trackmate_track in trackmate_tracks:
         state_path = f"track_{trackmate_track.track_id}.bin"
@@ -181,5 +189,7 @@ def perform_mitosis_track_generation(
         )
         with open(save_path, "wb") as f:
             pickle.dump(trackmate_track, f)
+
+    print("\nProcess finished with success!")
 
     return mitosis_tracks

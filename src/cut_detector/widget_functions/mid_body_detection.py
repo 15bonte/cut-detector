@@ -78,3 +78,5 @@ def perform_mid_body_detection(
             # Transpose to match  T, C, H, W
             final_mitosis_movie = np.transpose(final_mitosis_movie, (0, 3, 1, 2))
             OmeTiffWriter.save(final_mitosis_movie, image_save_path, dim_order="TCYX")
+
+    print("\nProcess finished with success!")
