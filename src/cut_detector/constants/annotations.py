@@ -10,4 +10,3 @@ NAMES_DICTIONARY = {
     "Membrane cut, simple MT ?": 8,
     "Membrane cut, no MT ?": 9,
 }
-MARGIN = 50

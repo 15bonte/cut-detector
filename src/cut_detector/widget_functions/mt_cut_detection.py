@@ -3,6 +3,7 @@ import pickle
 from typing import Optional
 import numpy as np
 
+from ..factories.mt_cut_detection_factory import MtCutDetectionFactory
 from ..models.tools import get_model_path
 from ..utils.mitosis_track import MitosisTrack
 
@@ -29,12 +30,13 @@ def perform_mt_cut_detection(
         mitosis_tracks.append(mitosis_track)
 
     # Generate a list of the first MT cut time for each mitosis track
+    mt_cut_detector = MtCutDetectionFactory()
     for i, mitosis_track in enumerate(mitosis_tracks):
         print(f"Detect MT cut ({i+1}/{len(mitosis_tracks)})...")
 
         # Perform cut detection
-        mitosis_track.update_mt_cut_detection(
-            raw_video, scaler_path, model_path, hmm_bridges_parameters_file
+        mt_cut_detector.update_mt_cut_detection(
+            mitosis_track, raw_video, scaler_path, model_path, hmm_bridges_parameters_file
         )
 
         # Save updated mitosis track

@@ -2,35 +2,25 @@ from __future__ import annotations
 
 from copy import deepcopy
 import json
-import os
-import pickle
 from typing import Optional, Tuple, Union
 import numpy as np
 from skimage.morphology import extrema, opening
 import xmltodict
 from munch import Munch
-from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
 from scipy import ndimage
 
 
-from ..constants.annotations import NAMES_DICTIONARY, MARGIN
+from ..constants.annotations import NAMES_DICTIONARY
 from ..constants.tracking import (
     CYTOKINESIS_DURATION,
     FRAMES_AROUND_METAPHASE,
     METAPHASE_INDEX,
     MINIMUM_DISTANCE_TO_BORDER,
 )
-
-from .bridges_classification.bridges_classification_parameters import (
-    BridgesClassificationParameters,
-)
 from .mid_body_spot import MidBodySpot
-from .mid_body_track import MidBodyTrack
 from .trackmate_track import TrackMateTrack
 from .box_dimensions_dln import BoxDimensionsDln
 from .box_dimensions import BoxDimensions
-from .bridges_classification.tools import get_bridge_class, apply_hmm
 from .bridges_classification.impossible_detection import ImpossibleDetection
 from .image_tools import resize_image, smart_cropping
 
@@ -440,7 +430,12 @@ class MitosisTrack:
         self,
         video: np.ndarray,
         first_cut_frame: int,
-        parameters: BridgesClassificationParameters = BridgesClassificationParameters(),
+        length_light_spot: int,
+        crop_size_light_spot: int,
+        h_maxima_light_spot: int,
+        intensity_threshold_light_spot: int,
+        center_tolerance_light_spot: int,
+        min_percentage_light_spot: float,
         print_enabled=False,
     ) -> bool:
         """
@@ -465,7 +460,7 @@ class MitosisTrack:
         nb_spot_detected = 0
         frame_counted = 0
         # Iterate over video frames
-        for i in range(-parameters.length_light_spot // 2, parameters.length_light_spot // 2):
+        for i in range(-length_light_spot // 2, length_light_spot // 2):
             frame = first_cut_frame + i
 
             # Make sure mid-body exists at frame
@@ -481,13 +476,13 @@ class MitosisTrack:
 
             # Extract image and crop on the midbody
             img = np.transpose(video[frame, ...], (2, 0, 1))  # C, H, W
-            crop = smart_cropping(img, parameters.crop_size_light_spot, x_pos, y_pos, pad=True)[
+            crop = smart_cropping(img, crop_size_light_spot, x_pos, y_pos, pad=True)[
                 0, ...
             ]  # H, W
 
             # Perform opening to remove small spots and apply h_maxima to get potential spots
             filtered_image = opening(crop, footprint=np.ones((3, 3)))
-            local_maxima = extrema.h_maxima(filtered_image, parameters.h_maxima_light_spot)
+            local_maxima = extrema.h_maxima(filtered_image, h_maxima_light_spot)
 
             # Label spot regions and remove inconsistent ones
             labeled_local_maxima, nb_labels = ndimage.label(
@@ -497,7 +492,7 @@ class MitosisTrack:
                 # Labels intensity in original image has to be higher than threshold
                 if (
                     crop[np.where(labeled_local_maxima == label)].mean()
-                    < parameters.intensity_threshold_light_spot
+                    < intensity_threshold_light_spot
                 ):
                     labeled_local_maxima[labeled_local_maxima == label] = 0
             # Re-label accordingly
@@ -513,12 +508,8 @@ class MitosisTrack:
 
             # Remove spots that are too close to the center
             for spot in spots:
-                if (
-                    np.abs(spot[0] - parameters.crop_size_light_spot)
-                    < parameters.center_tolerance_light_spot
-                ) and (
-                    np.abs(spot[1] - parameters.crop_size_light_spot)
-                    < parameters.center_tolerance_light_spot
+                if (np.abs(spot[0] - crop_size_light_spot) < center_tolerance_light_spot) and (
+                    np.abs(spot[1] - crop_size_light_spot) < center_tolerance_light_spot
                 ):
                     spots = np.delete(spots, np.where((spots == spot).all(axis=1))[0], axis=0)
 
@@ -529,7 +520,7 @@ class MitosisTrack:
         # Light spot is considered as detected if at least in MIN_PERCENTAGE_LIGHTSPOT % of frames
         if frame_counted > 0:
             percentage_spot_detected = nb_spot_detected / frame_counted
-            spot_detected = percentage_spot_detected >= parameters.min_percentage_light_spot
+            spot_detected = percentage_spot_detected >= min_percentage_light_spot
         else:
             spot_detected = False
 
@@ -542,135 +533,3 @@ class MitosisTrack:
             )
 
         return spot_detected
-
-    def is_bridges_classification_impossible(self) -> bool:
-        """
-        Bridges classification is impossible if:
-        - no midbody spots
-        - more than 2 daughter tracks
-        - nucleus is near border
-        - no midbody spot after cytokinesis
-        """
-
-        if self.is_near_border:
-            self.key_events_frame["first_mt_cut"] = ImpossibleDetection.NEAR_BORDER
-            self.key_events_frame["second_mt_cut"] = ImpossibleDetection.NEAR_BORDER
-            return True
-
-        if len(self.daughter_track_ids) >= 2:
-            self.key_events_frame[
-                "first_mt_cut"
-            ] = ImpossibleDetection.MORE_THAN_TWO_DAUGHTER_TRACKS
-            self.key_events_frame[
-                "second_mt_cut"
-            ] = ImpossibleDetection.MORE_THAN_TWO_DAUGHTER_TRACKS
-            return True
-
-        if not self.mid_body_spots:
-            self.key_events_frame["first_mt_cut"] = ImpossibleDetection.NO_MID_BODY_DETECTED
-            self.key_events_frame["second_mt_cut"] = ImpossibleDetection.NO_MID_BODY_DETECTED
-            return True
-
-        if max(self.mid_body_spots.keys()) < self.key_events_frame["cytokinesis"]:
-            self.key_events_frame[
-                "first_mt_cut"
-            ] = ImpossibleDetection.NO_MID_BODY_DETECTED_AFTER_CYTOKINESIS
-            self.key_events_frame[
-                "second_mt_cut"
-            ] = ImpossibleDetection.NO_MID_BODY_DETECTED_AFTER_CYTOKINESIS
-            return True
-
-        return False
-
-    def update_mt_cut_detection(
-        self, video, scaler_path, model_path, hmm_bridges_parameters_file
-    ) -> None:
-        """
-        Update micro-tubules cut detection using bridges classification.
-        """
-        classification_impossible = self.is_bridges_classification_impossible()
-
-        if classification_impossible:
-            return
-
-        # Get default classification parameters
-        parameters = BridgesClassificationParameters()
-
-        # Perform classification...
-        ordered_mb_frames = sorted(self.mid_body_spots.keys())
-        first_mb_frame = ordered_mb_frames[0]
-        last_mb_frame = ordered_mb_frames[-1]
-        first_frame = max(first_mb_frame, self.key_events_frame["cytokinesis"] - 2)  # -2?
-
-        # Load the classifier and scaler
-        with open(model_path, "rb") as f:
-            classifier: SVC = pickle.load(f)
-        # Load the scaler
-        with open(scaler_path, "rb") as f:
-            scaler: StandardScaler = pickle.load(f)
-
-        list_class_bridges = []
-        # Iterate over frames and get the class of the bridge
-        for frame in range(first_frame, last_mb_frame + 1):
-            min_x = self.position.min_x
-            min_y = self.position.min_y
-
-            # Get midbody coordinates
-            mb_coords = self.mid_body_spots[frame].position
-            x_pos, y_pos = min_x + mb_coords[0], min_y + mb_coords[1]
-
-            # Extract frame image and crop around the midbody Sir-tubulin
-            frame_image = video[frame, :, :, :].squeeze().transpose(2, 0, 1)  # C, H, W
-            crop = smart_cropping(frame_image, MARGIN, x_pos, y_pos, pad=True)[0, ...]  # H, W
-
-            # Get the class of the bridge
-            bridge_class = get_bridge_class(
-                crop, scaler, classifier, parameters, plot_enabled=False
-            )
-            list_class_bridges.append(bridge_class)
-
-        # Make sure cytokinesis bridge is detected as A (no MT cut)
-        relative_cytokinesis_frame = self.key_events_frame["cytokinesis"] - first_frame
-        if relative_cytokinesis_frame < 0 or list_class_bridges[relative_cytokinesis_frame] != 0:
-            self.key_events_frame["first_mt_cut"] = ImpossibleDetection.MT_CUT_AT_CYTOKINESIS
-            self.key_events_frame["second_mt_cut"] = ImpossibleDetection.MT_CUT_AT_CYTOKINESIS
-            return
-
-        # Read HMM parameters
-        if not os.path.exists(hmm_bridges_parameters_file):
-            raise FileNotFoundError(f"File {hmm_bridges_parameters_file} not found")
-        hmm_parameters = np.load(hmm_bridges_parameters_file)
-
-        # Correct the sequence with HMM
-        seq_after_hmm = apply_hmm(hmm_parameters, list_class_bridges)
-
-        # Get index of first element > 0 in sequence (first MT cut)
-        first_mt_cut_frame_rel = next((i for i, x in enumerate(seq_after_hmm) if x > 0), -1)
-
-        # Ignore if no MT cut detected
-        if first_mt_cut_frame_rel == -1:
-            self.key_events_frame["first_mt_cut"] = ImpossibleDetection.NO_CUT_DETECTED
-            self.key_events_frame["second_mt_cut"] = ImpossibleDetection.NO_CUT_DETECTED
-            return
-
-        first_mt_cut_frame_abs = first_frame + first_mt_cut_frame_rel
-        if self.light_spot_detected(video, first_mt_cut_frame_abs):
-            self.key_events_frame["first_mt_cut"] = ImpossibleDetection.LIGHT_SPOT
-            self.key_events_frame["second_mt_cut"] = ImpossibleDetection.LIGHT_SPOT
-            return
-
-        # Update mitosis track accordingly
-        self.key_events_frame["first_mt_cut"] = first_mt_cut_frame_abs
-
-        # Get index of first element > 1 in sequence (second MT cut)
-        second_mt_cut_frame_rel = next((i for i, x in enumerate(seq_after_hmm) if x > 1), -1)
-
-        # get the frame of the second MT cut
-        if second_mt_cut_frame_rel == -1:
-            self.key_events_frame["second_mt_cut"] = ImpossibleDetection.NO_CUT_DETECTED
-            return
-
-        second_mt_cut_frame_abs = first_frame + second_mt_cut_frame_rel
-
-        # Update mitosis track accordingly
-        self.key_events_frame["second_mt_cut"] = second_mt_cut_frame_abs

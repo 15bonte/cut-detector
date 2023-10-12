@@ -3,16 +3,20 @@ from enum import Enum
 
 # Enum for the different types of templates
 class TemplateType(Enum):
-    All = 1
-    AllWithoutHaralick = 2
-    NbPeaks = 3
-    PeaksAndIntensity = 4
-    Haralick = 5
-    All_Ablation1 = 6
-    All_Ablation2 = 7
-    All_Ablation3 = 8
-    All_Ablation4 = 9
-    All_Ablation5 = 10
-    All_Ablation6 = 11
-    All_Ablation7 = 12
-    All_Ablation8 = 13
+    """
+    Enum to represent the different embeddings for bridges classification.
+    """
+
+    ALL = 1
+    ALL_WITHOUT_HARALICK = 2
+    NB_PEAKS = 3
+    PEAKS_AND_INTENSITY = 4
+    HARALICK = 5
+    ALL_ABLATION_1 = 6
+    ALL_ABLATION_2 = 7
+    ALL_ABLATION_3 = 8
+    ALL_ABLATION_4 = 9
+    ALL_ABLATION_5 = 10
+    ALL_ABLATION_6 = 11
+    ALL_ABLATION_7 = 12
+    ALL_ABLATION_8 = 13
