@@ -50,16 +50,18 @@ This package relies on [cellpose] to perform segmentation. This package can be i
 
 We highly recommend to use GPU to speed up segmentation. To use your NVIDIA GPU, the first step is to download the dedicated driver from [NVIDIA].
 
-Next we need to remove the CPU version of torch:
+Next we need to remove the CPU version of torch, and image lib (because of torchvision):
 
 ```
 pip uninstall torch
+pip uninstall libpng
+pip uninstall libjpeg
 ```
 
 The GPU version of torch to be installed can be found [here](https://pytorch.org/get-started/locally/). You may choose the CUDA version supported by your GPU, and install it with conda. This package has been developed with the version 11.6, installed with this command:
 
 ```
-conda install pytorch==1.12.1 torchvision torchaudio pytorch-cuda=11.6 -c pytorch -c nvidia
+conda install pytorch==1.12.1 torchvision pytorch-cuda=11.6 -c pytorch -c nvidia
 ```
 
 ### Package installation
