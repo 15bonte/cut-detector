@@ -8,6 +8,9 @@ from cellpose import models
 
 from ..models.tools import get_model_path
 from ..constants.tracking import (
+    AUGMENT,
+    CELLPROB_THRESHOLD,
+    FLOW_THRESHOLD,
     GAP_CLOSING_MAX_DISTANCE_RATIO,
     LINKING_MAX_DISTANCE_RATIO,
     MAX_FRAME_GAP,
@@ -66,9 +69,7 @@ def perform_tracking(
                 "fiji.plugin.trackmate.cellpose.tbonte.CellposeSettings.PretrainedModel"
             )
         except TypeError:
-            print(
-                "No Trackmate plugin found for fast mode. Using usual segmentation instead."
-            )
+            print("No Trackmate plugin found for fast mode. Using usual segmentation instead.")
             fast_mode = False
 
     if not fast_mode:
@@ -122,11 +123,15 @@ def perform_tracking(
     settings.detectorSettings["USE_GPU"] = True if torch.cuda.is_available() else False
     settings.detectorSettings["SIMPLIFY_CONTOURS"] = True
 
+    if fast_mode:
+        settings.detectorSettings["FLOW_THRESHOLD"] = FLOW_THRESHOLD
+        settings.detectorSettings["CELLPROB_THRESHOLD"] = CELLPROB_THRESHOLD
+        # NB: AUGMENT is unused in current implementation (because of cellpose command line)
+        settings.detectorSettings["AUGMENT"] = AUGMENT
+
     # Configure tracker
     settings.trackerFactory = sparse_lap_tracker_factory()
-    settings.trackerSettings = (
-        lap_utils.getDefaultSegmentSettingsMap()
-    )  # almost good enough
+    settings.trackerSettings = lap_utils.getDefaultSegmentSettingsMap()  # almost good enough
     settings.trackerSettings["LINKING_MAX_DISTANCE"] = (
         LINKING_MAX_DISTANCE_RATIO * average_spot_size
     )
@@ -176,4 +181,3 @@ def perform_tracking(
 
     # Force exit
     ij_instance.dispose()
-    sys.exit(0)

@@ -2,6 +2,9 @@ name: cut-detector
 display_name: Cut Detector
 contributions:
   commands:
+    - id: cut-detector.whole_process
+      python_name: cut_detector._widget:whole_process
+      title: 0 - Whole Process
     - id: cut-detector.segmentation_tracking
       python_name: cut_detector._widget:segmentation_tracking
       title: 1 - Segmentation & Tracking
@@ -18,6 +21,8 @@ contributions:
       python_name: cut_detector._widget:results_saving
       title: 5 - Results Saving
   widgets:
+    - command: cut-detector.whole_process
+      display_name: 0 - Whole Process
     - command: cut-detector.segmentation_tracking
       display_name: 1 - Segmentation & Tracking
     - command: cut-detector.mitosis_track_generation

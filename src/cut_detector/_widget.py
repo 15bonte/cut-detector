@@ -6,10 +6,12 @@ see: https://napari.org/stable/plugins/guides.html?#widgets
 
 Replace code below according to your needs.
 """
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from magicgui import magic_factory
+import tempfile
 
 
 from .utils.tools import re_organize_channels
@@ -22,6 +24,98 @@ from .widget_functions.save_results import perform_results_saving
 
 if TYPE_CHECKING:
     import napari
+
+
+@magic_factory(
+    call_button="Run Whole Process",
+    layout="vertical",
+    fiji_dir=dict(
+        widget_type="FileEdit",
+        label="Fiji path (likely named Fiji.app): ",
+        mode="d",
+    ),
+    default_model_check_box=dict(
+        widget_type="CheckBox", text="Use default segmentation model?", value=True
+    ),
+    segmentation_model=dict(
+        widget_type="FileEdit",
+        label="If not checked, cellpose segmentation model: ",
+    ),
+    fast_mode_check_box=dict(widget_type="CheckBox", text="Enable fast mode?", value=False),
+    save_check_box=dict(widget_type="CheckBox", text="Save cell divisions movies?", value=False),
+    movies_save_dir=dict(
+        widget_type="FileEdit",
+        label="If checked, directory to save division movies: ",
+        mode="d",
+    ),
+    results_save_dir=dict(
+        widget_type="FileEdit",
+        label="Directory to save results: ",
+        mode="d",
+    ),
+)
+def whole_process(
+    img_layer: "napari.layers.Image",
+    img_viewer: "napari.Viewer",
+    fiji_dir: str,
+    default_model_check_box: str,
+    segmentation_model: str,
+    fast_mode_check_box: bool,
+    save_check_box: bool,
+    movies_save_dir: str,
+    results_save_dir: str,
+):
+    # Make sure we are working with the same image (same name)
+    video_path = img_viewer.layers[0].source.path
+    assert img_layer.name == os.path.basename(video_path).split(".")[0]
+
+    # Create temporary folders
+    xml_model_dir_instance = tempfile.TemporaryDirectory()
+    xml_model_dir = xml_model_dir_instance.name
+    exported_mitoses_dir_instance = tempfile.TemporaryDirectory()
+    exported_mitoses_dir = exported_mitoses_dir_instance.name
+    exported_tracks_dir_instance = tempfile.TemporaryDirectory()
+    exported_tracks_dir = exported_tracks_dir_instance.name
+
+    # Segmentation and tracking
+    video_path = str(Path(video_path))
+    segmentation_model = str(Path(segmentation_model))
+    perform_tracking(
+        video_path,
+        fiji_dir,
+        xml_model_dir,
+        segmentation_model if not default_model_check_box else None,
+        fast_mode_check_box,
+    )
+
+    raw_video = re_organize_channels(img_layer.data)  # TXYC
+
+    # Mitosis track_generation
+    perform_mitosis_track_generation(
+        raw_video, img_layer.name, xml_model_dir, exported_mitoses_dir, exported_tracks_dir
+    )
+
+    # Mid-body detection
+    perform_mid_body_detection(
+        raw_video,
+        img_layer.name,
+        exported_mitoses_dir,
+        exported_tracks_dir,
+        movies_save_dir if save_check_box else None,
+    )
+
+    # MT cut detection
+    perform_mt_cut_detection(raw_video, img_layer.name, exported_mitoses_dir)
+
+    # Results saving
+    perform_results_saving(exported_mitoses_dir, save_dir=results_save_dir)
+
+    # Delete temporary folders
+    xml_model_dir_instance.cleanup()
+    exported_mitoses_dir_instance.cleanup()
+    exported_tracks_dir_instance.cleanup()
+
+    print("\nWhole process finished with success!")
 
 
 @magic_factory(
@@ -51,7 +145,7 @@ if TYPE_CHECKING:
     fast_mode_check_box=dict(widget_type="CheckBox", text="Enable fast mode?", value=False),
 )
 def segmentation_tracking(
-    video_path: str,
+    img_viewer: "napari.Viewer",
     fiji_dir: str,
     xml_model_dir: str,
     default_model_check_box: str,
@@ -59,6 +153,7 @@ def segmentation_tracking(
     fast_mode_check_box: bool,
 ):
     # Convert video path from windows to linux
+    video_path = img_viewer.layers[0].source.path
     video_path = str(Path(video_path))
     segmentation_model = str(Path(segmentation_model))
     perform_tracking(
@@ -166,10 +261,13 @@ def micro_tubules_cut_detection(img_layer: "napari.layers.Image", exported_mitos
     ),
     results_save_dir=dict(
         widget_type="FileEdit",
-        label="Directory to save .bin mitoses: ",
+        label="Directory to save results: ",
         mode="d",
     ),
 )
-def results_saving(exported_mitoses_dir: str, results_save_dir: str):
+def results_saving(
+    exported_mitoses_dir: str,
+    results_save_dir: str,
+):
     perform_results_saving(exported_mitoses_dir, save_dir=results_save_dir)
     print("\nResults saved with success!")
