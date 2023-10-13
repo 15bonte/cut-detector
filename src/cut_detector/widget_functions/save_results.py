@@ -324,5 +324,3 @@ def perform_results_saving(
     # Plot results
     box_plot_cut_differences(cut_differences, show, save_dir)
     plot_cut_distributions(first_cut_times, first_cut_times_gt, p_value, show, save_dir)
-
-    print("\nProcess finished with success!")

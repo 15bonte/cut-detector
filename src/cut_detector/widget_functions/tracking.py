@@ -18,7 +18,8 @@ def perform_tracking(
     video_path: str,
     fiji_path: str,
     save_folder: str,
-    model_path: Optional[str] = None,
+    model_path: Optional[str],
+    fast_mode: bool,
 ) -> None:
     # Load default model if necessary
     if model_path is None:
@@ -48,12 +49,6 @@ def perform_tracking(
     )
     file = sj.jimport("java.io.File")
     tm_xml_writer = sj.jimport("fiji.plugin.trackmate.io.TmXmlWriter")
-    cellpose_detector_factory = sj.jimport(
-        "fiji.plugin.trackmate.cellpose.CellposeDetectorFactory"
-    )
-    pretrained_model = sj.jimport(
-        "fiji.plugin.trackmate.cellpose.CellposeSettings.PretrainedModel"
-    )
     tracker_keys = sj.jimport("fiji.plugin.trackmate.tracking.TrackerKeys")
     track_mate_track_analyzer_provider = sj.jimport(
         "fiji.plugin.trackmate.providers.TrackAnalyzerProvider"
@@ -61,6 +56,28 @@ def perform_tracking(
     track_mate_edge_analyzer_provider = sj.jimport(
         "fiji.plugin.trackmate.providers.EdgeAnalyzerProvider"
     )
+
+    if fast_mode:
+        try:
+            cellpose_detector_factory = sj.jimport(
+                "fiji.plugin.trackmate.cellpose.tbonte.CellposeDetectorFactory"
+            )
+            pretrained_model = sj.jimport(
+                "fiji.plugin.trackmate.cellpose.tbonte.CellposeSettings.PretrainedModel"
+            )
+        except TypeError:
+            print(
+                "No Trackmate plugin found for fast mode. Using usual segmentation instead."
+            )
+            fast_mode = False
+
+    if not fast_mode:
+        cellpose_detector_factory = sj.jimport(
+            "fiji.plugin.trackmate.cellpose.CellposeDetectorFactory"
+        )
+        pretrained_model = sj.jimport(
+            "fiji.plugin.trackmate.cellpose.CellposeSettings.PretrainedModel"
+        )
 
     # Skip if file already exists
     video_file_name = os.path.basename(video_path).split(".")[0]
@@ -107,7 +124,9 @@ def perform_tracking(
 
     # Configure tracker
     settings.trackerFactory = sparse_lap_tracker_factory()
-    settings.trackerSettings = lap_utils.getDefaultSegmentSettingsMap()  # almost good enough
+    settings.trackerSettings = (
+        lap_utils.getDefaultSegmentSettingsMap()
+    )  # almost good enough
     settings.trackerSettings["LINKING_MAX_DISTANCE"] = (
         LINKING_MAX_DISTANCE_RATIO * average_spot_size
     )

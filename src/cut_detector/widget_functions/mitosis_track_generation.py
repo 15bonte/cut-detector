@@ -190,6 +190,4 @@ def perform_mitosis_track_generation(
         with open(save_path, "wb") as f:
             pickle.dump(trackmate_track, f)
 
-    print("\nProcess finished with success!")
-
     return mitosis_tracks

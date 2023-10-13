@@ -48,6 +48,7 @@ if TYPE_CHECKING:
         widget_type="FileEdit",
         label="If not checked, cellpose segmentation model: ",
     ),
+    fast_mode_check_box=dict(widget_type="CheckBox", text="Enable fast mode?", value=False),
 )
 def segmentation_tracking(
     video_path: str,
@@ -55,6 +56,7 @@ def segmentation_tracking(
     xml_model_dir: str,
     default_model_check_box: str,
     segmentation_model: str,
+    fast_mode_check_box: bool,
 ):
     # Convert video path from windows to linux
     video_path = str(Path(video_path))
@@ -64,7 +66,9 @@ def segmentation_tracking(
         fiji_dir,
         xml_model_dir,
         segmentation_model if not default_model_check_box else None,
+        fast_mode_check_box,
     )
+    print("\nSegmentation and tracking finished with success!")
 
 
 @magic_factory(
@@ -96,6 +100,7 @@ def mitosis_track_generation(
     perform_mitosis_track_generation(
         raw_video, img_layer.name, xml_model_dir, mitoses_save_dir, tracks_save_dir
     )
+    print("\nMitosis tracks generated with success!")
 
 
 @magic_factory(
@@ -133,6 +138,7 @@ def mid_body_detection(
         exported_tracks_dir,
         save_dir if save_check_box else None,
     )
+    print("\nMid-body detection finished with success!")
 
 
 @magic_factory(
@@ -147,6 +153,7 @@ def mid_body_detection(
 def micro_tubules_cut_detection(img_layer: "napari.layers.Image", exported_mitoses_dir: str):
     raw_video = re_organize_channels(img_layer.data)  # TXYC
     perform_mt_cut_detection(raw_video, img_layer.name, exported_mitoses_dir)
+    print("\nMicro-tubules cut detection finished with success!")
 
 
 @magic_factory(
@@ -165,3 +172,4 @@ def micro_tubules_cut_detection(img_layer: "napari.layers.Image", exported_mitos
 )
 def results_saving(exported_mitoses_dir: str, results_save_dir: str):
     perform_results_saving(exported_mitoses_dir, save_dir=results_save_dir)
+    print("\nResults saved with success!")
