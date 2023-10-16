@@ -7,7 +7,7 @@
 [![codecov](https://codecov.io/gh/15bonte/cut-detector/branch/main/graph/badge.svg)](https://codecov.io/gh/15bonte/cut-detector)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/cut-detector)](https://napari-hub.org/plugins/cut-detector)
 
-Automatic Cut Detector
+Automatic micro-tubules cut detector.
 
 ---
 
@@ -28,47 +28,50 @@ https://napari.org/stable/plugins/index.html
 It is highly recommended to create a dedicated conda environment, by following these few steps:
 
 1. Install an [Anaconda] distribution of Python. Note you might need to use an anaconda prompt if you did not add anaconda to the path.
-2. Open an anaconda prompt and create a new environment with :
+
+2. Open an anaconda prompt and create a new environment with:
 
 ```
    conda create --name cut-detector python=3.9
 ```
 
-3. Run
+3. Activate the newly created environment:
 
 ```
 conda activate cut-detector
 ```
 
-to activate the newly created environment.
+### Package installation
 
-### Cellpose needed ?
+Once in a dedicated environment, our package can be installed via [pip]:
 
-This package relies on [cellpose] to perform segmentation. This package can be installed using
+```
+pip install cut_detector
+```
+
+### Fiji
+
+This package relies on [Trackmate] to perform cell tracking. Trackmate is called through [Fiji], which has to be installed independently. Please follow the steps [here] to install it.
 
 ### GPU
 
 We highly recommend to use GPU to speed up segmentation. To use your NVIDIA GPU, the first step is to download the dedicated driver from [NVIDIA].
 
-Next we need to remove the CPU version of torch, and image lib (because of torchvision):
+Next we need to remove the CPU version of torch:
 
 ```
 pip uninstall torch
-pip uninstall libpng
-pip uninstall libjpeg
 ```
 
 The GPU version of torch to be installed can be found [here](https://pytorch.org/get-started/locally/). You may choose the CUDA version supported by your GPU, and install it with conda. This package has been developed with the version 11.6, installed with this command:
 
 ```
-conda install pytorch==1.12.1 torchvision pytorch-cuda=11.6 -c pytorch -c nvidia
+conda install numpy==1.25 pytorch==1.12.1 torchvision pytorch-cuda=11.6 -c pytorch -c nvidia
 ```
 
-### Package installation
+Note that we have added numpy here to prevent conda from installing a version higher than 1.25, which is not supported by numba.
 
-Finally, you can install `cut-detector` and its dependencies via [pip]:
-
-    pip install cut-detector
+If the previous results in an inifinite "Solving environment", consider using mamba instead of conda.
 
 ## Contributing
 
@@ -100,5 +103,7 @@ If you encounter any problems, please [file an issue] along with a detailed desc
 [pip]: https://pypi.org/project/pip/
 [PyPI]: https://pypi.org/
 [Anaconda]: (https://www.anaconda.com/products/distribution)
-[cellpose]: (https://github.com/MouseLand/cellpose/tree/main)
+[Trackmate]: (https://imagej.net/plugins/trackmate/)
+[Fiji]: (https://imagej.net/software/fiji/)
+[here]: (https://imagej.net/software/fiji/downloads)
 [NVIDIA]: (https://www.nvidia.com/Download/index.aspx?lang=en-us)
