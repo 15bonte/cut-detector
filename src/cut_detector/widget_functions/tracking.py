@@ -126,7 +126,6 @@ def perform_tracking(
     if fast_mode:
         settings.detectorSettings["FLOW_THRESHOLD"] = FLOW_THRESHOLD
         settings.detectorSettings["CELLPROB_THRESHOLD"] = CELLPROB_THRESHOLD
-        # NB: AUGMENT is unused in current implementation (because of cellpose command line)
         settings.detectorSettings["AUGMENT"] = AUGMENT
 
     # Configure tracker
