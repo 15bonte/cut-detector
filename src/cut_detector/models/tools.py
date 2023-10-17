@@ -1,6 +1,5 @@
 import os
 import urllib.request
-from cellpose.utils import download_url_to_file
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -9,18 +8,22 @@ def get_model_path(model_name: str) -> None:
     """
     Returns absolute path to model file.
     """
+    sub_folder_to_create = None
     if model_name == "segmentation_model":
         path_end = "segmentation_model"
     elif model_name == "metaphase_model":
-        path_end = os.path.join("metaphase_cnn", "metaphase_cnn.pt")
+        path_end = "metaphase_cnn/metaphase_cnn.pt"
+        sub_folder_to_create = "metaphase_cnn"
     elif model_name == "hmm_metaphase_parameters":
         path_end = "hmm_metaphase_parameters.npz"
     elif model_name == "hmm_bridges_parameters":
         path_end = "hmm_bridges_parameters.npz"
     elif model_name == "svc_scaler":
-        path_end = os.path.join("svc_bridges", "scaler.pkl")
+        path_end = "svc_bridges/scaler.pkl"
+        sub_folder_to_create = "svc_bridges"
     elif model_name == "svc_model":
-        path_end = os.path.join("svc_bridges", "model.pkl")
+        path_end = "svc_bridges/model.pkl"
+        sub_folder_to_create = "svc_bridges"
     else:
         raise ValueError(f"Unknown model name: {model_name}")
 
@@ -28,6 +31,8 @@ def get_model_path(model_name: str) -> None:
 
     if not os.path.exists(local_path):
         print(f"Downloading model {model_name}...")
+        if sub_folder_to_create is not None:
+            os.makedirs(os.path.join(CURRENT_DIR, sub_folder_to_create))
         urllib.request.urlretrieve(
             f"https://raw.githubusercontent.com//15bonte/cut-detector/main/models/{path_end}",
             local_path,
