@@ -1,5 +1,6 @@
 import os
 import urllib.request
+from cellpose.utils import download_url_to_file
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -28,7 +29,8 @@ def get_model_path(model_name: str) -> None:
     if not os.path.exists(local_path):
         print(f"Downloading model {model_name}...")
         urllib.request.urlretrieve(
-            f"https://github.com/15bonte/cut-detector/models/{path_end}", local_path
+            f"https://raw.githubusercontent.com//15bonte/cut-detector/main/models/{path_end}",
+            local_path,
         )
 
     return local_path
