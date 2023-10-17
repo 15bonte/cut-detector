@@ -1,6 +1,6 @@
 # Cut Detector
 
-[![License BSD-3](https://img.shields.io/pypi/l/cellpose-napari.svg?color=green)](https://github.com/15bonte/cut-detector/raw/master/LICENSE)
+[![License BSD-3](https://img.shields.io/pypi/l/cut-detector.svg?color=green)](https://github.com/15bonte/cut-detector/raw/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/cut-detector.svg?color=green)](https://pypi.org/project/cut-detector)
 [![Python Version](https://img.shields.io/pypi/pyversions/cut-detector.svg?color=green)](https://python.org)
 [![tests](https://github.com/15bonte/cut-detector/workflows/tests/badge.svg)](https://github.com/15bonte/cut-detector/actions)
