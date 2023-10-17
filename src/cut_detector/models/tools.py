@@ -32,7 +32,9 @@ def get_model_path(model_name: str) -> None:
     if not os.path.exists(local_path):
         print(f"Downloading model {model_name}...")
         if sub_folder_to_create is not None:
-            os.makedirs(os.path.join(CURRENT_DIR, sub_folder_to_create))
+            os.makedirs(
+                os.path.join(CURRENT_DIR, sub_folder_to_create), exist_ok=True
+            )
         urllib.request.urlretrieve(
             f"https://raw.githubusercontent.com//15bonte/cut-detector/main/models/{path_end}",
             local_path,
