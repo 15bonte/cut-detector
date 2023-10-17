@@ -102,7 +102,7 @@ If you encounter any problems, please [file an issue] along with a detailed desc
 [tox]: https://tox.readthedocs.io/en/latest/
 [pip]: https://pypi.org/project/pip/
 [PyPI]: https://pypi.org/
-[Anaconda]: (https://www.anaconda.com/products/distribution)
-[Trackmate]: (https://imagej.net/plugins/trackmate/)
-[Fiji]: (https://imagej.net/software/fiji/)
-[NVIDIA]: (https://www.nvidia.com/Download/index.aspx?lang=en-us)
+[Anaconda]: https://www.anaconda.com/products/distribution
+[Trackmate]: https://imagej.net/plugins/trackmate/
+[Fiji]: https://imagej.net/software/fiji/
+[NVIDIA]: https://www.nvidia.com/Download/index.aspx?lang=en-us
