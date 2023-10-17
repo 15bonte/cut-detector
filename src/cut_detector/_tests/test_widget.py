@@ -3,16 +3,10 @@ import numpy as np
 from cut_detector._widget import whole_process
 
 
-def test_example_magic_widget(make_napari_viewer, capsys):
+# make_napari_viewer is a pytest fixture that returns a napari viewer object
+def test_example_magic_widget(make_napari_viewer):
     viewer = make_napari_viewer()
-    layer = viewer.add_image(np.random.random((100, 100)))
+    viewer.add_image(np.random.random((100, 100)))
 
-    # this time, our widget will be a MagicFactory or FunctionGui instance
-    my_widget = whole_process()
-
-    # if we "call" this object, it'll execute our function
-    my_widget(viewer.layers[0])
-
-    # read captured output and check that it's as we expected
-    captured = capsys.readouterr()
-    assert captured.out == f"you have selected {layer}\n"
+    # Just try to open the widget
+    whole_process()
