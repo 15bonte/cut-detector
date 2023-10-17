@@ -32,13 +32,13 @@ It is highly recommended to create a dedicated conda environment, by following t
 2. Open an anaconda prompt and create a new environment with:
 
 ```
-   conda create --name cut-detector python=3.9
+conda create --name cut_detector python=3.9
 ```
 
 3. Activate the newly created environment:
 
 ```
-conda activate cut-detector
+conda activate cut_detector
 ```
 
 ### Package installation
