@@ -51,7 +51,7 @@ pip install cut_detector
 
 ### Fiji
 
-This package relies on [Trackmate] to perform cell tracking. Trackmate is called through [Fiji], which has to be installed independently. Please follow the steps [here] to install it.
+This package relies on [Trackmate] to perform cell tracking. Trackmate is called through [Fiji], which has to be installed independently. Please follow the steps [here](https://imagej.net/software/fiji/downloads) to install it.
 
 ### GPU
 
@@ -105,5 +105,4 @@ If you encounter any problems, please [file an issue] along with a detailed desc
 [Anaconda]: (https://www.anaconda.com/products/distribution)
 [Trackmate]: (https://imagej.net/plugins/trackmate/)
 [Fiji]: (https://imagej.net/software/fiji/)
-[here]: (https://imagej.net/software/fiji/downloads)
 [NVIDIA]: (https://www.nvidia.com/Download/index.aspx?lang=en-us)
