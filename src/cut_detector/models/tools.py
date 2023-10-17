@@ -1,4 +1,5 @@
 import os
+import urllib.request
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -8,15 +9,26 @@ def get_model_path(model_name: str) -> None:
     Returns absolute path to model file.
     """
     if model_name == "segmentation_model":
-        return os.path.join(CURRENT_DIR, "segmentation_model")
-    if model_name == "metaphase_model":
-        return os.path.join(CURRENT_DIR, "metaphase_cnn", "metaphase_cnn.pt")
-    if model_name == "hmm_metaphase_parameters":
-        return os.path.join(CURRENT_DIR, "hmm_metaphase_parameters.npz")
-    if model_name == "hmm_bridges_parameters":
-        return os.path.join(CURRENT_DIR, "hmm_bridges_parameters.npz")
-    if model_name == "svc_scaler":
-        return os.path.join(CURRENT_DIR, "svc_bridges", "scaler.pkl")
-    if model_name == "svc_model":
-        return os.path.join(CURRENT_DIR, "svc_bridges", "model.pkl")
-    raise ValueError(f"Unknown model name: {model_name}")
+        path_end = "segmentation_model"
+    elif model_name == "metaphase_model":
+        path_end = os.path.join("metaphase_cnn", "metaphase_cnn.pt")
+    elif model_name == "hmm_metaphase_parameters":
+        path_end = "hmm_metaphase_parameters.npz"
+    elif model_name == "hmm_bridges_parameters":
+        path_end = "hmm_bridges_parameters.npz"
+    elif model_name == "svc_scaler":
+        path_end = os.path.join("svc_bridges", "scaler.pkl")
+    elif model_name == "svc_model":
+        path_end = os.path.join("svc_bridges", "model.pkl")
+    else:
+        raise ValueError(f"Unknown model name: {model_name}")
+
+    local_path = os.path.join(CURRENT_DIR, path_end)
+
+    if not os.path.exists(local_path):
+        print(f"Downloading model {model_name}...")
+        urllib.request.urlretrieve(
+            f"https://github.com/15bonte/cut-detector/models/{path_end}", local_path
+        )
+
+    return local_path
