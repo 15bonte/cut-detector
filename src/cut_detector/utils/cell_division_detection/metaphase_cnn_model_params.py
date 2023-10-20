@@ -18,5 +18,5 @@ class MetaphaseCnnModelParams(BaseModelParams):
         self.nb_classes = 3
         self.class_names = ["Interphase", "Metaphase", "Death"]
 
-        self.nb_modalities = 3
-        self.nb_stacks_per_modality = 1
+        self.c_indexes = [0, 1, 2]
+        self.z_indexes = [0]

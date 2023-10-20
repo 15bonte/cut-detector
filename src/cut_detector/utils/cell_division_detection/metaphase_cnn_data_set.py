@@ -13,7 +13,7 @@ class MetaphaseCnnDataSet(AbstractDataSet):
         super().__init__(*args, **kwargs)
 
         # Data sources
-        nb_channels = self.params.nb_modalities * self.params.nb_stacks_per_modality
+        nb_channels = len(self.params.c_indexes) * len(self.params.z_indexes)
         self.input_data_source = ImagesReader(
             [self.data_manager.get_microscopy_image_path],
             [[Projection(method=ProjectMethods.Channel, channels=list(range(nb_channels)))]],
