@@ -128,6 +128,10 @@ def perform_mitosis_track_generation(
         xml_model_path, raw_video.shape
     )
 
+    # Missing xml file case
+    if trackmate_tracks is None:
+        return None
+
     # Get dictionary of TrackMate spots (from xml file) for each track and detect metaphase spots
     tracks_merging_factory.pre_process_spots(
         trackmate_tracks,

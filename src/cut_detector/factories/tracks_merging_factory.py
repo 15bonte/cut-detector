@@ -57,7 +57,7 @@ class TracksMergingFactory:
         """
         if not os.path.exists(xml_model_path):
             print("No xml file found for this video.")
-            return None
+            return None, None
         with open(xml_model_path) as fd:
             doc = xmltodict.parse(fd.read())
 
