@@ -121,10 +121,6 @@ def whole_process(
 @magic_factory(
     call_button="Run Segmentation and Tracking",
     layout="vertical",
-    video_path=dict(
-        widget_type="FileEdit",
-        label="Video path",
-    ),
     fiji_dir=dict(
         widget_type="FileEdit",
         label="Fiji path (likely named Fiji.app): ",
