@@ -89,3 +89,9 @@ src/cut_detector/models/hmm_bridges_parameters.npz
 src/cut_detector/models/hmm_metaphase_parameters.npz
 src/cut_detector/models/metaphase_cnn/
 src/cut_detector/models/svc_bridges/
+
+# downloaded data
+src/cut_detector/data/mitoses/
+src/cut_detector/data/models/
+src/cut_detector/data/tracks/
+src/cut_detector/data/videos/
