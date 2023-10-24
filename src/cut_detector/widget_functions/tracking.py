@@ -176,7 +176,5 @@ def perform_tracking(
     writer.appendSettings(settings)
     writer.writeToFile()
 
-    print("Process finished with success!")
-
     # Force exit
     ij_instance.dispose()
