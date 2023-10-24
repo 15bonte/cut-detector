@@ -33,12 +33,19 @@ It is highly recommended to create a dedicated conda environment, by following t
 
 ```
 conda create --name cut_detector python=3.9
+conda activate cut_detector
 ```
 
 3. Activate the newly created environment:
 
 ```
 conda activate cut_detector
+```
+
+4. Use [Mamba] to install openjdk which is necessary to call Fiji from python:
+
+```
+mamba install -c conda-forge openjdk=8
 ```
 
 ### Package installation
@@ -48,6 +55,10 @@ Once in a dedicated environment, our package can be installed via [pip]:
 ```
 pip install cut_detector
 ```
+
+### Git
+
+Git is also needed (at this point we are not sure why), and can be downloaded [here](https://git-scm.com/downloads).
 
 ### Fiji
 
@@ -106,3 +117,4 @@ If you encounter any problems, please [file an issue] along with a detailed desc
 [Trackmate]: https://imagej.net/plugins/trackmate/
 [Fiji]: https://imagej.net/software/fiji/
 [NVIDIA]: https://www.nvidia.com/Download/index.aspx?lang=en-us
+[Mamba]: https://mamba.readthedocs.io/en/latest/
