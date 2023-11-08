@@ -29,7 +29,7 @@ It is highly recommended to create a dedicated conda environment, by following t
 
 1. Install an [Anaconda] distribution of Python. Note you might need to use an anaconda prompt if you did not add anaconda to the path.
 
-2. Open an anaconda prompt to create a new environment using [conda] and [mamba]. Note than openjdk is necessary to call Fiji from python, which is needed as you may see below.
+2. Open an anaconda prompt to create a new environment using [conda] and [mamba]. Note than openjdk is necessary to call Fiji from python, which is needed as you will see below.
 
 ```
 conda install mamba -n base -c conda-forge
@@ -60,15 +60,13 @@ Next we need to remove the CPU version of torch:
 pip uninstall torch
 ```
 
-The GPU version of torch to be installed can be found [here](https://pytorch.org/get-started/locally/). You may choose the CUDA version supported by your GPU, and install it with conda. This package has been developed with the version 11.6, installed with this command:
+The GPU version of torch to be installed can be found [here](https://pytorch.org/get-started/locally/). You may choose the CUDA version supported by your GPU, and install it with mamba. This package has been developed with the version 11.6, installed with this command:
 
 ```
-conda install numpy==1.25 pytorch==1.12.1 torchvision pytorch-cuda=11.6 -c pytorch -c nvidia
+mamba install numpy==1.25 pytorch==1.12.1 torchvision pytorch-cuda=11.6 -c pytorch -c nvidia
 ```
 
-Note that we have added numpy here to prevent conda from installing a version higher than 1.25, which is not supported by numba.
-
-If the previous results in an inifinite "Solving environment", consider using mamba instead of conda.
+Note that we have added numpy here to prevent mamba from installing a version higher than 1.25, which is not supported by numba.
 
 ## Contributing
 
