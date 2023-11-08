@@ -15,7 +15,7 @@ def test_track_generation_widget(make_napari_viewer_proxy):
 
     # Add video
     video = io.imread(os.path.join(get_data_path("videos"), "example_video.tif"))
-    viewer.add_image(video)
+    viewer.add_image(video, name="example_video")
 
     # Open the widget
     widget = mitosis_track_generation()
