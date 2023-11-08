@@ -22,6 +22,8 @@ def get_data_path(data_name: str) -> None:
             "example_video/track_3.bin",
             "example_video/track_4.bin",
         ]
+    elif data_name == "results":
+        files = []  # no files to download here
     elif data_name == "videos":
         files = ["example_video.tif"]
     else:

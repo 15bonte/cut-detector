@@ -95,3 +95,4 @@ src/cut_detector/data/mitoses/
 src/cut_detector/data/models/
 src/cut_detector/data/tracks/
 src/cut_detector/data/videos/
+src/cut_detector/data/results/
