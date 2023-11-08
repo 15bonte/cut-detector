@@ -29,13 +29,13 @@ def get_data_path(data_name: str) -> None:
 
     local_path = os.path.join(CURRENT_DIR, data_name)
 
-    print(f"Downloading data {data_name}...")
     if sub_folder_to_create is not None:
         os.makedirs(os.path.join(CURRENT_DIR, sub_folder_to_create), exist_ok=True)
 
     for file in files:
         file_local_path = os.path.join(local_path, file)
         if not os.path.exists(file_local_path):
+            print(f"Downloading data {data_name}...")
             urllib.request.urlretrieve(
                 f"https://raw.githubusercontent.com//15bonte/cut-detector-models/main/data/{data_name}/{file}",
                 file_local_path,
