@@ -1,5 +1,3 @@
-import numpy as np
-
 from cut_detector._widget import whole_process
 
 
