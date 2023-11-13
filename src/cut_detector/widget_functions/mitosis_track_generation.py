@@ -20,7 +20,9 @@ def plot_predictions_evolution(
     mitosis_tracks: list[MitosisTrack],
 ) -> None:
     # Spots detected by Cellpose
-    detected_spots = {raw_spot.frame: len(raw_spot.spots) for raw_spot in raw_spots}
+    detected_spots = {
+        raw_spot.frame: len(raw_spot.spots) for raw_spot in raw_spots
+    }
 
     # Mitoses identified by current method, minus ending tracks
     detected_mitoses = {frame: detected_spots[0] for frame in detected_spots}
@@ -44,19 +46,28 @@ def plot_predictions_evolution(
             detected_tracks[frame] += 1
 
     data_spots = [detected_spots[0]] + [
-        detected_spots[i] if i in detected_spots else 0 for i in range(min_frame, max_frame)
+        detected_spots[i] if i in detected_spots else 0
+        for i in range(min_frame, max_frame)
     ]
     data_tracks = [detected_tracks[0]] + [
-        detected_tracks[i] if i in detected_tracks else 0 for i in range(min_frame, max_frame)
+        detected_tracks[i] if i in detected_tracks else 0
+        for i in range(min_frame, max_frame)
     ]
     data_mitoses = [detected_mitoses[0]] + [
-        detected_mitoses[i] if i in detected_mitoses else 0 for i in range(min_frame, max_frame)
+        detected_mitoses[i] if i in detected_mitoses else 0
+        for i in range(min_frame, max_frame)
     ]
 
     _, ax = plt.subplots(1, 1, figsize=(15, 5))
-    ax.step(list(range(min_frame, max_frame + 1)), data_spots, "r", linewidth=8.0)
-    ax.step(list(range(min_frame, max_frame + 1)), data_tracks, "g", linewidth=8.0)
-    ax.step(list(range(min_frame, max_frame + 1)), data_mitoses, "b", linewidth=8.0)
+    ax.step(
+        list(range(min_frame, max_frame + 1)), data_spots, "r", linewidth=8.0
+    )
+    ax.step(
+        list(range(min_frame, max_frame + 1)), data_tracks, "g", linewidth=8.0
+    )
+    ax.step(
+        list(range(min_frame, max_frame + 1)), data_mitoses, "b", linewidth=8.0
+    )
 
     ending_tracks = [track.stop + 1 for track in raw_tracks]
 
@@ -77,7 +88,9 @@ def plot_predictions_evolution(
 
     # Ending tracks
     for ending_track_frame in ending_tracks:
-        ax.axvline(ending_track_frame, color="k", linewidth=2.0, linestyle="--")
+        ax.axvline(
+            ending_track_frame, color="k", linewidth=2.0, linestyle="--"
+        )
 
     ax.set_xlim(min_frame, max_frame)
 
@@ -102,7 +115,9 @@ def perform_mitosis_track_generation(
     mitoses_save_dir: str,
     tracks_save_dir: str,
     metaphase_model_path: Optional[str] = get_model_path("metaphase_model"),
-    hmm_metaphase_parameters_file: Optional[str] = get_model_path("hmm_metaphase_parameters"),
+    hmm_metaphase_parameters_file: Optional[str] = get_model_path(
+        "hmm_metaphase_parameters"
+    ),
     predictions_file: Optional[str] = None,
     only_predictions_update: bool = False,
     plot_evolution: bool = False,
@@ -151,7 +166,9 @@ def perform_mitosis_track_generation(
     print("\nGet tracks to merge...")
 
     # Plug tracks occurring at frame>0 to closest metaphase
-    mitosis_tracks = tracks_merging_factory.get_tracks_to_merge(trackmate_tracks)
+    mitosis_tracks = tracks_merging_factory.get_tracks_to_merge(
+        trackmate_tracks
+    )
 
     # Plot predictions evolution
     if plot_evolution:
@@ -160,16 +177,18 @@ def perform_mitosis_track_generation(
     # Update useful attributes for each track
     for i, mitosis_track in enumerate(mitosis_tracks):
         mitosis_track.id = i
-        mitosis_track.update_mitosis_start_end(trackmate_tracks, mitosis_tracks)
+        mitosis_track.update_mitosis_start_end(
+            trackmate_tracks, mitosis_tracks
+        )
         mitosis_track.update_key_events_frame(trackmate_tracks)
         mitosis_track.update_mitosis_position_dln(trackmate_tracks)
         mitosis_track.update_is_near_border(raw_video)
 
         # Save mitosis track
-        daughter_track_ids = ",".join([str(d) for d in mitosis_track.daughter_track_ids])
-        state_path = (
-            f"{video_name}_mitosis_{i}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.bin"
+        daughter_track_ids = ",".join(
+            [str(d) for d in mitosis_track.daughter_track_ids]
         )
+        state_path = f"{video_name}_mitosis_{i}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.bin"
         save_path = os.path.join(
             mitoses_save_dir,
             state_path,

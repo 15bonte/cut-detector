@@ -5,14 +5,18 @@ import xmltodict
 import torch
 from torch.utils.data import DataLoader
 
-from cnn_framework.utils.model_managers.cnn_model_manager import CnnModelManager
-from cnn_framework.utils.data_managers.default_data_manager import DefaultDataManager
-from cnn_framework.utils.metrics.classification_accuracy import ClassificationAccuracy
-from cnn_framework.utils.preprocessing import normalize_array
+from cnn_framework.utils.model_managers.cnn_model_manager import (
+    CnnModelManager,
+)
+from cnn_framework.utils.data_managers.default_data_manager import (
+    DefaultDataManager,
+)
+from cnn_framework.utils.metrics.classification_accuracy import (
+    ClassificationAccuracy,
+)
 from cnn_framework.utils.data_loader_generators.data_loader_generator import (
     collate_dataset_output,
 )
-from cnn_framework.utils.data_sets.dataset_output import DatasetOutput
 from cnn_framework.utils.enum import PredictMode
 
 from ..utils.mitosis_track import MitosisTrack
@@ -24,10 +28,14 @@ from ..utils.cell_division_detection.metaphase_cnn_data_set import (
     MetaphaseCnnDataSet,
 )
 from ..utils.cell_division_detection.metaphase_cnn import MetaphaseCnn
-from ..utils.cell_division_detection.metaphase_cnn_model_params import MetaphaseCnnModelParams
+from ..utils.cell_division_detection.metaphase_cnn_model_params import (
+    MetaphaseCnnModelParams,
+)
 
 
-def get_track_from_id(tracks: list[TrackMateTrack], track_id: int) -> TrackMateTrack:
+def get_track_from_id(
+    tracks: list[TrackMateTrack], track_id: int
+) -> TrackMateTrack:
     for track in tracks:
         if track.track_id == track_id:
             return track
@@ -45,13 +53,18 @@ class TracksMergingFactory:
     """
 
     def __init__(
-        self, min_track_spots=10, minimum_metaphase_interval=10, max_spot_distance_for_split=20
+        self,
+        min_track_spots=10,
+        minimum_metaphase_interval=10,
+        max_spot_distance_for_split=20,
     ) -> None:
         self.min_track_spots = min_track_spots
         self.minimum_metaphase_interval = minimum_metaphase_interval
         self.max_spot_distance_for_split = max_spot_distance_for_split
 
-    def read_trackmate_xml(self, xml_model_path: str, raw_video_shape: np.ndarray) -> None:
+    def read_trackmate_xml(
+        self, xml_model_path: str, raw_video_shape: np.ndarray
+    ) -> None:
         """
         Read useful information from xml file.
         """
@@ -68,7 +81,9 @@ class TracksMergingFactory:
                 and track.stop - track.start + 1 >= self.min_track_spots,
                 [
                     TrackMateTrack(track)
-                    for track in doc["TrackMate"]["Model"]["AllTracks"]["Track"]
+                    for track in doc["TrackMate"]["Model"]["AllTracks"][
+                        "Track"
+                    ]
                 ],
             )
         )
@@ -79,7 +94,9 @@ class TracksMergingFactory:
 
         return trackmate_tracks, raw_spots
 
-    def get_tracks_to_merge(self, raw_tracks: list[TrackMateTrack]) -> list[MitosisTrack]:
+    def get_tracks_to_merge(
+        self, raw_tracks: list[TrackMateTrack]
+    ) -> list[MitosisTrack]:
         """
         Plug tracks occurring at frame>0 to closest metaphase.
         """
@@ -105,7 +122,9 @@ class TracksMergingFactory:
             first_spot = track.track_spots[track_first_frame]
             stuck_spots: list[TrackMateSpot] = list(
                 filter(
-                    lambda x: x.is_stuck_to(first_spot, self.max_spot_distance_for_split),
+                    lambda x: x.is_stuck_to(
+                        first_spot, self.max_spot_distance_for_split
+                    ),
                     contemporary_spots,
                 )
             )
@@ -113,9 +132,9 @@ class TracksMergingFactory:
             # Keep only spots with metaphase frame close to track first frame
             metaphase_spots = list(
                 filter(
-                    lambda x: get_track_from_id(raw_tracks, x.track_id).has_close_metaphase(
-                        x, track_first_frame
-                    ),
+                    lambda x: get_track_from_id(
+                        raw_tracks, x.track_id
+                    ).has_close_metaphase(x, track_first_frame),
                     stuck_spots,
                 )
             )
@@ -127,9 +146,9 @@ class TracksMergingFactory:
             # Order remaining spots by overlap
             selected_spot = sorted(
                 metaphase_spots,
-                key=lambda x: get_track_from_id(raw_tracks, x.track_id).compute_metaphase_iou(
-                    track
-                ),
+                key=lambda x: get_track_from_id(
+                    raw_tracks, x.track_id
+                ).compute_metaphase_iou(track),
             )[-1]
 
             # Mother cell spot is spot in metaphase for corresponding track
@@ -148,7 +167,11 @@ class TracksMergingFactory:
             # If not, create new split
             if not triple_division:
                 mitosis_tracks.append(
-                    MitosisTrack(mother_cell_spot.track_id, track.track_id, mother_cell_spot.frame)
+                    MitosisTrack(
+                        mother_cell_spot.track_id,
+                        track.track_id,
+                        mother_cell_spot.frame,
+                    )
                 )
 
         # Return dictionaries of tracks to merge
@@ -170,14 +193,18 @@ class TracksMergingFactory:
         """
         corrected_sequence = np.copy(orig_sequence)
         # Get indexes of 1
-        metaphase_index = [i for i, x in enumerate(corrected_sequence) if x == 1]
+        metaphase_index = [
+            i for i, x in enumerate(corrected_sequence) if x == 1
+        ]
         for idx in range(1, len(metaphase_index)):
             if (
                 metaphase_index[idx] - metaphase_index[idx - 1] != 1
                 and metaphase_index[idx] - metaphase_index[idx - 1]
                 < self.minimum_metaphase_interval
             ):
-                corrected_sequence[list(range(metaphase_index[idx - 1], metaphase_index[idx]))] = 1
+                corrected_sequence[
+                    list(range(metaphase_index[idx - 1], metaphase_index[idx]))
+                ] = 1
         return corrected_sequence
 
     def pre_process_spots(
@@ -201,15 +228,19 @@ class TracksMergingFactory:
             # Get current track spots data & images
             current_nuclei_crops = track.get_spots_data(raw_spots, raw_video)
             # Merge current_nuclei_crops with nuclei_crops
-            nuclei_crops = nuclei_crops + current_nuclei_crops
+            nuclei_crops = nuclei_crops + current_nuclei_crops  # CYX
 
         # Apply CNN model to get metaphase spots, once for all
-        predictions = self._predict_metaphase_spots(metaphase_model_path, nuclei_crops)
+        predictions = self._predict_metaphase_spots(
+            metaphase_model_path, nuclei_crops
+        )
 
         # Load HMM parameters and create model
         if not only_predictions_update:
             if not os.path.exists(hmm_metaphase_parameters_file):
-                raise FileNotFoundError(f"File {hmm_metaphase_parameters_file} not found")
+                raise FileNotFoundError(
+                    f"File {hmm_metaphase_parameters_file} not found"
+                )
             hmm_parameters = np.load(hmm_metaphase_parameters_file)
             hmm_model = HiddenMarkovModel(
                 hmm_parameters["A"], hmm_parameters["B"], hmm_parameters["pi"]
@@ -223,13 +254,17 @@ class TracksMergingFactory:
             # Hidden Markov Model to smooth predictions
             # If we just want to get raw CNN predictions, we don't want to correct the predictions
             if not only_predictions_update:
-                track_predictions, _ = hmm_model.viterbi_inference(track_predictions)
+                track_predictions, _ = hmm_model.viterbi_inference(
+                    track_predictions
+                )
                 track_predictions = self.correct_sequence(track_predictions)
 
             # Save prediction for each spot
             track.update_metaphase_spots(track_predictions)
 
-        self.update_predictions_file(trackmate_tracks, predictions_file, video_name)
+        self.update_predictions_file(
+            trackmate_tracks, predictions_file, video_name
+        )
 
     @staticmethod
     def _predict_metaphase_spots(
@@ -247,20 +282,6 @@ class TracksMergingFactory:
         -------
         predictions: [class predicted]
         """
-
-        # Custom class to avoid loading images from folder
-        class MetaphaseCnnDatasetFiles(MetaphaseCnnDataSet):
-            def __init__(self, data_list, *args, **kwargs):
-                self.data_list = (
-                    data_list  # not pythonic, but needed as super init calls generate_raw_images
-                )
-                super().__init__(*args, **kwargs)
-
-            def generate_raw_images(self, filename):
-                idx = int(filename.split(".")[0])
-                nucleus_image = normalize_array(self.data_list[idx], None)  # C, H, W
-                nucleus_image = np.moveaxis(nucleus_image, 0, -1)  # H, W, C
-                return DatasetOutput(input=nucleus_image, target_array=np.asarray([0, 1, 0]))
 
         # Metaphase model parameters
         model_parameters = MetaphaseCnnModelParams()
@@ -285,12 +306,12 @@ class TracksMergingFactory:
         )
 
         # Test (no sampler to keep order)
-        dataset_test = MetaphaseCnnDatasetFiles(
+        dataset_test = MetaphaseCnnDataSet(
             nuclei_crops,
-            False,
-            [f"{idx}.ext" for idx in range(len(nuclei_crops))],
-            DefaultDataManager(""),
-            model_parameters,
+            is_train=False,
+            names=[f"{idx}.ext" for idx in range(len(nuclei_crops))],
+            data_manager=DefaultDataManager(""),
+            params=model_parameters,
         )
         test_dl = DataLoader(
             dataset_test,
@@ -298,10 +319,14 @@ class TracksMergingFactory:
             collate_fn=collate_dataset_output,
         )
 
-        manager = CnnModelManager(model, model_parameters, ClassificationAccuracy)
+        manager = CnnModelManager(
+            model, model_parameters, ClassificationAccuracy
+        )
 
         predictions = manager.predict(
-            test_dl, predict_mode=PredictMode.GetPrediction, nb_images_to_save=0
+            test_dl,
+            predict_mode=PredictMode.GetPrediction,
+            nb_images_to_save=0,
         )  # careful, this is scores and not probabilities
         predictions = [int(np.argmax(p)) for p in predictions]
 
@@ -330,7 +355,10 @@ class TracksMergingFactory:
 
         # Retrieve predictions
         predictions = {
-            int(track.track_id): [int(spot.predicted_phase) for spot in track.track_spots.values()]
+            int(track.track_id): [
+                int(spot.predicted_phase)
+                for spot in track.track_spots.values()
+            ]
             for track in tracks
         }
         predictions_data[video_name] = predictions
