@@ -9,8 +9,12 @@ import xmltodict
 from munch import Munch
 from scipy import ndimage
 
-
-from ..constants.annotations import NAMES_DICTIONARY
+from ..constants.annotations import (
+    NAMES_DICTIONARY,
+    get_class_ids_after_first_mt_cut,
+    get_class_ids_after_second_mt_cut,
+    get_class_ids_after_first_membrane_cut,
+)
 from ..constants.tracking import (
     CYTOKINESIS_DURATION,
     FRAMES_AROUND_METAPHASE,
@@ -23,6 +27,7 @@ from .box_dimensions_dln import BoxDimensionsDln
 from .box_dimensions import BoxDimensions
 from .bridges_classification.impossible_detection import ImpossibleDetection
 from .image_tools import resize_image, smart_cropping
+from .tools import cell_counter_frame_to_video_frame
 
 
 class MitosisTrack:
@@ -30,7 +35,12 @@ class MitosisTrack:
     A class to store the information of a mitosis track.
     """
 
-    def __init__(self, mother_track_id: int, daughter_track_id: int, metaphase_frame: int):
+    def __init__(
+        self,
+        mother_track_id: int,
+        daughter_track_id: int,
+        metaphase_frame: int,
+    ):
         # Elementary information
         self.mother_track_id = mother_track_id
         self.daughter_track_ids = [daughter_track_id]
@@ -62,8 +72,13 @@ class MitosisTrack:
         # Used to know if the track is near the border of the video
         self.is_near_border = False
 
-    def is_same_mitosis(self, mother_track_id: int, metaphase_frame: int) -> bool:
-        return self.mother_track_id == mother_track_id and self.metaphase_frame == metaphase_frame
+    def is_same_mitosis(
+        self, mother_track_id: int, metaphase_frame: int
+    ) -> bool:
+        return (
+            self.mother_track_id == mother_track_id
+            and self.metaphase_frame == metaphase_frame
+        )
 
     def add_daughter_track(self, daughter_track_id: int) -> None:
         self.daughter_track_ids.append(daughter_track_id)
@@ -71,20 +86,32 @@ class MitosisTrack:
     def get_mother_daughters_tracks(
         self, tracks: list[TrackMateTrack]
     ) -> Tuple[TrackMateTrack, list[TrackMateTrack]]:
-        mother_track = [track for track in tracks if track.track_id == self.mother_track_id][0]
-        daughter_tracks = [track for track in tracks if track.track_id in self.daughter_track_ids]
+        mother_track = [
+            track for track in tracks if track.track_id == self.mother_track_id
+        ][0]
+        daughter_tracks = [
+            track
+            for track in tracks
+            if track.track_id in self.daughter_track_ids
+        ]
         return mother_track, daughter_tracks
 
-    def _add_dln_position(self, frame: int, frame_dimensions: BoxDimensionsDln) -> None:
+    def _add_dln_position(
+        self, frame: int, frame_dimensions: BoxDimensionsDln
+    ) -> None:
         self.dln_positions[frame] = deepcopy(frame_dimensions)
         # Update absolute min and max accordingly
         self.position.update_from_box_dimensions(frame_dimensions)
 
     def update_mitosis_start_end(
-        self, trackmate_tracks: list[TrackMateTrack], mitosis_tracks: list[MitosisTrack]
+        self,
+        trackmate_tracks: list[TrackMateTrack],
+        mitosis_tracks: list[MitosisTrack],
     ) -> None:
         # Get all tracks involved in current mitosis
-        mother_track, daughter_tracks = self.get_mother_daughters_tracks(trackmate_tracks)
+        mother_track, daughter_tracks = self.get_mother_daughters_tracks(
+            trackmate_tracks
+        )
 
         # Get min and max frame of current mitosis
         # Min is the metaphase frame minus FRAMES_AROUND_METAPHASE, protected against frames before start of mother track
@@ -102,7 +129,9 @@ class MitosisTrack:
                     and track_to_merge_bis.metaphase_frame
                     > self.metaphase_frame  # other mitosis should be strictly after
                 ):
-                    track_end_frame = min(track_end_frame, track_to_merge_bis.metaphase_frame)
+                    track_end_frame = min(
+                        track_end_frame, track_to_merge_bis.metaphase_frame
+                    )
             max_frame = min(max_frame, track_end_frame)
 
         # Update mitosis_track
@@ -137,48 +166,69 @@ class MitosisTrack:
             mid_body_coordinates = (x_abs, y_abs)
 
             # get distance to border
-            min_x = min(mid_body_coordinates[0], max_width - mid_body_coordinates[0])
-            min_y = min(mid_body_coordinates[1], max_height - mid_body_coordinates[1])
+            min_x = min(
+                mid_body_coordinates[0], max_width - mid_body_coordinates[0]
+            )
+            min_y = min(
+                mid_body_coordinates[1], max_height - mid_body_coordinates[1]
+            )
 
             min_dist_to_border = min(min_dist_to_border, min_x, min_y)
 
         self.is_near_border = min_dist_to_border < MINIMUM_DISTANCE_TO_BORDER
 
-    def update_key_events_frame(self, trackmate_tracks: list[TrackMateTrack]) -> None:
+    def update_key_events_frame(
+        self, trackmate_tracks: list[TrackMateTrack]
+    ) -> None:
         # Get all tracks involved in current mitosis
-        mother_track, daughter_tracks = self.get_mother_daughters_tracks(trackmate_tracks)
+        mother_track, daughter_tracks = self.get_mother_daughters_tracks(
+            trackmate_tracks
+        )
 
         # Store first metaphase frame
         for frame in range(self.metaphase_frame, mother_track.start, -1):
             # Some frames may be missing since gap closing is allowed
             if frame not in mother_track.track_spots:
                 continue
-            if mother_track.track_spots[frame].predicted_phase != METAPHASE_INDEX:
+            if (
+                mother_track.track_spots[frame].predicted_phase
+                != METAPHASE_INDEX
+            ):
                 self.key_events_frame["metaphase"] = frame + 1
                 break
 
         # Store first cytokinesis frame - considered as the first frame of daughter tracks
-        self.key_events_frame["cytokinesis"] = min([track.start for track in daughter_tracks])
+        self.key_events_frame["cytokinesis"] = min(
+            [track.start for track in daughter_tracks]
+        )
 
-    def update_mitosis_position_dln(self, trackmate_tracks: list[TrackMateTrack]) -> None:
+    def update_mitosis_position_dln(
+        self, trackmate_tracks: list[TrackMateTrack]
+    ) -> None:
         """
         Update positions of mitosis for each frame and Delaunay triangulation
         """
 
         min_frame, max_frame = self.min_frame, self.max_frame
-        mother_track, daughter_tracks = self.get_mother_daughters_tracks(trackmate_tracks)
+        mother_track, daughter_tracks = self.get_mother_daughters_tracks(
+            trackmate_tracks
+        )
 
         previous_box_dimensions_dln = None
         for frame in range(min_frame, max_frame + 1):
             box_dimensions_dln = mother_track.compute_dln_from_tracks(
-                frame, previous_box_dimensions_dln, additional_tracks=daughter_tracks
+                frame,
+                previous_box_dimensions_dln,
+                additional_tracks=daughter_tracks,
             )
             # Store in case next frame is missing
             previous_box_dimensions_dln = box_dimensions_dln
             # Update accordingly
             self._add_dln_position(frame, box_dimensions_dln)
 
-    def generate_video_movie(self, raw_video: np.array) -> Tuple[np.array, np.array]:
+    def generate_video_movie(
+        self, raw_video: np.array
+    ) -> Tuple[np.array, np.array]:
         """
         Parameters
         ----------
@@ -210,19 +260,30 @@ class MitosisTrack:
             ]  # H, W, C
 
             # Generate mask with Delaunay triangulation
-            current_frame_shape = (max_y - min_y, max_x - min_x)  # current spot
+            current_frame_shape = (
+                max_y - min_y,
+                max_x - min_x,
+            )  # current spot
             indices = np.stack(np.indices(current_frame_shape), axis=-1)
             out_idx = np.nonzero(dln.find_simplex(indices) + 1)
             single_channel_mask = np.zeros(current_frame_shape)
             single_channel_mask[out_idx] = 1
 
             # Construct mask image
-            mask_image = np.stack([single_channel_mask] * raw_video.shape[-1], axis=0)  # C, H, W
+            mask_image = np.stack(
+                [single_channel_mask] * raw_video.shape[-1], axis=0
+            )  # C, H, W
             mask_image = resize_image(
                 mask_image,
                 method="zero",
-                pad_margin_h=[min_y - self.position.min_y, self.position.max_y - max_y],
-                pad_margin_w=[min_x - self.position.min_x, self.position.max_x - max_x],
+                pad_margin_h=[
+                    min_y - self.position.min_y,
+                    self.position.max_y - max_y,
+                ],
+                pad_margin_w=[
+                    min_x - self.position.min_x,
+                    self.position.max_x - max_x,
+                ],
             )[
                 0, ...
             ]  # H, W
@@ -235,14 +296,18 @@ class MitosisTrack:
 
         return mitosis_movie, mask_movie
 
-    def generate_mitosis_summary(self, raw_tracks: list[TrackMateTrack], save_path: str) -> None:
+    def generate_mitosis_summary(
+        self, raw_tracks: list[TrackMateTrack], save_path: str
+    ) -> None:
         """
         Unused so far.
         Might be improved with all useful information, saved to csv...
         """
         mitosis_summary = {}
 
-        mother_track, daughter_tracks = self.get_mother_daughters_tracks(raw_tracks)
+        mother_track, daughter_tracks = self.get_mother_daughters_tracks(
+            raw_tracks
+        )
         daughters_first_frame = min([track.start for track in daughter_tracks])
 
         for idx, frame in enumerate(range(self.min_frame, self.max_frame + 1)):
@@ -254,7 +319,10 @@ class MitosisTrack:
             if frame >= self.metaphase_frame or frame >= daughters_first_frame:
                 mitosis_summary[idx + 1] = "telophase"
             # Metaphase according to CNN + HMM prediction
-            elif mother_track.track_spots[frame].predicted_phase == METAPHASE_INDEX:
+            elif (
+                mother_track.track_spots[frame].predicted_phase
+                == METAPHASE_INDEX
+            ):
                 mitosis_summary[idx + 1] = "metaphase"
             # In other cases, interphase
             else:
@@ -270,12 +338,17 @@ class MitosisTrack:
         Match is possible if there is an overlap between the two tracks,
         and other track starts no earlier/no later than FRAMES_AROUND_METAPHASE around self start.
         """
-        if abs(other_track.metaphase_frame - self.metaphase_frame) > FRAMES_AROUND_METAPHASE:
+        if (
+            abs(other_track.metaphase_frame - self.metaphase_frame)
+            > FRAMES_AROUND_METAPHASE
+        ):
             return False
 
         return self.position.overlaps(other_track.position)
 
-    def add_mid_body_movie(self, mitosis_movie: np.array, mask_movie: np.array) -> np.array:
+    def add_mid_body_movie(
+        self, mitosis_movie: np.array, mask_movie: np.array
+    ) -> np.array:
         """
         Parameters
         ----------
@@ -295,8 +368,12 @@ class MitosisTrack:
             square_size = 2
             spots_video[
                 absolute_frame - self.min_frame,
-                spot.position[1] - square_size : spot.position[1] + square_size,
-                spot.position[0] - square_size : spot.position[0] + square_size,
+                spot.position[1]
+                - square_size : spot.position[1]
+                + square_size,
+                spot.position[0]
+                - square_size : spot.position[0]
+                + square_size,
             ] = 1
 
         # Add empty dimension at end
@@ -315,7 +392,9 @@ class MitosisTrack:
 
         return mitosis_movie
 
-    def update_mid_body_ground_truth(self, annotation_file: str, nb_channels: int) -> None:
+    def update_mid_body_ground_truth(
+        self, annotation_file: str, nb_channels: int
+    ) -> None:
         """
         Parameters
         ----------
@@ -335,7 +414,9 @@ class MitosisTrack:
         with open(annotation_file) as fd:
             doc = Munch.fromDict(xmltodict.parse(fd.read()))
 
-        for i, type_data in enumerate(doc.CellCounter_Marker_File.Marker_Data.Marker_Type):
+        for i, type_data in enumerate(
+            doc.CellCounter_Marker_File.Marker_Data.Marker_Type
+        ):
             assert i == int(type_data.Type) - 1  # order must be kept
             # Ignore if no data
             if "Marker" not in type_data:
@@ -349,44 +430,72 @@ class MitosisTrack:
                 x_pos, y_pos, frame = (
                     int(marker.MarkerX),
                     int(marker.MarkerY),
-                    int(marker.MarkerZ) // nb_channels,
+                    cell_counter_frame_to_video_frame(
+                        int(marker.MarkerZ), nb_channels
+                    ),
                 )
                 # Create associated spot
-                self.gt_mid_body_spots[frame + self.min_frame] = MidBodySpot(frame, (x_pos, y_pos))
+                self.gt_mid_body_spots[frame + self.min_frame] = MidBodySpot(
+                    frame, (x_pos, y_pos)
+                )
 
             # If Name is missing of wrong, assume it is i
-            if "Name" not in type_data or type_data.Name not in NAMES_DICTIONARY:
+            if (
+                "Name" not in type_data
+                or type_data.Name not in NAMES_DICTIONARY
+            ):
                 class_index = i
             else:
                 class_index = NAMES_DICTIONARY[type_data.Name]
                 assert class_index == i
-            class_first_frame = int(markers[0].MarkerZ) // nb_channels
+
+            class_first_frame = cell_counter_frame_to_video_frame(
+                int(markers[0].MarkerZ), nb_channels
+            )
             class_abs_first_frame = class_first_frame + self.min_frame
 
             # First MT cut
-            if 2 not in self.gt_key_events_frame and class_index % 5 > 0:
+            if (
+                "first_mt_cut" not in self.gt_key_events_frame
+                and class_index in get_class_ids_after_first_mt_cut()
+            ):
                 assert (
-                    class_abs_first_frame >= self.gt_key_events_frame["cytokinesis"]
+                    class_abs_first_frame
+                    >= self.gt_key_events_frame["cytokinesis"]
                 )  # after metaphase
-                self.gt_key_events_frame["first_mt_cut"] = class_abs_first_frame
+                self.gt_key_events_frame[
+                    "first_mt_cut"
+                ] = class_abs_first_frame
 
             # Second MT cut
-            if 3 not in self.gt_key_events_frame and class_index in [2, 4, 7, 9]:
+            if (
+                "second_mt_cut" not in self.gt_key_events_frame
+                and class_index in get_class_ids_after_second_mt_cut()
+            ):
                 assert (
-                    class_abs_first_frame >= self.gt_key_events_frame["first_mt_cut"]
+                    class_abs_first_frame
+                    >= self.gt_key_events_frame["first_mt_cut"]
                 )  # after first MT cut
-                self.gt_key_events_frame["second_mt_cut"] = class_abs_first_frame
+                self.gt_key_events_frame[
+                    "second_mt_cut"
+                ] = class_abs_first_frame
 
             # First membrane cut
-            if 4 not in self.gt_key_events_frame and class_index in [3, 4, 8, 9]:
-                if class_abs_first_frame < self.gt_key_events_frame["first_mt_cut"]:
-                    a = 0
+            if (
+                "first_membrane_cut" not in self.gt_key_events_frame
+                and class_index in get_class_ids_after_first_membrane_cut()
+            ):
                 assert (
-                    class_abs_first_frame >= self.gt_key_events_frame["first_mt_cut"]
+                    class_abs_first_frame
+                    >= self.gt_key_events_frame["first_mt_cut"]
                 )  # after first MT cut
-                self.gt_key_events_frame["first_membrane_cut"] = class_abs_first_frame
+                self.gt_key_events_frame[
+                    "first_membrane_cut"
+                ] = class_abs_first_frame
 
-    def evaluate_mid_body_detection(self, tolerance=10, percent_seen=0.9) -> bool:
+    def evaluate_mid_body_detection(
+        self, tolerance=10, percent_seen=0.9
+    ) -> bool:
         """
         Mid_body is considered as detected if during at least percent_seen % of frames
         between cytokinesis and second MT cut it is at most tolerance pixels away
@@ -403,14 +512,14 @@ class MitosisTrack:
         # Check frames until second MT cut or end of annotations
         max_frame = (
             self.gt_key_events_frame["second_mt_cut"]
-            if 3 in self.gt_key_events_frame
+            if "second_mt_cut" in self.gt_key_events_frame
             else max(self.gt_mid_body_spots.keys())
         )
 
         for frame in range(self.gt_key_events_frame["cytokinesis"], max_frame):
             if frame not in self.gt_mid_body_spots:
                 continue
-            if frame not in self.mid_body_spots.keys():
+            if frame not in self.mid_body_spots:
                 position_difference.append(1e3)  # random huge value
                 continue
             position_difference.append(
@@ -422,9 +531,34 @@ class MitosisTrack:
 
         # Get percent_seen th percentile of position difference
         position_difference = np.array(position_difference)
-        max_position_difference = np.quantile(position_difference, percent_seen)
+        max_position_difference = np.quantile(
+            position_difference, percent_seen
+        )
 
-        return max_position_difference < tolerance
+        is_correctly_detected = max_position_difference < tolerance
+        position_difference_wo_outliers = np.array(
+            [pos for pos in position_difference if pos < 1e3]
+        )
+        percent_detected = int(
+            (
+                len(position_difference_wo_outliers)
+                / len(position_difference)
+                * 100
+            )
+        )
+        average_position_difference = int(
+            (
+                position_difference_wo_outliers.mean()
+                if len(position_difference_wo_outliers) > 0
+                else 1e3
+            )
+        )
+
+        return (
+            is_correctly_detected,
+            percent_detected,
+            average_position_difference,
+        )
 
     def light_spot_detected(
         self,
@@ -476,13 +610,17 @@ class MitosisTrack:
 
             # Extract image and crop on the midbody
             img = np.transpose(video[frame, ...], (2, 0, 1))  # C, H, W
-            crop = smart_cropping(img, crop_size_light_spot, x_pos, y_pos, pad=True)[
+            crop = smart_cropping(
+                img, crop_size_light_spot, x_pos, y_pos, pad=True
+            )[
                 0, ...
             ]  # H, W
 
             # Perform opening to remove small spots and apply h_maxima to get potential spots
             filtered_image = opening(crop, footprint=np.ones((3, 3)))
-            local_maxima = extrema.h_maxima(filtered_image, h_maxima_light_spot)
+            local_maxima = extrema.h_maxima(
+                filtered_image, h_maxima_light_spot
+            )
 
             # Label spot regions and remove inconsistent ones
             labeled_local_maxima, nb_labels = ndimage.label(
@@ -508,10 +646,16 @@ class MitosisTrack:
 
             # Remove spots that are too close to the center
             for spot in spots:
-                if (np.abs(spot[0] - crop_size_light_spot) < center_tolerance_light_spot) and (
-                    np.abs(spot[1] - crop_size_light_spot) < center_tolerance_light_spot
+                if (
+                    np.abs(spot[0] - crop_size_light_spot)
+                    < center_tolerance_light_spot
+                ) and (
+                    np.abs(spot[1] - crop_size_light_spot)
+                    < center_tolerance_light_spot
                 ):
-                    spots = np.delete(spots, np.where((spots == spot).all(axis=1))[0], axis=0)
+                    spots = np.delete(
+                        spots, np.where((spots == spot).all(axis=1))[0], axis=0
+                    )
 
             if len(spots) > 0:
                 nb_spot_detected += 1
@@ -520,7 +664,9 @@ class MitosisTrack:
         # Light spot is considered as detected if at least in MIN_PERCENTAGE_LIGHTSPOT % of frames
         if frame_counted > 0:
             percentage_spot_detected = nb_spot_detected / frame_counted
-            spot_detected = percentage_spot_detected >= min_percentage_light_spot
+            spot_detected = (
+                percentage_spot_detected >= min_percentage_light_spot
+            )
         else:
             spot_detected = False
 

@@ -10,3 +10,43 @@ NAMES_DICTIONARY = {
     "Membrane cut, simple MT ?": 8,
     "Membrane cut, no MT ?": 9,
 }
+
+
+def get_class_ids_after_first_mt_cut() -> list[int]:
+    """
+    Get ids of classes after first MT cut.
+    """
+    return [
+        NAMES_DICTIONARY["No membrane cut, simple MT"],
+        NAMES_DICTIONARY["No membrane cut, no MT"],
+        NAMES_DICTIONARY["Membrane cut, simple MT"],
+        NAMES_DICTIONARY["Membrane cut, no MT"],
+        NAMES_DICTIONARY["No membrane cut, simple MT ?"],
+        NAMES_DICTIONARY["No membrane cut, no MT ?"],
+        NAMES_DICTIONARY["Membrane cut, simple MT ?"],
+        NAMES_DICTIONARY["Membrane cut, no MT ?"],
+    ]
+
+
+def get_class_ids_after_second_mt_cut() -> list[int]:
+    """
+    Get ids of classes after second MT cut.
+    """
+    return [
+        NAMES_DICTIONARY["No membrane cut, no MT"],
+        NAMES_DICTIONARY["Membrane cut, no MT"],
+        NAMES_DICTIONARY["No membrane cut, no MT ?"],
+        NAMES_DICTIONARY["Membrane cut, no MT ?"],
+    ]
+
+
+def get_class_ids_after_first_membrane_cut() -> list[int]:
+    """
+    Get ids of classes after first membrane cut.
+    """
+    return [
+        NAMES_DICTIONARY["Membrane cut, simple MT"],
+        NAMES_DICTIONARY["Membrane cut, no MT"],
+        NAMES_DICTIONARY["Membrane cut, simple MT ?"],
+        NAMES_DICTIONARY["Membrane cut, no MT ?"],
+    ]
