@@ -29,7 +29,7 @@ It is highly recommended to create a dedicated conda environment, by following t
 
 1. Install an [Anaconda] distribution of Python. Note you might need to use an anaconda prompt if you did not add anaconda to the path.
 
-2. Open an anaconda prompt to create a new environment using [conda] and [mamba]. Note than openjdk is necessary to call Fiji from python, which is needed as you will see below.
+2. Open an Anaconda prompt as admin to create a new environment using [conda] and [mamba]. Note than openjdk is necessary to call Fiji from python, which is needed as you will see below.
 
 ```
 conda install mamba -n base -c conda-forge
