@@ -18,7 +18,9 @@ from .utils.tools import re_organize_channels
 
 from .widget_functions.tracking import perform_tracking
 from .widget_functions.mid_body_detection import perform_mid_body_detection
-from .widget_functions.mitosis_track_generation import perform_mitosis_track_generation
+from .widget_functions.mitosis_track_generation import (
+    perform_mitosis_track_generation,
+)
 from .widget_functions.mt_cut_detection import perform_mt_cut_detection
 from .widget_functions.save_results import perform_results_saving
 
@@ -35,14 +37,20 @@ if TYPE_CHECKING:
         mode="d",
     ),
     default_model_check_box=dict(
-        widget_type="CheckBox", text="Use default segmentation model?", value=True
+        widget_type="CheckBox",
+        text="Use default segmentation model?",
+        value=True,
     ),
     segmentation_model=dict(
         widget_type="FileEdit",
         label="If not checked, cellpose segmentation model: ",
     ),
-    fast_mode_check_box=dict(widget_type="CheckBox", text="Enable fast mode?", value=False),
-    save_check_box=dict(widget_type="CheckBox", text="Save cell divisions movies?", value=False),
+    fast_mode_check_box=dict(
+        widget_type="CheckBox", text="Enable fast mode?", value=False
+    ),
+    save_check_box=dict(
+        widget_type="CheckBox", text="Save cell divisions movies?", value=False
+    ),
     movies_save_dir=dict(
         widget_type="FileEdit",
         label="If checked, directory to save division movies: ",
@@ -66,8 +74,14 @@ def whole_process(
     results_save_dir: str,
 ):
     # Make sure we are working with the same image (same name)
-    video_path = img_viewer.layers[0].source.path
-    assert img_layer.name == os.path.basename(video_path).split(".")[0]
+    video_path = None
+    for layer in img_viewer.layers:
+        local_video_path = layer.source.path
+        if img_layer.name == os.path.basename(local_video_path).split(".")[0]:
+            # This is the same image, we keep the link
+            video_path = local_video_path
+            break
+    assert video_path is not None
 
     # Create temporary folders
     xml_model_dir_instance = tempfile.TemporaryDirectory()
@@ -92,7 +106,11 @@ def whole_process(
 
     # Mitosis track_generation
     perform_mitosis_track_generation(
-        raw_video, img_layer.name, xml_model_dir, exported_mitoses_dir, exported_tracks_dir
+        raw_video,
+        img_layer.name,
+        xml_model_dir,
+        exported_mitoses_dir,
+        exported_tracks_dir,
     )
 
     # Mid-body detection
@@ -132,13 +150,17 @@ def whole_process(
         mode="d",
     ),
     default_model_check_box=dict(
-        widget_type="CheckBox", text="Use default segmentation model?", value=True
+        widget_type="CheckBox",
+        text="Use default segmentation model?",
+        value=True,
     ),
     segmentation_model=dict(
         widget_type="FileEdit",
         label="If not checked, cellpose segmentation model: ",
     ),
-    fast_mode_check_box=dict(widget_type="CheckBox", text="Enable fast mode?", value=False),
+    fast_mode_check_box=dict(
+        widget_type="CheckBox", text="Enable fast mode?", value=False
+    ),
 )
 def segmentation_tracking(
     img_viewer: "napari.Viewer",
@@ -148,6 +170,8 @@ def segmentation_tracking(
     segmentation_model: str,
     fast_mode_check_box: bool,
 ):
+    # Make sure there is only one image loaded as no layer has to be provided
+    assert len(img_viewer.layers) == 1
     # Convert video path from windows to linux
     video_path = img_viewer.layers[0].source.path
     video_path = str(Path(video_path))
@@ -189,7 +213,11 @@ def mitosis_track_generation(
 ):
     raw_video = re_organize_channels(img_layer.data)  # TXYC
     perform_mitosis_track_generation(
-        raw_video, img_layer.name, xml_model_dir, mitoses_save_dir, tracks_save_dir
+        raw_video,
+        img_layer.name,
+        xml_model_dir,
+        mitoses_save_dir,
+        tracks_save_dir,
     )
     print("\nMitosis tracks generated with success!")
 
@@ -207,7 +235,9 @@ def mitosis_track_generation(
         label="Saved .bin tracks directory: ",
         mode="d",
     ),
-    save_check_box=dict(widget_type="CheckBox", text="Save cell divisions movies?", value=False),
+    save_check_box=dict(
+        widget_type="CheckBox", text="Save cell divisions movies?", value=False
+    ),
     save_dir=dict(
         widget_type="FileEdit",
         label="If checked, directory to save division movies: ",
@@ -241,7 +271,9 @@ def mid_body_detection(
         mode="d",
     ),
 )
-def micro_tubules_cut_detection(img_layer: "napari.layers.Image", exported_mitoses_dir: str):
+def micro_tubules_cut_detection(
+    img_layer: "napari.layers.Image", exported_mitoses_dir: str
+):
     raw_video = re_organize_channels(img_layer.data)  # TXYC
     perform_mt_cut_detection(raw_video, img_layer.name, exported_mitoses_dir)
     print("\nMicro-tubules cut detection finished with success!")
