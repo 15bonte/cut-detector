@@ -47,8 +47,12 @@ class TrackMateTrack:
         self.track_spots_ids: set[int] = set()
 
         if isinstance(trackmate_track["Edge"], dict):  # only one edge
-            self.track_spots_ids.add(int(trackmate_track["Edge"]["@SPOT_SOURCE_ID"]))
-            self.track_spots_ids.add(int(trackmate_track["Edge"]["@SPOT_TARGET_ID"]))
+            self.track_spots_ids.add(
+                int(trackmate_track["Edge"]["@SPOT_SOURCE_ID"])
+            )
+            self.track_spots_ids.add(
+                int(trackmate_track["Edge"]["@SPOT_TARGET_ID"])
+            )
         else:
             for edge in trackmate_track["Edge"]:
                 self.track_spots_ids.add(int(edge["@SPOT_SOURCE_ID"]))
@@ -57,7 +61,9 @@ class TrackMateTrack:
         self.start = int(float(trackmate_track["@TRACK_START"]))
         self.stop = int(float(trackmate_track["@TRACK_STOP"]))
 
-        self.track_spots: dict[int, TrackMateSpot] = {}  # {frame: TrackMateSpot}
+        self.track_spots: dict[
+            int, TrackMateSpot
+        ] = {}  # {frame: TrackMateSpot}
         self.metaphase_spots: list[TrackMateSpot] = []
 
         # Can be different from len(self.track_spots) if we have a gap in the track
@@ -98,13 +104,18 @@ class TrackMateTrack:
             ):
                 self.metaphase_spots.append(self.track_spots[frame])
 
-    def has_close_metaphase(self, spot: TrackMateSpot, target_frame: int) -> bool:
+    def has_close_metaphase(
+        self, spot: TrackMateSpot, target_frame: int
+    ) -> bool:
         """
         Returns True if corresponding track contains one metaphase spot close to target frame.
         """
         # Look for metaphase spot
         for metaphase_spot in self.metaphase_spots:
-            if abs(metaphase_spot.frame - target_frame) < FRAMES_AROUND_METAPHASE:
+            if (
+                abs(metaphase_spot.frame - target_frame)
+                < FRAMES_AROUND_METAPHASE
+            ):
                 # Mother track found!
                 spot.corresponding_metaphase_spot = metaphase_spot
                 return True
@@ -124,6 +135,10 @@ class TrackMateTrack:
 
         daughter_track_first_frame = min(daughter_track.track_spots.keys())
 
+        # If current track starts at first frame, ignore as it cannot be a mother track
+        if self.start == daughter_track_first_frame:
+            return -1
+
         # Compute two regions
         self_previous_region = self.compute_dln_from_tracks(
             daughter_track_first_frame - 1, relative=False
@@ -142,11 +157,15 @@ class TrackMateTrack:
             axis=-1,
         )
 
-        self_previous_out_idx = np.nonzero(self_previous_region.dln.find_simplex(indices) + 1)
+        self_previous_out_idx = np.nonzero(
+            self_previous_region.dln.find_simplex(indices) + 1
+        )
         self_previous_region_mask = np.zeros(local_shape, dtype=bool)
         self_previous_region_mask[self_previous_out_idx] = True
 
-        daughter_out_idx = np.nonzero(daughter_region.dln.find_simplex(indices) + 1)
+        daughter_out_idx = np.nonzero(
+            daughter_region.dln.find_simplex(indices) + 1
+        )
         daughter_region_mask = np.zeros(local_shape, dtype=bool)
         daughter_region_mask[daughter_out_idx] = True
 
@@ -169,7 +188,9 @@ class TrackMateTrack:
         if additional_tracks is not None:
             tracks = tracks + additional_tracks
 
-        box_dimensions_dln, track_frame_points = get_whole_box_dimensions_dln(tracks, frame)
+        box_dimensions_dln, track_frame_points = get_whole_box_dimensions_dln(
+            tracks, frame
+        )
 
         # If missing spot at this frame...
         if box_dimensions_dln.is_empty():
@@ -204,7 +225,9 @@ class TrackMateTrack:
             track_frame_points = [[y, x] for x, y in track_frame_points]
         # Compute hull
         hull = ConvexHull(points=track_frame_points)
-        box_dimensions_dln.dln = Delaunay(np.array(track_frame_points)[hull.vertices])
+        box_dimensions_dln.dln = Delaunay(
+            np.array(track_frame_points)[hull.vertices]
+        )
 
         return box_dimensions_dln
 
