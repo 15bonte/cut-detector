@@ -67,6 +67,15 @@ conda install numpy==1.25 pytorch==1.12.1 torchvision pytorch-cuda=11.6 -c pytor
 
 Note that we have added numpy here to prevent conda from installing a version higher than 1.25, which is not supported by numba.
 
+## Update
+
+To update cut-detector to the latest version, open an Anaconda prompt and use the following commands:
+
+```
+conda activate cut_detector
+pip install cut-detector --upgrade
+```
+
 ## Contributing
 
 Contributions are very welcome. Tests can be run with [tox], please ensure
