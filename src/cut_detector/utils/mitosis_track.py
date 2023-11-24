@@ -197,6 +197,10 @@ class MitosisTrack:
                 self.key_events_frame["metaphase"] = frame + 1
                 break
 
+        # If no metaphase frame found, consider it is the first frame of the mother track
+        if "metaphase" not in self.key_events_frame:
+            self.key_events_frame["metaphase"] = mother_track.start
+
         # Store first cytokinesis frame - considered as the first frame of daughter tracks
         self.key_events_frame["cytokinesis"] = min(
             [track.start for track in daughter_tracks]
