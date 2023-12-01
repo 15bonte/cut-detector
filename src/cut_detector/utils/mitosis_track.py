@@ -602,11 +602,7 @@ class MitosisTrack:
             frame = first_cut_frame + i
 
             # Make sure mid-body exists at frame
-            if (
-                not self.mid_body_spots
-                or frame > self.max_frame
-                or frame > max(list(self.mid_body_spots.keys()))
-            ):
+            if not self.mid_body_spots or frame not in self.mid_body_spots:
                 continue
 
             # Get mid-body coordinates
