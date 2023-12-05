@@ -242,15 +242,15 @@ class TrackMateTrack:
         ----------
         track: TrackMateTrack
         raw_spots: [TrackMateFrameSpots]
-        raw_video: T, H, W, C
+        raw_video: TYXC
 
         Returns
         -------
-        nucleus_crops: [C, H, W]
+        nucleus_crops: CYX
         """
 
         spot_abs_positions = {}  # {frame: BoxDimensions}
-        nucleus_crops = []  # [C, H, W]
+        nucleus_crops = []  # CYX
 
         for frame_spots in raw_spots:
             # Ignore spots before or after current track
@@ -281,8 +281,8 @@ class TrackMateTrack:
                     spot_abs_positions[frame].min_x,
                     spot_abs_positions[frame].max_x,
                 )
-            nucleus = raw_video[frame, min_y:max_y, min_x:max_x, :]  # H, W, C
-            nucleus = np.moveaxis(nucleus, -1, 0)  # C, H, W
+            nucleus = raw_video[frame, min_y:max_y, min_x:max_x, :]  # YXC
+            nucleus = np.moveaxis(nucleus, -1, 0)  # CYX
             nucleus_crops.append(nucleus)
 
         self.number_spots = len(nucleus_crops)

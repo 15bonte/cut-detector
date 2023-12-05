@@ -33,8 +33,8 @@ class MetaphaseCnnDataSet(AbstractDataSet):
 
     def generate_raw_images(self, filename):
         idx = int(filename.split(".")[0])
-        nucleus_image = normalize_array(self.data[idx], None)  # C, H, W
-        nucleus_image = np.moveaxis(nucleus_image, 0, -1)  # H, W, C
+        nucleus_image = normalize_array(self.data[idx], None)  # CYX
+        nucleus_image = np.moveaxis(nucleus_image, 0, -1)  # YXC
         return DatasetOutput(
             input=nucleus_image, target_array=np.asarray([0, 1, 0])
         )

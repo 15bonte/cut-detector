@@ -658,8 +658,8 @@ class MtCutDetectionFactory:
             x_pos, y_pos = min_x + mb_coords[0], min_y + mb_coords[1]
 
             # Extract frame image and crop around the midbody Sir-tubulin
-            frame_image = video[frame, :, :, :].squeeze().transpose(2, 0, 1)  # C, H, W
-            crop = smart_cropping(frame_image, self.margin, x_pos, y_pos, pad=True)[0, ...]  # H, W
+            frame_image = video[frame, :, :, :].squeeze().transpose(2, 0, 1)  # CYX
+            crop = smart_cropping(frame_image, self.margin, x_pos, y_pos, pad=True)[0, ...]  # YX
 
             # Get the class of the bridge
             bridge_class = self.get_bridge_class(crop, scaler, classifier, plot_enabled=False)

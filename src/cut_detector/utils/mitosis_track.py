@@ -142,7 +142,7 @@ class MitosisTrack:
         """
         Parameters
         ----------
-        raw_video: np.array  # (T, H, W, C)
+        raw_video: np.array  TYXC
         ----------
         """
 
@@ -236,13 +236,13 @@ class MitosisTrack:
         """
         Parameters
         ----------
-        raw_video: initial video (T, H, W, C)
+        raw_video: initial video TYXC
         ----------
 
         Returns
         ----------
-        mitosis_movie: mitosis movie (T, H, W, C)
-        mask_movie: mask movie (T, H, W, C) (all channels are actually the same)
+        mitosis_movie: mitosis movie TYXC
+        mask_movie: mask movie TYX
         ----------
         """
 
@@ -261,7 +261,7 @@ class MitosisTrack:
                 self.position.min_y : self.position.max_y,
                 self.position.min_x : self.position.max_x,
                 :,
-            ]  # H, W, C
+            ]  # YXC
 
             # Generate mask with Delaunay triangulation
             current_frame_shape = (
@@ -276,7 +276,7 @@ class MitosisTrack:
             # Construct mask image
             mask_image = np.stack(
                 [single_channel_mask] * raw_video.shape[-1], axis=0
-            )  # C, H, W
+            )  # CYX
             mask_image = resize_image(
                 mask_image,
                 method="zero",
@@ -290,13 +290,13 @@ class MitosisTrack:
                 ],
             )[
                 0, ...
-            ]  # H, W
+            ]  # YX
 
             mitosis_movie.append(frame_image)
             mask_movie.append(mask_image)
 
-        mitosis_movie = np.array(mitosis_movie)  # T, H, W, C
-        mask_movie = np.array(mask_movie)  # T, H, W
+        mitosis_movie = np.array(mitosis_movie)  # TYXC
+        mask_movie = np.array(mask_movie)  # TYX
 
         return mitosis_movie, mask_movie
 
@@ -356,16 +356,16 @@ class MitosisTrack:
         """
         Parameters
         ----------
-        mitosis_movie: (T, H, W, C)
-        mask_movie: (T, H, W)
+        mitosis_movie: TYXC
+        mask_movie: TYX
 
         Returns
         ----------
-        spots_video: (T, H, W, 1)
+        spots_video: TYX C=1
         """
 
         video_shape = mitosis_movie.shape[:3]
-        spots_video = np.zeros(video_shape)  # T, H, W
+        spots_video = np.zeros(video_shape)  # TYX
 
         for absolute_frame, spot in self.mid_body_spots.items():
             # Create 1 circle around spot position
@@ -381,18 +381,18 @@ class MitosisTrack:
             ] = 1
 
         # Add empty dimension at end
-        mid_body_movie = np.expand_dims(spots_video, axis=-1)  # (T, H, W, 1)
+        mid_body_movie = np.expand_dims(spots_video, axis=-1)  # TYX C=1
 
         # Mix mid-body and mask movie
-        mask_movie = np.expand_dims(mask_movie, axis=-1)  # (T, H, W, 1)
-        mid_body_mask_movie = mask_movie + mid_body_movie  # (T, H, W, 1)
+        mask_movie = np.expand_dims(mask_movie, axis=-1)  # TYX C=1
+        mid_body_mask_movie = mask_movie + mid_body_movie  # TYX C=1
 
         # Cast mid_body_mask_movie to mitosis_movie dtype
         mid_body_mask_movie = mid_body_mask_movie.astype(mitosis_movie.dtype)
 
         mitosis_movie = np.concatenate(
             [mitosis_movie, mid_body_mask_movie], axis=-1
-        )  # (T, H, W, C+1)
+        )  # TYX C=C+1
 
         return mitosis_movie
 
@@ -609,12 +609,12 @@ class MitosisTrack:
             x_pos, y_pos = self.mid_body_spots[frame].position
 
             # Extract image and crop on the midbody
-            img = np.transpose(video[frame, ...], (2, 0, 1))  # C, H, W
+            img = np.transpose(video[frame, ...], (2, 0, 1))  # CYX
             crop = smart_cropping(
                 img, crop_size_light_spot, x_pos, y_pos, pad=True
             )[
                 0, ...
-            ]  # H, W
+            ]  # YX
 
             # Perform opening to remove small spots and apply h_maxima to get potential spots
             filtered_image = opening(crop, footprint=np.ones((3, 3)))

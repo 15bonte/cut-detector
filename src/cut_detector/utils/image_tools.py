@@ -24,7 +24,12 @@ def get_padding(input_shape, output_shape):
     pad_margin_h_top = abs(desired_height - height) // 2
     pad_margin_h_bottom = abs(desired_height - height) - pad_margin_h_top
 
-    return pad_margin_w_left, pad_margin_h_top, pad_margin_w_right, pad_margin_h_bottom
+    return (
+        pad_margin_w_left,
+        pad_margin_h_top,
+        pad_margin_w_right,
+        pad_margin_h_bottom,
+    )
 
 
 def resize_padding(image, output_shape, mode, pad_margin_w, pad_margin_h):
@@ -43,7 +48,9 @@ def resize_padding(image, output_shape, mode, pad_margin_w, pad_margin_h):
         image = crop_center(image, (depth, height, desired_width))
         width = desired_width
 
-    raw_padding = get_padding(image.shape, output_shape)  # left, top, right and bottom
+    raw_padding = get_padding(
+        image.shape, output_shape
+    )  # left, top, right and bottom
 
     # Define margins for both sides
     if pad_margin_w is None:
@@ -92,8 +99,8 @@ def resize_image(
     pad_margin_h=None,
 ):
     """
-    Expect image to be a 3D numpy array (C, H, W).
-    Output_shape is a tuple (C, H, W).
+    Expect image to be a 3D numpy array CYX.
+    Output_shape is a tuple CYX.
     """
 
     if method == "min" or method == "zero":
@@ -115,7 +122,9 @@ def resize_image(
         if output_shape is not None and pad_margin_w is not None:
             assert sum(pad_margin_w) == output_shape[2] - image.shape[2]
         # Pad to required_dimensions
-        return resize_padding(image, output_shape, method, pad_margin_w, pad_margin_h)
+        return resize_padding(
+            image, output_shape, method, pad_margin_w, pad_margin_h
+        )
 
     raise ValueError(f"Unknown resize method: {method}")
 
@@ -132,7 +141,7 @@ def smart_cropping(
 ):
     """
     Crop microscopy image with smart margin.
-    microscopy_image: ..., H, W
+    microscopy_image: ..., YX
     """
 
     # Get image shape
@@ -152,7 +161,9 @@ def smart_cropping(
 
     # Crop image
     clipped_image = np.copy(
-        microscopy_image[..., clipped_min_y:clipped_max_y, clipped_min_x:clipped_max_x]
+        microscopy_image[
+            ..., clipped_min_y:clipped_max_y, clipped_min_x:clipped_max_x
+        ]
     )
 
     # Fade margin
@@ -190,11 +201,20 @@ def smart_cropping(
         max_x - min_x + 2 * margin
     ) * (max_y - min_y + 2 * margin):
         # Compute padding
-        pad_margin_h = (clipped_min_y - (min_y - margin), max_y + margin - clipped_max_y)
-        pad_margin_w = (clipped_min_x - (min_x - margin), max_x + margin - clipped_max_x)
+        pad_margin_h = (
+            clipped_min_y - (min_y - margin),
+            max_y + margin - clipped_max_y,
+        )
+        pad_margin_w = (
+            clipped_min_x - (min_x - margin),
+            max_x + margin - clipped_max_x,
+        )
         # Pad
         clipped_image = resize_image(
-            clipped_image, pad_margin_h=pad_margin_h, pad_margin_w=pad_margin_w, method="zero"
+            clipped_image,
+            pad_margin_h=pad_margin_h,
+            pad_margin_w=pad_margin_w,
+            method="zero",
         )
 
     return clipped_image

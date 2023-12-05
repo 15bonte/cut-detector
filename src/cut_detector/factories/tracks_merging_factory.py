@@ -276,7 +276,7 @@ class TracksMergingFactory:
         Parameters
         ----------
         metaphase_model: CNN model path
-        nuclei_crops: [C, H, W]
+        nuclei_crops: CYX
 
         Returns
         -------
