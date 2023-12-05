@@ -26,13 +26,19 @@ def get_data_path(data_name: str) -> None:
         files = []  # no files to download here
     elif data_name == "videos":
         files = ["example_video.tif"]
+    elif data_name == "mitosis_movies":
+        files = ["example_video_mitosis_0_0_to_4.tiff"]
+    elif data_name == "mid_bodies":
+        files = []  # no files to download here
     else:
         raise ValueError(f"Unknown data name: {data_name}")
 
     local_path = os.path.join(CURRENT_DIR, data_name)
 
     if sub_folder_to_create is not None:
-        os.makedirs(os.path.join(CURRENT_DIR, sub_folder_to_create), exist_ok=True)
+        os.makedirs(
+            os.path.join(CURRENT_DIR, sub_folder_to_create), exist_ok=True
+        )
 
     for file in files:
         file_local_path = os.path.join(local_path, file)
