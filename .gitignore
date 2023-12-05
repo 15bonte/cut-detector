@@ -96,3 +96,4 @@ src/cut_detector/data/models/
 src/cut_detector/data/tracks/
 src/cut_detector/data/videos/
 src/cut_detector/data/results/
+src/cut_detector/data/mid_bodies/
