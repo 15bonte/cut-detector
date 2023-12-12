@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 from skimage import io
 import numpy as np
 import napari
@@ -8,14 +9,15 @@ from cut_detector.data.tools import get_data_path
 from cut_detector.utils.mitosis_track import MitosisTrack
 
 
-def main():
+def main(
+    image_path: Optional[str] = get_data_path("videos"),
+    mitoses_path: Optional[str] = get_data_path("mitoses"),
+):
     # Create a Napari viewer
     viewer = napari.Viewer()
 
     # Add video
-    video = io.imread(
-        os.path.join(get_data_path("videos"), "example_video.tif")
-    )
+    video = io.imread(os.path.join(image_path, "example_video.tif"))
     viewer.add_image(video, name="example_video")
 
     # Create a blue rectangle
@@ -43,9 +45,8 @@ def main():
 
     # Load mitosis tracks
     mitosis_tracks: list[MitosisTrack] = []
-    exported_mitoses_dir = get_data_path("mitoses")
-    for state_path in os.listdir(exported_mitoses_dir):
-        with open(os.path.join(exported_mitoses_dir, state_path), "rb") as f:
+    for state_path in os.listdir(mitoses_path):
+        with open(os.path.join(mitoses_path, state_path), "rb") as f:
             mitosis_track = pickle.load(f)
         mitosis_tracks.append(mitosis_track)
 
