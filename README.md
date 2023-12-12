@@ -45,6 +45,14 @@ Once in a dedicated environment, our package can be installed via [pip]:
 pip install cut_detector
 ```
 
+Alternatively, you can clone the github repo to access to playground scripts.
+
+```
+git clone https://github.com/15bonte/cut-detector.git
+cd cut-detector
+pip install -e .
+```
+
 ### Fiji
 
 This package relies on [Trackmate] to perform cell tracking. Trackmate is called through [Fiji], which has to be installed independently. Please follow the steps [here](https://imagej.net/software/fiji/downloads) to install it.
