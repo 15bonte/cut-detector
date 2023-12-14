@@ -30,6 +30,8 @@ def get_data_path(data_name: str) -> None:
         files = ["example_video_mitosis_0_0_to_4.tiff"]
     elif data_name == "mid_bodies":
         files = []  # no files to download here
+    elif data_name == "segmentation_results":
+        files = ["example_video.bin"]
     else:
         raise ValueError(f"Unknown data name: {data_name}")
 
