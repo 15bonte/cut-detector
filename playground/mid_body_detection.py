@@ -12,7 +12,7 @@ def main(
     image_path: Optional[str] = get_data_path("mitosis_movies"),
     path_output: Optional[str] = get_data_path("mid_bodies"),
 ):
-    # If image_path or model_path are directories, take their first file
+    # If image_path is a directory, take its first file
     if os.path.isdir(image_path):
         image_path = os.path.join(image_path, os.listdir(image_path)[0])
 

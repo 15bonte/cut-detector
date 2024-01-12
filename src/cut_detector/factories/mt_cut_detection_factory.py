@@ -586,7 +586,7 @@ class MtCutDetectionFactory:
         scaler: StandardScaler,
         clf: SVC,
         plot_enabled=True,
-    ) -> int:
+    ):
         # Make sure crop has expected size
         assert img_bridge.shape[0] == self.margin * 2 and img_bridge.shape[1] == self.margin * 2
 
@@ -599,10 +599,15 @@ class MtCutDetectionFactory:
         # Predict the class
         frame_class = clf.predict(scaled_template)
         if frame_class[0] == "A":
-            return 0
+            predicted_class = 0
         if frame_class[0] == "B":
-            return 1
-        return 2
+            predicted_class = 1
+        else:
+            predicted_class = 2
+        
+        return predicted_class, template
+    
+
 
     @staticmethod
     def apply_hmm(hmm_parameters, sequence):
@@ -625,14 +630,15 @@ class MtCutDetectionFactory:
         scaler_path: str,
         model_path: str,
         hmm_bridges_parameters_file: str,
-    ) -> None:
+    ):
         """
         Update micro-tubules cut detection using bridges classification.
+        Expect TYXC video.
         """
         classification_impossible = self._is_bridges_classification_impossible(mitosis_track)
 
         if classification_impossible:
-            return
+            return None, None, None
 
         # Perform classification...
         ordered_mb_frames = sorted(mitosis_track.mid_body_spots.keys())
@@ -647,7 +653,7 @@ class MtCutDetectionFactory:
         with open(scaler_path, "rb") as f:
             scaler: StandardScaler = pickle.load(f)
 
-        list_class_bridges = []
+        list_class_bridges, templates = [], []
         # Iterate over frames and get the class of the bridge
         for frame in range(first_frame, last_mb_frame + 1):
             min_x = mitosis_track.position.min_x
@@ -662,8 +668,9 @@ class MtCutDetectionFactory:
             crop = smart_cropping(frame_image, self.margin, x_pos, y_pos, pad=True)[0, ...]  # YX
 
             # Get the class of the bridge
-            bridge_class = self.get_bridge_class(crop, scaler, classifier, plot_enabled=False)
+            bridge_class, template = self.get_bridge_class(crop, scaler, classifier, plot_enabled=False)
             list_class_bridges.append(bridge_class)
+            templates.append(template)
 
         # Make sure cytokinesis bridge is detected as A (no MT cut)
         relative_cytokinesis_frame = mitosis_track.key_events_frame["cytokinesis"] - first_frame
@@ -674,7 +681,7 @@ class MtCutDetectionFactory:
             mitosis_track.key_events_frame[
                 "second_mt_cut"
             ] = ImpossibleDetection.MT_CUT_AT_CYTOKINESIS
-            return
+            return list_class_bridges, None, templates
 
         # Read HMM parameters
         if not os.path.exists(hmm_bridges_parameters_file):
@@ -682,16 +689,16 @@ class MtCutDetectionFactory:
         hmm_parameters = np.load(hmm_bridges_parameters_file)
 
         # Correct the sequence with HMM
-        seq_after_hmm = self.apply_hmm(hmm_parameters, list_class_bridges)
+        list_class_bridges_after_hmm = self.apply_hmm(hmm_parameters, list_class_bridges)
 
         # Get index of first element > 0 in sequence (first MT cut)
-        first_mt_cut_frame_rel = next((i for i, x in enumerate(seq_after_hmm) if x > 0), -1)
+        first_mt_cut_frame_rel = next((i for i, x in enumerate(list_class_bridges_after_hmm) if x > 0), -1)
 
         # Ignore if no MT cut detected
         if first_mt_cut_frame_rel == -1:
             mitosis_track.key_events_frame["first_mt_cut"] = ImpossibleDetection.NO_CUT_DETECTED
             mitosis_track.key_events_frame["second_mt_cut"] = ImpossibleDetection.NO_CUT_DETECTED
-            return
+            return list_class_bridges, list_class_bridges_after_hmm, templates
 
         first_mt_cut_frame_abs = first_frame + first_mt_cut_frame_rel
         if mitosis_track.light_spot_detected(
@@ -706,20 +713,23 @@ class MtCutDetectionFactory:
         ):
             mitosis_track.key_events_frame["first_mt_cut"] = ImpossibleDetection.LIGHT_SPOT
             mitosis_track.key_events_frame["second_mt_cut"] = ImpossibleDetection.LIGHT_SPOT
-            return
+            return list_class_bridges, list_class_bridges_after_hmm, templates
 
         # Update mitosis track accordingly
         mitosis_track.key_events_frame["first_mt_cut"] = first_mt_cut_frame_abs
 
         # Get index of first element > 1 in sequence (second MT cut)
-        second_mt_cut_frame_rel = next((i for i, x in enumerate(seq_after_hmm) if x > 1), -1)
+        second_mt_cut_frame_rel = next((i for i, x in enumerate(list_class_bridges_after_hmm) if x > 1), -1)
 
         # get the frame of the second MT cut
         if second_mt_cut_frame_rel == -1:
             mitosis_track.key_events_frame["second_mt_cut"] = ImpossibleDetection.NO_CUT_DETECTED
-            return
+            return list_class_bridges, list_class_bridges_after_hmm, templates
 
         second_mt_cut_frame_abs = first_frame + second_mt_cut_frame_rel
 
         # Update mitosis track accordingly
         mitosis_track.key_events_frame["second_mt_cut"] = second_mt_cut_frame_abs
+
+        # Return proxies for testing
+        return list_class_bridges, list_class_bridges_after_hmm, templates
