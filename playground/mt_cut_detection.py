@@ -2,6 +2,7 @@ import os
 import pickle
 from typing import Optional
 from cnn_framework.utils.readers.tiff_reader import TiffReader
+from matplotlib import pyplot as plt
 
 from cut_detector.data.tools import get_data_path
 from cut_detector.models.tools import get_model_path
@@ -11,7 +12,7 @@ from cut_detector.factories.mt_cut_detection_factory import (
 
 
 def main(
-    image_path: Optional[str] = get_data_path("mitosis_movies"),
+    image_path: Optional[str] = get_data_path("videos"),
     mitosis_path: Optional[str] = get_data_path("mitoses"),
     scaler_path: Optional[str] = get_model_path("svc_scaler"),
     model_path: Optional[str] = get_model_path("svc_model"),
@@ -33,11 +34,7 @@ def main(
 
     factory = MtCutDetectionFactory()
 
-    (
-        list_class_bridges,
-        list_class_bridges_after_hmm,
-        templates,
-    ) = factory.update_mt_cut_detection(
+    results = factory.update_mt_cut_detection(
         mitosis_track,
         video,
         scaler_path,
@@ -45,6 +42,11 @@ def main(
         hmm_bridges_parameters_file,
     )
 
+    # Display series of crops
+    for crop in results["crops"]:
+        plt.figure()
+        plt.imshow(crop, cmap="gray")
+        plt.show()
 
 if __name__ == "__main__":
     main()
