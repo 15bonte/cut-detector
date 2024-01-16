@@ -709,7 +709,7 @@ class MtCutDetectionFactory:
         frame_class = clf.predict(scaled_template)
         if frame_class[0] == "A":
             predicted_class = 0
-        if frame_class[0] == "B":
+        elif frame_class[0] == "B":
             predicted_class = 1
         else:
             predicted_class = 2
