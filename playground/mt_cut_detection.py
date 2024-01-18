@@ -10,6 +10,9 @@ from cut_detector.models.tools import get_model_path
 from cut_detector.factories.mt_cut_detection_factory import (
     MtCutDetectionFactory,
 )
+from cut_detector.utils.bridges_classification.template_type import (
+    TemplateType,
+)
 
 
 def main(
@@ -35,7 +38,7 @@ def main(
     with open(mitosis_path, "rb") as f:
         mitosis_track = pickle.load(f)
 
-    factory = MtCutDetectionFactory()
+    factory = MtCutDetectionFactory(template_type=TemplateType.ALL)
 
     results = factory.update_mt_cut_detection(
         mitosis_track,
@@ -43,6 +46,7 @@ def main(
         scaler_path,
         model_path,
         hmm_bridges_parameters_file,
+        enable_debug_plot=True,
     )
 
     if display_svm_analysis:

@@ -555,7 +555,7 @@ class MtCutDetectionFactory:
             )
             return np.concatenate((template, haralick_features))
 
-        if self.template_type == TemplateType.All_Ablation2:
+        if self.template_type == TemplateType.ALL_ABLATION_2:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
@@ -566,7 +566,7 @@ class MtCutDetectionFactory:
             )
             return np.concatenate((template, haralick_features))
 
-        if self.template_type == TemplateType.All_Ablation3:
+        if self.template_type == TemplateType.ALL_ABLATION_3:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
@@ -579,7 +579,7 @@ class MtCutDetectionFactory:
             )
             return np.concatenate((template, haralick_features))
 
-        if self.template_type == TemplateType.All_Ablation4:
+        if self.template_type == TemplateType.ALL_ABLATION_4:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
@@ -595,7 +595,7 @@ class MtCutDetectionFactory:
             )
             return np.concatenate((template, haralick_features[1:]))
 
-        if self.template_type == TemplateType.All_Ablation5:
+        if self.template_type == TemplateType.ALL_ABLATION_5:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
@@ -613,7 +613,7 @@ class MtCutDetectionFactory:
                 (template, haralick_features[:1], haralick_features[2:])
             )
 
-        if self.template_type == TemplateType.All_Ablation6:
+        if self.template_type == TemplateType.ALL_ABLATION_6:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
@@ -631,7 +631,7 @@ class MtCutDetectionFactory:
                 (template, haralick_features[:2], haralick_features[3:])
             )
 
-        if self.template_type == TemplateType.All_Ablation7:
+        if self.template_type == TemplateType.ALL_ABLATION_7:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
@@ -649,7 +649,7 @@ class MtCutDetectionFactory:
                 (template, haralick_features[:3], haralick_features[4:])
             )
 
-        if self.template_type == TemplateType.All_Ablation8:
+        if self.template_type == TemplateType.ALL_ABLATION_8:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
@@ -727,6 +727,7 @@ class MtCutDetectionFactory:
         scaler_path: str,
         model_path: str,
         hmm_bridges_parameters_file: str,
+        enable_debug_plot=False
     ):
         """
         Update micro-tubules cut detection using bridges classification.
@@ -782,7 +783,7 @@ class MtCutDetectionFactory:
 
             # Get bridge class (and other data useful for debugging)
             bridge_class, template, distance = self.get_bridge_class(
-                crop, scaler, classifier, plot_enabled=False
+                crop, scaler, classifier, plot_enabled=enable_debug_plot
             )
 
             results["list_class_bridges"].append(bridge_class)
