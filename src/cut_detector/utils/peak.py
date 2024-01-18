@@ -17,6 +17,7 @@ class Peak:
         relative_intensity=0,
         position_index=-1,
         circle_index=-1,
+        prominence=0,
     ):
         self.relative_position = relative_position
         self.intensity = intensity
@@ -24,6 +25,7 @@ class Peak:
         self.relative_intensity = relative_intensity
         self.position_index = position_index
         self.circle_index = circle_index
+        self.prominence = prominence
 
     @classmethod
     def get_average_intensity(cls, peaks: list[Peak]) -> float:
@@ -48,6 +50,14 @@ class Peak:
         """
         relative_intensities = [peak.relative_intensity for peak in peaks]
         return np.mean(relative_intensities)
+
+    @classmethod
+    def get_average_prominence(cls, peaks: list[Peak]) -> float:
+        """
+        Return the average prominence of a list of peaks.
+        """
+        prominences = [peak.prominence for peak in peaks]
+        return np.mean(prominences)
 
     @classmethod
     def group_peaks(
@@ -90,11 +100,13 @@ class Peak:
             [peak.coordinates for peak in peaks], axis=0
         )
         average_relative_intensity = cls.get_average_relative_intensity(peaks)
+        average_prominence = cls.get_average_prominence(peaks)
         return cls(
-            average_relative_position,
-            average_intensity,
-            average_coordinates,
-            average_relative_intensity,
+            relative_position=average_relative_position,
+            intensity=average_intensity,
+            coordinates=average_coordinates,
+            relative_intensity=average_relative_intensity,
+            prominence=average_prominence,
         )
 
     @classmethod

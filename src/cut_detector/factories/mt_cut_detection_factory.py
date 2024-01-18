@@ -196,11 +196,15 @@ class MtCutDetectionFactory:
         concatenated_intensities.insert(0, concatenated_intensities[0] - 1)
         concatenated_intensities.append(concatenated_intensities[-1] - 1)
 
-        peaks_idx, _ = find_peaks(
+        peaks_idx, peaks_data = find_peaks(
             concatenated_intensities,
-            height=np.mean(intensities) * self.coeff_height_peak,
+            height=(
+                np.mean(intensities) * self.coeff_height_peak,
+                None,
+            ),  # absolute value
             distance=len(intensities) * self.circle_min_ratio,
             width=(None, round(len(intensities) * self.coeff_width_peak)),
+            prominence=(None, None),
         )
 
         peaks_idx = [i - 1 for i in peaks_idx]
@@ -218,8 +222,9 @@ class MtCutDetectionFactory:
                 / np.mean(intensities),
                 position_index=peak_idx,
                 circle_index=circle_index,
+                prominence=peaks_data["prominences"][idx],
             )
-            for peak_idx in peaks_idx
+            for idx, peak_idx in enumerate(peaks_idx)
         ]
 
         return circle_positions, intensities, peaks
@@ -377,20 +382,24 @@ class MtCutDetectionFactory:
                 color=colors[circle_idx // 2],
             )
             plt.axhline(
-                y=mean_intensity[circle_idx] * self.coeff_height_peak,
+                y=np.mean(interpolated_list_intensity)
+                * self.coeff_height_peak,
                 color=colors[circle_idx // 2],
             )
 
-        plt.plot(
-            [
-                peak.relative_position * expected_points_nb
-                for peak in final_peaks
-            ],
-            peaks_intensity,
-            marker="o",
-            markersize=4,
-            color="red",
-        )
+        for idx, peak in enumerate(final_peaks):
+            plt.plot(
+                peak.relative_position * expected_points_nb,
+                peaks_intensity[idx],
+                marker="o",
+                markersize=4,
+                color="red",
+            )
+            plt.text(
+                peak.relative_position * expected_points_nb,
+                peaks_intensity[idx],
+                f"Prominence: {int(peak.prominence)}",
+            )
 
         # plot the image without the bridge line
         plt.subplot(2, 2, 3)
@@ -400,18 +409,18 @@ class MtCutDetectionFactory:
         plt.subplot(2, 2, 4)
         plt.imshow(image)
 
+        for peak in final_peaks:
+            plt.scatter(
+                peak.coordinates[1],
+                peak.coordinates[0],
+                marker="o",
+                color="red",
+            )
+
         if len(final_peaks) == 2:
             plt.plot(
                 [final_peaks[0].coordinates[1], final_peaks[1].coordinates[1]],
                 [final_peaks[0].coordinates[0], final_peaks[1].coordinates[0]],
-                color="red",
-            )
-        elif len(final_peaks) == 1:
-            plt.plot(
-                final_peaks[0].coordinates[1],
-                final_peaks[0].coordinates[0],
-                marker="o",
-                markersize=4,
                 color="red",
             )
 
@@ -727,7 +736,7 @@ class MtCutDetectionFactory:
         scaler_path: str,
         model_path: str,
         hmm_bridges_parameters_file: str,
-        enable_debug_plot=False
+        enable_debug_plot=False,
     ):
         """
         Update micro-tubules cut detection using bridges classification.
