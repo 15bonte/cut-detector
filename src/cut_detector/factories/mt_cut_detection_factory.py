@@ -7,6 +7,8 @@ from sklearn.svm import SVC
 from scipy.signal import find_peaks
 from skimage.feature import graycomatrix, graycoprops
 
+from cut_detector.utils.peak import Peak
+
 from ..utils.bridges_classification.impossible_detection import (
     ImpossibleDetection,
 )
@@ -141,15 +143,20 @@ class MtCutDetectionFactory:
         self,
         radius: int,
         image: np.ndarray,
-    ) -> tuple[list[tuple[int]], list[float], float, np.ndarray, np.ndarray]:
+        circle_index: int,
+    ) -> tuple[list[tuple[int]], list[float], list[Peak]]:
         """
         Compute useful data for a circle of a given radius around the mid body spot:
 
-        - circle_positions: list of the coordinates of the pixels on the circle
-        - intensities: list of the intensities of the pixels on the circle
-        - mean_intensity: mean intensity of the pixels on the circle
-        - peaks: list of the indexes of the peaks of the intensities on the circle
-        - norm_peaks: list of the normalized indexes of the peaks of the intensities on the circle
+        Returns
+        -------
+
+        circle_positions : list of the coordinates of the pixels on the circle
+
+        intensities : list of the intensities of the pixels on the circle
+
+        peaks : list of Peaks
+
         """
         # Get image shape
         size_x = image.shape[1]
@@ -182,9 +189,6 @@ class MtCutDetectionFactory:
             mean = total / inc
             intensities.append(mean)
 
-        # Detect the peaks of the intensities on the circle
-        mean_intensity = np.mean(intensities)
-
         # Prevent the case where the peak is on the border so we detect 2 peaks instead of 1
         concatenated_intensities = intensities + intensities
 
@@ -192,40 +196,38 @@ class MtCutDetectionFactory:
         concatenated_intensities.insert(0, concatenated_intensities[0] - 1)
         concatenated_intensities.append(concatenated_intensities[-1] - 1)
 
-        peaks, _ = find_peaks(
+        peaks_idx, _ = find_peaks(
             concatenated_intensities,
-            height=mean_intensity * self.coeff_height_peak,
+            height=np.mean(intensities) * self.coeff_height_peak,
             distance=len(intensities) * self.circle_min_ratio,
-            width=(None, round(len(intensities) * self.coeff_width_peak)),
+            # width=(None, round(len(intensities) * self.coeff_width_peak)),
         )
+        # NB: some peaks actually have a very high width
 
-        peaks = [i - 1 for i in peaks]
-        peaks = [p % len(circle_positions) for p in peaks]
-        peaks = [p for p in peaks if peaks.count(p) >= 2]
-        peaks = list(set(peaks))
+        peaks_idx = [i - 1 for i in peaks_idx]
+        peaks_idx = [p % len(circle_positions) for p in peaks_idx]
+        peaks_idx = [p for p in peaks_idx if peaks_idx.count(p) >= 2]
+        peaks_idx = list(set(peaks_idx))
 
-        norm_peaks = [peak / len(circle_positions) for peak in peaks]
+        # Create peak instances
+        peaks = [
+            Peak(
+                relative_position=peak_idx / len(circle_positions),
+                intensity=intensities[peak_idx],
+                coordinates=circle_positions[peak_idx],
+                relative_intensity=intensities[peak_idx] / np.mean(intensities),
+                position_index=peak_idx,
+                circle_index=circle_index,
+            )
+            for peak_idx in peaks_idx
+        ]
 
-        return circle_positions, intensities, mean_intensity, peaks, norm_peaks
+        return circle_positions, intensities, peaks
 
-    def _get_peaks(
-        self,
-        all_positions: list[list[tuple[int]]],
-        all_intensities: list[list[float]],
-        all_peaks: list[np.ndarray],
-        all_norm_peaks: list[np.ndarray],
-    ) -> tuple[list[tuple[int]], list[float]]:
+    def _get_windows(self) -> list[tuple[float]]:
         """
-        Post-processing of peaks detection.
-
-        Returns kept peaks (circle index, peak position) and their intensities.
-        A typical output would be:
-            final_peaks = [(0, 30), (0, 62)]
-            peaks_intensity = [440, 416]
-        Peak at position 30 on circle 0 was kept, with an intensity of 440.
-        Peak at position 62 on circle 0 was kept, with an intensity of 416.
+        Return the windows for the peak detection.
         """
-        # Create the windows
         windows_starts = np.linspace(
             0, 1 - self.window_size, num=round(self.overlap / self.window_size)
         )
@@ -233,107 +235,59 @@ class MtCutDetectionFactory:
             self.window_size, 1, num=round(self.overlap / self.window_size)
         )
         windows = list(zip(windows_starts, windows_ends))
+        return windows
 
-        # Group the peaks by windows
-        group_peaks = (
-            []
-        )  # list (window) of list of tuple (index of the circle, position of the peak)
-        for window in windows:
-            group = []
-            for i, (peaks, norm_peaks) in enumerate(
-                zip(all_peaks, all_norm_peaks)
-            ):
-                for peak, norm_peak in zip(peaks, norm_peaks):
-                    if window[0] <= norm_peak < window[1]:
-                        group.append((i, peak))
-            group_peaks.append(group)
-
-        # Remove groups that have less than min_peaks_by_group peaks
-        new_group_peaks = []
-        for group_peak in group_peaks:
-            if (
-                len(group_peak) >= self.min_peaks_by_group
-                and group_peak not in new_group_peaks
-            ):
-                new_group_peaks.append(group_peak)
+    def _post_process_peaks(
+        self,
+        all_peaks: list[list[Peak]],
+    ) -> list[Peak]:
+        """
+        Post-processing of peaks detection.
+        Returns kept peaks and their intensities.
+        """
+        # Group peaks by window
+        window_peaks = Peak.group_peaks(
+            all_peaks,
+            self._get_windows(),
+            minimum_size=self.min_peaks_by_group,
+        )
 
         # If there is more than 1 peak, make sure there is no duplicate
-        if len(new_group_peaks) >= 2:
-            # Sort by maximum number of peaks, or higher mean intensity
+        if len(window_peaks) >= 2:
+            # Sort by maximum number of peaks, then higher mean intensity
             def get_length_intensity_key(item):
                 return (
                     len(item),
-                    np.mean([all_intensities[p[0]][p[1]] for p in item]),
+                    Peak.get_average_intensity(item),
                 )
 
-            new_group_peaks.sort(key=get_length_intensity_key, reverse=True)
+            window_peaks.sort(key=get_length_intensity_key, reverse=True)
 
-            # One peak must appear in one group only
-            # Remove the peaks that are already seen in previous groups
-            for i in range(len(new_group_peaks) - 1):
-                for j in range(i + 1, len(new_group_peaks)):
-                    new_group_peaks[j] = [
-                        p
-                        for p in new_group_peaks[j]
-                        if p not in new_group_peaks[i]
-                    ]
+            unique_window_peaks = Peak.remove_duplicated_peaks(
+                window_peaks, self.min_peaks_by_group
+            )
+            cleaned_window_peaks = Peak.remove_close_peaks(
+                unique_window_peaks, self.circle_min_ratio
+            )
 
-            # Remove groups that have less than min_peaks_by_group peaks
-            new_group_peaks = [
-                g for g in new_group_peaks if len(g) >= self.min_peaks_by_group
-            ]
-
-            # Compute the mean position of the peaks in each group
-            position_groups = [
-                sum(pos / len(all_positions[circle]) for circle, pos in group)
-                / len(group)
-                for group in new_group_peaks
-            ]
-
-            # Remove the groups that are too close to each other, i.e. distance < circle_min_ratio
-            i = 0
-            while i < len(position_groups) - 1:
-                j = i + 1
-                while j < len(position_groups):
-                    first_position = (
-                        position_groups[i] - position_groups[j]
-                    ) % 1
-                    second_position = (
-                        position_groups[j] - position_groups[i]
-                    ) % 1
-                    if (
-                        min(first_position, second_position)
-                        < self.circle_min_ratio
-                    ):
-                        if len(new_group_peaks[i]) > len(new_group_peaks[j]):
-                            new_group_peaks.remove(new_group_peaks[j])
-                            position_groups.remove(position_groups[j])
-                            j -= 1
-                        else:
-                            new_group_peaks.remove(new_group_peaks[i])
-                            position_groups.remove(position_groups[i])
-                            i -= 1
-                    j += 1
-                i += 1
-
-            # Sort again by maximum number of peaks and mean intensity of the peaks in the group
-            new_group_peaks.sort(key=get_length_intensity_key, reverse=True)
+            # Sort once again, after all cleanings
+            cleaned_window_peaks.sort(
+                key=get_length_intensity_key, reverse=True
+            )
 
             # Should not be possible to have more than 2 MT, then keep 2 best ones
-            if len(new_group_peaks) > 2:
-                new_group_peaks = new_group_peaks[:2]
+            if len(cleaned_window_peaks) > 2:
+                cleaned_window_peaks = cleaned_window_peaks[:2]
+        
+        else:
+            cleaned_window_peaks = window_peaks
 
-        # Compute peaks_intensity with the mean intensity of the peaks
-        peaks_intensity = [
-            sum(all_intensities[circle][pos] for circle, pos in group)
-            / len(group)
-            for group in new_group_peaks
+        # Create average peaks
+        average_peaks = [
+            Peak.create_average_peak(peak) for peak in cleaned_window_peaks
         ]
 
-        # final_peaks for plot
-        final_peaks = [p[0] for p in new_group_peaks]
-
-        return final_peaks, peaks_intensity
+        return average_peaks
 
     @staticmethod
     def _get_haralick_features(
@@ -375,24 +329,63 @@ class MtCutDetectionFactory:
         self,
         filename,
         image,
-        final_peaks: list[tuple[int]],
+        final_peaks: list[Peak],
         all_positions: list[list[tuple[int]]],
-        mean_intensity: list[float],
         peaks_intensity: list[float],
-        list_intensity: list[float],
+        list_intensities: list[list[float]],
     ) -> None:
         """
         Plot the image with the circle and the peaks.
         """
 
+        mean_intensity = [
+            np.mean(circle_intensities)
+            for circle_intensities in list_intensities
+        ]
+
         # Plot the intensities of the circle around the mid body spot
         plt.subplot(2, 1, 1)
         plt.title("Number of peaks: " + str(len(final_peaks)))
 
-        plt.plot(range(len(list_intensity)), list_intensity)
-        plt.axhline(y=mean_intensity[0] * self.coeff_height_peak, color="red")
+        # Colors - create a color list of 9 colors using usual matplotlib colors
+        colors = [
+            "blue",
+            "orange",
+            "green",
+            "yellow",
+            "purple",
+            "brown",
+            "pink",
+            "grey",
+            "olive",
+        ]
+
+        # Plot intensities along circles
+        expected_points_nb = len(list_intensities[0])
+        for circle_idx, list_intensity in enumerate(list_intensities):
+            interpolated_x = np.linspace(
+                0, len(list_intensity), expected_points_nb
+            )
+            interpolated_list_intensity = np.interp(
+                interpolated_x,  # x
+                range(len(list_intensity)),  # xp
+                list_intensity,  # fp
+            )
+            plt.plot(
+                range(expected_points_nb),
+                interpolated_list_intensity,
+                color=colors[circle_idx // 2],
+            )
+            plt.axhline(
+                y=mean_intensity[circle_idx] * self.coeff_height_peak,
+                color=colors[circle_idx // 2],
+            )
+
         plt.plot(
-            [p[1] for p in final_peaks],
+            [
+                peak.relative_position * expected_points_nb
+                for peak in final_peaks
+            ],
             peaks_intensity,
             marker="o",
             markersize=4,
@@ -407,22 +400,21 @@ class MtCutDetectionFactory:
         plt.subplot(2, 2, 4)
         plt.imshow(image)
 
-        if len(final_peaks) > 0:
-            coord_peaks = [all_positions[p[0]][p[1]] for p in final_peaks]
-            if len(final_peaks) == 2:
-                plt.plot(
-                    [coord_peaks[0][1], coord_peaks[1][1]],
-                    [coord_peaks[0][0], coord_peaks[1][0]],
-                    color="red",
-                )
-            elif len(final_peaks) == 1:
-                plt.plot(
-                    coord_peaks[0][1],
-                    coord_peaks[0][0],
-                    marker="o",
-                    markersize=4,
-                    color="red",
-                )
+        if len(final_peaks) == 2:
+            plt.plot(
+                [final_peaks[0].coordinates[1], final_peaks[1].coordinates[1]],
+                [final_peaks[0].coordinates[0], final_peaks[1].coordinates[0]],
+                color="red",
+            )
+        elif len(final_peaks) == 1:
+            plt.plot(
+                final_peaks[0].coordinates[1],
+                final_peaks[0].coordinates[0],
+                marker="o",
+                markersize=4,
+                color="red",
+            )
+
         for i in range(len(all_positions)):
             x_cercle = [
                 all_positions[i][k][0] for k in range(len(all_positions[i]))
@@ -461,26 +453,20 @@ class MtCutDetectionFactory:
         ]
 
         # Get useful data for each circle
-        all_positions, all_intensities, all_mean_intensity = [], [], []
-        all_peaks, all_norm_peaks = [], []
-        for radius in list_radius:
+        all_positions, all_intensities, all_peaks = [], [], []
+        for circle_index, radius in enumerate(list_radius):
             (
                 positions,
                 intensities,
-                mean_intensity,
                 peaks,
-                norm_peaks,
-            ) = self._get_circle_data(radius, image)
+            ) = self._get_circle_data(radius, image, circle_index)
             all_positions.append(positions)
             all_intensities.append(intensities)
-            all_mean_intensity.append(mean_intensity)
             all_peaks.append(peaks)
-            all_norm_peaks.append(norm_peaks)
 
         # Get peaks data
-        final_peaks, peaks_intensity = self._get_peaks(
-            all_positions, all_intensities, all_peaks, all_norm_peaks
-        )
+        final_peaks = self._post_process_peaks(all_peaks)
+        peaks_intensity = [peak.intensity for peak in final_peaks]
 
         # Get useful Haralick features from middle center circle
         haralick_features = self._get_haralick_features(all_intensities[0])
@@ -492,9 +478,8 @@ class MtCutDetectionFactory:
                 image,
                 final_peaks,
                 all_positions,
-                all_mean_intensity,
                 peaks_intensity,
-                all_intensities[0],
+                all_intensities,
             )
 
         # Get the template of the bridge
