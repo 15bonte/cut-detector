@@ -15,6 +15,24 @@ from cut_detector.utils.bridges_classification.template_type import (
 )
 
 
+def re_organize_channels(image):
+    """
+    From any order to TYXC.
+    """
+    image = image.squeeze()
+    assert image.ndim == 4, "Image must be 4D: time, channels, height, width"
+
+    # Get dimension with minimum size and put last
+    min_dim = np.argmin(image.shape)
+    image = np.moveaxis(image, min_dim, -1)
+
+    # Get dimension with minimum size in first 3 dimensions and put first
+    min_dim = np.argmin(image.shape[:3])
+    image = np.moveaxis(image, min_dim, 0)
+
+    return image
+
+
 def main(
     image_path: Optional[str] = get_data_path("videos"),
     mitosis_path: Optional[str] = get_data_path("mitoses"),
@@ -24,7 +42,7 @@ def main(
         "hmm_bridges_parameters"
     ),
     display_svm_analysis=False,
-    display_crops=True,
+    display_crops=False,
 ):
     # If paths are directories, take their first file
     if os.path.isdir(image_path):
@@ -33,8 +51,8 @@ def main(
         mitosis_path = os.path.join(mitosis_path, os.listdir(mitosis_path)[0])
 
     # Read data: image, mitosis_track
-    image = TiffReader(image_path, respect_initial_type=True).image  # TCZYX
-    video = image.squeeze().transpose(0, 2, 3, 1)  # TYXC
+    image = TiffReader(image_path, respect_initial_type=True).image
+    video = re_organize_channels(image)  # TYXC
     with open(mitosis_path, "rb") as f:
         mitosis_track = pickle.load(f)
 
@@ -71,11 +89,17 @@ def main(
 
         plt.show()
 
-    # Display series of crops
-    for crop in results["crops"]:
-        plt.figure()
-        plt.imshow(crop, cmap="gray")
-        plt.show()
+    if display_crops:
+        # Display series of crops
+        for crop in results["crops"]:
+            plt.figure()
+            plt.imshow(crop, cmap="gray")
+            plt.show()
+
 
 if __name__ == "__main__":
-    main()
+    IMAGE_PATH = r"C:\Users\thoma\data\Data Nathalie\videos_debug\20231019-t1_siSpastin-50-2.tif"
+    MITOSIS_PATH = r"C:\Users\thoma\OneDrive\Bureau\mitoses\20231019-t1_siSpastin-50-2_mitosis_32_5_to_37.bin"
+
+    main(IMAGE_PATH, MITOSIS_PATH)
+    # main()
