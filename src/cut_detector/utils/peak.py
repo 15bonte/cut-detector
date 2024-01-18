@@ -11,10 +11,10 @@ class Peak:
 
     def __init__(
         self,
-        relative_position,
-        intensity,
-        coordinates,
-        relative_intensity,
+        relative_position=-1,
+        intensity=0,
+        coordinates=(0, 0),
+        relative_intensity=0,
         position_index=-1,
         circle_index=-1,
     ):
