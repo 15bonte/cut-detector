@@ -200,9 +200,8 @@ class MtCutDetectionFactory:
             concatenated_intensities,
             height=np.mean(intensities) * self.coeff_height_peak,
             distance=len(intensities) * self.circle_min_ratio,
-            # width=(None, round(len(intensities) * self.coeff_width_peak)),
+            width=(None, round(len(intensities) * self.coeff_width_peak)),
         )
-        # NB: some peaks actually have a very high width
 
         peaks_idx = [i - 1 for i in peaks_idx]
         peaks_idx = [p % len(circle_positions) for p in peaks_idx]
@@ -215,7 +214,8 @@ class MtCutDetectionFactory:
                 relative_position=peak_idx / len(circle_positions),
                 intensity=intensities[peak_idx],
                 coordinates=circle_positions[peak_idx],
-                relative_intensity=intensities[peak_idx] / np.mean(intensities),
+                relative_intensity=intensities[peak_idx]
+                / np.mean(intensities),
                 position_index=peak_idx,
                 circle_index=circle_index,
             )
@@ -278,7 +278,7 @@ class MtCutDetectionFactory:
             # Should not be possible to have more than 2 MT, then keep 2 best ones
             if len(cleaned_window_peaks) > 2:
                 cleaned_window_peaks = cleaned_window_peaks[:2]
-        
+
         else:
             cleaned_window_peaks = window_peaks
 
