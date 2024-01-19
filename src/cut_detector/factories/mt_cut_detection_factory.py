@@ -472,15 +472,20 @@ class MtCutDetectionFactory:
             )
 
         for i in range(len(all_positions)):
-            x_cercle = [
+            x_circle = [
                 all_positions[i][k][0] for k in range(len(all_positions[i]))
             ]
-            y_cercle = [
+            y_circle = [
                 all_positions[i][k][1] for k in range(len(all_positions[i]))
             ]
-            plt.plot(y_cercle, x_cercle, color="green")
+            plt.plot(y_circle, x_circle, color="green")
 
         plt.title(filename)
+
+        # Display on whole screen
+        fig_manager = plt.get_current_fig_manager()
+        fig_manager.window.showMaximized()
+
         plt.show()
 
     def _get_average_circle_peaks(
