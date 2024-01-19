@@ -20,3 +20,4 @@ class TemplateType(Enum):
     ALL_ABLATION_6 = 11
     ALL_ABLATION_7 = 12
     ALL_ABLATION_8 = 13
+    AVERAGE_CIRCLE = 14

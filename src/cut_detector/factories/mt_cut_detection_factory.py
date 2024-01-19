@@ -522,6 +522,10 @@ class MtCutDetectionFactory:
         average_circle_peaks.sort(key=get_peak_intensity, reverse=True)
         average_circle_peaks = average_circle_peaks[:2]
 
+        # Complete with empty Peak if length <2
+        while len(average_circle_peaks) < 2:
+            average_circle_peaks.append(Peak())
+
         return average_circle_peaks
 
     def get_bridge_template(
@@ -769,6 +773,19 @@ class MtCutDetectionFactory:
             return np.concatenate(
                 (template, haralick_features[:4], haralick_features[5:])
             )
+
+        if self.template_type == TemplateType.AVERAGE_CIRCLE:
+            avg_peaks_template = np.array(
+                [
+                    average_circle_peaks[0].intensity,
+                    average_circle_peaks[0].prominence,
+                    average_circle_peaks[0].width,
+                    average_circle_peaks[1].intensity,
+                    average_circle_peaks[1].prominence,
+                    average_circle_peaks[1].width,
+                ]
+            )
+            return avg_peaks_template
 
         raise ValueError("Unknown template type")
 
