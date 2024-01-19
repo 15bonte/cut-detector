@@ -163,10 +163,11 @@ class MtCutDetectionFactory:
             axis=0,
         )
 
+        minimum_height = np.mean(intensities) * coeff_height_peak
         peaks_idx, peaks_data = find_peaks(
             concatenated_intensities,
             height=(
-                np.mean(intensities) * coeff_height_peak,
+                minimum_height,
                 None,
             ),  # absolute value
             distance=len(intensities) * self.circle_min_ratio,
@@ -187,6 +188,11 @@ class MtCutDetectionFactory:
             plt.plot(intensities)
             plt.plot(peaks_idx, np.array(intensities)[peaks_idx], "x")
             plt.hlines(*results_half[1:], color="C2")
+            plt.hlines(
+                minimum_height,
+                xmin=0,
+                xmax=len(intensities),
+            )
             plt.show()
 
         # Create peak instances
@@ -420,8 +426,10 @@ class MtCutDetectionFactory:
                 color=colors[circle_idx // 2],
             )
             plt.axhline(
-                y=np.mean(interpolated_list_intensity)
-                * self.coeff_height_peak,
+                y=np.mean(
+                    interpolated_list_intensity)* self.coeff_height_peak,
+                xmin=0,
+                xmax=expected_points_nb,
                 color=colors[circle_idx // 2],
             )
 
@@ -440,6 +448,8 @@ class MtCutDetectionFactory:
             #     f"Prominence: {int(peak.prominence)}",
             # )
         for avg_peak in average_circle_peaks:
+            if avg_peak.is_empty():
+                continue
             plt.plot(
                 avg_peak.relative_position * expected_points_nb,
                 avg_peak.intensity,

@@ -29,6 +29,12 @@ class Peak:
         self.prominence = prominence
         self.width = width
 
+    def is_empty(self) -> bool:
+        """
+        Return True if the peak is empty, i.e. relative_position == -1.
+        """
+        return self.relative_position == -1
+
     @classmethod
     def get_average_intensity(cls, peaks: list[Peak]) -> float:
         """
