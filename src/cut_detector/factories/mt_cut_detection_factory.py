@@ -7,6 +7,9 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from scipy.signal import find_peaks, peak_widths
 from skimage.feature import graycomatrix, graycoprops
+from skimage.exposure import equalize_adapthist
+
+import scipy.ndimage as ndi
 
 from cut_detector.utils.peak import Peak
 
@@ -382,6 +385,7 @@ class MtCutDetectionFactory:
         self,
         filename,
         image,
+        filtered_image,
         final_peaks: list[Peak],
         all_positions: list[list[tuple[int]]],
         peaks_intensity: list[float],
@@ -426,8 +430,8 @@ class MtCutDetectionFactory:
                 color=colors[circle_idx // 2],
             )
             plt.axhline(
-                y=np.mean(
-                    interpolated_list_intensity)* self.coeff_height_peak,
+                y=np.mean(interpolated_list_intensity)
+                * self.coeff_height_peak,
                 xmin=0,
                 xmax=expected_points_nb,
                 color=colors[circle_idx // 2],
@@ -458,13 +462,17 @@ class MtCutDetectionFactory:
                 color="green",
             )
 
-        # plot the image without the bridge line
-        plt.subplot(2, 2, 3)
+        # plot initial image
+        plt.subplot(2, 3, 4)
         plt.imshow(image)
 
+        # plot filtered image
+        plt.subplot(2, 3, 5)
+        plt.imshow(filtered_image)
+
         # plot the image with the bridge line
-        plt.subplot(2, 2, 4)
-        plt.imshow(image)
+        plt.subplot(2, 3, 6)
+        plt.imshow(filtered_image)
 
         for peak in final_peaks:
             plt.scatter(
@@ -543,6 +551,15 @@ class MtCutDetectionFactory:
 
         return average_circle_peaks
 
+    def _pre_process_image(self, image: np.ndarray) -> np.ndarray:
+        """
+        Smooth image
+        """
+        return image  # no pre-processing to apply so far
+        filtered_image = ndi.correlate(image, np.full((3, 3), 1 / 9))
+        filtered_image = equalize_adapthist(filtered_image, kernel_size=20)
+        return filtered_image
+
     def get_bridge_template(
         self,
         image: np.ndarray,
@@ -568,6 +585,9 @@ class MtCutDetectionFactory:
             circle_radius - diff_radius,
         ]
 
+        # Apply image pre-processing
+        filtered_image = self._pre_process_image(image)
+
         # Get useful data for each circle
         all_positions, all_intensities, all_peaks = [], [], []
         for circle_index, radius in enumerate(list_radius):
@@ -576,7 +596,7 @@ class MtCutDetectionFactory:
                 intensities,
                 peaks,
             ) = self._get_circle_data(
-                radius, image, circle_index, debug_plot=False
+                radius, filtered_image, circle_index, debug_plot=False
             )
             all_positions.append(positions)
             all_intensities.append(intensities)
@@ -597,6 +617,7 @@ class MtCutDetectionFactory:
             self._plot_circles(
                 filename,
                 image,
+                filtered_image,
                 final_peaks,
                 all_positions,
                 peaks_intensity,
