@@ -1,10 +1,11 @@
 import os
+from typing import Optional
 from matplotlib import pyplot as plt
 import numpy as np
 import pickle
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
-from scipy.signal import find_peaks
+from scipy.signal import find_peaks, peak_widths
 from skimage.feature import graycomatrix, graycoprops
 
 from cut_detector.utils.peak import Peak
@@ -139,11 +140,81 @@ class MtCutDetectionFactory:
 
         return False
 
+    def _detect_peaks_from_intensities(
+        self,
+        intensities: list[float],
+        circle_index: int,
+        coeff_height_peak: float,
+        coeff_width_peak: float,
+        debug_plot: bool,
+        circle_positions: Optional[list[tuple[int]]] = None,
+    ) -> list[Peak]:
+        """
+        Given a list of intensities, detect peaks using scipy.
+        """
+
+        # Concatenate intensities to detect peaks even at borders
+        concatenated_intensities = np.concatenate(
+            (
+                np.array(intensities),
+                np.array(intensities),
+                np.array(intensities),
+            ),
+            axis=0,
+        )
+
+        peaks_idx, peaks_data = find_peaks(
+            concatenated_intensities,
+            height=(
+                np.mean(intensities) * coeff_height_peak,
+                None,
+            ),  # absolute value
+            distance=len(intensities) * self.circle_min_ratio,
+            width=(None, round(len(intensities) * coeff_width_peak)),
+            prominence=(None, None),
+        )
+
+        # Keep only indexes at middle concatenated_intensities
+        peaks_idx = [
+            idx - len(intensities)
+            for idx in peaks_idx
+            if len(intensities) <= idx < 2 * len(intensities)
+        ]
+
+        if debug_plot:
+            results_half = peak_widths(intensities, peaks_idx, rel_height=0.5)
+            plt.figure()
+            plt.plot(intensities)
+            plt.plot(peaks_idx, np.array(intensities)[peaks_idx], "x")
+            plt.hlines(*results_half[1:], color="C2")
+            plt.show()
+
+        # Create peak instances
+        peaks = [
+            Peak(
+                relative_position=peak_idx / len(intensities),
+                intensity=intensities[peak_idx],
+                coordinates=circle_positions[peak_idx]
+                if circle_positions is not None
+                else (0, 0),
+                relative_intensity=intensities[peak_idx]
+                / np.mean(intensities),
+                position_index=peak_idx,
+                circle_index=circle_index,
+                prominence=peaks_data["prominences"][idx],
+                width=peaks_data["widths"][idx],
+            )
+            for idx, peak_idx in enumerate(peaks_idx)
+        ]
+
+        return peaks
+
     def _get_circle_data(
         self,
         radius: int,
         image: np.ndarray,
         circle_index: int,
+        debug_plot: bool,
     ) -> tuple[list[tuple[int]], list[float], list[Peak]]:
         """
         Compute useful data for a circle of a given radius around the mid body spot:
@@ -189,43 +260,14 @@ class MtCutDetectionFactory:
             mean = total / inc
             intensities.append(mean)
 
-        # Prevent the case where the peak is on the border so we detect 2 peaks instead of 1
-        concatenated_intensities = intensities + intensities
-
-        # Insert lower intensity at the beginning and at the end of the list
-        concatenated_intensities.insert(0, concatenated_intensities[0] - 1)
-        concatenated_intensities.append(concatenated_intensities[-1] - 1)
-
-        peaks_idx, peaks_data = find_peaks(
-            concatenated_intensities,
-            height=(
-                np.mean(intensities) * self.coeff_height_peak,
-                None,
-            ),  # absolute value
-            distance=len(intensities) * self.circle_min_ratio,
-            width=(None, round(len(intensities) * self.coeff_width_peak)),
-            prominence=(None, None),
+        peaks = self._detect_peaks_from_intensities(
+            intensities,
+            circle_index,
+            self.coeff_height_peak,
+            self.coeff_width_peak,
+            debug_plot,
+            circle_positions,
         )
-
-        peaks_idx = [i - 1 for i in peaks_idx]
-        peaks_idx = [p % len(circle_positions) for p in peaks_idx]
-        peaks_idx = [p for p in peaks_idx if peaks_idx.count(p) >= 2]
-        peaks_idx = list(set(peaks_idx))
-
-        # Create peak instances
-        peaks = [
-            Peak(
-                relative_position=peak_idx / len(circle_positions),
-                intensity=intensities[peak_idx],
-                coordinates=circle_positions[peak_idx],
-                relative_intensity=intensities[peak_idx]
-                / np.mean(intensities),
-                position_index=peak_idx,
-                circle_index=circle_index,
-                prominence=peaks_data["prominences"][idx],
-            )
-            for idx, peak_idx in enumerate(peaks_idx)
-        ]
 
         return circle_positions, intensities, peaks
 
@@ -250,7 +292,7 @@ class MtCutDetectionFactory:
         Post-processing of peaks detection.
         Returns kept peaks and their intensities.
         """
-        # Group peaks by window
+        # Group peaks by window and remove small groups
         window_peaks = Peak.group_peaks(
             all_peaks,
             self._get_windows(),
@@ -262,8 +304,8 @@ class MtCutDetectionFactory:
             # Sort by maximum number of peaks, then higher mean intensity
             def get_length_intensity_key(item):
                 return (
-                    len(item),
                     Peak.get_average_intensity(item),
+                    len(item),
                 )
 
             window_peaks.sort(key=get_length_intensity_key, reverse=True)
@@ -338,15 +380,11 @@ class MtCutDetectionFactory:
         all_positions: list[list[tuple[int]]],
         peaks_intensity: list[float],
         list_intensities: list[list[float]],
+        average_circle_peaks: list[Peak],
     ) -> None:
         """
         Plot the image with the circle and the peaks.
         """
-
-        mean_intensity = [
-            np.mean(circle_intensities)
-            for circle_intensities in list_intensities
-        ]
 
         # Plot the intensities of the circle around the mid body spot
         plt.subplot(2, 1, 1)
@@ -387,6 +425,7 @@ class MtCutDetectionFactory:
                 color=colors[circle_idx // 2],
             )
 
+        # Plot peaks
         for idx, peak in enumerate(final_peaks):
             plt.plot(
                 peak.relative_position * expected_points_nb,
@@ -395,10 +434,18 @@ class MtCutDetectionFactory:
                 markersize=4,
                 color="red",
             )
-            plt.text(
-                peak.relative_position * expected_points_nb,
-                peaks_intensity[idx],
-                f"Prominence: {int(peak.prominence)}",
+            # plt.text(
+            #     peak.relative_position * expected_points_nb,
+            #     peaks_intensity[idx],
+            #     f"Prominence: {int(peak.prominence)}",
+            # )
+        for avg_peak in average_circle_peaks:
+            plt.plot(
+                avg_peak.relative_position * expected_points_nb,
+                avg_peak.intensity,
+                marker="*",
+                markersize=4,
+                color="green",
             )
 
         # plot the image without the bridge line
@@ -436,10 +483,51 @@ class MtCutDetectionFactory:
         plt.title(filename)
         plt.show()
 
+    def _get_average_circle_peaks(
+        self, all_intensities: list[float]
+    ) -> list[Peak]:
+        """
+        Compute 2 best peaks on average circle.
+        """
+        # First, compute average circle intensities
+        expected_points_nb = len(all_intensities[0])
+        average_circle_intensities = []
+        for intensities in all_intensities:
+            interpolated_points = np.linspace(
+                0, len(intensities), expected_points_nb
+            )
+            interpolated_intensities = np.interp(
+                interpolated_points,  # x
+                range(len(intensities)),  # xp
+                intensities,  # fp
+            )
+            average_circle_intensities.append(interpolated_intensities)
+        average_circle_intensities = np.mean(
+            average_circle_intensities, axis=0
+        )
+
+        # Then, detect peaks on average circle
+        average_circle_peaks = self._detect_peaks_from_intensities(
+            average_circle_intensities,
+            circle_index=0,
+            coeff_height_peak=0,  # minimum
+            coeff_width_peak=len(average_circle_intensities),  # maximum
+            debug_plot=False,
+        )
+
+        # Keep only 2 best peaks
+        def get_peak_intensity(peak: Peak):
+            return peak.intensity
+
+        average_circle_peaks.sort(key=get_peak_intensity, reverse=True)
+        average_circle_peaks = average_circle_peaks[:2]
+
+        return average_circle_peaks
+
     def get_bridge_template(
         self,
         image: np.ndarray,
-        plot_enabled: bool,
+        debug_plot: bool,
         filename=None,
     ) -> np.ndarray:
         """
@@ -468,10 +556,15 @@ class MtCutDetectionFactory:
                 positions,
                 intensities,
                 peaks,
-            ) = self._get_circle_data(radius, image, circle_index)
+            ) = self._get_circle_data(
+                radius, image, circle_index, debug_plot=False
+            )
             all_positions.append(positions)
             all_intensities.append(intensities)
             all_peaks.append(peaks)
+
+        # Alternative method: compute 2 best peaks on average circle
+        average_circle_peaks = self._get_average_circle_peaks(all_intensities)
 
         # Get peaks data
         final_peaks = self._post_process_peaks(all_peaks)
@@ -481,7 +574,7 @@ class MtCutDetectionFactory:
         haralick_features = self._get_haralick_features(all_intensities[0])
 
         # Plot if enabled
-        if plot_enabled:
+        if debug_plot:
             self._plot_circles(
                 filename,
                 image,
@@ -489,6 +582,7 @@ class MtCutDetectionFactory:
                 all_positions,
                 peaks_intensity,
                 all_intensities,
+                average_circle_peaks,
             )
 
         # Get the template of the bridge
@@ -683,7 +777,7 @@ class MtCutDetectionFactory:
         img_bridge: np.ndarray,
         scaler: StandardScaler,
         clf: SVC,
-        plot_enabled=True,
+        debug_plot=True,
     ):
         # Make sure crop has expected size
         assert (
@@ -693,7 +787,7 @@ class MtCutDetectionFactory:
 
         # Get template and reshape to 2D data
         template = self.get_bridge_template(
-            img_bridge, plot_enabled=plot_enabled
+            img_bridge, debug_plot=debug_plot
         ).reshape(1, -1)
 
         # Scale template
@@ -736,7 +830,7 @@ class MtCutDetectionFactory:
         scaler_path: str,
         model_path: str,
         hmm_bridges_parameters_file: str,
-        enable_debug_plot=False,
+        debug_plot=False,
     ):
         """
         Update micro-tubules cut detection using bridges classification.
@@ -792,7 +886,7 @@ class MtCutDetectionFactory:
 
             # Get bridge class (and other data useful for debugging)
             bridge_class, template, distance = self.get_bridge_class(
-                crop, scaler, classifier, plot_enabled=enable_debug_plot
+                crop, scaler, classifier, debug_plot=debug_plot
             )
 
             results["list_class_bridges"].append(bridge_class)

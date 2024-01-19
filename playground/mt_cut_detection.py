@@ -56,7 +56,10 @@ def main(
     with open(mitosis_path, "rb") as f:
         mitosis_track = pickle.load(f)
 
-    factory = MtCutDetectionFactory(template_type=TemplateType.ALL)
+    factory = MtCutDetectionFactory(
+        template_type=TemplateType.ALL,
+        # coeff_height_peak=0.0
+    )
 
     results = factory.update_mt_cut_detection(
         mitosis_track,
@@ -64,7 +67,7 @@ def main(
         scaler_path,
         model_path,
         hmm_bridges_parameters_file,
-        enable_debug_plot=True,
+        debug_plot=True,
     )
 
     if display_svm_analysis:
