@@ -49,6 +49,7 @@ class MitosisTrack:
         self.metaphase_frame = metaphase_frame
 
         # Key events: metaphase/cytokinesis/first_mt_cut/second_mt_cut/first_membrane_cut
+        # Absolute frame
         self.key_events_frame: dict[str, Union[int, ImpossibleDetection]] = {}
         self.gt_key_events_frame: Optional[dict[str, int]] = None
 

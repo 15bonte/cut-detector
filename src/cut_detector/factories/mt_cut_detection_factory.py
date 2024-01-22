@@ -538,12 +538,17 @@ class MtCutDetectionFactory:
             debug_plot=False,
         )
 
-        # Keep only 2 best peaks
         def get_peak_intensity(peak: Peak):
             return peak.intensity
 
+        def get_peak_relative_position(peak: Peak):
+            return peak.relative_position
+
+        # Keep only 2 best peaks, i.e. with highest intensity
         average_circle_peaks.sort(key=get_peak_intensity, reverse=True)
         average_circle_peaks = average_circle_peaks[:2]
+        # Order them by relative position to assure consistency
+        average_circle_peaks.sort(key=get_peak_relative_position)
 
         # Complete with empty Peak if length <2
         while len(average_circle_peaks) < 2:
@@ -842,6 +847,10 @@ class MtCutDetectionFactory:
         template = self.get_bridge_template(
             img_bridge, debug_plot=debug_plot
         ).reshape(1, -1)
+
+        # This only occurs in debug mode
+        if scaler.n_features_in_ != template.shape[1]:
+            return -1, template, -1
 
         # Scale template
         scaled_template = scaler.transform(template)
