@@ -107,8 +107,11 @@ def main(
         # Plot 2 subplots
         _, axs = plt.subplots(2, 1)
 
+        # Possible that first frames are skipped
+        nb_points = len(np.array(results["templates"])[..., 0].squeeze())
+        frame_indexes = list(mitosis_track.mid_body_spots)[-nb_points:]
         axs[0].plot(
-            list(mitosis_track.mid_body_spots),
+            frame_indexes,
             np.array(results["templates"])[..., 0].squeeze(),
         )
         axs[0].set_title("First MT intensity")
@@ -125,17 +128,17 @@ def main(
             )
 
         axs[1].plot(
-            list(mitosis_track.mid_body_spots),
+            frame_indexes,
             np.array(results["templates"])[..., 3].squeeze(),
         )
         axs[1].set_title("Second MT intensity")
         if mitosis_track.gt_key_events_frame is not None:
-            axs[0].axvline(
+            axs[1].axvline(
                 x=mitosis_track.gt_key_events_frame["first_mt_cut"],
                 color="r",
                 linestyle="-",
             )
-            axs[0].axvline(
+            axs[1].axvline(
                 x=mitosis_track.gt_key_events_frame["second_mt_cut"],
                 color="r",
                 linestyle="-",
