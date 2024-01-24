@@ -178,43 +178,60 @@ class MtCutDetectionFactory:
             prominence=(None, None),
         )
 
-        # Keep only indexes at middle concatenated_intensities
-        peaks_idx = [
-            idx - len(intensities)
-            for idx in peaks_idx
-            if len(intensities) <= idx < 2 * len(intensities)
-        ]
-
-        if debug_plot:
-            results_half = peak_widths(intensities, peaks_idx, rel_height=0.5)
-            plt.figure()
-            plt.plot(intensities)
-            plt.plot(peaks_idx, np.array(intensities)[peaks_idx], "x")
-            plt.hlines(*results_half[1:], color="C2")
-            plt.hlines(
-                minimum_height,
-                xmin=0,
-                xmax=len(intensities),
-            )
-            plt.show()
-
         # Create peak instances
+        # Regarding peak_idx, remove intensities length to focus on the first intensities list
         peaks = [
             Peak(
-                relative_position=peak_idx / len(intensities),
-                intensity=intensities[peak_idx],
-                coordinates=circle_positions[peak_idx]
+                relative_position=(peak_idx - len(intensities))
+                / len(intensities),
+                intensity=peaks_data["peak_heights"][idx],
+                coordinates=circle_positions[peak_idx - len(intensities)]
                 if circle_positions is not None
                 else (0, 0),
-                relative_intensity=intensities[peak_idx]
+                relative_intensity=peaks_data["peak_heights"][idx]
                 / np.mean(intensities),
-                position_index=peak_idx,
+                position_index=peak_idx - len(intensities),
                 circle_index=circle_index,
                 prominence=peaks_data["prominences"][idx],
                 width=peaks_data["widths"][idx],
             )
             for idx, peak_idx in enumerate(peaks_idx)
+            if len(intensities) <= peak_idx < 2 * len(intensities)
         ]
+
+        if debug_plot:
+            results_half = (
+                peaks_data["widths"],
+                peaks_data["width_heights"],
+                peaks_data["left_ips"],
+                peaks_data["right_ips"],
+            )  # ie taken at half prominence
+            plt.figure()
+            plt.plot(concatenated_intensities)
+            plt.plot(
+                peaks_idx, np.array(concatenated_intensities)[peaks_idx], "x"
+            )
+            plt.hlines(*results_half[1:], color="C2")
+            plt.hlines(
+                minimum_height,
+                xmin=0,
+                xmax=len(concatenated_intensities),
+                color="red",
+            )
+            contour_heights = (
+                np.array(concatenated_intensities)[peaks_idx]
+                - peaks_data["prominences"]
+            )
+            plt.vlines(
+                x=peaks_idx,
+                ymin=contour_heights,
+                ymax=concatenated_intensities[peaks_idx],
+                color="green",
+            )
+            plt.xlim(
+                len(intensities), len(intensities) * 2
+            )  # ignore rest of concatenated intensities
+            plt.show()
 
         return peaks
 
@@ -538,17 +555,17 @@ class MtCutDetectionFactory:
             debug_plot=False,
         )
 
-        def get_peak_intensity(peak: Peak):
-            return peak.intensity
+        def get_peak_prominence(peak: Peak):
+            return peak.prominence
 
         def get_peak_relative_position(peak: Peak):
             return peak.relative_position
 
-        # Keep only 2 best peaks, i.e. with highest intensity
-        average_circle_peaks.sort(key=get_peak_intensity, reverse=True)
+        # Keep only 2 best peaks, i.e. with highest prominence
+        average_circle_peaks.sort(key=get_peak_prominence, reverse=True)
         average_circle_peaks = average_circle_peaks[:2]
-        # Order them by relative position to assure consistency
-        average_circle_peaks.sort(key=get_peak_relative_position)
+        # # Order them by relative position to assure consistency
+        # average_circle_peaks.sort(key=get_peak_relative_position)
 
         # Complete with empty Peak if length <2
         while len(average_circle_peaks) < 2:
@@ -558,12 +575,16 @@ class MtCutDetectionFactory:
 
     def _pre_process_image(self, image: np.ndarray) -> np.ndarray:
         """
-        Smooth image
+        Smooth image.
+        1. Apply a mean filter to smooth the image
+        2. Apply an adaptive histogram equalization to improve contrast
         """
         return image  # no pre-processing to apply so far
-        filtered_image = ndi.correlate(image, np.full((3, 3), 1 / 9))
-        filtered_image = equalize_adapthist(filtered_image, kernel_size=20)
-        return filtered_image
+        # filtered_image = ndi.correlate(image, np.full((3, 3), 1 / 9))
+        # filtered_image = equalize_adapthist(
+        #     filtered_image, kernel_size=self.circle_radius * 2
+        # )
+        # return filtered_image
 
     def get_bridge_template(
         self,
