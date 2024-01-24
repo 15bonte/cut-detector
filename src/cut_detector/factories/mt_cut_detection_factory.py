@@ -558,13 +558,14 @@ class MtCutDetectionFactory:
         def get_peak_prominence(peak: Peak):
             return peak.prominence
 
-        def get_peak_relative_position(peak: Peak):
-            return peak.relative_position
-
         # Keep only 2 best peaks, i.e. with highest prominence
         average_circle_peaks.sort(key=get_peak_prominence, reverse=True)
         average_circle_peaks = average_circle_peaks[:2]
+
         # # Order them by relative position to assure consistency
+        # NB: this was used to follow peaks - sigmoid fit test 
+        # def get_peak_relative_position(peak: Peak):
+        #     return peak.relative_position
         # average_circle_peaks.sort(key=get_peak_relative_position)
 
         # Complete with empty Peak if length <2
