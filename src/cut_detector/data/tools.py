@@ -16,11 +16,7 @@ def get_data_path(data_name: str) -> None:
     elif data_name == "tracks":
         sub_folder_to_create = f"{data_name}/example_video"
         files = [
-            "example_video/track_0.bin",
-            "example_video/track_1.bin",
-            "example_video/track_2.bin",
-            "example_video/track_3.bin",
-            "example_video/track_4.bin",
+            f"example_video/track_{track_id}.bin" for track_id in range(5)
         ]
     elif data_name == "results":
         files = []  # no files to download here
@@ -32,6 +28,9 @@ def get_data_path(data_name: str) -> None:
         files = []  # no files to download here
     elif data_name == "segmentation_results":
         files = ["example_video.bin"]
+    elif data_name == "spots":
+        sub_folder_to_create = f"{data_name}/example_video"
+        files = [f"example_video/spot_{spot_id}.bin" for spot_id in range(237)]
     else:
         raise ValueError(f"Unknown data name: {data_name}")
 
