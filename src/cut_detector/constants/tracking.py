@@ -1,3 +1,6 @@
+# Tracking parameters
+MAX_FRAME_GAP = 3
+
 # Metaphase links
 FRAMES_AROUND_METAPHASE = (
     10  # look for metaphase candidate spots in this range

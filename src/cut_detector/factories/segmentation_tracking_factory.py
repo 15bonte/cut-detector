@@ -5,6 +5,8 @@ import imagej
 import scyjava as sj
 from cellpose import models
 
+from ..constants.tracking import MAX_FRAME_GAP
+
 
 class SegmentationTrackingFactory:
     """
@@ -28,7 +30,7 @@ class SegmentationTrackingFactory:
         flow_threshold=0.0,
         gap_closing_max_distance_ratio=0.5,
         linking_max_distance_ratio=1,
-        max_frame_gap=3,
+        max_frame_gap=MAX_FRAME_GAP,
     ) -> None:
         self.model_path = model_path
         self.augment = augment
