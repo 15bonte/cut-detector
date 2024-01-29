@@ -65,7 +65,9 @@ def plot_cut_distributions(
 
     # Quartiles and median
     predicted_median = np.median(first_cut_times)
-    gt_median = np.median(first_cut_times_gt) if len(first_cut_times_gt) else None
+    gt_median = (
+        np.median(first_cut_times_gt) if len(first_cut_times_gt) else None
+    )
     predicted_q1 = np.percentile(first_cut_times, 25)
     predicted_q3 = np.percentile(first_cut_times, 75)
     plt.axvline(
@@ -99,7 +101,11 @@ def plot_cut_distributions(
 
     plt.title(
         f"Proportion of MT cuts over time - {len(first_cut_times)} predicted mitoses"
-        + (f"- {len(first_cut_times_gt)} ground truth mitoses" if len(first_cut_times_gt) else "")
+        + (
+            f"- {len(first_cut_times_gt)} ground truth mitoses"
+            if len(first_cut_times_gt)
+            else ""
+        )
     )
     plt.xlabel("Time (min)")
     plt.ylabel("Proportion of first cut")
@@ -126,7 +132,9 @@ def perform_t_test(cut_differences: list[int]) -> float:
 
     # Check if the result is statistically significant (e.g., using a significance level of 0.05)
     if p_value < ALPHA:
-        print("Reject the null hypothesis: There is a statistically significant difference.")
+        print(
+            "Reject the null hypothesis: There is a statistically significant difference."
+        )
     else:
         print(
             "Fail to reject the null hypothesis: There is no statistically significant difference."
@@ -135,18 +143,22 @@ def perform_t_test(cut_differences: list[int]) -> float:
     return p_value
 
 
-def print_weird_mitoses(selected_tracks: list[MitosisTrack], min_acceptable_frame=13) -> None:
+def print_weird_mitoses(
+    selected_tracks: list[MitosisTrack], min_acceptable_frame=13
+) -> None:
     """
     Print useful information about weird mitoses.
     """
     ordered_tracks = [
         track
         for track in selected_tracks
-        if track.key_events_frame["first_mt_cut"] - track.key_events_frame["cytokinesis"]
+        if track.key_events_frame["first_mt_cut"]
+        - track.key_events_frame["cytokinesis"]
         <= min_acceptable_frame
     ]
     ordered_tracks.sort(
-        key=lambda x: x.key_events_frame["first_mt_cut"] - x.key_events_frame["cytokinesis"]
+        key=lambda x: x.key_events_frame["first_mt_cut"]
+        - x.key_events_frame["cytokinesis"]
     )
 
     print("Weird mitoses (early cut):")
@@ -158,13 +170,17 @@ def print_weird_mitoses(selected_tracks: list[MitosisTrack], min_acceptable_fram
         print(f"Key events frame: {mitosis_track.key_events_frame}")
         print(
             "video frame cut",
-            mitosis_track.key_events_frame["first_mt_cut"] - mitosis_track.min_frame + 1,
+            mitosis_track.key_events_frame["first_mt_cut"]
+            - mitosis_track.min_frame
+            + 1,
         )
         if mitosis_track.gt_key_events_frame is not None:
             print(f"GT key events frame: {mitosis_track.gt_key_events_frame}")
             print(
                 "video frame cut",
-                mitosis_track.gt_key_events_frame["first_mt_cut"] - mitosis_track.min_frame + 1,
+                mitosis_track.gt_key_events_frame["first_mt_cut"]
+                - mitosis_track.min_frame
+                + 1,
             )
 
 
@@ -176,16 +192,24 @@ def print_analysis_summary(
 ) -> None:
     print(f"\n Among the {len(mitosis_tracks)} mitoses detected, there are:")
     for cut_id, count in mitosis_results_summary.items():
-        print(f"    - {count} mitoses in category {ImpossibleDetection(cut_id).name}")
+        print(
+            f"    - {count} mitoses in category {ImpossibleDetection(cut_id).name}"
+        )
 
     if len(first_cut_times_gt) == 0:
         return
-    print(f"\n Among the {len(first_cut_times_gt)} mitoses annotated, there are:")
+    print(
+        f"\n Among the {len(first_cut_times_gt)} mitoses annotated, there are:"
+    )
     for cut_id, count in gt_mitosis_results_summary.items():
-        print(f"    - {count} mitoses in category {ImpossibleDetection(cut_id).name}")
+        print(
+            f"    - {count} mitoses in category {ImpossibleDetection(cut_id).name}"
+        )
 
 
-def save_csv_results(mitosis_tracks: list[MitosisTrack], save_dir: Optional[str] = None) -> None:
+def save_csv_results(
+    mitosis_tracks: list[MitosisTrack], save_dir: Optional[str] = None
+) -> None:
     if save_dir is None:
         return
 
@@ -203,7 +227,9 @@ def save_csv_results(mitosis_tracks: list[MitosisTrack], save_dir: Optional[str]
         for mitosis_track in mitosis_tracks:
             f.write(f"{mitosis_track.id};")
             f.write(f"{mitosis_track.mother_track_id};")
-            daughter_ids = ",".join([str(d) for d in mitosis_track.daughter_track_ids])
+            daughter_ids = ",".join(
+                [str(d) for d in mitosis_track.daughter_track_ids]
+            )
             f.write(f"{daughter_ids};")
             f.write(f"{mitosis_track.key_events_frame['metaphase']};")
             cytokinesis_frame = mitosis_track.key_events_frame["cytokinesis"]
@@ -307,6 +333,11 @@ def perform_results_saving(
     if verbose:
         print_weird_mitoses(selected_tracks)
 
+    # Protect against no detection
+    if len(first_cut_times) == 0:
+        print("No mitosis detected.")
+        return
+
     # Statistical test
     p_value = perform_t_test(cut_differences)
 
@@ -323,4 +354,6 @@ def perform_results_saving(
 
     # Plot results
     box_plot_cut_differences(cut_differences, show, save_dir)
-    plot_cut_distributions(first_cut_times, first_cut_times_gt, p_value, show, save_dir)
+    plot_cut_distributions(
+        first_cut_times, first_cut_times_gt, p_value, show, save_dir
+    )
