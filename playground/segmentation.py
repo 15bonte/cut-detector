@@ -8,10 +8,8 @@ from cnn_framework.utils.readers.tiff_reader import TiffReader
 
 from cut_detector.data.tools import get_data_path
 from cut_detector.models.tools import get_model_path
-from cut_detector.constants.tracking import (
-    AUGMENT,
-    CELLPROB_THRESHOLD,
-    FLOW_THRESHOLD,
+from cut_detector.factories.segmentation_tracking_factory import (
+    SegmentationTrackingFactory,
 )
 
 
@@ -21,9 +19,6 @@ def main(
     diameter=0,  # 0 means using segmentation model saved value
     channel_to_segment=3,  # index starts at 1
     nucleus_channel=0,  # 0 means no nucleus channel
-    cellprob_threshold=CELLPROB_THRESHOLD,
-    flow_treshold=FLOW_THRESHOLD,
-    augment=AUGMENT,
 ):
     """
     Script to run simple cellpose segmentation.
@@ -37,8 +32,10 @@ def main(
     # Read image and preprocess if needed
     image = TiffReader(image_path).image  # TCZYX
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # Initialize factory to get constants
+    factory = SegmentationTrackingFactory(model_path)
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = models.CellposeModel(pretrained_model=[model_path], device=device)
 
     for frame in range(image.shape[0]):
@@ -47,9 +44,9 @@ def main(
             [frame_image],
             channels=[channel_to_segment, nucleus_channel],
             diameter=diameter,
-            flow_threshold=flow_treshold,
-            cellprob_threshold=cellprob_threshold,
-            augment=augment,
+            flow_threshold=factory.flow_threshold,
+            cellprob_threshold=factory.cellprob_threshold,
+            augment=factory.augment,
         )
 
         # Plot image_to_segment and segmented_image
