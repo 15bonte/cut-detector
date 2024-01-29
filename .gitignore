@@ -99,3 +99,4 @@ src/cut_detector/data/results/
 src/cut_detector/data/mitosis_movies/
 src/cut_detector/data/mid_bodies/
 src/cut_detector/data/segmentation_results/
+src/cut_detector/data/spots/
