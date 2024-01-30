@@ -14,8 +14,8 @@ def load_tracks_and_spots(
     Load saved spots and tracks generated from Trackmate xml file.
     """
     trackmate_tracks: list[TrackMateTrack] = []
-    for spot_file in os.listdir(trackmate_tracks_path):
-        with open(os.path.join(trackmate_tracks_path, spot_file), "rb") as f:
+    for track_file in os.listdir(trackmate_tracks_path):
+        with open(os.path.join(trackmate_tracks_path, track_file), "rb") as f:
             trackmate_tracks.append(pickle.load(f))
 
     spots: list[TrackMateSpot] = []
