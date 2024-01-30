@@ -3,18 +3,27 @@ import pickle
 from typing import Optional
 
 from cut_detector.data.tools import get_data_path
+from cut_detector.utils.trackmate_track import TrackMateTrack
+from cut_detector.utils.trackmate_spot import TrackMateSpot
 
 
-def load_tracks_and_spots():
-    trackmate_tracks = []
+def load_tracks_and_spots(
+    trackmate_tracks_path: str, spots_path: str
+) -> tuple[list[TrackMateTrack], list[TrackMateSpot]]:
+    """
+    Load saved spots and tracks generated from Trackmate xml file.
+    """
+    trackmate_tracks: list[TrackMateTrack] = []
     for spot_file in os.listdir(trackmate_tracks_path):
         with open(os.path.join(trackmate_tracks_path, spot_file), "rb") as f:
             trackmate_tracks.append(pickle.load(f))
 
-    spots = []
+    spots: list[TrackMateSpot] = []
     for spot_file in os.listdir(spots_path):
         with open(os.path.join(spots_path, spot_file), "rb") as f:
             spots.append(pickle.load(f))
+
+    return trackmate_tracks, spots
 
 
 def main(
@@ -32,27 +41,12 @@ def main(
     with open(segmentation_results_path, "rb") as f:
         cellpose_results = pickle.load(f)
 
+    # TODO: create spots from Cellpose results
     # TODO: perform tracking using laptrack
 
     # Load TrackMate results to compare... make sure they match!
-    trackmate_tracks = []
-    for spot_file in os.listdir(trackmate_tracks_path):
-        with open(os.path.join(trackmate_tracks_path, spot_file), "rb") as f:
-            trackmate_tracks.append(pickle.load(f))
-
-    spots = []
-    for spot_file in os.listdir(spots_path):
-        with open(os.path.join(spots_path, spot_file), "rb") as f:
-            spots.append(pickle.load(f))
-
-    # Load TrackMate results to compare... make sure they match!
-    load_tracks_and_spots()
-
-    # Read useful information from xml file
-    tracks_merging_factory = TracksMergingFactory()
-    xml_model_path = os.path.join(xml_model_dir, f"{video_name}_model.xml")
-    trackmate_tracks, raw_spots = tracks_merging_factory.read_trackmate_xml(
-        xml_model_path, raw_video.shape
+    trackmate_tracks, trackmate_spots = load_tracks_and_spots(
+        trackmate_tracks_path, spots_path
     )
 
 
