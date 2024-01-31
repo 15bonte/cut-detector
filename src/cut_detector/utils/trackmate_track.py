@@ -18,6 +18,20 @@ from .trackmate_frame_spots import TrackMateFrameSpots
 def get_whole_box_dimensions_dln(
     tracks: list[TrackMateTrack], frame: int
 ) -> Tuple[BoxDimensionsDln, list[list[int]]]:
+    """
+    Merge different tracks.
+
+    Parameters
+    ----------
+    predictions : list[int]
+        list of predictions for each frame of the track.
+
+    Returns
+    -------
+    BoxDimensionsDln : Box dimension of merged tracks.
+    list[list[int]] : List of box dimension coordinates for all tracks.
+
+    """
     box_dimensions_dln = BoxDimensionsDln()
     track_frame_points = []
 
@@ -78,6 +92,10 @@ class TrackMateTrack:
         predictions : list[int]
             list of predictions for each frame of the track.
 
+        Returns
+        -------
+        None.
+
         """
         for idx, frame in enumerate(sorted(self.track_spots.keys())):
             self.track_spots[frame].predicted_phase = predictions[idx]
@@ -108,7 +126,15 @@ class TrackMateTrack:
         self, spot: TrackMateSpot, target_frame: int
     ) -> bool:
         """
-        Returns True if corresponding track contains one metaphase spot close to target frame.
+        Parameters
+        ----------
+        spot : TrackMateSpot
+            Only used to update corresponding metaphase spot.
+
+        Returns
+        -------
+        bool : True if corresponding track contains one metaphase spot close to target frame.
+
         """
         # Look for metaphase spot
         for metaphase_spot in self.metaphase_spots:
@@ -124,13 +150,22 @@ class TrackMateTrack:
     def compute_metaphase_iou(self, daughter_track: TrackMateTrack) -> float:
         """
         Get intersection between daughter area at first frame and self area at previous frame.
-        Get self area at previous frame.
-        Returns the quotient.
+        Get self area at previous frame. Returns the quotient.
 
         Ideally, it should be close to 0.5 as a daughter cell should occupy 50% of the area
         of the mother cell.
 
         May be improved by checking overlap of areas instead of convex hulls.
+
+        Parameters
+        ----------
+        daughter_track : TrackMateTrack
+            Potential daughter track.
+
+        Returns
+        -------
+        float : Intersection Over Union.
+
         """
 
         daughter_track_first_frame = min(daughter_track.track_spots.keys())
@@ -184,6 +219,26 @@ class TrackMateTrack:
         additional_tracks: Optional[list[TrackMateTrack]] = None,
         relative: bool = True,
     ) -> BoxDimensionsDln:
+        """
+        Compute Delaunay triangulation at given frame.
+
+        Parameters
+        ----------
+        frame : int
+            Frame at which Delaunay triangulation is computed.
+        previous_box_dimensions_dln : Optional[BoxDimensionsDln] = None
+            If specified and current track has no spot at frame, no computation is done
+            and previous_box_dimensions_dln is returned.
+        additional_tracks : Optional[list[TrackMateTrack]] = None
+            If specified, perform computation on both current track and these additional tracks.
+        relative : bool = True
+            If True, indexes are relative to current track position.
+
+        Returns
+        -------
+        BoxDimensionsDln : Track(s) Delaunay triangulation.
+
+        """
         tracks = [self]
         if additional_tracks is not None:
             tracks = tracks + additional_tracks
@@ -235,22 +290,23 @@ class TrackMateTrack:
         self, raw_spots: list[TrackMateFrameSpots], raw_video: np.array
     ) -> list[np.array]:
         """
-        Parse xml data to assign spots at corresponding track.
-        Returns list of nucleus crops for each frame.
+        Generate crops around cells for metaphase CNN inference.
 
         Parameters
         ----------
-        track: TrackMateTrack
-        raw_spots: [TrackMateFrameSpots]
-        raw_video: TYXC
+        raw_spots : list[TrackMateFrameSpots]
+            All video spots.
+        raw_video : np.array
+            TYXC
 
         Returns
         -------
-        nucleus_crops: CYX
+        list[np.array]: Cell crops (CYX)
+
         """
 
         spot_abs_positions = {}  # {frame: BoxDimensions}
-        nucleus_crops = []  # CYX
+        cell_crops = []  # CYX
 
         for frame_spots in raw_spots:
             # Ignore spots before or after current track
@@ -283,7 +339,7 @@ class TrackMateTrack:
                 )
             nucleus = raw_video[frame, min_y:max_y, min_x:max_x, :]  # YXC
             nucleus = np.moveaxis(nucleus, -1, 0)  # CYX
-            nucleus_crops.append(nucleus)
+            cell_crops.append(nucleus)
 
-        self.number_spots = len(nucleus_crops)
-        return nucleus_crops
+        self.number_spots = len(cell_crops)
+        return cell_crops
