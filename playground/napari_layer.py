@@ -17,8 +17,10 @@ def main(
     viewer = napari.Viewer()
 
     # Add video
-    video = io.imread(os.path.join(image_path, "example_video.tif"))
-    viewer.add_image(video, name="example_video")
+    video = io.imread(os.path.join(image_path, "example_video.tif"))  # TYXC
+    viewer.add_image(video[..., 0].squeeze(), name="micro-tubules")
+    viewer.add_image(video[..., 1].squeeze(), name="mid-body")
+    viewer.add_image(video[..., 2].squeeze(), name="phase contrast")
 
     # Create a blue rectangle
     rectangle_width = 50
