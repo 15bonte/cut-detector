@@ -29,12 +29,11 @@ It is highly recommended to create a dedicated conda environment, by following t
 
 1. Install an [Anaconda] distribution of Python. Note you might need to use an anaconda prompt if you did not add anaconda to the path.
 
-2. Open an Anaconda prompt as admin to create a new environment using [conda]. We advice to use python 3.10 and conda 23.10.0, to get conda-libmamba-solver as default solver. Note than openjdk is necessary to call Fiji from python, which is needed as you will see below.
+2. Open an Anaconda prompt as admin to create a new environment using [conda]. We advice to use python 3.10 and conda 23.10.0, to get conda-libmamba-solver as default solver.
 
 ```
 conda create --name cut_detector python=3.10 conda=23.10.0
 conda activate cut_detector
-conda install -c conda-forge openjdk=8
 ```
 
 ### Package installation
@@ -56,6 +55,12 @@ pip install -e .
 ### Fiji
 
 This package relies on [Trackmate] to perform cell tracking. Trackmate is called through [Fiji], which has to be installed independently. Please follow the steps [here](https://imagej.net/software/fiji/downloads) to install it.
+
+Next, install which openjdk is necessary to call Fiji from python.
+
+```
+conda install -c conda-forge openjdk=8
+```
 
 ### GPU
 
