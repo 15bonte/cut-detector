@@ -56,7 +56,7 @@ pip install -e .
 
 This package relies on [Trackmate] to perform cell tracking. Trackmate is called through [Fiji], which has to be installed independently. Please follow the steps [here](https://imagej.net/software/fiji/downloads) to install it.
 
-Next, install which openjdk is necessary to call Fiji from python.
+Next, install openjdk which is necessary to call Fiji from python.
 
 ```
 conda install -c conda-forge openjdk=8
