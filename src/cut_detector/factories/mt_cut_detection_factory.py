@@ -1,18 +1,19 @@
 import os
+import random
 from typing import Optional
 from matplotlib import pyplot as plt
 import numpy as np
 import pickle
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
-from scipy.signal import find_peaks, peak_widths
+from scipy.signal import find_peaks
 from skimage.feature import graycomatrix, graycoprops
-from skimage.exposure import equalize_adapthist
 
+from skimage.exposure import equalize_adapthist
 import scipy.ndimage as ndi
 
-from cut_detector.utils.peak import Peak
-
+from ..utils.box_dimensions import BoxDimensions
+from ..utils.peak import Peak
 from ..utils.bridges_classification.impossible_detection import (
     ImpossibleDetection,
 )
@@ -103,42 +104,42 @@ class MtCutDetectionFactory:
         """
 
         if mitosis_track.is_near_border:
-            mitosis_track.key_events_frame[
-                "first_mt_cut"
-            ] = ImpossibleDetection.NEAR_BORDER
-            mitosis_track.key_events_frame[
-                "second_mt_cut"
-            ] = ImpossibleDetection.NEAR_BORDER
+            mitosis_track.key_events_frame["first_mt_cut"] = (
+                ImpossibleDetection.NEAR_BORDER
+            )
+            mitosis_track.key_events_frame["second_mt_cut"] = (
+                ImpossibleDetection.NEAR_BORDER
+            )
             return True
 
         if len(mitosis_track.daughter_track_ids) >= 2:
-            mitosis_track.key_events_frame[
-                "first_mt_cut"
-            ] = ImpossibleDetection.MORE_THAN_TWO_DAUGHTER_TRACKS
-            mitosis_track.key_events_frame[
-                "second_mt_cut"
-            ] = ImpossibleDetection.MORE_THAN_TWO_DAUGHTER_TRACKS
+            mitosis_track.key_events_frame["first_mt_cut"] = (
+                ImpossibleDetection.MORE_THAN_TWO_DAUGHTER_TRACKS
+            )
+            mitosis_track.key_events_frame["second_mt_cut"] = (
+                ImpossibleDetection.MORE_THAN_TWO_DAUGHTER_TRACKS
+            )
             return True
 
         if not mitosis_track.mid_body_spots:
-            mitosis_track.key_events_frame[
-                "first_mt_cut"
-            ] = ImpossibleDetection.NO_MID_BODY_DETECTED
-            mitosis_track.key_events_frame[
-                "second_mt_cut"
-            ] = ImpossibleDetection.NO_MID_BODY_DETECTED
+            mitosis_track.key_events_frame["first_mt_cut"] = (
+                ImpossibleDetection.NO_MID_BODY_DETECTED
+            )
+            mitosis_track.key_events_frame["second_mt_cut"] = (
+                ImpossibleDetection.NO_MID_BODY_DETECTED
+            )
             return True
 
         if (
             max(mitosis_track.mid_body_spots.keys())
             < mitosis_track.key_events_frame["cytokinesis"]
         ):
-            mitosis_track.key_events_frame[
-                "first_mt_cut"
-            ] = ImpossibleDetection.NO_MID_BODY_DETECTED_AFTER_CYTOKINESIS
-            mitosis_track.key_events_frame[
-                "second_mt_cut"
-            ] = ImpossibleDetection.NO_MID_BODY_DETECTED_AFTER_CYTOKINESIS
+            mitosis_track.key_events_frame["first_mt_cut"] = (
+                ImpossibleDetection.NO_MID_BODY_DETECTED_AFTER_CYTOKINESIS
+            )
+            mitosis_track.key_events_frame["second_mt_cut"] = (
+                ImpossibleDetection.NO_MID_BODY_DETECTED_AFTER_CYTOKINESIS
+            )
             return True
 
         return False
@@ -185,9 +186,11 @@ class MtCutDetectionFactory:
                 relative_position=(peak_idx - len(intensities))
                 / len(intensities),
                 intensity=peaks_data["peak_heights"][idx],
-                coordinates=circle_positions[peak_idx - len(intensities)]
-                if circle_positions is not None
-                else (0, 0),
+                coordinates=(
+                    circle_positions[peak_idx - len(intensities)]
+                    if circle_positions is not None
+                    else (0, 0)
+                ),
                 relative_intensity=peaks_data["peak_heights"][idx]
                 / np.mean(intensities),
                 position_index=peak_idx - len(intensities),
@@ -563,7 +566,7 @@ class MtCutDetectionFactory:
         average_circle_peaks = average_circle_peaks[:2]
 
         # # Order them by relative position to assure consistency
-        # NB: this was used to follow peaks - sigmoid fit test 
+        # NB: this was used to follow peaks - sigmoid fit test
         # def get_peak_relative_position(peak: Peak):
         #     return peak.relative_position
         # average_circle_peaks.sort(key=get_peak_relative_position)
@@ -592,9 +595,12 @@ class MtCutDetectionFactory:
         image: np.ndarray,
         debug_plot: bool,
         filename=None,
+        class_mode=None,
     ) -> np.ndarray:
         """
         Return bridge image embedding according to template provided in parameters.
+
+        class_mode: int, used for debug
         """
 
         # Create the coordinates list of the circle around the mid body spot
@@ -639,6 +645,74 @@ class MtCutDetectionFactory:
         # Get useful Haralick features from middle center circle
         haralick_features = self._get_haralick_features(all_intensities[0])
 
+        # Save fake one cut image
+        if class_mode == 0:
+            original_peak_coordinate = final_peaks[0].coordinates
+            # Randomize the peak coordinate:
+            difference_with_center = np.array(
+                [
+                    self.margin - original_peak_coordinate[0],  # y
+                    original_peak_coordinate[1] - self.margin,  # x
+                ]
+            )  # move origin to center
+            random_shift = random.uniform(-0.5, 0.5)
+            difference_with_center = difference_with_center * (
+                1 + random_shift
+            )
+            new_peak_coordinate = [
+                self.margin - difference_with_center[0],  # y
+                self.margin + difference_with_center[1],  # x
+            ]
+
+            # move back to original origin
+            a = 0
+            # random_square = BoxDimensions(
+            #     min_x=int(
+            #         peak_coordinate[0]
+            #         - random.randint(
+            #             0, min(int(peak_coordinate[0] - self.margin), 10)
+            #         )
+            #     ),
+            #     max_x=int(
+            #         peak_coordinate[0]
+            #         + random.randint(
+            #             0, min(-int(peak_coordinate[0] - self.margin), 10)
+            #         )
+            #     ),
+            #     min_y=int(
+            #         peak_coordinate[1]
+            #         - random.randint(
+            #             0, min(int(peak_coordinate[1] - self.margin), 10)
+            #         )
+            #     ),
+            #     max_y=int(
+            #         peak_coordinate[1]
+            #         + random.randint(
+            #             0, min(-int(peak_coordinate[1] - self.margin), 10)
+            #         )
+            #     ),
+            # )
+            # image[
+            #     random_square.min_y : random_square.max_y,
+            #     random_square.min_x : random_square.max_x,
+            # ] = 0
+            # Plot image with matplotlib
+            plt.imshow(image)
+            # Draw point at the peak coordinate
+            plt.scatter(
+                original_peak_coordinate[1],
+                original_peak_coordinate[0],
+                marker="o",
+                color="red",
+            )
+            plt.scatter(
+                new_peak_coordinate[1],
+                new_peak_coordinate[0],
+                marker="o",
+                color="green",
+            )
+            plt.show()
+
         # Plot if enabled
         if debug_plot:
             self._plot_circles(
@@ -657,10 +731,10 @@ class MtCutDetectionFactory:
             return np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
-                    np.mean(peaks_intensity)
-                    if len(final_peaks) > 0
-                    else np.mean(
-                        all_intensities[0]
+                    (
+                        np.mean(peaks_intensity)
+                        if len(final_peaks) > 0
+                        else np.mean(all_intensities[0])
                     ),  # 1 : intensity of the peaks
                     np.var(
                         all_intensities[0]
@@ -682,10 +756,10 @@ class MtCutDetectionFactory:
             return np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
-                    np.mean(peaks_intensity)
-                    if len(final_peaks) > 0
-                    else np.mean(
-                        all_intensities[0]
+                    (
+                        np.mean(peaks_intensity)
+                        if len(final_peaks) > 0
+                        else np.mean(all_intensities[0])
                     ),  # 1 : intensity of the peaks
                 ]
             )
@@ -697,10 +771,10 @@ class MtCutDetectionFactory:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
-                    np.mean(peaks_intensity)
-                    if len(final_peaks) > 0
-                    else np.mean(
-                        all_intensities[0]
+                    (
+                        np.mean(peaks_intensity)
+                        if len(final_peaks) > 0
+                        else np.mean(all_intensities[0])
                     ),  # 1 : intensity of the peaks
                     np.mean(
                         all_intensities[0]
@@ -713,10 +787,10 @@ class MtCutDetectionFactory:
         if self.template_type == TemplateType.ALL_ABLATION_1:
             template = np.array(
                 [
-                    np.mean(peaks_intensity)
-                    if len(final_peaks) > 0
-                    else np.mean(
-                        all_intensities[0]
+                    (
+                        np.mean(peaks_intensity)
+                        if len(final_peaks) > 0
+                        else np.mean(all_intensities[0])
                     ),  # 1 : intensity of the peaks
                     np.mean(
                         all_intensities[0]
@@ -740,10 +814,10 @@ class MtCutDetectionFactory:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
-                    np.mean(peaks_intensity)
-                    if len(final_peaks) > 0
-                    else np.mean(
-                        all_intensities[0]
+                    (
+                        np.mean(peaks_intensity)
+                        if len(final_peaks) > 0
+                        else np.mean(all_intensities[0])
                     ),  # 1 : intensity of the peaks
                 ]
             )
@@ -753,10 +827,10 @@ class MtCutDetectionFactory:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
-                    np.mean(peaks_intensity)
-                    if len(final_peaks) > 0
-                    else np.mean(
-                        all_intensities[0]
+                    (
+                        np.mean(peaks_intensity)
+                        if len(final_peaks) > 0
+                        else np.mean(all_intensities[0])
                     ),  # 1 : intensity of the peaks
                     np.mean(
                         all_intensities[0]
@@ -769,10 +843,10 @@ class MtCutDetectionFactory:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
-                    np.mean(peaks_intensity)
-                    if len(final_peaks) > 0
-                    else np.mean(
-                        all_intensities[0]
+                    (
+                        np.mean(peaks_intensity)
+                        if len(final_peaks) > 0
+                        else np.mean(all_intensities[0])
                     ),  # 1 : intensity of the peaks
                     np.mean(
                         all_intensities[0]
@@ -787,10 +861,10 @@ class MtCutDetectionFactory:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
-                    np.mean(peaks_intensity)
-                    if len(final_peaks) > 0
-                    else np.mean(
-                        all_intensities[0]
+                    (
+                        np.mean(peaks_intensity)
+                        if len(final_peaks) > 0
+                        else np.mean(all_intensities[0])
                     ),  # 1 : intensity of the peaks
                     np.mean(
                         all_intensities[0]
@@ -805,10 +879,10 @@ class MtCutDetectionFactory:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
-                    np.mean(peaks_intensity)
-                    if len(final_peaks) > 0
-                    else np.mean(
-                        all_intensities[0]
+                    (
+                        np.mean(peaks_intensity)
+                        if len(final_peaks) > 0
+                        else np.mean(all_intensities[0])
                     ),  # 1 : intensity of the peaks
                     np.mean(
                         all_intensities[0]
@@ -823,10 +897,10 @@ class MtCutDetectionFactory:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
-                    np.mean(peaks_intensity)
-                    if len(final_peaks) > 0
-                    else np.mean(
-                        all_intensities[0]
+                    (
+                        np.mean(peaks_intensity)
+                        if len(final_peaks) > 0
+                        else np.mean(all_intensities[0])
                     ),  # 1 : intensity of the peaks
                     np.mean(
                         all_intensities[0]
@@ -986,12 +1060,12 @@ class MtCutDetectionFactory:
             relative_cytokinesis_frame < 0
             or results["list_class_bridges"][relative_cytokinesis_frame] != 0
         ):
-            mitosis_track.key_events_frame[
-                "first_mt_cut"
-            ] = ImpossibleDetection.MT_CUT_AT_CYTOKINESIS
-            mitosis_track.key_events_frame[
-                "second_mt_cut"
-            ] = ImpossibleDetection.MT_CUT_AT_CYTOKINESIS
+            mitosis_track.key_events_frame["first_mt_cut"] = (
+                ImpossibleDetection.MT_CUT_AT_CYTOKINESIS
+            )
+            mitosis_track.key_events_frame["second_mt_cut"] = (
+                ImpossibleDetection.MT_CUT_AT_CYTOKINESIS
+            )
             return results
 
         # Read HMM parameters
@@ -1018,12 +1092,12 @@ class MtCutDetectionFactory:
 
         # Ignore if no MT cut detected
         if first_mt_cut_frame_rel == -1:
-            mitosis_track.key_events_frame[
-                "first_mt_cut"
-            ] = ImpossibleDetection.NO_CUT_DETECTED
-            mitosis_track.key_events_frame[
-                "second_mt_cut"
-            ] = ImpossibleDetection.NO_CUT_DETECTED
+            mitosis_track.key_events_frame["first_mt_cut"] = (
+                ImpossibleDetection.NO_CUT_DETECTED
+            )
+            mitosis_track.key_events_frame["second_mt_cut"] = (
+                ImpossibleDetection.NO_CUT_DETECTED
+            )
             return results
 
         first_mt_cut_frame_abs = first_frame + first_mt_cut_frame_rel
@@ -1037,12 +1111,12 @@ class MtCutDetectionFactory:
             self.center_tolerance_light_spot,
             self.min_percentage_light_spot,
         ):
-            mitosis_track.key_events_frame[
-                "first_mt_cut"
-            ] = ImpossibleDetection.LIGHT_SPOT
-            mitosis_track.key_events_frame[
-                "second_mt_cut"
-            ] = ImpossibleDetection.LIGHT_SPOT
+            mitosis_track.key_events_frame["first_mt_cut"] = (
+                ImpossibleDetection.LIGHT_SPOT
+            )
+            mitosis_track.key_events_frame["second_mt_cut"] = (
+                ImpossibleDetection.LIGHT_SPOT
+            )
             return results
 
         # Update mitosis track accordingly
@@ -1060,17 +1134,17 @@ class MtCutDetectionFactory:
 
         # get the frame of the second MT cut
         if second_mt_cut_frame_rel == -1:
-            mitosis_track.key_events_frame[
-                "second_mt_cut"
-            ] = ImpossibleDetection.NO_CUT_DETECTED
+            mitosis_track.key_events_frame["second_mt_cut"] = (
+                ImpossibleDetection.NO_CUT_DETECTED
+            )
             return results
 
         second_mt_cut_frame_abs = first_frame + second_mt_cut_frame_rel
 
         # Update mitosis track accordingly
-        mitosis_track.key_events_frame[
-            "second_mt_cut"
-        ] = second_mt_cut_frame_abs
+        mitosis_track.key_events_frame["second_mt_cut"] = (
+            second_mt_cut_frame_abs
+        )
 
         # Return proxies for testing
         return results

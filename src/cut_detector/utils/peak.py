@@ -22,7 +22,7 @@ class Peak:
     ):
         self.relative_position = relative_position
         self.intensity = intensity
-        self.coordinates = coordinates
+        self.coordinates = coordinates  # (y, x)
         self.relative_intensity = relative_intensity
         self.position_index = position_index
         self.circle_index = circle_index
