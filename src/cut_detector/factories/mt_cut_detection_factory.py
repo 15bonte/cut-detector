@@ -7,10 +7,12 @@ import pickle
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from scipy.signal import find_peaks
-from skimage.feature import graycomatrix, graycoprops
 
+from skimage.feature import graycomatrix, graycoprops
 from skimage.exposure import equalize_adapthist
 import scipy.ndimage as ndi
+
+from cnn_framework.utils.tools import save_tiff
 
 from ..utils.box_dimensions import BoxDimensions
 from ..utils.peak import Peak
@@ -591,8 +593,9 @@ class MtCutDetectionFactory:
         self,
         image: np.ndarray,
         debug_plot: bool,
-        filename=None,
+        file_path=None,
         class_mode=None,
+        save_dir =None,
     ) -> np.ndarray:
         """
         Return bridge image embedding according to template provided in parameters.
@@ -616,7 +619,8 @@ class MtCutDetectionFactory:
         ]
 
         # Apply image pre-processing
-        filtered_image = self._pre_process_image(image)
+        sir_tubulin_image = image[..., 0].squeeze()
+        filtered_image = self._pre_process_image(sir_tubulin_image)
 
         # Get useful data for each circle
         all_positions, all_intensities, all_peaks = [], [], []
@@ -643,77 +647,33 @@ class MtCutDetectionFactory:
         haralick_features = self._get_haralick_features(all_intensities[0])
 
         # Save fake one cut image
-        if class_mode == 0:
-            original_peak_coordinate = final_peaks[0].coordinates
-            # Randomize the peak coordinate:
-            difference_with_center = np.array(
-                [
-                    self.margin - original_peak_coordinate[0],  # y
-                    original_peak_coordinate[1] - self.margin,  # x
-                ]
-            )  # move origin to center
-            random_shift = random.uniform(-0.5, 0.5)
-            difference_with_center = difference_with_center * (
-                1 + random_shift
-            )
-            new_peak_coordinate = [
-                self.margin - difference_with_center[0],  # y
-                self.margin + difference_with_center[1],  # x
-            ]
-
-            # move back to original origin
-            a = 0
-            # random_square = BoxDimensions(
-            #     min_x=int(
-            #         peak_coordinate[0]
-            #         - random.randint(
-            #             0, min(int(peak_coordinate[0] - self.margin), 10)
-            #         )
-            #     ),
-            #     max_x=int(
-            #         peak_coordinate[0]
-            #         + random.randint(
-            #             0, min(-int(peak_coordinate[0] - self.margin), 10)
-            #         )
-            #     ),
-            #     min_y=int(
-            #         peak_coordinate[1]
-            #         - random.randint(
-            #             0, min(int(peak_coordinate[1] - self.margin), 10)
-            #         )
-            #     ),
-            #     max_y=int(
-            #         peak_coordinate[1]
-            #         + random.randint(
-            #             0, min(-int(peak_coordinate[1] - self.margin), 10)
-            #         )
-            #     ),
-            # )
-            # image[
-            #     random_square.min_y : random_square.max_y,
-            #     random_square.min_x : random_square.max_x,
-            # ] = 0
-            # Plot image with matplotlib
-            plt.imshow(image)
-            # Draw point at the peak coordinate
-            plt.scatter(
-                original_peak_coordinate[1],
-                original_peak_coordinate[0],
-                marker="o",
-                color="red",
-            )
-            plt.scatter(
-                new_peak_coordinate[1],
-                new_peak_coordinate[0],
-                marker="o",
-                color="green",
-            )
-            plt.show()
+        if save_dir is not None:
+            file_name = os.path.basename(file_path).split("_c")[0]
+            if class_mode == 0:
+                micro_tubules_augmentation = MicroTubulesAugmentation(average_circle_peaks)
+                augmentations = micro_tubules_augmentation.generate_augmentations(
+                    image
+                )
+                for title, augmented_image in augmentations.items():
+                    save_path = os.path.join(
+                        save_dir, f"{file_name}_{title}_c1.tiff"
+                    )
+                    save_tiff(augmented_image, save_path, original_order="YXC")
+            if class_mode in (2, 4):
+                micro_tubules_augmentation = MicroTubulesAugmentation()
+                augmentations = micro_tubules_augmentation.generate_augmentations(
+                    image
+                )
+                for title, augmented_image in augmentations.items():
+                    save_path = os.path.join(
+                        save_dir, f"{file_name}_{title}_c0.tiff"
+                    )
+                    save_tiff(augmented_image, save_path, original_order="YXC")
 
         # Plot if enabled
         if debug_plot:
             self._plot_circles(
-                filename,
+                file_path,
                 image,
                 filtered_image,
                 final_peaks,

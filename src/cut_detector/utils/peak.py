@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Optional
 
 import numpy as np
 
@@ -204,3 +205,138 @@ class Peak:
             i += 1
 
         return window_peaks
+
+    def intersects(self, relative_position: float) -> bool:
+        """
+        Return True if the peak intersects the given relative position.
+        """
+        relative_difference = min(
+            abs(self.relative_position - relative_position),  # usual case
+            1 - abs(self.relative_position - relative_position),  # wrap around
+        )
+        return relative_difference < self.relative_width / 2
+
+    @classmethod
+    def enabled_augmentation(cls, peaks: Optional[list[Peak]]) -> list[str]:
+        """
+        Enable image augmentation.
+        Depends on the peaks: must not cut in the middle of a peak,
+        and must have peak on both sides of the cut.
+
+        NB: for some reason, zero is at the bottom.
+        Trigonometric rotation, so 0.25 is at the right, etc.
+        """
+
+        if peaks is None:
+            return [
+                "top",
+                "bottom",
+                "left",
+                "right",
+                "top_left",
+                "top_right",
+                "bottom_left",
+                "bottom_right",
+            ]
+
+        assert len(peaks) == 2, "Only no cut is supported so far"
+
+        augmentations = []
+
+        # Top/bottom
+        if (
+            not peaks[0].intersects(0.25)
+            and not peaks[1].intersects(0.25)
+            and not peaks[0].intersects(0.75)
+            and not peaks[1].intersects(0.75)
+        ):
+            if (  # first MT in top
+                peaks[0].relative_position > 0.25
+                and peaks[0].relative_position < 0.75
+            ) or (  # second MT in top
+                peaks[1].relative_position > 0.25
+                and peaks[1].relative_position < 0.75
+            ):
+                augmentations.append("top")
+
+            if (  # first MT in bottom
+                peaks[0].relative_position < 0.25
+                or peaks[0].relative_position > 0.75
+            ) or (  # second MT in bottom
+                peaks[1].relative_position < 0.25
+                or peaks[1].relative_position > 0.75
+            ):
+                augmentations.append("bottom")
+
+        # Left/right
+        if (
+            not peaks[0].intersects(0.0)
+            and not peaks[1].intersects(0.0)
+            and not peaks[0].intersects(0.5)
+            and not peaks[1].intersects(0.5)
+        ):
+            if (  # first MT in left
+                peaks[0].relative_position > 0.5
+            ) or (  # second MT in left
+                peaks[1].relative_position > 0.5
+            ):
+                augmentations.append("left")
+
+            if (  # first MT in right
+                peaks[0].relative_position < 0.5
+            ) or (  # second MT in right
+                peaks[1].relative_position < 0.5
+            ):
+                augmentations.append("right")
+
+        # Top right/bottom left
+        if (
+            not peaks[0].intersects(1 / 8)
+            and not peaks[1].intersects(1 / 8)
+            and not peaks[0].intersects(5 / 8)
+            and not peaks[1].intersects(5 / 8)
+        ):
+            if (  # first MT in bottom left
+                peaks[0].relative_position < 1 / 8
+                or peaks[0].relative_position > 5 / 8
+            ) or (  # second MT in bottom left
+                peaks[1].relative_position < 1 / 8
+                or peaks[1].relative_position > 5 / 8
+            ):
+                augmentations.append("bottom_left")
+
+            if (  # first MT in top right
+                peaks[0].relative_position > 1 / 8
+                and peaks[0].relative_position < 5 / 8
+            ) or (  # second MT in top right
+                peaks[1].relative_position > 1 / 8
+                and peaks[1].relative_position < 5 / 8
+            ):
+                augmentations.append("top_right")
+
+        # Bottom right/top left
+        if (
+            not peaks[0].intersects(3 / 8)
+            and not peaks[1].intersects(3 / 8)
+            and not peaks[0].intersects(7 / 8)
+            and not peaks[1].intersects(7 / 8)
+        ):
+            if (  # first MT in bottom right
+                peaks[0].relative_position < 3 / 8
+                or peaks[0].relative_position > 7 / 8
+            ) or (  # second MT in bottom right
+                peaks[1].relative_position < 3 / 8
+                or peaks[1].relative_position > 7 / 8
+            ):
+                augmentations.append("bottom_right")
+
+            if (  # first MT in top left
+                peaks[0].relative_position > 3 / 8
+                and peaks[0].relative_position < 7 / 8
+            ) or (  # second MT in top left
+                peaks[1].relative_position > 3 / 8
+                and peaks[1].relative_position < 7 / 8
+            ):
+                augmentations.append("top_left")
+
+        return augmentations
