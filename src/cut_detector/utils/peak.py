@@ -19,6 +19,7 @@ class Peak:
         circle_index=-1,
         prominence=0,
         width=0,
+        relative_width=0,
     ):
         self.relative_position = relative_position
         self.intensity = intensity
@@ -28,6 +29,7 @@ class Peak:
         self.circle_index = circle_index
         self.prominence = prominence
         self.width = width
+        self.relative_width = relative_width
 
     def is_empty(self) -> bool:
         """
@@ -76,6 +78,14 @@ class Peak:
         return np.mean(widths)
 
     @classmethod
+    def get_average_relative_width(cls, peaks: list[Peak]) -> float:
+        """
+        Return the average relative width of a list of peaks.
+        """
+        relative_widths = [peak.relative_width for peak in peaks]
+        return np.mean(relative_widths)
+
+    @classmethod
     def group_peaks(
         cls,
         circle_peaks: list[list[Peak]],
@@ -118,6 +128,7 @@ class Peak:
         average_relative_intensity = cls.get_average_relative_intensity(peaks)
         average_prominence = cls.get_average_prominence(peaks)
         average_width = cls.get_average_width(peaks)
+        average_relative_width = cls.get_average_relative_width(peaks)
         return cls(
             relative_position=average_relative_position,
             intensity=average_intensity,
@@ -125,6 +136,7 @@ class Peak:
             relative_intensity=average_relative_intensity,
             prominence=average_prominence,
             width=average_width,
+            relative_width=average_relative_width,
         )
 
     @classmethod

@@ -21,6 +21,7 @@ from ..utils.bridges_classification.template_type import TemplateType
 from ..utils.hidden_markov_models import HiddenMarkovModel
 from ..utils.image_tools import smart_cropping
 from ..utils.mitosis_track import MitosisTrack
+from ..utils.micro_tubules_augmentation import MicroTubulesAugmentation
 
 
 class MtCutDetectionFactory:
@@ -197,6 +198,7 @@ class MtCutDetectionFactory:
                 circle_index=circle_index,
                 prominence=peaks_data["prominences"][idx],
                 width=peaks_data["widths"][idx],
+                relative_width=peaks_data["widths"][idx] / len(intensities),
             )
             for idx, peak_idx in enumerate(peaks_idx)
             if len(intensities) <= peak_idx < 2 * len(intensities)
@@ -519,11 +521,6 @@ class MtCutDetectionFactory:
             plt.plot(y_circle, x_circle, color="green")
 
         plt.title(filename)
-
-        # Display on whole screen
-        fig_manager = plt.get_current_fig_manager()
-        fig_manager.window.showMaximized()
-
         plt.show()
 
     def _get_average_circle_peaks(
