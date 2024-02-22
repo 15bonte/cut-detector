@@ -73,16 +73,17 @@ class MicroTubulesAugmentation:
     def __init__(self, peaks: Optional[list[Peak]] = None):
         self.augmentations = Peak.enabled_augmentation(peaks)
 
-    def generate_augmentations(self, image) -> dict[str, np.ndarray]:
+    def generate_augmentations(self, original_image) -> dict[str, np.ndarray]:
         """
         Generate image augmentations from the given image.
 
         Parameters
         ----------
         image: np.ndarray
-            The image to augment. YXC
+            The image to augment. CYX
 
         """
+        image = np.moveaxis(original_image, 0, -1)  # YXC
         assert image.shape[0] == image.shape[1]
 
         augmentations = {}

@@ -1,5 +1,4 @@
 import os
-import random
 from typing import Optional
 from matplotlib import pyplot as plt
 import numpy as np
@@ -9,12 +8,9 @@ from sklearn.svm import SVC
 from scipy.signal import find_peaks
 
 from skimage.feature import graycomatrix, graycoprops
-from skimage.exposure import equalize_adapthist
-import scipy.ndimage as ndi
 
 from cnn_framework.utils.tools import save_tiff
 
-from ..utils.box_dimensions import BoxDimensions
 from ..utils.peak import Peak
 from ..utils.bridges_classification.impossible_detection import (
     ImpossibleDetection,
@@ -158,6 +154,10 @@ class MtCutDetectionFactory:
     ) -> list[Peak]:
         """
         Given a list of intensities, detect peaks using scipy.
+
+        Parameters
+        ----------
+        circle_positions : (y, x)
         """
 
         # Concatenate intensities to detect peaks even at borders
@@ -252,19 +252,20 @@ class MtCutDetectionFactory:
         """
         Compute useful data for a circle of a given radius around the mid body spot:
 
+        Parameters
+        -------
+        image : YX
+
         Returns
         -------
 
         circle_positions : list of the coordinates of the pixels on the circle
-
         intensities : list of the intensities of the pixels on the circle
-
         peaks : list of Peaks
 
         """
         # Get image shape
-        size_x = image.shape[1]
-        size_y = image.shape[0]
+        size_y, size_x = image.shape[0], image.shape[1]
 
         # Get the mid-body spot coordinates, middle of the image
         mid_body_position = (size_x // 2, size_y // 2)
@@ -274,10 +275,10 @@ class MtCutDetectionFactory:
         angles = np.linspace(0, 2 * np.pi, perimeter)
         circle_positions = []
         for angle in angles:
-            pos_x = round(mid_body_position[1] + radius * np.cos(angle))
-            pos_y = round(mid_body_position[0] + radius * np.sin(angle))
-            if (pos_x, pos_y) not in circle_positions:
-                circle_positions.append((pos_x, pos_y))
+            pos_y = round(mid_body_position[0] + radius * np.cos(angle))
+            pos_x = round(mid_body_position[1] + radius * np.sin(angle))
+            if (pos_y, pos_x) not in circle_positions:
+                circle_positions.append((pos_y, pos_x))
 
         intensities = []
         for position in circle_positions:
@@ -285,10 +286,10 @@ class MtCutDetectionFactory:
             total, inc = 0, 0
             for k in range(-1, 2):
                 for j in range(-1, 2):
-                    pos_x = position[0] + k
-                    pos_y = position[1] + j
-                    if 0 <= pos_x < size_x and 0 <= pos_y < size_y:
-                        total += image[pos_x, pos_y]
+                    pos_y = position[0] + k
+                    pos_x = position[1] + j
+                    if 0 <= pos_y < size_y and 0 <= pos_x < size_x:
+                        total += image[pos_y, pos_x]
                         inc += 1
             mean = total / inc
             intensities.append(mean)
@@ -408,7 +409,7 @@ class MtCutDetectionFactory:
     def _plot_circles(
         self,
         filename,
-        image,
+        sir_tubulin_image,
         filtered_image,
         final_peaks: list[Peak],
         all_positions: list[list[tuple[int]]],
@@ -418,6 +419,12 @@ class MtCutDetectionFactory:
     ) -> None:
         """
         Plot the image with the circle and the peaks.
+
+        Parameters
+        ----------
+
+        sir_tubulin_image: YX
+        filtered_image: YX
         """
 
         # Plot the intensities of the circle around the mid body spot
@@ -488,7 +495,7 @@ class MtCutDetectionFactory:
 
         # plot initial image
         plt.subplot(2, 3, 4)
-        plt.imshow(image)
+        plt.imshow(sir_tubulin_image)
 
         # plot filtered image
         plt.subplot(2, 3, 5)
@@ -583,6 +590,8 @@ class MtCutDetectionFactory:
         2. Apply an adaptive histogram equalization to improve contrast
         """
         return image  # no pre-processing to apply so far
+        # from skimage.exposure import equalize_adapthist
+        # import scipy.ndimage as ndi
         # filtered_image = ndi.correlate(image, np.full((3, 3), 1 / 9))
         # filtered_image = equalize_adapthist(
         #     filtered_image, kernel_size=self.circle_radius * 2
@@ -595,11 +604,12 @@ class MtCutDetectionFactory:
         debug_plot: bool,
         file_path=None,
         class_mode=None,
-        save_dir =None,
+        save_dir=None,
     ) -> np.ndarray:
         """
         Return bridge image embedding according to template provided in parameters.
 
+        image : CYX
         class_mode: int, used for debug
         """
 
@@ -619,8 +629,8 @@ class MtCutDetectionFactory:
         ]
 
         # Apply image pre-processing
-        sir_tubulin_image = image[..., 0].squeeze()
-        filtered_image = self._pre_process_image(sir_tubulin_image)
+        sir_tubulin_image = image[0, ...].squeeze()  # YX
+        filtered_image = self._pre_process_image(sir_tubulin_image)  # YX
 
         # Get useful data for each circle
         all_positions, all_intensities, all_peaks = [], [], []
@@ -650,9 +660,11 @@ class MtCutDetectionFactory:
         if save_dir is not None:
             file_name = os.path.basename(file_path).split("_c")[0]
             if class_mode == 0:
-                micro_tubules_augmentation = MicroTubulesAugmentation(average_circle_peaks)
-                augmentations = micro_tubules_augmentation.generate_augmentations(
-                    image
+                micro_tubules_augmentation = MicroTubulesAugmentation(
+                    average_circle_peaks
+                )
+                augmentations = (
+                    micro_tubules_augmentation.generate_augmentations(image)
                 )
                 for title, augmented_image in augmentations.items():
                     save_path = os.path.join(
@@ -661,8 +673,8 @@ class MtCutDetectionFactory:
                     save_tiff(augmented_image, save_path, original_order="YXC")
             if class_mode in (2, 4):
                 micro_tubules_augmentation = MicroTubulesAugmentation()
-                augmentations = micro_tubules_augmentation.generate_augmentations(
-                    image
+                augmentations = (
+                    micro_tubules_augmentation.generate_augmentations(image)
                 )
                 for title, augmented_image in augmentations.items():
                     save_path = os.path.join(
@@ -674,7 +686,7 @@ class MtCutDetectionFactory:
         if debug_plot:
             self._plot_circles(
                 file_path,
-                image,
+                sir_tubulin_image,
                 filtered_image,
                 final_peaks,
                 all_positions,
@@ -890,10 +902,16 @@ class MtCutDetectionFactory:
         clf: SVC,
         debug_plot=True,
     ):
+        """
+        Parameters 
+        ----------
+
+        img_bridge : CYX
+        """
         # Make sure crop has expected size
         assert (
-            img_bridge.shape[0] == self.margin * 2
-            and img_bridge.shape[1] == self.margin * 2
+            img_bridge.shape[1] == self.margin * 2
+            and img_bridge.shape[2] == self.margin * 2
         )
 
         # Get template and reshape to 2D data
@@ -995,9 +1013,7 @@ class MtCutDetectionFactory:
             )  # CYX
             crop = smart_cropping(
                 frame_image, self.margin, x_pos, y_pos, pad=True
-            )[
-                0, ...
-            ]  # YX
+            )  # CYX
 
             # Get bridge class (and other data useful for debugging)
             bridge_class, template, distance = self.get_bridge_class(

@@ -98,7 +98,7 @@ def main(
         # Display series of crops
         for crop in results["crops"]:
             plt.figure()
-            plt.imshow(crop, cmap="gray")
+            plt.imshow(crop[0], cmap="gray")
             plt.show()
 
     if display_intensity_analysis and len(results["templates"]) > 0:
