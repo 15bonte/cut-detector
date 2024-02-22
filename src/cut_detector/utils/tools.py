@@ -1,8 +1,14 @@
+import os
+import pickle
 from matplotlib import pyplot as plt
 import numpy as np
+
 import bigfish.stack as stack
 from bigfish.plot.utils import save_plot, get_minmax_values
 from bigfish.plot.plot_images import _define_patch
+
+from cnn_framework.utils.tools import extract_patterns
+from cnn_framework.utils.display_tools import display_progress
 
 
 def re_organize_channels(image: np.ndarray) -> np.ndarray:
@@ -234,3 +240,121 @@ def plot_detection(
         plt.show()
     else:
         plt.close()
+
+
+def get_annotation_file(video_path, mitosis_track, annotations_files):
+    video_file = os.path.basename(video_path).split(".")[0]
+    mitosis_id = f"mitosis_{mitosis_track.id}_"
+    # Assume that mitosis id is consistent across all Trackmate runs
+    # (i.e. possible to use former annotations with new mitoses)
+    annotation_path_candidates = extract_patterns(
+        annotations_files, ["*" + video_file + "*" + mitosis_id + "*"]
+    )
+    # Check if video exists
+    if len(annotation_path_candidates) == 0:
+        return None
+
+    return annotation_path_candidates[0]
+
+
+def upload_annotations(
+    annotations_folder: str, video_path: str, mitoses_folder: str
+) -> tuple[int]:
+    """
+    Function used to upload annotations and perform mid-body detection evaluation.
+    """
+
+    # Read video
+    video_name = os.path.basename(video_path).split(".")[0]
+
+    mitosis_tracks = []
+    # Iterate over "bin" files in exported_mitoses_dir
+    for state_path in os.listdir(mitoses_folder):
+        # Ignore if not for current video
+        if video_name not in state_path:
+            continue
+        # Load mitosis track
+        with open(os.path.join(mitoses_folder, state_path), "rb") as f:
+            mitosis_track = pickle.load(f)
+
+        # Add mitosis track to list
+        mitosis_tracks.append(mitosis_track)
+
+    # Get all files in annotations_folder
+    annotations_files = []
+    for root, _, files in os.walk(annotations_folder):
+        for file in files:
+            if ".xml" in file:
+                annotations_files.append(os.path.join(root, file))
+
+    # Used to evaluate mid-body detection
+    mb_detected, mb_not_detected = 0, 0
+
+    # Generate movie for each mitosis and save
+    wrong_detections = []
+    for i, mitosis_track in enumerate(mitosis_tracks):
+        # If annotation is available, load it and update mitosis track
+        annotation_file = get_annotation_file(
+            video_path, mitosis_track, annotations_files
+        )
+        if annotation_file is not None:
+            mitosis_track.update_mid_body_ground_truth(
+                annotation_file, nb_channels=4
+            )
+
+            # Save updated mitosis track
+            daughter_track_ids = ",".join(
+                [str(d) for d in mitosis_track.daughter_track_ids]
+            )
+            state_path = f"{video_name}_mitosis_{mitosis_track.id}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.bin"
+            save_path = os.path.join(
+                mitoses_folder,
+                state_path,
+            )
+            with open(save_path, "wb") as f:
+                pickle.dump(mitosis_track, f)
+
+            # Evaluate mid-body detection (ignore triple divisions)
+            if len(mitosis_track.daughter_track_ids) == 1:
+                (
+                    is_correctly_detected,
+                    percent_detected,
+                    average_position_difference,
+                ) = mitosis_track.evaluate_mid_body_detection()
+                if is_correctly_detected:
+                    mb_detected += 1
+                else:
+                    mb_not_detected += 1
+                    wrong_detections.append(
+                        {
+                            "path": state_path,
+                            "percent_detected": percent_detected,
+                            "average_position_difference": average_position_difference,
+                        }
+                    )
+                    mitosis_track.evaluate_mid_body_detection()
+
+        display_progress(
+            "Update with annotations and evaluate",
+            i + 1,
+            len(mitosis_tracks),
+            additional_message=f"Image {i+1}/{len(mitosis_tracks)}",
+        )
+
+    # Print wrong detections
+    if len(wrong_detections) > 0:
+        print("\nWrong detections:")
+        for wrong_detection in wrong_detections:
+            print(
+                f"{wrong_detection['path']}: detected {wrong_detection['percent_detected']}% with avg distance {wrong_detection['average_position_difference']}"
+            )
+
+    if (mb_detected + mb_not_detected) == 0:
+        print("No mid-body detection evaluation possible.")
+        return 0, 0
+
+    print(
+        f"\nMid-body detection evaluation: {mb_detected / (mb_detected + mb_not_detected) * 100:.2f}%"
+    )
+
+    return mb_detected, mb_not_detected
