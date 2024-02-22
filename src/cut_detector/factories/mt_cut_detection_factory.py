@@ -70,7 +70,7 @@ class MtCutDetectionFactory:
         center_tolerance_light_spot=5,
         min_percentage_light_spot=0.1,
         crop_size_light_spot=20,
-        length_light_spot=10,
+        length_light_spot=3,
         template_type=TemplateType.ALL,
     ) -> None:
         self.margin = margin
