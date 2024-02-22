@@ -1,14 +1,5 @@
-"""
-This module is an example of a barebones QWidget plugin for napari
-
-It implements the Widget specification.
-see: https://napari.org/stable/plugins/guides.html?#widgets
-
-Replace code below according to your needs.
-"""
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from magicgui import magic_factory
 import tempfile
@@ -23,9 +14,6 @@ from .widget_functions.mitosis_track_generation import (
 )
 from .widget_functions.mt_cut_detection import perform_mt_cut_detection
 from .widget_functions.save_results import perform_results_saving
-
-if TYPE_CHECKING:
-    import napari
 
 
 @magic_factory(
