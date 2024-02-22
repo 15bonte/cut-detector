@@ -97,7 +97,7 @@ class MidBodyDetectionFactory:
         mask_movie: Optional[np.array] = None,
         mid_body_channel=1,
         sir_channel=0,
-        mode="bigfish",
+        mode="h_maxima",
     ) -> dict[int, list[MidBodySpot]]:
         """
         Parameters
@@ -178,7 +178,7 @@ class MidBodyDetectionFactory:
             else:
                 spots, _ = detection.spots_thresholding(
                     filtered_image,
-                    spots_mask.astype(np.bool),
+                    spots_mask.astype(bool),
                     threshold=self.threshold,
                 )
 
