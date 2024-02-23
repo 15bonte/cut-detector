@@ -50,7 +50,7 @@ class MtCutDetectionFactory:
         min_percentage_light_spot (float): Minimum percentage of frames with light spots to
         consider the mitosis as a light spot mitosis.
         crop_size_light_spot (int): Size of the crop for the light spot detection.
-        length_light_spot (int): Length of the video to check around the mt cut for the light spot
+        length_light_spot (int): Length of the video to check around the mt cut for light spot
         detection.
     """
 
