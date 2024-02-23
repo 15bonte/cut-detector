@@ -659,29 +659,26 @@ class MtCutDetectionFactory:
         # Save fake one cut image
         if save_dir is not None:
             file_name = os.path.basename(file_path).split("_c")[0]
-            if class_mode == 0:
-                micro_tubules_augmentation = MicroTubulesAugmentation(
-                    average_circle_peaks
-                )
-                augmentations = (
-                    micro_tubules_augmentation.generate_augmentations(image)
-                )
-                for title, augmented_image in augmentations.items():
-                    save_path = os.path.join(
-                        save_dir, f"{file_name}_{title}_c1.tiff"
-                    )
-                    save_tiff(augmented_image, save_path, original_order="YXC")
-            if class_mode in (2, 4):
-                micro_tubules_augmentation = MicroTubulesAugmentation()
-                augmentations = (
-                    micro_tubules_augmentation.generate_augmentations(image)
-                )
-                for title, augmented_image in augmentations.items():
-                    save_path = os.path.join(
-                        save_dir, f"{file_name}_{title}_c0.tiff"
-                    )
-                    save_tiff(augmented_image, save_path, original_order="YXC")
 
+            # Keep number of peaks depending on class mode
+            if class_mode  in (1, 3):
+                average_circle_peaks = average_circle_peaks[:1]
+            if class_mode in (2, 4):
+                average_circle_peaks = []
+            
+            micro_tubules_augmentation = MicroTubulesAugmentation(
+                average_circle_peaks
+            )
+            augmentations = (
+                micro_tubules_augmentation.generate_augmentations(image)
+            )
+            for title, title_values in augmentations.items():
+                category = title_values["category"]
+                save_path = os.path.join(
+                    save_dir, f"{file_name}_{title}_c{category}.tiff"
+                )
+                save_tiff(title_values["image"], save_path, original_order="YXC")
+            
         # Plot if enabled
         if debug_plot:
             self._plot_circles(

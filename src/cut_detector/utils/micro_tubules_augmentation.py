@@ -71,9 +71,47 @@ class MicroTubulesAugmentation:
     """
 
     def __init__(self, peaks: Optional[list[Peak]] = None):
-        self.augmentations = Peak.enabled_augmentation(peaks)
+        peak_augmentations = []
+        for peak in peaks:
+            peak_augmentations.append(peak.enabled_augmentation())
+        self.augmentations = self.merge_augmentations(peak_augmentations)
 
-    def generate_augmentations(self, original_image) -> dict[str, np.ndarray]:
+    @classmethod
+    def merge_augmentations(
+        cls, peak_augmentations: list[dict[str, int]]
+    ) -> dict[str, int]:
+        """
+        Merge values given to augmentation categories by different peaks.
+        """
+        augmentations = {}
+        for category in [
+            "top",
+            "bottom",
+            "left",
+            "right",
+            "top_left",
+            "bottom_right",
+            "top_right",
+            "bottom_left",
+        ]:
+            value = 0  # by default, no MT is seen
+            for peak_augmentation in peak_augmentations:  # iterate over peaks
+                if (
+                    peak_augmentation[category] == -1
+                ):  # if one peak forbids the augmentation
+                    value = None
+                    break
+                if (
+                    peak_augmentation[category] == 1
+                ):  # if at least one peak found
+                    value = 1
+            if value is not None:
+                augmentations[category] = value
+        return augmentations
+
+    def generate_augmentations(
+        self, original_image
+    ) -> dict[str, dict[int, np.ndarray]]:
         """
         Generate image augmentations from the given image.
 
@@ -93,7 +131,10 @@ class MicroTubulesAugmentation:
             top_image = image[: image.shape[0] - image.shape[0] // 2, :]
             reversed_top_image = top_image[::-1, :]
             transformed_image[image.shape[0] // 2 :, :] = reversed_top_image
-            augmentations["top"] = transformed_image
+            augmentations["top"] = {
+                "image": transformed_image,
+                "category": self.augmentations["top"],
+            }
 
         if "bottom" in self.augmentations:
             transformed_image = np.copy(image)
@@ -102,14 +143,20 @@ class MicroTubulesAugmentation:
             transformed_image[: image.shape[0] - image.shape[0] // 2, :] = (
                 reversed_bottom_image
             )
-            augmentations["bottom"] = transformed_image
+            augmentations["bottom"] = {
+                "image": transformed_image,
+                "category": self.augmentations["bottom"],
+            }
 
         if "left" in self.augmentations:
             transformed_image = np.copy(image)
             left_image = image[:, : image.shape[1] - image.shape[1] // 2]
             reversed_left_image = left_image[:, ::-1]
             transformed_image[:, image.shape[1] // 2 :] = reversed_left_image
-            augmentations["left"] = transformed_image
+            augmentations["left"] = {
+                "image": transformed_image,
+                "category": self.augmentations["left"],
+            }
 
         if "right" in self.augmentations:
             transformed_image = np.copy(image)
@@ -118,30 +165,45 @@ class MicroTubulesAugmentation:
             transformed_image[:, : image.shape[1] - image.shape[1] // 2] = (
                 reversed_right_image
             )
-            augmentations["right"] = transformed_image
+            augmentations["right"] = {
+                "image": transformed_image,
+                "category": self.augmentations["right"],
+            }
 
         if "top_left" in self.augmentations:
             transformed_image = zero_to_bottom_right(image) + np.moveaxis(
                 zero_to_bottom_right(image)[::-1, ::-1].transpose(), 0, -1
             )
-            augmentations["top_left"] = transformed_image
+            augmentations["top_left"] = {
+                "image": transformed_image,
+                "category": self.augmentations["top_left"],
+            }
 
         if "bottom_right" in self.augmentations:
             transformed_image = zero_to_top_left(image) + np.moveaxis(
                 zero_to_top_left(image)[::-1, ::-1].transpose(), 0, -1
             )
-            augmentations["bottom_right"] = transformed_image
+            augmentations["bottom_right"] = {
+                "image": transformed_image,
+                "category": self.augmentations["bottom_right"],
+            }
 
         if "top_right" in self.augmentations:
             transformed_image = zero_to_bottom_left(image) + np.moveaxis(
                 zero_to_bottom_left(image).transpose(), 0, -1
             )
-            augmentations["top_right"] = transformed_image
+            augmentations["top_right"] = {
+                "image": transformed_image,
+                "category": self.augmentations["top_right"],
+            }
 
         if "bottom_left" in self.augmentations:
             transformed_image = zero_to_top_right(image) + np.moveaxis(
                 zero_to_top_right(image).transpose(), 0, -1
             )
-            augmentations["bottom_left"] = transformed_image
+            augmentations["bottom_left"] = {
+                "image": transformed_image,
+                "category": self.augmentations["bottom_left"],
+            }
 
         return augmentations
