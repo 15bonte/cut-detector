@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import Optional
 
 from magicgui import magic_factory
 import tempfile
@@ -196,8 +197,8 @@ def segmentation_tracking(
 def mitosis_track_generation(
     img_layer: "napari.layers.Image",
     xml_model_dir: str,
-    mitoses_save_dir: str,
-    tracks_save_dir: str,
+    mitoses_save_dir: Optional[str],
+    tracks_save_dir: Optional[str],
 ):
     raw_video = re_organize_channels(img_layer.data)  # TXYC
     perform_mitosis_track_generation(
@@ -263,7 +264,11 @@ def micro_tubules_cut_detection(
     img_layer: "napari.layers.Image", exported_mitoses_dir: str
 ):
     raw_video = re_organize_channels(img_layer.data)  # TXYC
-    perform_mt_cut_detection(raw_video, img_layer.name, exported_mitoses_dir)
+    perform_mt_cut_detection(
+        raw_video,
+        img_layer.name,
+        exported_mitoses_dir,
+    )
     print("\nMicro-tubules cut detection finished with success!")
 
 

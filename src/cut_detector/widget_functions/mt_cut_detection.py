@@ -14,8 +14,19 @@ def perform_mt_cut_detection(
     exported_mitoses_dir: str,
     scaler_path: Optional[str] = get_model_path("svc_scaler"),
     model_path: Optional[str] = get_model_path("svc_model"),
-    hmm_bridges_parameters_file: Optional[str] = get_model_path("hmm_bridges_parameters"),
+    hmm_bridges_parameters_file: Optional[str] = get_model_path(
+        "hmm_bridges_parameters"
+    ),
+    update_mitoses: Optional[bool] = True,
 ):
+    """
+
+    Parameters
+    ----------
+    raw_video: np.ndarray
+        TYXC
+
+    """
     mitosis_tracks: list[MitosisTrack] = []
     # Iterate over "bin" files in exported_mitoses_dir
     for state_path in os.listdir(exported_mitoses_dir):
@@ -36,15 +47,22 @@ def perform_mt_cut_detection(
 
         # Perform cut detection
         mt_cut_detector.update_mt_cut_detection(
-            mitosis_track, raw_video, scaler_path, model_path, hmm_bridges_parameters_file
+            mitosis_track,
+            raw_video,
+            scaler_path,
+            model_path,
+            hmm_bridges_parameters_file,
         )
 
         # Save updated mitosis track
-        daughter_track_ids = ",".join([str(d) for d in mitosis_track.daughter_track_ids])
-        state_path = f"{video_name}_mitosis_{mitosis_track.id}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.bin"
-        save_path = os.path.join(
-            exported_mitoses_dir,
-            state_path,
-        )
-        with open(save_path, "wb") as f:
-            pickle.dump(mitosis_track, f)
+        if update_mitoses:
+            daughter_track_ids = ",".join(
+                [str(d) for d in mitosis_track.daughter_track_ids]
+            )
+            state_path = f"{video_name}_mitosis_{mitosis_track.id}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.bin"
+            save_path = os.path.join(
+                exported_mitoses_dir,
+                state_path,
+            )
+            with open(save_path, "wb") as f:
+                pickle.dump(mitosis_track, f)

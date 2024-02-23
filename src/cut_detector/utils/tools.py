@@ -1,5 +1,6 @@
 import os
 import pickle
+from typing import Optional
 from matplotlib import pyplot as plt
 import numpy as np
 
@@ -258,7 +259,10 @@ def get_annotation_file(video_path, mitosis_track, annotations_files):
 
 
 def upload_annotations(
-    annotations_folder: str, video_path: str, mitoses_folder: str
+    annotations_folder: str,
+    video_path: str,
+    mitoses_folder: str,
+    update_mitoses: Optional[bool] = True,
 ) -> tuple[int]:
     """
     Function used to upload annotations and perform mid-body detection evaluation.
@@ -303,16 +307,17 @@ def upload_annotations(
             )
 
             # Save updated mitosis track
-            daughter_track_ids = ",".join(
-                [str(d) for d in mitosis_track.daughter_track_ids]
-            )
-            state_path = f"{video_name}_mitosis_{mitosis_track.id}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.bin"
-            save_path = os.path.join(
-                mitoses_folder,
-                state_path,
-            )
-            with open(save_path, "wb") as f:
-                pickle.dump(mitosis_track, f)
+            if update_mitoses:
+                daughter_track_ids = ",".join(
+                    [str(d) for d in mitosis_track.daughter_track_ids]
+                )
+                state_path = f"{video_name}_mitosis_{mitosis_track.id}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.bin"
+                save_path = os.path.join(
+                    mitoses_folder,
+                    state_path,
+                )
+                with open(save_path, "wb") as f:
+                    pickle.dump(mitosis_track, f)
 
             # Evaluate mid-body detection (ignore triple divisions)
             if len(mitosis_track.daughter_track_ids) == 1:

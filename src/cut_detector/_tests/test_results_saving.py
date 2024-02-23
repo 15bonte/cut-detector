@@ -10,7 +10,10 @@ def test_open_results_saving_widget():
 
 def test_results_saving():
     perform_results_saving(
-        get_data_path("mitoses"), get_data_path("results"), verbose=True
+        get_data_path("mitoses"),
+        show=False,
+        save_dir=get_data_path("results"),
+        verbose=True,
     )
 
 

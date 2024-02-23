@@ -20,6 +20,7 @@ def test_annotations_upload(
             annotations_folder,
             os.path.join(video_folder, video),
             mitoses_folder,
+            update_mitoses=False,
         )
         all_detected += detected
         all_not_detected += not_detected

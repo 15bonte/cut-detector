@@ -112,8 +112,8 @@ def perform_mitosis_track_generation(
     raw_video: np.ndarray,
     video_name: str,
     xml_model_dir: str,
-    mitoses_save_dir: str,
-    tracks_save_dir: str,
+    mitoses_save_dir: Optional[str],
+    tracks_save_dir: Optional[str],
     metaphase_model_path: Optional[str] = get_model_path("metaphase_model"),
     hmm_metaphase_parameters_file: Optional[str] = get_model_path(
         "hmm_metaphase_parameters"
@@ -126,13 +126,16 @@ def perform_mitosis_track_generation(
     Perform mitosis track generation.
     """
     # Create save_dir if not exists
-    if not os.path.exists(mitoses_save_dir):
+    if mitoses_save_dir is not None and not os.path.exists(mitoses_save_dir):
         os.makedirs(mitoses_save_dir)
 
     # Create video tracks save dir if not exists
-    video_tracks_save_dir = os.path.join(tracks_save_dir, video_name)
-    if not os.path.exists(video_tracks_save_dir):
-        os.makedirs(video_tracks_save_dir)
+    if tracks_save_dir is not None:
+        video_tracks_save_dir = os.path.join(tracks_save_dir, video_name)
+        if not os.path.exists(video_tracks_save_dir):
+            os.makedirs(video_tracks_save_dir)
+    else:
+        video_tracks_save_dir = None
 
     # Create factory instance, where useful functions are defined
     tracks_merging_factory = TracksMergingFactory()
@@ -185,16 +188,17 @@ def perform_mitosis_track_generation(
         mitosis_track.update_is_near_border(raw_video)
 
         # Save mitosis track
-        daughter_track_ids = ",".join(
-            [str(d) for d in mitosis_track.daughter_track_ids]
-        )
-        state_path = f"{video_name}_mitosis_{i}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.bin"
-        save_path = os.path.join(
-            mitoses_save_dir,
-            state_path,
-        )
-        with open(save_path, "wb") as f:
-            pickle.dump(mitosis_track, f)
+        if mitoses_save_dir is not None:
+            daughter_track_ids = ",".join(
+                [str(d) for d in mitosis_track.daughter_track_ids]
+            )
+            state_path = f"{video_name}_mitosis_{i}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.bin"
+            save_path = os.path.join(
+                mitoses_save_dir,
+                state_path,
+            )
+            with open(save_path, "wb") as f:
+                pickle.dump(mitosis_track, f)
 
         display_progress(
             "Mitosis tracks generation:",
@@ -204,13 +208,14 @@ def perform_mitosis_track_generation(
         )
 
     # Save updated trackmate tracks
-    for trackmate_track in trackmate_tracks:
-        state_path = f"track_{trackmate_track.track_id}.bin"
-        save_path = os.path.join(
-            video_tracks_save_dir,
-            state_path,
-        )
-        with open(save_path, "wb") as f:
-            pickle.dump(trackmate_track, f)
+    if video_tracks_save_dir is not None:
+        for trackmate_track in trackmate_tracks:
+            state_path = f"track_{trackmate_track.track_id}.bin"
+            save_path = os.path.join(
+                video_tracks_save_dir,
+                state_path,
+            )
+            with open(save_path, "wb") as f:
+                pickle.dump(trackmate_track, f)
 
     return mitosis_tracks
