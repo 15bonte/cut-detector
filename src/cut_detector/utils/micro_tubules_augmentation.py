@@ -72,6 +72,8 @@ class MicroTubulesAugmentation:
 
     def __init__(self, peaks: Optional[list[Peak]] = None):
         peak_augmentations = []
+        if peaks is None:
+            peaks = []
         for peak in peaks:
             peak_augmentations.append(peak.enabled_augmentation())
         self.augmentations = self.merge_augmentations(peak_augmentations)
