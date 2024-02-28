@@ -275,12 +275,15 @@ class TracksMergingFactory:
 
         Parameters
         ----------
-        metaphase_model: CNN model path
-        nuclei_crops: CYX
+        metaphase_model : str
+            CNN model path
+        nuclei_crops :  list[np.array]
+            list[CYX]
 
         Returns
         -------
-        predictions: [class predicted]
+        predictions : list[int]
+            predicted classes
         """
 
         # Metaphase model parameters
@@ -290,7 +293,6 @@ class TracksMergingFactory:
         model_parameters.val_ratio = 0
         model_parameters.test_ratio = 1
 
-        # Model definition
         # Load pretrained model
         model = MetaphaseCnn(nb_classes=model_parameters.nb_classes)
 
@@ -310,12 +312,12 @@ class TracksMergingFactory:
             nuclei_crops,
             is_train=False,
             names=[f"{idx}.ext" for idx in range(len(nuclei_crops))],
-            data_manager=DefaultDataManager(""),
+            data_manager=DefaultDataManager(),
             params=model_parameters,
         )
         test_dl = DataLoader(
             dataset_test,
-            batch_size=128,
+            batch_size=model_parameters.batch_size,
             collate_fn=collate_dataset_output,
         )
 

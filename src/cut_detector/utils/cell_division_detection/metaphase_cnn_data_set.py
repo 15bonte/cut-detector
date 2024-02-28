@@ -12,9 +12,8 @@ class MetaphaseCnnDataSet(AbstractDataSet):
     """
 
     def __init__(self, data, *args, **kwargs):
-        # Not pythonic, but needed as super init calls generate_raw_images
-        self.data = data
         super().__init__(*args, **kwargs)
+        self.data = data
 
     def set_transforms(self):
         height, width = self.params.input_dimensions.to_tuple(False)

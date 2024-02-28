@@ -112,8 +112,8 @@ def perform_mitosis_track_generation(
     raw_video: np.ndarray,
     video_name: str,
     xml_model_dir: str,
-    mitoses_save_dir: Optional[str],
-    tracks_save_dir: Optional[str],
+    mitoses_save_dir: Optional[str] = None,
+    tracks_save_dir: Optional[str] = None,
     metaphase_model_path: Optional[str] = get_model_path("metaphase_model"),
     hmm_metaphase_parameters_file: Optional[str] = get_model_path(
         "hmm_metaphase_parameters"

@@ -20,3 +20,5 @@ class MetaphaseCnnModelParams(BaseModelParams):
 
         self.c_indexes = [0, 1, 2]
         self.z_indexes = [0]
+
+        self.batch_size = 128
