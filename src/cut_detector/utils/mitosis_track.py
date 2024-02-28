@@ -143,7 +143,8 @@ class MitosisTrack:
         """
         Parameters
         ----------
-        raw_video: np.array  TYXC
+        raw_video: np.array
+            TYXC
         ----------
         """
 
@@ -237,14 +238,16 @@ class MitosisTrack:
         """
         Parameters
         ----------
-        raw_video: initial video TYXC
-        ----------
+        raw_video : np.array
+            initial video, TYXC
 
         Returns
         ----------
-        mitosis_movie: mitosis movie TYXC
-        mask_movie: mask movie TYX
-        ----------
+        mitosis_movie : np.array
+            mitosis movie, TYXC
+        mask_movie : np.array
+            mask movie, TYX
+
         """
 
         mitosis_movie, mask_movie = [], []
@@ -298,6 +301,11 @@ class MitosisTrack:
 
         mitosis_movie = np.array(mitosis_movie)  # TYXC
         mask_movie = np.array(mask_movie)  # TYX
+
+        # If mid-bodies are already computed, add them to the mitosis movie
+        if self.mid_body_spots:
+            mitosis_movie = self.add_mid_body_movie(mitosis_movie, mask_movie)
+            return mitosis_movie[..., :-1], mitosis_movie[..., -1].squeeze()
 
         return mitosis_movie, mask_movie
 
@@ -468,9 +476,9 @@ class MitosisTrack:
                     class_abs_first_frame
                     >= self.gt_key_events_frame["cytokinesis"]
                 )  # after metaphase
-                self.gt_key_events_frame[
-                    "first_mt_cut"
-                ] = class_abs_first_frame
+                self.gt_key_events_frame["first_mt_cut"] = (
+                    class_abs_first_frame
+                )
 
             # Second MT cut
             if (
@@ -481,9 +489,9 @@ class MitosisTrack:
                     class_abs_first_frame
                     >= self.gt_key_events_frame["first_mt_cut"]
                 )  # after first MT cut
-                self.gt_key_events_frame[
-                    "second_mt_cut"
-                ] = class_abs_first_frame
+                self.gt_key_events_frame["second_mt_cut"] = (
+                    class_abs_first_frame
+                )
 
             # First membrane cut
             if (
@@ -494,9 +502,9 @@ class MitosisTrack:
                     class_abs_first_frame
                     >= self.gt_key_events_frame["first_mt_cut"]
                 )  # after first MT cut
-                self.gt_key_events_frame[
-                    "first_membrane_cut"
-                ] = class_abs_first_frame
+                self.gt_key_events_frame["first_membrane_cut"] = (
+                    class_abs_first_frame
+                )
 
     def evaluate_mid_body_detection(
         self, tolerance=10, percent_seen=0.9
