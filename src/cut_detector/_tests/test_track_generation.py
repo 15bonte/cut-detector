@@ -12,6 +12,9 @@ def test_open_track_generation_widget():
     # Just try to open the widget
     mitosis_track_generation()
 
+
+def test_track_generation():
+
     # Add video
     video = video = io.imread(
         os.path.join(get_data_path("videos"), "example_video.tif")

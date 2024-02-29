@@ -204,7 +204,7 @@ def perform_mitosis_track_generation(
             "Mitosis tracks generation:",
             i + 1,
             len(mitosis_tracks),
-            additional_message=f"Frame {i + 1}/{len(mitosis_tracks)}",
+            additional_message=f"Mitosis {i + 1}/{len(mitosis_tracks)}",
         )
 
     # Save updated trackmate tracks
