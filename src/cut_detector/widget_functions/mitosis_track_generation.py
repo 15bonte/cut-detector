@@ -114,9 +114,9 @@ def perform_mitosis_track_generation(
     xml_model_dir: str,
     mitoses_save_dir: Optional[str] = None,
     tracks_save_dir: Optional[str] = None,
-    metaphase_model_path: Optional[str] = get_model_path("metaphase_model"),
-    hmm_metaphase_parameters_file: Optional[str] = get_model_path(
-        "hmm_metaphase_parameters"
+    metaphase_model_path: Optional[str] = get_model_path("metaphase_cnn"),
+    hmm_metaphase_parameters_file: Optional[str] = os.path.join(
+        get_model_path("hmm"), "hmm_metaphase_parameters.npz"
     ),
     predictions_file: Optional[str] = None,
     only_predictions_update: bool = False,
@@ -155,7 +155,7 @@ def perform_mitosis_track_generation(
         trackmate_tracks,
         raw_spots,
         raw_video,
-        metaphase_model_path,
+        os.path.join(metaphase_model_path, "metaphase_cnn.pt"),
         hmm_metaphase_parameters_file,
         predictions_file,
         video_name,

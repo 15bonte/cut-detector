@@ -12,10 +12,14 @@ def perform_mt_cut_detection(
     raw_video: np.ndarray,
     video_name: str,
     exported_mitoses_dir: str,
-    scaler_path: Optional[str] = get_model_path("svc_scaler"),
-    model_path: Optional[str] = get_model_path("svc_model"),
-    hmm_bridges_parameters_file: Optional[str] = get_model_path(
-        "hmm_bridges_parameters"
+    scaler_path: Optional[str] = os.path.join(
+        get_model_path("svc_bridges"), "scaler.pkl"
+    ),
+    model_path: Optional[str] = os.path.join(
+        get_model_path("svc_bridges"), "model.pkl"
+    ),
+    hmm_bridges_parameters_file: Optional[str] = os.path.join(
+        get_model_path("hmm"), "hmm_bridges_parameters.npz"
     ),
     update_mitoses: Optional[bool] = True,
 ):
