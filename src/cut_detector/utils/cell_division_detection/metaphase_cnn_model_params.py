@@ -22,3 +22,5 @@ class MetaphaseCnnModelParams(BaseModelParams):
         self.z_indexes = [0]
 
         self.batch_size = 128
+
+        self.encoder_name = "resnet18"

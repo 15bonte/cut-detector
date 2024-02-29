@@ -3,7 +3,7 @@ import albumentations as A
 
 from cnn_framework.utils.data_sets.abstract_data_set import AbstractDataSet
 from cnn_framework.utils.data_sets.dataset_output import DatasetOutput
-from cnn_framework.utils.preprocessing import normalize_array
+from cnn_framework.utils.tools import handle_image_type
 
 
 class MetaphaseCnnDataSet(AbstractDataSet):
@@ -19,6 +19,11 @@ class MetaphaseCnnDataSet(AbstractDataSet):
         height, width = self.params.input_dimensions.to_tuple(False)
         self.transforms = A.Compose(
             [
+                A.Normalize(
+                    self.mean_std["mean"],
+                    std=self.mean_std["std"],
+                    max_pixel_value=1,
+                ),
                 A.PadIfNeeded(
                     min_height=height,
                     min_width=width,
@@ -32,8 +37,9 @@ class MetaphaseCnnDataSet(AbstractDataSet):
 
     def generate_raw_images(self, filename):
         idx = int(filename.split(".")[0])
-        nucleus_image = normalize_array(self.data[idx], None)  # CYX
-        nucleus_image = np.moveaxis(nucleus_image, 0, -1)  # YXC
+        nucleus_image = np.moveaxis(self.data[idx], 0, -1)  # YXC
+        nucleus_image = handle_image_type(nucleus_image)  # to [0, 1]
         return DatasetOutput(
-            input=nucleus_image, target_array=np.asarray([0, 1, 0])
+            input=nucleus_image,
+            target_array=np.asarray([0, 1, 0]),  # any target value
         )

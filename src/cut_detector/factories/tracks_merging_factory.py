@@ -18,6 +18,7 @@ from cnn_framework.utils.data_loader_generators.data_loader_generator import (
     collate_dataset_output,
 )
 from cnn_framework.utils.enum import PredictMode
+from cnn_framework.utils.models.resnet_classifier import ResnetClassifier
 
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.trackmate_spot import TrackMateSpot
@@ -27,7 +28,6 @@ from ..utils.hidden_markov_models import HiddenMarkovModel
 from ..utils.cell_division_detection.metaphase_cnn_data_set import (
     MetaphaseCnnDataSet,
 )
-from ..utils.cell_division_detection.metaphase_cnn import MetaphaseCnn
 from ..utils.cell_division_detection.metaphase_cnn_model_params import (
     MetaphaseCnnModelParams,
 )
@@ -292,9 +292,15 @@ class TracksMergingFactory:
         model_parameters.train_ratio = 0
         model_parameters.val_ratio = 0
         model_parameters.test_ratio = 1
+        model_parameters.models_folder = metaphase_model_path
 
         # Load pretrained model
-        model = MetaphaseCnn(nb_classes=model_parameters.nb_classes)
+        model = ResnetClassifier(
+            nb_classes=model_parameters.nb_classes,
+            nb_input_channels=len(model_parameters.c_indexes)
+            * len(model_parameters.z_indexes),
+            encoder_name=model_parameters.encoder_name,
+        )
 
         map_location = None
         if not torch.cuda.is_available():
@@ -302,7 +308,7 @@ class TracksMergingFactory:
             print("No GPU found, using CPU.")
         model.load_state_dict(
             torch.load(
-                metaphase_model_path,
+                os.path.join(metaphase_model_path, "metaphase_cnn.pt"),
                 map_location=map_location,
             )
         )

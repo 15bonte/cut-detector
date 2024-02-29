@@ -155,7 +155,7 @@ def perform_mitosis_track_generation(
         trackmate_tracks,
         raw_spots,
         raw_video,
-        os.path.join(metaphase_model_path, "metaphase_cnn.pt"),
+        metaphase_model_path,
         hmm_metaphase_parameters_file,
         predictions_file,
         video_name,
