@@ -2,23 +2,6 @@ import json
 import os
 import numpy as np
 import xmltodict
-import torch
-from torch.utils.data import DataLoader
-
-from cnn_framework.utils.model_managers.cnn_model_manager import (
-    CnnModelManager,
-)
-from cnn_framework.utils.data_managers.default_data_manager import (
-    DefaultDataManager,
-)
-from cnn_framework.utils.metrics.classification_accuracy import (
-    ClassificationAccuracy,
-)
-from cnn_framework.utils.data_loader_generators.data_loader_generator import (
-    collate_dataset_output,
-)
-from cnn_framework.utils.enum import PredictMode
-from cnn_framework.utils.models.resnet_classifier import ResnetClassifier
 
 from ..utils.tools import perform_cnn_inference
 from ..utils.mitosis_track import MitosisTrack
@@ -26,9 +9,6 @@ from ..utils.trackmate_spot import TrackMateSpot
 from ..utils.trackmate_track import TrackMateTrack
 from ..utils.trackmate_frame_spots import TrackMateFrameSpots
 from ..utils.hidden_markov_models import HiddenMarkovModel
-from ..utils.cell_division_detection.metaphase_cnn_data_set import (
-    MetaphaseCnnDataSet,
-)
 from ..utils.cell_division_detection.metaphase_cnn_model_params import (
     MetaphaseCnnModelParams,
 )
@@ -291,8 +271,6 @@ class TracksMergingFactory:
             model_path=metaphase_model_path,
             images=nuclei_crops,
             cnn_model_params=MetaphaseCnnModelParams,
-            cnn_data_set=MetaphaseCnnDataSet,
-            model_name="metaphase_cnn.pt",
         )
         return predictions
 

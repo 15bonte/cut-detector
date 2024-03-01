@@ -11,15 +11,23 @@ from skimage.feature import graycomatrix, graycoprops
 
 from cnn_framework.utils.tools import save_tiff
 
+from ..utils.bridges_classification.bridges_mt_model_manager import (
+    BridgesMtModelManager,
+)
+from ..utils.bridges_classification.bridges_mt_cnn_model_params import (
+    BridgesMtCnnModelParams,
+)
+from ..utils.tools import perform_cnn_inference
 from ..utils.peak import Peak
 from ..utils.bridges_classification.impossible_detection import (
     ImpossibleDetection,
 )
 from ..utils.bridges_classification.template_type import TemplateType
 from ..utils.hidden_markov_models import HiddenMarkovModel
-from ..utils.image_tools import smart_cropping
 from ..utils.mitosis_track import MitosisTrack
-from ..utils.micro_tubules_augmentation import MicroTubulesAugmentation
+from ..utils.bridges_classification.micro_tubules_augmentation import (
+    MicroTubulesAugmentation,
+)
 
 
 class MtCutDetectionFactory:
@@ -963,6 +971,7 @@ class MtCutDetectionFactory:
         model_path: str,
         hmm_bridges_parameters_file: str,
         debug_plot=False,
+        list_class_bridges: Optional[list[int]] = None,
     ):
         """
         Update micro-tubules cut detection using bridges classification.
@@ -1111,12 +1120,36 @@ class MtCutDetectionFactory:
         mitosis_tracks: list[MitosisTrack],
         video: np.ndarray,
         bridges_mt_cnn_model_path: str,
-    ):
+    ) -> dict[int, list[int]]:
+        """
+        Classify bridges using a CNN model.
+        """
         # Get bridge crops
         crops = {}
         for mitosis_track in mitosis_tracks:
-            crops[mitosis_track.id] = mitosis_track.get_bridge_images(
-                video, self.margin
-            )
+            raw_crops = mitosis_track.get_bridge_images(video, self.margin)
+            first_channel_crops = [
+                np.expand_dims(raw_crop[0], axis=0) for raw_crop in raw_crops
+            ]
+            crops[mitosis_track.id] = first_channel_crops
 
         # Perform classification
+        crops_list = [
+            crop for crop_list in crops.values() for crop in crop_list
+        ]
+        predictions = perform_cnn_inference(
+            model_path=bridges_mt_cnn_model_path,
+            images=crops_list,
+            cnn_model_params=BridgesMtCnnModelParams,
+            model_manager=BridgesMtModelManager,
+        )
+
+        # Create prediction dictionary
+        mitosis_predictions = {}
+        for mitosis_track_id, crop_list in crops.items():
+            mitosis_predictions[mitosis_track_id] = predictions[
+                : len(crop_list)
+            ]
+            predictions = predictions[len(crop_list) :]
+
+        return mitosis_predictions

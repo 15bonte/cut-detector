@@ -2,7 +2,7 @@ from typing import Optional
 
 import numpy as np
 
-from .peak import Peak
+from ..peak import Peak
 
 
 def zero_to_bottom_right(image):

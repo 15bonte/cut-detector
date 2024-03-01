@@ -5,6 +5,8 @@ from matplotlib import pyplot as plt
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
+import ast
+import csv
 
 import bigfish.stack as stack
 from bigfish.plot.utils import save_plot, get_minmax_values
@@ -27,7 +29,8 @@ from cnn_framework.utils.data_loader_generators.data_loader_generator import (
 from cnn_framework.utils.enum import PredictMode
 from cnn_framework.utils.models.resnet_classifier import ResnetClassifier
 from cnn_framework.utils.model_params.base_model_params import BaseModelParams
-from cnn_framework.utils.data_sets.abstract_data_set import AbstractDataSet
+
+from .cnn_data_set import CnnDataSet
 
 
 def re_organize_channels(image: np.ndarray) -> np.ndarray:
@@ -383,12 +386,34 @@ def upload_annotations(
     return mb_detected, mb_not_detected
 
 
+def csv_parameters_to_dict(parameters_path: str):
+    """
+    Read parameters from a csv file and return them as a dictionary.
+    Assume to skip some lines if they do not have the right format.
+    """
+    result_dict = {}
+    with open(parameters_path, "r") as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=",")
+        for row in csv_reader:
+            splitted_row = row[0].split(";", 1)
+            if len(splitted_row) == 1:  # if there is no data in second column
+                continue
+            if len(row) > 1:  # if there is a comma in second column
+                splitted_row[1] += "," + ",".join(row[1:])
+            key, value = splitted_row[0], splitted_row[1]
+            if (
+                len(value) and value[0] == "[" and value[-1] == "]"
+            ):  # transform string to list
+                value = ast.literal_eval(value)
+            result_dict[key] = value
+    return result_dict
+
+
 def perform_cnn_inference(
     model_path: str,
     images: list[np.array],
     cnn_model_params: BaseModelParams,
-    cnn_data_set: AbstractDataSet,
-    model_name: str,
+    cnn_data_set=CnnDataSet,
     cnn_classifier=ResnetClassifier,
     model_manager=CnnModelManager,
 ):
@@ -405,8 +430,6 @@ def perform_cnn_inference(
         model parameters
     cnn_data_set : AbstractDataSet
         dataset to read data
-    model_name : str
-        model name
     cnn_classifier : ResnetClassifier
         CNN classifier
     model_manager : CnnModelManager
@@ -426,12 +449,16 @@ def perform_cnn_inference(
     model_parameters.test_ratio = 1
     model_parameters.models_folder = model_path
 
+    # Read csv parameters file
+    parameters_file = os.path.join(model_path, "parameters.csv")
+    training_parameters = csv_parameters_to_dict(parameters_file)
+
     # Load pretrained model
     model = cnn_classifier(
-        nb_classes=model_parameters.nb_classes,
-        nb_input_channels=len(model_parameters.c_indexes)
-        * len(model_parameters.z_indexes),
-        encoder_name=model_parameters.encoder_name,
+        nb_classes=int(training_parameters["nb_classes"]),
+        nb_input_channels=len(training_parameters["c_indexes"])
+        * len(training_parameters["z_indexes"]),
+        encoder_name=training_parameters["encoder_name"],
     )
 
     map_location = None
@@ -440,7 +467,7 @@ def perform_cnn_inference(
         print("No GPU found, using CPU.")
     model.load_state_dict(
         torch.load(
-            os.path.join(model_path, model_name),
+            os.path.join(model_path, f"{model_parameters.name}.pt"),
             map_location=map_location,
         )
     )

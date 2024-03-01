@@ -21,6 +21,9 @@ def perform_mt_cut_detection(
     hmm_bridges_parameters_file: Optional[str] = os.path.join(
         get_model_path("hmm"), "hmm_bridges_parameters.npz"
     ),
+    bridges_mt_cnn_model_path: Optional[str] = get_model_path(
+        "bridges_mt_cnn"
+    ),
     update_mitoses: Optional[bool] = True,
 ):
     """
@@ -46,6 +49,10 @@ def perform_mt_cut_detection(
 
     # Generate a list of the first MT cut time for each mitosis track
     mt_cut_detector = MtCutDetectionFactory()
+    list_class_bridges = mt_cut_detector.classify_bridges(
+        mitosis_tracks, raw_video, bridges_mt_cnn_model_path
+    )
+
     for i, mitosis_track in enumerate(mitosis_tracks):
         print(f"Detect MT cut ({i+1}/{len(mitosis_tracks)})...")
 
@@ -56,6 +63,7 @@ def perform_mt_cut_detection(
             scaler_path,
             model_path,
             hmm_bridges_parameters_file,
+            list_class_bridges=list_class_bridges[mitosis_track.id],
         )
 
         # Save updated mitosis track

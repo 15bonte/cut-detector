@@ -6,7 +6,7 @@ from cnn_framework.utils.data_sets.dataset_output import DatasetOutput
 from cnn_framework.utils.tools import handle_image_type
 
 
-class MetaphaseCnnDataSet(AbstractDataSet):
+class CnnDataSet(AbstractDataSet):
     """
     Custom class to avoid loading images from folder.
     """
@@ -37,9 +37,14 @@ class MetaphaseCnnDataSet(AbstractDataSet):
 
     def generate_raw_images(self, filename):
         idx = int(filename.split(".")[0])
+        # Get image and adapt it to torch
         nucleus_image = np.moveaxis(self.data[idx], 0, -1)  # YXC
         nucleus_image = handle_image_type(nucleus_image)  # to [0, 1]
+        # Define any target value
+        target_array = np.zeros(self.params.nb_classes)
+        target_array[0] = 1
+        # Construct output
         return DatasetOutput(
             input=nucleus_image,
-            target_array=np.asarray([0, 1, 0]),  # any target value
+            target_array=target_array,
         )
