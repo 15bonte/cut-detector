@@ -3,6 +3,8 @@ import pickle
 from typing import Optional
 from matplotlib import pyplot as plt
 import numpy as np
+import torch
+from torch.utils.data import DataLoader
 
 import bigfish.stack as stack
 from bigfish.plot.utils import save_plot, get_minmax_values
@@ -10,6 +12,22 @@ from bigfish.plot.plot_images import _define_patch
 
 from cnn_framework.utils.tools import extract_patterns
 from cnn_framework.utils.display_tools import display_progress
+from cnn_framework.utils.model_managers.cnn_model_manager import (
+    CnnModelManager,
+)
+from cnn_framework.utils.data_managers.default_data_manager import (
+    DefaultDataManager,
+)
+from cnn_framework.utils.metrics.classification_accuracy import (
+    ClassificationAccuracy,
+)
+from cnn_framework.utils.data_loader_generators.data_loader_generator import (
+    collate_dataset_output,
+)
+from cnn_framework.utils.enum import PredictMode
+from cnn_framework.utils.models.resnet_classifier import ResnetClassifier
+from cnn_framework.utils.model_params.base_model_params import BaseModelParams
+from cnn_framework.utils.data_sets.abstract_data_set import AbstractDataSet
 
 
 def re_organize_channels(image: np.ndarray) -> np.ndarray:
@@ -363,3 +381,91 @@ def upload_annotations(
     )
 
     return mb_detected, mb_not_detected
+
+
+def perform_cnn_inference(
+    model_path: str,
+    images: list[np.array],
+    cnn_model_params: BaseModelParams,
+    cnn_data_set: AbstractDataSet,
+    model_name: str,
+    cnn_classifier=ResnetClassifier,
+    model_manager=CnnModelManager,
+):
+    """
+    Perform CNN inference on a list of images.
+
+    Parameters
+    ----------
+    model_path : str
+        CNN model path
+    images :  list[np.array]
+        list[CYX]
+    cnn_model_params : BaseModelParams
+        model parameters
+    cnn_data_set : AbstractDataSet
+        dataset to read data
+    model_name : str
+        model name
+    cnn_classifier : ResnetClassifier
+        CNN classifier
+    model_manager : CnnModelManager
+        model manager
+
+    Returns
+    -------
+    predictions : list[int]
+        predicted classes
+
+    """
+    # Metaphase model parameters
+    model_parameters = cnn_model_params()
+    # Modify parameters for inference
+    model_parameters.train_ratio = 0
+    model_parameters.val_ratio = 0
+    model_parameters.test_ratio = 1
+    model_parameters.models_folder = model_path
+
+    # Load pretrained model
+    model = cnn_classifier(
+        nb_classes=model_parameters.nb_classes,
+        nb_input_channels=len(model_parameters.c_indexes)
+        * len(model_parameters.z_indexes),
+        encoder_name=model_parameters.encoder_name,
+    )
+
+    map_location = None
+    if not torch.cuda.is_available():
+        map_location = torch.device("cpu")
+        print("No GPU found, using CPU.")
+    model.load_state_dict(
+        torch.load(
+            os.path.join(model_path, model_name),
+            map_location=map_location,
+        )
+    )
+
+    # Test (no sampler to keep order)
+    dataset_test = cnn_data_set(
+        images,
+        is_train=False,
+        names=[f"{idx}.ext" for idx in range(len(images))],
+        data_manager=DefaultDataManager(),
+        params=model_parameters,
+    )
+    test_dl = DataLoader(
+        dataset_test,
+        batch_size=model_parameters.batch_size,
+        collate_fn=collate_dataset_output,
+    )
+
+    manager = model_manager(model, model_parameters, ClassificationAccuracy)
+
+    predictions = manager.predict(
+        test_dl,
+        predict_mode=PredictMode.GetPrediction,
+        nb_images_to_save=0,
+    )  # careful, this is scores and not probabilities
+    predictions = [int(np.argmax(p)) for p in predictions]
+
+    return predictions

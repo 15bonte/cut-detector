@@ -20,6 +20,7 @@ from cnn_framework.utils.data_loader_generators.data_loader_generator import (
 from cnn_framework.utils.enum import PredictMode
 from cnn_framework.utils.models.resnet_classifier import ResnetClassifier
 
+from ..utils.tools import perform_cnn_inference
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.trackmate_spot import TrackMateSpot
 from ..utils.trackmate_track import TrackMateTrack
@@ -271,7 +272,7 @@ class TracksMergingFactory:
         metaphase_model_path: str, nuclei_crops: list[np.array]
     ) -> list[int]:
         """
-        Run CNN model to predict metaphase spots
+        Run CNN model to predict metaphase spots.
 
         Parameters
         ----------
@@ -286,58 +287,13 @@ class TracksMergingFactory:
             predicted classes
         """
 
-        # Metaphase model parameters
-        model_parameters = MetaphaseCnnModelParams()
-        # Modify parameters for training
-        model_parameters.train_ratio = 0
-        model_parameters.val_ratio = 0
-        model_parameters.test_ratio = 1
-        model_parameters.models_folder = metaphase_model_path
-
-        # Load pretrained model
-        model = ResnetClassifier(
-            nb_classes=model_parameters.nb_classes,
-            nb_input_channels=len(model_parameters.c_indexes)
-            * len(model_parameters.z_indexes),
-            encoder_name=model_parameters.encoder_name,
+        predictions = perform_cnn_inference(
+            model_path=metaphase_model_path,
+            images=nuclei_crops,
+            cnn_model_params=MetaphaseCnnModelParams,
+            cnn_data_set=MetaphaseCnnDataSet,
+            model_name="metaphase_cnn.pt",
         )
-
-        map_location = None
-        if not torch.cuda.is_available():
-            map_location = torch.device("cpu")
-            print("No GPU found, using CPU.")
-        model.load_state_dict(
-            torch.load(
-                os.path.join(metaphase_model_path, "metaphase_cnn.pt"),
-                map_location=map_location,
-            )
-        )
-
-        # Test (no sampler to keep order)
-        dataset_test = MetaphaseCnnDataSet(
-            nuclei_crops,
-            is_train=False,
-            names=[f"{idx}.ext" for idx in range(len(nuclei_crops))],
-            data_manager=DefaultDataManager(),
-            params=model_parameters,
-        )
-        test_dl = DataLoader(
-            dataset_test,
-            batch_size=model_parameters.batch_size,
-            collate_fn=collate_dataset_output,
-        )
-
-        manager = CnnModelManager(
-            model, model_parameters, ClassificationAccuracy
-        )
-
-        predictions = manager.predict(
-            test_dl,
-            predict_mode=PredictMode.GetPrediction,
-            nb_images_to_save=0,
-        )  # careful, this is scores and not probabilities
-        predictions = [int(np.argmax(p)) for p in predictions]
-
         return predictions
 
     @staticmethod
