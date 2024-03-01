@@ -688,3 +688,51 @@ class MitosisTrack:
             )
 
         return spot_detected
+
+    def get_bridge_images(
+        self, video: np.array, margin: int
+    ) -> list[np.array]:
+        """
+        Generate list of crops around the mid-body.
+        First frame is the maximum of cytokinesis frame and mid-body first frame.
+        Last frame is the last mid-body frame.
+
+        Parameters
+        ----------
+        video: np.array
+            TYXC
+        margin: int
+            number of pixels to keep around the mid-body, in all directions
+
+        Returns
+        ----------
+        bridge_images: list[np.array]
+            list of crops around the mid-body, TCYX
+        """
+
+        ordered_mb_frames = sorted(self.mid_body_spots.keys())
+        first_mb_frame = ordered_mb_frames[0]
+        last_mb_frame = ordered_mb_frames[-1]
+        first_frame = max(
+            first_mb_frame, self.key_events_frame["cytokinesis"] - 2
+        )  # -2?
+
+        bridge_images = []
+        for frame in range(first_frame, last_mb_frame + 1):
+            min_x = self.position.min_x
+            min_y = self.position.min_y
+
+            # Get midbody coordinates
+            mb_coords = self.mid_body_spots[frame].position
+            x_pos, y_pos = min_x + mb_coords[0], min_y + mb_coords[1]
+
+            # Extract frame image and crop around the midbody Sir-tubulin
+            frame_image = (
+                video[frame, :, :, :].squeeze().transpose(2, 0, 1)
+            )  # CYX
+            crop = smart_cropping(
+                frame_image, margin, x_pos, y_pos, pad=True
+            )  # CYX
+            bridge_images.append(crop)
+
+        return bridge_images

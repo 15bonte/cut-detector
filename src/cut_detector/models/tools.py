@@ -17,6 +17,9 @@ def get_model_path(model_name: str) -> None:
         files = ["hmm_metaphase_parameters.npz", "hmm_bridges_parameters.npz"]
     elif model_name == "svc_bridges":
         files = ["scaler.pkl", "model.pkl"]
+    elif model_name == "bridges_mt_cnn":
+        model_name = "bridges_mt_cnn_v009"
+        files = ["mean_std.json", "bridges_mt_cnn.pt"]
     else:
         raise ValueError(f"Unknown model name: {model_name}")
 

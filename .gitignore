@@ -92,6 +92,7 @@ src/cut_detector/models/metaphase_cnn*
 src/cut_detector/models/svc_bridges*
 src/cut_detector/models/hmm*
 src/cut_detector/models/segmentation*
+src/cut_detector/models/bridges_mt_cnn*
 
 
 # downloaded data

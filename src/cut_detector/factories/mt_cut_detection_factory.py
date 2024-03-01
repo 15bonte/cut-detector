@@ -661,24 +661,26 @@ class MtCutDetectionFactory:
             file_name = os.path.basename(file_path).split("_c")[0]
 
             # Keep number of peaks depending on class mode
-            if class_mode  in (1, 3):
+            if class_mode in (1, 3):
                 average_circle_peaks = average_circle_peaks[:1]
             if class_mode in (2, 4):
                 average_circle_peaks = []
-            
+
             micro_tubules_augmentation = MicroTubulesAugmentation(
                 average_circle_peaks
             )
-            augmentations = (
-                micro_tubules_augmentation.generate_augmentations(image)
+            augmentations = micro_tubules_augmentation.generate_augmentations(
+                image
             )
             for title, title_values in augmentations.items():
                 category = title_values["category"]
                 save_path = os.path.join(
                     save_dir, f"{file_name}_{title}_c{category}.tiff"
                 )
-                save_tiff(title_values["image"], save_path, original_order="YXC")
-            
+                save_tiff(
+                    title_values["image"], save_path, original_order="YXC"
+                )
+
         # Plot if enabled
         if debug_plot:
             self._plot_circles(
@@ -900,7 +902,7 @@ class MtCutDetectionFactory:
         debug_plot=True,
     ):
         """
-        Parameters 
+        Parameters
         ----------
 
         img_bridge : CYX
@@ -983,7 +985,6 @@ class MtCutDetectionFactory:
         # Perform classification...
         ordered_mb_frames = sorted(mitosis_track.mid_body_spots.keys())
         first_mb_frame = ordered_mb_frames[0]
-        last_mb_frame = ordered_mb_frames[-1]
         first_frame = max(
             first_mb_frame, mitosis_track.key_events_frame["cytokinesis"] - 2
         )  # -2?
@@ -995,23 +996,10 @@ class MtCutDetectionFactory:
         with open(scaler_path, "rb") as f:
             scaler: StandardScaler = pickle.load(f)
 
+        results["crops"] = mitosis_track.get_bridge_images(video, self.margin)
+
         # Iterate over frames and get the class of the bridge
-        for frame in range(first_frame, last_mb_frame + 1):
-            min_x = mitosis_track.position.min_x
-            min_y = mitosis_track.position.min_y
-
-            # Get midbody coordinates
-            mb_coords = mitosis_track.mid_body_spots[frame].position
-            x_pos, y_pos = min_x + mb_coords[0], min_y + mb_coords[1]
-
-            # Extract frame image and crop around the midbody Sir-tubulin
-            frame_image = (
-                video[frame, :, :, :].squeeze().transpose(2, 0, 1)
-            )  # CYX
-            crop = smart_cropping(
-                frame_image, self.margin, x_pos, y_pos, pad=True
-            )  # CYX
-
+        for crop in results["crops"]:
             # Get bridge class (and other data useful for debugging)
             bridge_class, template, distance = self.get_bridge_class(
                 crop, scaler, classifier, debug_plot=debug_plot
@@ -1020,7 +1008,6 @@ class MtCutDetectionFactory:
             results["list_class_bridges"].append(bridge_class)
             results["templates"].append(template)
             results["distances"].append(distance)
-            results["crops"].append(crop)
 
         # Make sure cytokinesis bridge is detected as A (no MT cut)
         relative_cytokinesis_frame = (
@@ -1118,3 +1105,18 @@ class MtCutDetectionFactory:
 
         # Return proxies for testing
         return results
+
+    def classify_bridges(
+        self,
+        mitosis_tracks: list[MitosisTrack],
+        video: np.ndarray,
+        bridges_mt_cnn_model_path: str,
+    ):
+        # Get bridge crops
+        crops = {}
+        for mitosis_track in mitosis_tracks:
+            crops[mitosis_track.id] = mitosis_track.get_bridge_images(
+                video, self.margin
+            )
+
+        # Perform classification
