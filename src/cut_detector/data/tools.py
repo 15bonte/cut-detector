@@ -40,11 +40,7 @@ def get_data_path(data_name: str) -> None:
         raise ValueError(f"Unknown data name: {data_name}")
 
     local_path = os.path.join(CURRENT_DIR, data_name)
-
-    if sub_folder_to_create is not None:
-        os.makedirs(
-            os.path.join(CURRENT_DIR, sub_folder_to_create), exist_ok=True
-        )
+    os.makedirs(os.path.join(CURRENT_DIR, sub_folder_to_create), exist_ok=True)
 
     for file in files:
         file_local_path = os.path.join(local_path, file)

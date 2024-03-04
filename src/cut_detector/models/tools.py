@@ -22,6 +22,7 @@ def get_model_path(model_name: str) -> None:
         raise ValueError(f"Unknown model name: {model_name}")
 
     local_path = os.path.join(CURRENT_DIR, model_name)
+    os.makedirs(local_path, exist_ok=True)
 
     for file in files:
         file_local_path = os.path.join(local_path, file)
