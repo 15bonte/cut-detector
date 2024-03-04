@@ -35,7 +35,7 @@ class CnnDataSet(AbstractDataSet):
             ]
         )
 
-    def generate_raw_images(self, filename):
+    def generate_images(self, filename):
         idx = int(filename.split(".")[0])
         # Get image and adapt it to torch
         nucleus_image = np.moveaxis(self.data[idx], 0, -1)  # YXC
