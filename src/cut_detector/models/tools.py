@@ -12,14 +12,14 @@ def get_model_path(model_name: str) -> None:
         files = ["segmentation_model"]
     elif model_name == "metaphase_cnn":
         model_name = "metaphase_cnn_v009"
-        files = ["mean_std.json", "metaphase_cnn.pt"]
+        files = ["mean_std.json", "metaphase_cnn.pt", "parameters.csv"]
     elif model_name == "hmm":
         files = ["hmm_metaphase_parameters.npz", "hmm_bridges_parameters.npz"]
     elif model_name == "svc_bridges":
         files = ["scaler.pkl", "model.pkl"]
     elif model_name == "bridges_mt_cnn":
         model_name = "bridges_mt_cnn_v009"
-        files = ["mean_std.json", "bridges_mt_cnn.pt"]
+        files = ["mean_std.json", "bridges_mt_cnn.pt", "parameters.csv"]
     else:
         raise ValueError(f"Unknown model name: {model_name}")
 
