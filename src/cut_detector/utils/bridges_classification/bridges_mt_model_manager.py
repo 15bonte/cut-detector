@@ -82,31 +82,39 @@ class BridgesMtModelManager(CnnModelManager):
                 final_predictions[idx][2] += two_cuts_prediction
         dl_element.prediction = final_predictions
 
-        # target_argmax = torch.argmax(dl_element.target, dim=1)
-        # predictions_argmax = torch.argmax(final_predictions, dim=1)
-        # predictions_to_print = predictions.view(-1, 8, 2)
-        # for img_idx, original_image in enumerate(dl_element.input):
-        #     if predictions_argmax[img_idx] == target_argmax[img_idx]:
-        #         continue
-        #     plt.subplot(1, 9, 1)
-        #     mat_original = original_image[0].squeeze().detach().cpu().numpy()
-        #     plt.title(
-        #         f"{self.file_name_encoder.decode(dl_element.encoded_file_name[img_idx])} \n Pred {predictions_argmax[img_idx].detach().cpu().numpy()} vs Target {target_argmax[img_idx].detach().cpu().numpy()}"
-        #     )
-        #     plt.imshow(mat_original, cmap="gray")
-        #     for plt_idx, idx in enumerate(range(8 * img_idx, 8 * (img_idx + 1))):
-        #         plt.subplot(1, 9, 2 + plt_idx)
-        #         mat_sub_image = augmented_input[idx][0].squeeze().detach().cpu().numpy()
-        #         augment_pred = (
-        #             predictions_to_print[img_idx][plt_idx].detach().cpu().numpy()
-        #         )
-        #         plt.title(f"{str(augment_pred[0])[:4]}/{str(augment_pred[1])[:4]}")
-        #         plt.imshow(mat_sub_image, cmap="gray")
+        target_argmax = torch.argmax(dl_element.target, dim=1)
+        predictions_argmax = torch.argmax(final_predictions, dim=1)
+        predictions_to_print = predictions.view(-1, 8, 2)
+        for img_idx, original_image in enumerate(dl_element.input):
+            if predictions_argmax[img_idx] == target_argmax[img_idx]:
+                continue
+            plt.subplot(1, 9, 1)
+            mat_original = original_image[0].squeeze().detach().cpu().numpy()
+            plt.title(
+                f"{self.file_name_encoder.decode(dl_element.encoded_file_name[img_idx])} \n Pred {predictions_argmax[img_idx].detach().cpu().numpy()} cut vs Target {target_argmax[img_idx].detach().cpu().numpy()} cut"
+            )
+            plt.imshow(mat_original, cmap="gray")
+            for plt_idx, idx in enumerate(
+                range(8 * img_idx, 8 * (img_idx + 1))
+            ):
+                plt.subplot(1, 9, 2 + plt_idx)
+                mat_sub_image = (
+                    augmented_input[idx][0].squeeze().detach().cpu().numpy()
+                )
+                augment_pred = (
+                    predictions_to_print[img_idx][plt_idx]
+                    .detach()
+                    .cpu()
+                    .numpy()
+                )
+                predicted_category = ["No MT", "MT"][np.argmax(augment_pred)]
+                plt.title(f"{predicted_category} {str(max(augment_pred))[:4]}")
+                plt.imshow(mat_sub_image, cmap="gray")
 
-        #     # Display on whole screen
-        #     figManager = plt.get_current_fig_manager()
-        #     figManager.window.showMaximized()
-        #     plt.show()
+            # Display on whole screen
+            figManager = plt.get_current_fig_manager()
+            figManager.window.showMaximized()
+            plt.show()
 
         # Update metric
         dl_metric.update(
