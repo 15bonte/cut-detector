@@ -91,7 +91,7 @@ class BridgesMtModelManager(CnnModelManager):
             plt.subplot(1, 9, 1)
             mat_original = original_image[0].squeeze().detach().cpu().numpy()
             plt.title(
-                f"{self.file_name_encoder.decode(dl_element.encoded_file_name[img_idx])} \n Pred {predictions_argmax[img_idx].detach().cpu().numpy()} cut vs Target {target_argmax[img_idx].detach().cpu().numpy()} cut"
+                f"{self.file_name_encoder.decode(dl_element.encoded_file_name[img_idx])} \n Pred {2 - predictions_argmax[img_idx].detach().cpu().numpy()} MT vs Target {2 - target_argmax[img_idx].detach().cpu().numpy()} MT"
             )
             plt.imshow(mat_original, cmap="gray")
             for plt_idx, idx in enumerate(
