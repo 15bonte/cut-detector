@@ -23,7 +23,6 @@ from ..utils.bridges_classification.impossible_detection import (
     ImpossibleDetection,
 )
 from ..utils.bridges_classification.template_type import TemplateType
-from ..utils.hidden_markov_models import HiddenMarkovModel
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.bridges_classification.micro_tubules_augmentation import (
     MicroTubulesAugmentation,
@@ -947,22 +946,6 @@ class MtCutDetectionFactory:
 
         return predicted_class, template, distance
 
-    @staticmethod
-    def apply_hmm(hmm_parameters, sequence):
-        """
-        Correct the sequence of classes using HMM.
-        """
-        # Define observation sequence
-        obs_seq = np.asarray(sequence, dtype=np.int32)
-
-        # Define HMM model & run inference
-        model = HiddenMarkovModel(
-            hmm_parameters["A"], hmm_parameters["B"], hmm_parameters["pi"]
-        )
-        states_seq, _ = model.viterbi_inference(obs_seq)
-
-        return states_seq
-
     def update_mt_cut_detection(
         self,
         mitosis_track: MitosisTrack,
@@ -1042,7 +1025,7 @@ class MtCutDetectionFactory:
         hmm_parameters = np.load(hmm_bridges_parameters_file)
 
         # Correct the sequence with HMM
-        results["list_class_bridges_after_hmm"] = self.apply_hmm(
+        results["list_class_bridges_after_hmm"] = apply_hmm(
             hmm_parameters, results["list_class_bridges"]
         )
 
