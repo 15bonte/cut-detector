@@ -17,7 +17,7 @@ from ..utils.bridges_classification.bridges_mt_model_manager import (
 from ..utils.bridges_classification.bridges_mt_cnn_model_params import (
     BridgesMtCnnModelParams,
 )
-from ..utils.tools import perform_cnn_inference
+from ..utils.tools import apply_hmm, perform_cnn_inference
 from ..utils.peak import Peak
 from ..utils.bridges_classification.impossible_detection import (
     ImpossibleDetection,
