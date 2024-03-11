@@ -167,7 +167,6 @@ class MidBodyDetectionFactory:
         if mode == "bigfish":
             # Spots detection with bigfish functions
             filtered_image = stack.log_filter(image_mklp, sigma=self.sigma)
-            filtered_image = image_mklp
             # Filter out spots which are not maximal or outside convex hull
             spots_mask = (filtered_image > 0) * mask
             # If mask is empty, skip frame
