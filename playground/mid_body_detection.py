@@ -29,9 +29,8 @@ def main(
     factory = MidBodyDetectionFactory()
 
     spots_candidates = factory.detect_mid_body_spots(
-        mitosis_movie=mitosis_movie,
-        mask_movie=mask_movie,
-    )
+        mitosis_movie=mitosis_movie, mask_movie=mask_movie, mode="h_maxima"
+    )  # mode = "bigfish" or "h_maxima" (default)
     factory.generate_tracks_from_spots(
         spots_candidates,
     )
