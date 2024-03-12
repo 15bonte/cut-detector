@@ -1,6 +1,6 @@
 import os
 from typing import Optional
-from skimage import io
+from skimage import io 
 import numpy as np
 import napari
 import pickle
