@@ -143,7 +143,8 @@ class MitosisTrack:
         """
         Parameters
         ----------
-        raw_video: np.array  TYXC
+        raw_video: np.array
+            TYXC
         ----------
         """
 
@@ -237,14 +238,16 @@ class MitosisTrack:
         """
         Parameters
         ----------
-        raw_video: initial video TYXC
-        ----------
+        raw_video : np.array
+            initial video, TYXC
 
         Returns
         ----------
-        mitosis_movie: mitosis movie TYXC
-        mask_movie: mask movie TYX
-        ----------
+        mitosis_movie : np.array
+            mitosis movie, TYXC
+        mask_movie : np.array
+            mask movie, TYX
+
         """
 
         mitosis_movie, mask_movie = [], []
@@ -298,6 +301,11 @@ class MitosisTrack:
 
         mitosis_movie = np.array(mitosis_movie)  # TYXC
         mask_movie = np.array(mask_movie)  # TYX
+
+        # If mid-bodies are already computed, add them to the mitosis movie
+        if self.mid_body_spots:
+            mitosis_movie = self.add_mid_body_movie(mitosis_movie, mask_movie)
+            return mitosis_movie[..., :-1], mitosis_movie[..., -1].squeeze()
 
         return mitosis_movie, mask_movie
 
@@ -468,9 +476,9 @@ class MitosisTrack:
                     class_abs_first_frame
                     >= self.gt_key_events_frame["cytokinesis"]
                 )  # after metaphase
-                self.gt_key_events_frame[
-                    "first_mt_cut"
-                ] = class_abs_first_frame
+                self.gt_key_events_frame["first_mt_cut"] = (
+                    class_abs_first_frame
+                )
 
             # Second MT cut
             if (
@@ -481,9 +489,9 @@ class MitosisTrack:
                     class_abs_first_frame
                     >= self.gt_key_events_frame["first_mt_cut"]
                 )  # after first MT cut
-                self.gt_key_events_frame[
-                    "second_mt_cut"
-                ] = class_abs_first_frame
+                self.gt_key_events_frame["second_mt_cut"] = (
+                    class_abs_first_frame
+                )
 
             # First membrane cut
             if (
@@ -494,9 +502,9 @@ class MitosisTrack:
                     class_abs_first_frame
                     >= self.gt_key_events_frame["first_mt_cut"]
                 )  # after first MT cut
-                self.gt_key_events_frame[
-                    "first_membrane_cut"
-                ] = class_abs_first_frame
+                self.gt_key_events_frame["first_membrane_cut"] = (
+                    class_abs_first_frame
+                )
 
     def evaluate_mid_body_detection(
         self, tolerance=10, percent_seen=0.9
@@ -680,3 +688,51 @@ class MitosisTrack:
             )
 
         return spot_detected
+
+    def get_bridge_images(
+        self, video: np.array, margin: int
+    ) -> list[np.array]:
+        """
+        Generate list of crops around the mid-body.
+        First frame is the maximum of cytokinesis frame and mid-body first frame.
+        Last frame is the last mid-body frame.
+
+        Parameters
+        ----------
+        video: np.array
+            TYXC
+        margin: int
+            number of pixels to keep around the mid-body, in all directions
+
+        Returns
+        ----------
+        bridge_images: list[np.array]
+            list of crops around the mid-body, TCYX
+        """
+
+        ordered_mb_frames = sorted(self.mid_body_spots.keys())
+        first_mb_frame = ordered_mb_frames[0]
+        last_mb_frame = ordered_mb_frames[-1]
+        first_frame = max(
+            first_mb_frame, self.key_events_frame["cytokinesis"] - 2
+        )  # -2?
+
+        bridge_images = []
+        for frame in range(first_frame, last_mb_frame + 1):
+            min_x = self.position.min_x
+            min_y = self.position.min_y
+
+            # Get midbody coordinates
+            mb_coords = self.mid_body_spots[frame].position
+            x_pos, y_pos = min_x + mb_coords[0], min_y + mb_coords[1]
+
+            # Extract frame image and crop around the midbody Sir-tubulin
+            frame_image = (
+                video[frame, :, :, :].squeeze().transpose(2, 0, 1)
+            )  # CYX
+            crop = smart_cropping(
+                frame_image, margin, x_pos, y_pos, pad=True
+            )  # CYX
+            bridge_images.append(crop)
+
+        return bridge_images

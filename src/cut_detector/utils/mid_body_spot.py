@@ -3,8 +3,10 @@ from __future__ import annotations
 from typing import Optional
 import numpy as np
 
+from .spot import Spot
 
-class MidBodySpot:
+
+class MidBodySpot(Spot):
     """
     Mid-body candidate spot
     """
@@ -18,8 +20,7 @@ class MidBodySpot:
         area: Optional[float] = None,
         circularity: Optional[float] = None,
     ):
-        self.frame = frame
-        self.position = position  # (x, y)
+        super().__init__(frame, position)
         self.intensity = intensity
         self.sir_intensity = sir_intensity
         self.area = area

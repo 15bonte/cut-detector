@@ -31,15 +31,16 @@ def get_data_path(data_name: str) -> None:
     elif data_name == "spots":
         sub_folder_to_create = f"{data_name}/example_video"
         files = [f"example_video/spot_{spot_id}.bin" for spot_id in range(237)]
+    elif data_name == "annotations":
+        sub_folder_to_create = f"{data_name}/example_video"
+        files = [
+            "example_video/CellCounter_example_video_mitosis_0_0_to_4.xml"
+        ]
     else:
         raise ValueError(f"Unknown data name: {data_name}")
 
     local_path = os.path.join(CURRENT_DIR, data_name)
-
-    if sub_folder_to_create is not None:
-        os.makedirs(
-            os.path.join(CURRENT_DIR, sub_folder_to_create), exist_ok=True
-        )
+    os.makedirs(os.path.join(CURRENT_DIR, sub_folder_to_create), exist_ok=True)
 
     for file in files:
         file_local_path = os.path.join(local_path, file)

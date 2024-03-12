@@ -12,11 +12,12 @@ class MetaphaseCnnModelParams(BaseModelParams):
 
         self.input_dimensions = Dimensions(height=256, width=256)
 
-        self.num_epochs = 50
-        self.learning_rate = 0.1
-
         self.nb_classes = 3
         self.class_names = ["Interphase", "Metaphase", "Death"]
 
         self.c_indexes = [0, 1, 2]
         self.z_indexes = [0]
+
+        self.batch_size = 128
+
+        self.encoder_name = "resnet18"

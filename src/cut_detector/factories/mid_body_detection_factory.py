@@ -127,7 +127,7 @@ class MidBodyDetectionFactory:
 
             mitosis_frame = mitosis_movie[frame, :, :, :].squeeze()  # YXC
             mask_frame = mask_movie[frame, :, :].squeeze()  # YX
-            spots = self.spot_detection(
+            spots = self._spot_detection(
                 mitosis_frame,
                 mask_frame,
                 mid_body_channel,
@@ -141,13 +141,13 @@ class MidBodyDetectionFactory:
 
         return spots_dictionary
 
-    def spot_detection(
+    def _spot_detection(
         self,
         image: np.array,
         mask: np.array,
         mid_body_channel: int,
         sir_channel: int,
-        mode="bigfish",
+        mode: str,
         frame=-1,
     ) -> list[MidBodySpot]:
         """
@@ -167,7 +167,6 @@ class MidBodyDetectionFactory:
         if mode == "bigfish":
             # Spots detection with bigfish functions
             filtered_image = stack.log_filter(image_mklp, sigma=self.sigma)
-            filtered_image = image_mklp
             # Filter out spots which are not maximal or outside convex hull
             spots_mask = (filtered_image > 0) * mask
             # If mask is empty, skip frame
@@ -178,7 +177,7 @@ class MidBodyDetectionFactory:
             else:
                 spots, _ = detection.spots_thresholding(
                     filtered_image,
-                    spots_mask.astype(np.bool),
+                    spots_mask.astype(bool),
                     threshold=self.threshold,
                 )
 
@@ -425,9 +424,9 @@ class MidBodyDetectionFactory:
 
             mid_body_position = np.mean(closest_points, axis=0)
             mid_body_position = np.mean(mid_body_position, axis=0)
-            expected_positions[
-                frame - mitosis_track.min_frame
-            ] = mid_body_position
+            expected_positions[frame - mitosis_track.min_frame] = (
+                mid_body_position
+            )
 
         # Remove wrong tracks by keeping only tracks with at least minimum_track_length points
         mid_body_tracks = [
@@ -532,9 +531,11 @@ class MidBodyDetectionFactory:
                 for spot in spots_candidates[frame]
             ]
             colors = [
-                matplotlib_colors[spot.track_id % len(matplotlib_colors)]
-                if spot.track_id is not None
-                else (0, 0, 0)
+                (
+                    matplotlib_colors[spot.track_id % len(matplotlib_colors)]
+                    if spot.track_id is not None
+                    else (0, 0, 0)
+                )
                 for spot in spots_candidates[frame]
             ]
 
