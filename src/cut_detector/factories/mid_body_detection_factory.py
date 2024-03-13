@@ -226,8 +226,8 @@ class MidBodyDetectionFactory:
         mid_body_spots = [
             MidBodySpot(
                 frame,
-                x=position[0],
-                y=position[1],
+                x=position[1],
+                y=position[0],
                 intensity=self._get_average_intensity(position, image_mklp),
                 sir_intensity=self._get_average_intensity(position, image_sir),
             )
