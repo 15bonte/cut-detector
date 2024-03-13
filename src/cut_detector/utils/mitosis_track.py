@@ -381,12 +381,8 @@ class MitosisTrack:
             square_size = 2
             spots_video[
                 absolute_frame - self.min_frame,
-                spot.position[1]
-                - square_size : spot.position[1]
-                + square_size,
-                spot.position[0]
-                - square_size : spot.position[0]
-                + square_size,
+                spot.y - square_size : spot.y + square_size,
+                spot.x - square_size : spot.x + square_size,
             ] = 1
 
         # Add empty dimension at end
@@ -449,7 +445,7 @@ class MitosisTrack:
                 )
                 # Create associated spot
                 self.gt_mid_body_spots[frame + self.min_frame] = MidBodySpot(
-                    frame, (x_pos, y_pos)
+                    frame, x=x_pos, y=y_pos
                 )
 
             # If Name is missing of wrong, assume it is i
@@ -536,9 +532,8 @@ class MitosisTrack:
                 position_difference.append(1e3)  # random huge value
                 continue
             position_difference.append(
-                np.linalg.norm(
-                    np.array(self.gt_mid_body_spots[frame].position)
-                    - np.array(self.mid_body_spots[frame].position)
+                self.gt_mid_body_spots[frame].distance_to(
+                    self.mid_body_spots[frame]
                 )
             )
 
@@ -736,3 +731,13 @@ class MitosisTrack:
             bridge_images.append(crop)
 
         return bridge_images
+
+    def adapt_deprecated_attributes(self):
+        """
+        Used to adapt deprecated attributes to new ones.
+        In particular, x and y instead of position for mid_body_spots.
+        """
+        for mid_body_spot in self.mid_body_spots.values():
+            if mid_body_spot.position is not None:
+                mid_body_spot.x = mid_body_spot.position[0]
+                mid_body_spot.y = mid_body_spot.position[1]
