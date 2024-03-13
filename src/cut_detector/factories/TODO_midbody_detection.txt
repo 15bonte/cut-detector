@@ -1,0 +1,2 @@
+vers 221, dans mid_body_detection_factory.py
+Rajouter un cas avec une des nouvelles techniques envisagées.

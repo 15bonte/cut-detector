@@ -218,7 +218,11 @@ class MidBodyDetectionFactory:
                     (0, filtered_image.ndim)
                 )
 
-            # insert new case here
+        elif mode == "lapgau":
+            raise "Laplacian of Gaussian not implemtented yet"
+        
+        elif mode == "concom":
+            raise "Connected Components not implemtented yet"
 
         else:
             raise ValueError(f"Unknown mode: {mode}")
