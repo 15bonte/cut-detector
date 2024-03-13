@@ -218,6 +218,8 @@ class MidBodyDetectionFactory:
                     (0, filtered_image.ndim)
                 )
 
+            # insert new case here
+
         else:
             raise ValueError(f"Unknown mode: {mode}")
 

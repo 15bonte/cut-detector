@@ -8,7 +8,7 @@ from cut_detector.factories.mid_body_detection_factory import (
 )
 
 # origine des points en haut à gauche, D>G, H>B
-
+# autre test
 def main(
     image_path: Optional[str] = get_data_path("mitosis_movies"),
     path_output: Optional[str] = get_data_path("mid_bodies"),
