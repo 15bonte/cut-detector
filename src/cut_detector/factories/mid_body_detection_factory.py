@@ -158,7 +158,6 @@ class MidBodyDetectionFactory:
         Mode 'h_maxima'
             threshold_1: threshold for h_maxima
             threshold_2: unused
-
         """
 
         image_sir = image[:, :, sir_channel]

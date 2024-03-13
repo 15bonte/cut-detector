@@ -7,6 +7,7 @@ from cut_detector.factories.mid_body_detection_factory import (
     MidBodyDetectionFactory,
 )
 
+# origine des points en haut à gauche, D>G, H>B
 
 def main(
     image_path: Optional[str] = get_data_path("mitosis_movies"),
@@ -28,6 +29,8 @@ def main(
     # Search for mid-body in mitosis movie
     factory = MidBodyDetectionFactory()
 
+    # dict[int, list[MidBodySpot]]
+    # int: frame
     spots_candidates = factory.detect_mid_body_spots(
         mitosis_movie=mitosis_movie, mask_movie=mask_movie, mode="h_maxima"
     )  # mode = "bigfish" or "h_maxima" (default)
