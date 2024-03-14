@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import scipy.ndimage as ndi
+import matplotlib.pyplot as plt
 from scipy import spatial
 from skimage.util import img_as_float
 from skimage.feature.peak import peak_local_max
@@ -13,12 +14,14 @@ def fake_blob_log(
     min_sigma=1,
     max_sigma=50,
     num_sigma=10,
-    threshold=0.2,
+    threshold=0.05,
     overlap=0.5,
     log_scale=False,
     *,
     threshold_rel=None,
     exclude_border=False,
+    plot_cube=False,
+    pthreshold=0.05
 ):
     image = img_as_float(image)
     float_dtype = _supported_float_type(image.dtype)
@@ -47,9 +50,40 @@ def fake_blob_log(
     
     # computing gaussian laplace
     image_cube = np.empty(image.shape + (len(sigma_list),), dtype=float_dtype)
+    print("image cube shape:", image_cube.shape)
+    print("image shape:", image.shape)
     for i, s in enumerate(sigma_list):
         # average s**2 provides scale invariance
         image_cube[..., i] = -ndi.gaussian_laplace(image, s) * np.mean(s) ** 2
+        # plt.imshow(image_cube[..., i])
+        # plt.title(f"Cube layer {i}")
+        # plt.show()
+    if plot_cube:
+        # y, x, z = image_cube.nonzero()
+        # values = image_cube[x,y,z]
+        # print(values)
+        # fig = plt.figure()
+        # ax = fig.add_subplot(projection='3d')
+        # ax.scatter(x, y, z, c=values)
+        # print("plotting cube:", image_cube, sep="\n")
+        coords = np.argwhere((image_cube > pthreshold) | (image_cube < -pthreshold))
+        print("coords shapes:", coords.shape)
+        x = np.zeros(coords.shape[0])
+        y = np.zeros(coords.shape[0])
+        z = np.zeros(coords.shape[0])
+        v = np.zeros(coords.shape[0])
+        for idx, c in enumerate(coords):
+            # print("c shape:", c.shape)
+            x[idx] = c[0]
+            y[idx] = c[1]
+            z[idx] = c[2]
+            # print("imagecube c:", image_cube[c[0], c[1], c[2]])
+            v[idx] = image_cube[c[0], c[1], c[2]]
+            # v[idx] = image_cube[c[0], y[idx], z[idx]]
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        ax.scatter(x, y, z, c=v)
+
 
     exclude_border = _format_exclude_border(image.ndim, exclude_border)
     local_maxima = peak_local_max(

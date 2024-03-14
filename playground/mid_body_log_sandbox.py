@@ -34,8 +34,8 @@ def detect_movie_spots(movie):
     for frame in range(nb_frames):
         print(f"processing frame {frame}:")
         mitosis_frame = movie[frame, :, :, :].squeeze()  # YXC
-        process_frame_bin(mitosis_frame, mid_body_chan, sir_chan, frame)
-        # process_frame_nonbin(mitosis_frame, mid_body_chan, sir_chan, frame)
+        # process_frame_bin(mitosis_frame, mid_body_chan, sir_chan, frame)
+        process_frame_nonbin(mitosis_frame, mid_body_chan, sir_chan, frame)
         # input("press enter to process next frame")
     plt.show()
 
@@ -60,7 +60,7 @@ def process_frame_bin(image: np.array, mb_chan: int, sir_chan: int, frame_n: int
 
     ## Blob Log
     # blobs = blob_log(binary_image, min_sigma=3, max_sigma=6, num_sigma=30, threshold=.1)
-    blobs = fake_blob_log(binary_image, min_sigma=3, max_sigma=6, num_sigma=30, threshold=.1)
+    blobs = fake_blob_log(binary_image, min_sigma=3, max_sigma=6, num_sigma=30, threshold=.1, plot_cube=True)
     # blobs[:, 2] = blobs[:, 2] * np.sqrt(2)
     print(blobs)
 
@@ -72,20 +72,22 @@ def process_frame_bin(image: np.array, mb_chan: int, sir_chan: int, frame_n: int
 def process_frame_nonbin(image: np.array, mb_chan: int, sir_chan: int, frame_n: int):
     image_sir = image[:, :, sir_chan]
     image_mklp = image[:, :, mb_chan]
-    raw_image = image_mklp
+    raw_image = image_mklp / np.max(image_mklp)
 
     ## Area closing and opening
-    raw_image = area_closing(area_opening(raw_image, 25), 25)
+    # raw_image = area_closing(area_opening(raw_image, 25), 25)
 
     ## Blob Log
     blobs = []
-    # blobs = blob_log(raw_image, min_sigma=0, max_sigma=3, num_sigma=30, threshold=.1)
+    blobs = fake_blob_log(raw_image, min_sigma=5, max_sigma=10, num_sigma=30, threshold=.1, plot_cube=True)
+    # blobs = blob_log(raw_image, min_sigma=5, max_sigma=10, num_sigma=30, threshold=.1)
     # blobs[:, 2] = blobs[:, 2] * np.sqrt(2)
-    print(blobs)
+    print("blobs:", blobs)
+    print("blobs len:", blobs.shape[0])
 
     ## output
-    plt.figure()
-    plt.imshow(raw_image)
+    # plt.figure()
+    # plt.imshow(raw_image)
 
 if __name__ == "__main__":
     mid_body_log_sandbox(
