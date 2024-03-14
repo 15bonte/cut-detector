@@ -1,6 +1,0 @@
-Explorer le fonctionnement du cube de blob_log.
-
-Définir une métrique d'évaluation: créer un fichier d'évaluation
-csv avec fichier, frame, état (S/F) ?
-
-Traduire les fichiers d'explication fr
