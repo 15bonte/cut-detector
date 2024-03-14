@@ -10,6 +10,7 @@ from skimage.morphology import area_closing, area_opening
 from skimage.feature import blob_dog, blob_log, blob_doh
 from cnn_framework.utils.readers.tiff_reader import TiffReader
 from cut_detector.data.tools import get_data_path
+from fake_blob_log import fake_blob_log
 
 def mid_body_log_sandbox(image_path):
     # If image_path is a directory, take its first file
@@ -33,8 +34,8 @@ def detect_movie_spots(movie):
     for frame in range(nb_frames):
         print(f"processing frame {frame}:")
         mitosis_frame = movie[frame, :, :, :].squeeze()  # YXC
-        # process_frame_bin(mitosis_frame, mid_body_chan, sir_chan, frame)
-        process_frame_nonbin(mitosis_frame, mid_body_chan, sir_chan, frame)
+        process_frame_bin(mitosis_frame, mid_body_chan, sir_chan, frame)
+        # process_frame_nonbin(mitosis_frame, mid_body_chan, sir_chan, frame)
         # input("press enter to process next frame")
     plt.show()
 
@@ -58,7 +59,8 @@ def process_frame_bin(image: np.array, mb_chan: int, sir_chan: int, frame_n: int
     binary_image = area_closing(area_opening(binary_image, 50), 200)
 
     ## Blob Log
-    blobs = blob_log(binary_image, min_sigma=3, max_sigma=6, num_sigma=30, threshold=.1)
+    # blobs = blob_log(binary_image, min_sigma=3, max_sigma=6, num_sigma=30, threshold=.1)
+    blobs = fake_blob_log(binary_image, min_sigma=3, max_sigma=6, num_sigma=30, threshold=.1)
     # blobs[:, 2] = blobs[:, 2] * np.sqrt(2)
     print(blobs)
 
