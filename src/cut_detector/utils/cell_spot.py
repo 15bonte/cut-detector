@@ -22,7 +22,7 @@ class CellSpot(Spot):
         abs_max_x: int,
         abs_min_y: int,
         abs_max_y: int,
-        spot_points: list[list[int]],
+        spot_points: list[list[int]],  # (x, y)
     ):
         super().__init__(frame, x, y)
 
