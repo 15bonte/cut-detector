@@ -1,9 +1,11 @@
 import os
 from random import shuffle
-from typing import Optional
+from typing import Literal, Optional
+from math import sqrt
 import numpy as np
 from bigfish import stack, detection
 from skimage.morphology import extrema, opening
+from skimage.feature import blob_log
 from scipy import ndimage
 from scipy.optimize import linear_sum_assignment
 import matplotlib as mpl
@@ -141,13 +143,14 @@ class MidBodyDetectionFactory:
 
         return spots_dictionary
 
+    SPOT_DETECTION_MODE = Literal["bigfish", "h_maxima", "lapgau", "concom"]
     def _spot_detection(
         self,
         image: np.array,
         mask: np.array,
         mid_body_channel: int,
         sir_channel: int,
-        mode: str,
+        mode: SPOT_DETECTION_MODE,
         frame=-1,
     ) -> list[MidBodySpot]:
         """
@@ -219,10 +222,14 @@ class MidBodyDetectionFactory:
                 )
 
         elif mode == "lapgau":
-            raise "Laplacian of Gaussian not implemtented yet"
+            # raise "Laplacian of Gaussian not implemtented yet"
+            spots = [
+                (spot[0], spot[1]) 
+                for spot in self._compute_laplacian_of_gaussian(image_mklp)
+            ]
         
         elif mode == "concom":
-            raise "Connected Components not implemtented yet"
+            raise RuntimeError("Connected Components not implemented yet")
 
         else:
             raise ValueError(f"Unknown mode: {mode}")
@@ -239,6 +246,16 @@ class MidBodyDetectionFactory:
         ]
 
         return mid_body_spots
+    
+    @staticmethod
+    def _compute_laplacian_of_gaussian(midbody_gs_img: np.array) -> np.array: #2 dimensions, blob and Y X R
+        blobs_log = blob_log(midbody_gs_img, min_sigma=0, max_sigma=100)
+        # Compute radii in the 3rd column, since 3 column is sigma
+        # and radius can be approximated by sigma * sqrt(2) according to doc
+        blobs_log[:, 2] = blobs_log[:, 2] * sqrt(2)
+        print("found blobs:", blobs_log, sep="\n")
+        return blobs_log
+        
 
     @staticmethod
     def _get_average_intensity(

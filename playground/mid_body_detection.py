@@ -32,7 +32,8 @@ def main(
     # dict[int, list[MidBodySpot]]
     # int: frame
     spots_candidates = factory.detect_mid_body_spots(
-        mitosis_movie=mitosis_movie, mask_movie=mask_movie, mode="h_maxima"
+        # mitosis_movie=mitosis_movie, mask_movie=mask_movie, mode="h_maxima"
+        mitosis_movie=mitosis_movie, mask_movie=mask_movie, mode="lapgau"
     )  # mode = "bigfish" or "h_maxima" (default)
     factory.generate_tracks_from_spots(
         spots_candidates,
@@ -41,6 +42,9 @@ def main(
         spots_candidates, mitosis_movie, path_output
     )
 
-
 if __name__ == "__main__":
-    main()
+    # main()
+    main(
+        "./src/cut_detector/data/mitosis_movies/example_video_mitosis_t28-30.tiff",
+        get_data_path("mid_bodies_tests") 
+    )
