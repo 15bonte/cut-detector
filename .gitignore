@@ -107,3 +107,4 @@ src/cut_detector/data/segmentation_results/
 src/cut_detector/data/spots/
 src/cut_detector/data/annotations/
 src/cut_detector/data/mid_bodies_tests/
+src/cut_detector/data/mid_bodies_movies_test/
