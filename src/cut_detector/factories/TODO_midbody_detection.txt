@@ -1,2 +1,5 @@
 vers 221, dans mid_body_detection_factory.py
 Rajouter un cas avec une des nouvelles techniques envisagées.
+
+Définir une métrique d'évaluation: créer un fichier d'évaluation
+csv avec fichier, frame, état (S/F) ?
