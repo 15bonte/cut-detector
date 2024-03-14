@@ -224,7 +224,7 @@ class MidBodyDetectionFactory:
         elif mode == "lapgau":
             # raise "Laplacian of Gaussian not implemtented yet"
             spots = [
-                (spot[0], spot[1]) 
+                (int(spot[0]), int(spot[1])) 
                 for spot in self._compute_laplacian_of_gaussian(image_mklp)
             ]
         
@@ -249,7 +249,8 @@ class MidBodyDetectionFactory:
     
     @staticmethod
     def _compute_laplacian_of_gaussian(midbody_gs_img: np.array) -> np.array: #2 dimensions, blob and Y X R
-        blobs_log = blob_log(midbody_gs_img, min_sigma=0, max_sigma=100)
+        midbody_gs_img = midbody_gs_img / np.max(midbody_gs_img)
+        blobs_log = blob_log(midbody_gs_img, min_sigma=5, max_sigma=10, num_sigma=5, threshold=.1)
         # Compute radii in the 3rd column, since 3 column is sigma
         # and radius can be approximated by sigma * sqrt(2) according to doc
         blobs_log[:, 2] = blobs_log[:, 2] * sqrt(2)

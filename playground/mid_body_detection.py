@@ -13,9 +13,12 @@ def main(
     image_path: Optional[str] = get_data_path("mitosis_movies"),
     path_output: Optional[str] = get_data_path("mid_bodies"),
 ):
+    # print(image_path)
+
     # If image_path is a directory, take its first file
     if os.path.isdir(image_path):
         image_path = os.path.join(image_path, os.listdir(image_path)[0])
+    print(image_path)
 
     # Read image
     image = TiffReader(image_path, respect_initial_type=True).image  # TCZYX
@@ -45,6 +48,6 @@ def main(
 if __name__ == "__main__":
     # main()
     main(
-        "./src/cut_detector/data/mitosis_movies/example_video_mitosis_t28-30.tiff",
-        get_data_path("mid_bodies_tests") 
+        "./src/cut_detector/data/mitosis_movies/example_video_mitosis_0_0_to_4.tiff",
+        # get_data_path("mid_bodies_tests") 
     )
