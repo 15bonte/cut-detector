@@ -53,3 +53,11 @@ Avec pré-traitement AO/AC:
 - 200,200: échec, pas de MB rapporté
 
 Sans binarisation, c'est pas une méthode très viable.
+
+
+UPDATE:
+Il semble être possible de détecter les blobs en version non-binaire
+même sans pré-traitement.
+Les valeurs magiques, trouvées empiriquement:
+- fake_blob_log(raw_image, min_sigma=5, max_sigma=10, num_sigma=30, threshold=.1, plot_cube=True)
+- normalisation par max: raw_image = image_mklp / np.max(image_mklp) # Maybe really important ?

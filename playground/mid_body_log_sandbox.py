@@ -72,7 +72,7 @@ def process_frame_bin(image: np.array, mb_chan: int, sir_chan: int, frame_n: int
 def process_frame_nonbin(image: np.array, mb_chan: int, sir_chan: int, frame_n: int):
     image_sir = image[:, :, sir_chan]
     image_mklp = image[:, :, mb_chan]
-    raw_image = image_mklp / np.max(image_mklp)
+    raw_image = image_mklp / np.max(image_mklp) # Maybe really important ?
 
     ## Area closing and opening
     # raw_image = area_closing(area_opening(raw_image, 25), 25)
