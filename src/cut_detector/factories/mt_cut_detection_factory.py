@@ -5,21 +5,29 @@ import numpy as np
 import pickle
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
-from scipy.signal import find_peaks, peak_widths
+from scipy.signal import find_peaks
+
 from skimage.feature import graycomatrix, graycoprops
-from skimage.exposure import equalize_adapthist
 
-import scipy.ndimage as ndi
+from cnn_framework.utils.tools import save_tiff
 
-from cut_detector.utils.peak import Peak
-
+from ..utils.bridges_classification.bridges_mt_model_manager import (
+    BridgesMtModelManager,
+)
+from ..utils.bridges_classification.bridges_mt_cnn_model_params import (
+    BridgesMtCnnModelParams,
+)
+from ..utils.tools import perform_cnn_inference
+from ..utils.peak import Peak
 from ..utils.bridges_classification.impossible_detection import (
     ImpossibleDetection,
 )
 from ..utils.bridges_classification.template_type import TemplateType
 from ..utils.hidden_markov_models import HiddenMarkovModel
-from ..utils.image_tools import smart_cropping
 from ..utils.mitosis_track import MitosisTrack
+from ..utils.bridges_classification.micro_tubules_augmentation import (
+    MicroTubulesAugmentation,
+)
 
 
 class MtCutDetectionFactory:
@@ -50,7 +58,7 @@ class MtCutDetectionFactory:
         min_percentage_light_spot (float): Minimum percentage of frames with light spots to
         consider the mitosis as a light spot mitosis.
         crop_size_light_spot (int): Size of the crop for the light spot detection.
-        length_light_spot (int): Length of the video to check around the mt cut for the light spot
+        length_light_spot (int): Length of the video to check around the mt cut for light spot
         detection.
     """
 
@@ -70,7 +78,7 @@ class MtCutDetectionFactory:
         center_tolerance_light_spot=5,
         min_percentage_light_spot=0.1,
         crop_size_light_spot=20,
-        length_light_spot=10,
+        length_light_spot=3,
         template_type=TemplateType.ALL,
     ) -> None:
         self.margin = margin
@@ -103,42 +111,42 @@ class MtCutDetectionFactory:
         """
 
         if mitosis_track.is_near_border:
-            mitosis_track.key_events_frame[
-                "first_mt_cut"
-            ] = ImpossibleDetection.NEAR_BORDER
-            mitosis_track.key_events_frame[
-                "second_mt_cut"
-            ] = ImpossibleDetection.NEAR_BORDER
+            mitosis_track.key_events_frame["first_mt_cut"] = (
+                ImpossibleDetection.NEAR_BORDER
+            )
+            mitosis_track.key_events_frame["second_mt_cut"] = (
+                ImpossibleDetection.NEAR_BORDER
+            )
             return True
 
         if len(mitosis_track.daughter_track_ids) >= 2:
-            mitosis_track.key_events_frame[
-                "first_mt_cut"
-            ] = ImpossibleDetection.MORE_THAN_TWO_DAUGHTER_TRACKS
-            mitosis_track.key_events_frame[
-                "second_mt_cut"
-            ] = ImpossibleDetection.MORE_THAN_TWO_DAUGHTER_TRACKS
+            mitosis_track.key_events_frame["first_mt_cut"] = (
+                ImpossibleDetection.MORE_THAN_TWO_DAUGHTER_TRACKS
+            )
+            mitosis_track.key_events_frame["second_mt_cut"] = (
+                ImpossibleDetection.MORE_THAN_TWO_DAUGHTER_TRACKS
+            )
             return True
 
         if not mitosis_track.mid_body_spots:
-            mitosis_track.key_events_frame[
-                "first_mt_cut"
-            ] = ImpossibleDetection.NO_MID_BODY_DETECTED
-            mitosis_track.key_events_frame[
-                "second_mt_cut"
-            ] = ImpossibleDetection.NO_MID_BODY_DETECTED
+            mitosis_track.key_events_frame["first_mt_cut"] = (
+                ImpossibleDetection.NO_MID_BODY_DETECTED
+            )
+            mitosis_track.key_events_frame["second_mt_cut"] = (
+                ImpossibleDetection.NO_MID_BODY_DETECTED
+            )
             return True
 
         if (
             max(mitosis_track.mid_body_spots.keys())
             < mitosis_track.key_events_frame["cytokinesis"]
         ):
-            mitosis_track.key_events_frame[
-                "first_mt_cut"
-            ] = ImpossibleDetection.NO_MID_BODY_DETECTED_AFTER_CYTOKINESIS
-            mitosis_track.key_events_frame[
-                "second_mt_cut"
-            ] = ImpossibleDetection.NO_MID_BODY_DETECTED_AFTER_CYTOKINESIS
+            mitosis_track.key_events_frame["first_mt_cut"] = (
+                ImpossibleDetection.NO_MID_BODY_DETECTED_AFTER_CYTOKINESIS
+            )
+            mitosis_track.key_events_frame["second_mt_cut"] = (
+                ImpossibleDetection.NO_MID_BODY_DETECTED_AFTER_CYTOKINESIS
+            )
             return True
 
         return False
@@ -154,6 +162,10 @@ class MtCutDetectionFactory:
     ) -> list[Peak]:
         """
         Given a list of intensities, detect peaks using scipy.
+
+        Parameters
+        ----------
+        circle_positions : (y, x)
         """
 
         # Concatenate intensities to detect peaks even at borders
@@ -185,15 +197,18 @@ class MtCutDetectionFactory:
                 relative_position=(peak_idx - len(intensities))
                 / len(intensities),
                 intensity=peaks_data["peak_heights"][idx],
-                coordinates=circle_positions[peak_idx - len(intensities)]
-                if circle_positions is not None
-                else (0, 0),
+                coordinates=(
+                    circle_positions[peak_idx - len(intensities)]
+                    if circle_positions is not None
+                    else (0, 0)
+                ),
                 relative_intensity=peaks_data["peak_heights"][idx]
                 / np.mean(intensities),
                 position_index=peak_idx - len(intensities),
                 circle_index=circle_index,
                 prominence=peaks_data["prominences"][idx],
                 width=peaks_data["widths"][idx],
+                relative_width=peaks_data["widths"][idx] / len(intensities),
             )
             for idx, peak_idx in enumerate(peaks_idx)
             if len(intensities) <= peak_idx < 2 * len(intensities)
@@ -245,19 +260,20 @@ class MtCutDetectionFactory:
         """
         Compute useful data for a circle of a given radius around the mid body spot:
 
+        Parameters
+        -------
+        image : YX
+
         Returns
         -------
 
         circle_positions : list of the coordinates of the pixels on the circle
-
         intensities : list of the intensities of the pixels on the circle
-
         peaks : list of Peaks
 
         """
         # Get image shape
-        size_x = image.shape[1]
-        size_y = image.shape[0]
+        size_y, size_x = image.shape[0], image.shape[1]
 
         # Get the mid-body spot coordinates, middle of the image
         mid_body_position = (size_x // 2, size_y // 2)
@@ -267,10 +283,10 @@ class MtCutDetectionFactory:
         angles = np.linspace(0, 2 * np.pi, perimeter)
         circle_positions = []
         for angle in angles:
-            pos_x = round(mid_body_position[1] + radius * np.cos(angle))
-            pos_y = round(mid_body_position[0] + radius * np.sin(angle))
-            if (pos_x, pos_y) not in circle_positions:
-                circle_positions.append((pos_x, pos_y))
+            pos_y = round(mid_body_position[0] + radius * np.cos(angle))
+            pos_x = round(mid_body_position[1] + radius * np.sin(angle))
+            if (pos_y, pos_x) not in circle_positions:
+                circle_positions.append((pos_y, pos_x))
 
         intensities = []
         for position in circle_positions:
@@ -278,10 +294,10 @@ class MtCutDetectionFactory:
             total, inc = 0, 0
             for k in range(-1, 2):
                 for j in range(-1, 2):
-                    pos_x = position[0] + k
-                    pos_y = position[1] + j
-                    if 0 <= pos_x < size_x and 0 <= pos_y < size_y:
-                        total += image[pos_x, pos_y]
+                    pos_y = position[0] + k
+                    pos_x = position[1] + j
+                    if 0 <= pos_y < size_y and 0 <= pos_x < size_x:
+                        total += image[pos_y, pos_x]
                         inc += 1
             mean = total / inc
             intensities.append(mean)
@@ -401,7 +417,7 @@ class MtCutDetectionFactory:
     def _plot_circles(
         self,
         filename,
-        image,
+        sir_tubulin_image,
         filtered_image,
         final_peaks: list[Peak],
         all_positions: list[list[tuple[int]]],
@@ -411,6 +427,12 @@ class MtCutDetectionFactory:
     ) -> None:
         """
         Plot the image with the circle and the peaks.
+
+        Parameters
+        ----------
+
+        sir_tubulin_image: YX
+        filtered_image: YX
         """
 
         # Plot the intensities of the circle around the mid body spot
@@ -481,7 +503,7 @@ class MtCutDetectionFactory:
 
         # plot initial image
         plt.subplot(2, 3, 4)
-        plt.imshow(image)
+        plt.imshow(sir_tubulin_image)
 
         # plot filtered image
         plt.subplot(2, 3, 5)
@@ -516,11 +538,6 @@ class MtCutDetectionFactory:
             plt.plot(y_circle, x_circle, color="green")
 
         plt.title(filename)
-
-        # Display on whole screen
-        fig_manager = plt.get_current_fig_manager()
-        fig_manager.window.showMaximized()
-
         plt.show()
 
     def _get_average_circle_peaks(
@@ -563,7 +580,7 @@ class MtCutDetectionFactory:
         average_circle_peaks = average_circle_peaks[:2]
 
         # # Order them by relative position to assure consistency
-        # NB: this was used to follow peaks - sigmoid fit test 
+        # NB: this was used to follow peaks - sigmoid fit test
         # def get_peak_relative_position(peak: Peak):
         #     return peak.relative_position
         # average_circle_peaks.sort(key=get_peak_relative_position)
@@ -581,6 +598,8 @@ class MtCutDetectionFactory:
         2. Apply an adaptive histogram equalization to improve contrast
         """
         return image  # no pre-processing to apply so far
+        # from skimage.exposure import equalize_adapthist
+        # import scipy.ndimage as ndi
         # filtered_image = ndi.correlate(image, np.full((3, 3), 1 / 9))
         # filtered_image = equalize_adapthist(
         #     filtered_image, kernel_size=self.circle_radius * 2
@@ -591,10 +610,15 @@ class MtCutDetectionFactory:
         self,
         image: np.ndarray,
         debug_plot: bool,
-        filename=None,
+        file_path=None,
+        class_mode=None,
+        save_dir=None,
     ) -> np.ndarray:
         """
         Return bridge image embedding according to template provided in parameters.
+
+        image : CYX
+        class_mode: int, used for debug
         """
 
         # Create the coordinates list of the circle around the mid body spot
@@ -613,7 +637,8 @@ class MtCutDetectionFactory:
         ]
 
         # Apply image pre-processing
-        filtered_image = self._pre_process_image(image)
+        sir_tubulin_image = image[0, ...].squeeze()  # YX
+        filtered_image = self._pre_process_image(sir_tubulin_image)  # YX
 
         # Get useful data for each circle
         all_positions, all_intensities, all_peaks = [], [], []
@@ -639,11 +664,36 @@ class MtCutDetectionFactory:
         # Get useful Haralick features from middle center circle
         haralick_features = self._get_haralick_features(all_intensities[0])
 
+        # Save fake one cut image
+        if save_dir is not None:
+            file_name = os.path.basename(file_path).split("_c")[0]
+
+            # Keep number of peaks depending on class mode
+            if class_mode in (1, 3):
+                average_circle_peaks = average_circle_peaks[:1]
+            if class_mode in (2, 4):
+                average_circle_peaks = []
+
+            micro_tubules_augmentation = MicroTubulesAugmentation(
+                average_circle_peaks
+            )
+            augmentations = micro_tubules_augmentation.generate_augmentations(
+                image
+            )
+            for title, title_values in augmentations.items():
+                category = title_values["category"]
+                save_path = os.path.join(
+                    save_dir, f"{file_name}_{title}_c{category}.tiff"
+                )
+                save_tiff(
+                    title_values["image"], save_path, original_order="YXC"
+                )
+
         # Plot if enabled
         if debug_plot:
             self._plot_circles(
-                filename,
-                image,
+                file_path,
+                sir_tubulin_image,
                 filtered_image,
                 final_peaks,
                 all_positions,
@@ -657,10 +707,10 @@ class MtCutDetectionFactory:
             return np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
-                    np.mean(peaks_intensity)
-                    if len(final_peaks) > 0
-                    else np.mean(
-                        all_intensities[0]
+                    (
+                        np.mean(peaks_intensity)
+                        if len(final_peaks) > 0
+                        else np.mean(all_intensities[0])
                     ),  # 1 : intensity of the peaks
                     np.var(
                         all_intensities[0]
@@ -682,10 +732,10 @@ class MtCutDetectionFactory:
             return np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
-                    np.mean(peaks_intensity)
-                    if len(final_peaks) > 0
-                    else np.mean(
-                        all_intensities[0]
+                    (
+                        np.mean(peaks_intensity)
+                        if len(final_peaks) > 0
+                        else np.mean(all_intensities[0])
                     ),  # 1 : intensity of the peaks
                 ]
             )
@@ -697,10 +747,10 @@ class MtCutDetectionFactory:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
-                    np.mean(peaks_intensity)
-                    if len(final_peaks) > 0
-                    else np.mean(
-                        all_intensities[0]
+                    (
+                        np.mean(peaks_intensity)
+                        if len(final_peaks) > 0
+                        else np.mean(all_intensities[0])
                     ),  # 1 : intensity of the peaks
                     np.mean(
                         all_intensities[0]
@@ -713,10 +763,10 @@ class MtCutDetectionFactory:
         if self.template_type == TemplateType.ALL_ABLATION_1:
             template = np.array(
                 [
-                    np.mean(peaks_intensity)
-                    if len(final_peaks) > 0
-                    else np.mean(
-                        all_intensities[0]
+                    (
+                        np.mean(peaks_intensity)
+                        if len(final_peaks) > 0
+                        else np.mean(all_intensities[0])
                     ),  # 1 : intensity of the peaks
                     np.mean(
                         all_intensities[0]
@@ -740,10 +790,10 @@ class MtCutDetectionFactory:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
-                    np.mean(peaks_intensity)
-                    if len(final_peaks) > 0
-                    else np.mean(
-                        all_intensities[0]
+                    (
+                        np.mean(peaks_intensity)
+                        if len(final_peaks) > 0
+                        else np.mean(all_intensities[0])
                     ),  # 1 : intensity of the peaks
                 ]
             )
@@ -753,10 +803,10 @@ class MtCutDetectionFactory:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
-                    np.mean(peaks_intensity)
-                    if len(final_peaks) > 0
-                    else np.mean(
-                        all_intensities[0]
+                    (
+                        np.mean(peaks_intensity)
+                        if len(final_peaks) > 0
+                        else np.mean(all_intensities[0])
                     ),  # 1 : intensity of the peaks
                     np.mean(
                         all_intensities[0]
@@ -769,10 +819,10 @@ class MtCutDetectionFactory:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
-                    np.mean(peaks_intensity)
-                    if len(final_peaks) > 0
-                    else np.mean(
-                        all_intensities[0]
+                    (
+                        np.mean(peaks_intensity)
+                        if len(final_peaks) > 0
+                        else np.mean(all_intensities[0])
                     ),  # 1 : intensity of the peaks
                     np.mean(
                         all_intensities[0]
@@ -787,10 +837,10 @@ class MtCutDetectionFactory:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
-                    np.mean(peaks_intensity)
-                    if len(final_peaks) > 0
-                    else np.mean(
-                        all_intensities[0]
+                    (
+                        np.mean(peaks_intensity)
+                        if len(final_peaks) > 0
+                        else np.mean(all_intensities[0])
                     ),  # 1 : intensity of the peaks
                     np.mean(
                         all_intensities[0]
@@ -805,10 +855,10 @@ class MtCutDetectionFactory:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
-                    np.mean(peaks_intensity)
-                    if len(final_peaks) > 0
-                    else np.mean(
-                        all_intensities[0]
+                    (
+                        np.mean(peaks_intensity)
+                        if len(final_peaks) > 0
+                        else np.mean(all_intensities[0])
                     ),  # 1 : intensity of the peaks
                     np.mean(
                         all_intensities[0]
@@ -823,10 +873,10 @@ class MtCutDetectionFactory:
             template = np.array(
                 [
                     len(final_peaks),  # 0 : number of peaks
-                    np.mean(peaks_intensity)
-                    if len(final_peaks) > 0
-                    else np.mean(
-                        all_intensities[0]
+                    (
+                        np.mean(peaks_intensity)
+                        if len(final_peaks) > 0
+                        else np.mean(all_intensities[0])
                     ),  # 1 : intensity of the peaks
                     np.mean(
                         all_intensities[0]
@@ -859,10 +909,16 @@ class MtCutDetectionFactory:
         clf: SVC,
         debug_plot=True,
     ):
+        """
+        Parameters
+        ----------
+
+        img_bridge : CYX
+        """
         # Make sure crop has expected size
         assert (
-            img_bridge.shape[0] == self.margin * 2
-            and img_bridge.shape[1] == self.margin * 2
+            img_bridge.shape[1] == self.margin * 2
+            and img_bridge.shape[2] == self.margin * 2
         )
 
         # Get template and reshape to 2D data
@@ -915,6 +971,7 @@ class MtCutDetectionFactory:
         model_path: str,
         hmm_bridges_parameters_file: str,
         debug_plot=False,
+        list_class_bridges: Optional[list[int]] = None,
     ):
         """
         Update micro-tubules cut detection using bridges classification.
@@ -937,7 +994,6 @@ class MtCutDetectionFactory:
         # Perform classification...
         ordered_mb_frames = sorted(mitosis_track.mid_body_spots.keys())
         first_mb_frame = ordered_mb_frames[0]
-        last_mb_frame = ordered_mb_frames[-1]
         first_frame = max(
             first_mb_frame, mitosis_track.key_events_frame["cytokinesis"] - 2
         )  # -2?
@@ -949,25 +1005,10 @@ class MtCutDetectionFactory:
         with open(scaler_path, "rb") as f:
             scaler: StandardScaler = pickle.load(f)
 
+        results["crops"] = mitosis_track.get_bridge_images(video, self.margin)
+
         # Iterate over frames and get the class of the bridge
-        for frame in range(first_frame, last_mb_frame + 1):
-            min_x = mitosis_track.position.min_x
-            min_y = mitosis_track.position.min_y
-
-            # Get midbody coordinates
-            mb_coords = mitosis_track.mid_body_spots[frame].position
-            x_pos, y_pos = min_x + mb_coords[0], min_y + mb_coords[1]
-
-            # Extract frame image and crop around the midbody Sir-tubulin
-            frame_image = (
-                video[frame, :, :, :].squeeze().transpose(2, 0, 1)
-            )  # CYX
-            crop = smart_cropping(
-                frame_image, self.margin, x_pos, y_pos, pad=True
-            )[
-                0, ...
-            ]  # YX
-
+        for crop in results["crops"]:
             # Get bridge class (and other data useful for debugging)
             bridge_class, template, distance = self.get_bridge_class(
                 crop, scaler, classifier, debug_plot=debug_plot
@@ -976,7 +1017,6 @@ class MtCutDetectionFactory:
             results["list_class_bridges"].append(bridge_class)
             results["templates"].append(template)
             results["distances"].append(distance)
-            results["crops"].append(crop)
 
         # Make sure cytokinesis bridge is detected as A (no MT cut)
         relative_cytokinesis_frame = (
@@ -986,12 +1026,12 @@ class MtCutDetectionFactory:
             relative_cytokinesis_frame < 0
             or results["list_class_bridges"][relative_cytokinesis_frame] != 0
         ):
-            mitosis_track.key_events_frame[
-                "first_mt_cut"
-            ] = ImpossibleDetection.MT_CUT_AT_CYTOKINESIS
-            mitosis_track.key_events_frame[
-                "second_mt_cut"
-            ] = ImpossibleDetection.MT_CUT_AT_CYTOKINESIS
+            mitosis_track.key_events_frame["first_mt_cut"] = (
+                ImpossibleDetection.MT_CUT_AT_CYTOKINESIS
+            )
+            mitosis_track.key_events_frame["second_mt_cut"] = (
+                ImpossibleDetection.MT_CUT_AT_CYTOKINESIS
+            )
             return results
 
         # Read HMM parameters
@@ -1018,12 +1058,12 @@ class MtCutDetectionFactory:
 
         # Ignore if no MT cut detected
         if first_mt_cut_frame_rel == -1:
-            mitosis_track.key_events_frame[
-                "first_mt_cut"
-            ] = ImpossibleDetection.NO_CUT_DETECTED
-            mitosis_track.key_events_frame[
-                "second_mt_cut"
-            ] = ImpossibleDetection.NO_CUT_DETECTED
+            mitosis_track.key_events_frame["first_mt_cut"] = (
+                ImpossibleDetection.NO_CUT_DETECTED
+            )
+            mitosis_track.key_events_frame["second_mt_cut"] = (
+                ImpossibleDetection.NO_CUT_DETECTED
+            )
             return results
 
         first_mt_cut_frame_abs = first_frame + first_mt_cut_frame_rel
@@ -1037,12 +1077,12 @@ class MtCutDetectionFactory:
             self.center_tolerance_light_spot,
             self.min_percentage_light_spot,
         ):
-            mitosis_track.key_events_frame[
-                "first_mt_cut"
-            ] = ImpossibleDetection.LIGHT_SPOT
-            mitosis_track.key_events_frame[
-                "second_mt_cut"
-            ] = ImpossibleDetection.LIGHT_SPOT
+            mitosis_track.key_events_frame["first_mt_cut"] = (
+                ImpossibleDetection.LIGHT_SPOT
+            )
+            mitosis_track.key_events_frame["second_mt_cut"] = (
+                ImpossibleDetection.LIGHT_SPOT
+            )
             return results
 
         # Update mitosis track accordingly
@@ -1060,17 +1100,56 @@ class MtCutDetectionFactory:
 
         # get the frame of the second MT cut
         if second_mt_cut_frame_rel == -1:
-            mitosis_track.key_events_frame[
-                "second_mt_cut"
-            ] = ImpossibleDetection.NO_CUT_DETECTED
+            mitosis_track.key_events_frame["second_mt_cut"] = (
+                ImpossibleDetection.NO_CUT_DETECTED
+            )
             return results
 
         second_mt_cut_frame_abs = first_frame + second_mt_cut_frame_rel
 
         # Update mitosis track accordingly
-        mitosis_track.key_events_frame[
-            "second_mt_cut"
-        ] = second_mt_cut_frame_abs
+        mitosis_track.key_events_frame["second_mt_cut"] = (
+            second_mt_cut_frame_abs
+        )
 
         # Return proxies for testing
         return results
+
+    def classify_bridges(
+        self,
+        mitosis_tracks: list[MitosisTrack],
+        video: np.ndarray,
+        bridges_mt_cnn_model_path: str,
+    ) -> dict[int, list[int]]:
+        """
+        Classify bridges using a CNN model.
+        """
+        # Get bridge crops
+        crops = {}
+        for mitosis_track in mitosis_tracks:
+            raw_crops = mitosis_track.get_bridge_images(video, self.margin)
+            first_channel_crops = [
+                np.expand_dims(raw_crop[0], axis=0) for raw_crop in raw_crops
+            ]
+            crops[mitosis_track.id] = first_channel_crops
+
+        # Perform classification
+        crops_list = [
+            crop for crop_list in crops.values() for crop in crop_list
+        ]
+        predictions = perform_cnn_inference(
+            model_path=bridges_mt_cnn_model_path,
+            images=crops_list,
+            cnn_model_params=BridgesMtCnnModelParams,
+            model_manager=BridgesMtModelManager,
+        )
+
+        # Create prediction dictionary
+        mitosis_predictions = {}
+        for mitosis_track_id, crop_list in crops.items():
+            mitosis_predictions[mitosis_track_id] = predictions[
+                : len(crop_list)
+            ]
+            predictions = predictions[len(crop_list) :]
+
+        return mitosis_predictions

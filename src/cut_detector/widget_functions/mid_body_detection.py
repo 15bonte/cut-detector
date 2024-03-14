@@ -15,6 +15,7 @@ def perform_mid_body_detection(
     exported_mitoses_dir: str,
     exported_tracks_dir: str,
     save_dir: Optional[str] = None,
+    update_mitoses: bool = True,
 ):
     mitosis_tracks: list[MitosisTrack] = []
     # Iterate over "bin" files in exported_mitoses_dir
@@ -24,7 +25,8 @@ def perform_mid_body_detection(
             continue
         # Load mitosis track
         with open(os.path.join(exported_mitoses_dir, state_path), "rb") as f:
-            mitosis_track = pickle.load(f)
+            mitosis_track: MitosisTrack = pickle.load(f)
+            mitosis_track.adapt_deprecated_attributes()
 
         # Add mitosis track to list
         mitosis_tracks.append(mitosis_track)
@@ -59,16 +61,17 @@ def perform_mid_body_detection(
         )
 
         # Save updated mitosis track
-        daughter_track_ids = ",".join(
-            [str(d) for d in mitosis_track.daughter_track_ids]
-        )
-        state_path = f"{video_name}_mitosis_{mitosis_track.id}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.bin"
-        save_path = os.path.join(
-            exported_mitoses_dir,
-            state_path,
-        )
-        with open(save_path, "wb") as f:
-            pickle.dump(mitosis_track, f)
+        if update_mitoses:
+            daughter_track_ids = ",".join(
+                [str(d) for d in mitosis_track.daughter_track_ids]
+            )
+            state_path = f"{video_name}_mitosis_{mitosis_track.id}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.bin"
+            save_path = os.path.join(
+                exported_mitoses_dir,
+                state_path,
+            )
+            with open(save_path, "wb") as f:
+                pickle.dump(mitosis_track, f)
 
         if save_dir:
             # Save mitosis movie

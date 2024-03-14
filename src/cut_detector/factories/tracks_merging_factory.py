@@ -2,32 +2,13 @@ import json
 import os
 import numpy as np
 import xmltodict
-import torch
-from torch.utils.data import DataLoader
 
-from cnn_framework.utils.model_managers.cnn_model_manager import (
-    CnnModelManager,
-)
-from cnn_framework.utils.data_managers.default_data_manager import (
-    DefaultDataManager,
-)
-from cnn_framework.utils.metrics.classification_accuracy import (
-    ClassificationAccuracy,
-)
-from cnn_framework.utils.data_loader_generators.data_loader_generator import (
-    collate_dataset_output,
-)
-from cnn_framework.utils.enum import PredictMode
-
+from ..utils.tools import perform_cnn_inference
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.trackmate_spot import TrackMateSpot
 from ..utils.trackmate_track import TrackMateTrack
 from ..utils.trackmate_frame_spots import TrackMateFrameSpots
 from ..utils.hidden_markov_models import HiddenMarkovModel
-from ..utils.cell_division_detection.metaphase_cnn_data_set import (
-    MetaphaseCnnDataSet,
-)
-from ..utils.cell_division_detection.metaphase_cnn import MetaphaseCnn
 from ..utils.cell_division_detection.metaphase_cnn_model_params import (
     MetaphaseCnnModelParams,
 )
@@ -271,65 +252,26 @@ class TracksMergingFactory:
         metaphase_model_path: str, nuclei_crops: list[np.array]
     ) -> list[int]:
         """
-        Run CNN model to predict metaphase spots
+        Run CNN model to predict metaphase spots.
 
         Parameters
         ----------
-        metaphase_model: CNN model path
-        nuclei_crops: CYX
+        metaphase_model : str
+            CNN model path
+        nuclei_crops :  list[np.array]
+            list[CYX]
 
         Returns
         -------
-        predictions: [class predicted]
+        predictions : list[int]
+            predicted classes
         """
 
-        # Metaphase model parameters
-        model_parameters = MetaphaseCnnModelParams()
-        # Modify parameters for training
-        model_parameters.train_ratio = 0
-        model_parameters.val_ratio = 0
-        model_parameters.test_ratio = 1
-
-        # Model definition
-        # Load pretrained model
-        model = MetaphaseCnn(nb_classes=model_parameters.nb_classes)
-
-        map_location = None
-        if not torch.cuda.is_available():
-            map_location = torch.device("cpu")
-            print("No GPU found, using CPU.")
-        model.load_state_dict(
-            torch.load(
-                metaphase_model_path,
-                map_location=map_location,
-            )
+        predictions = perform_cnn_inference(
+            model_path=metaphase_model_path,
+            images=nuclei_crops,
+            cnn_model_params=MetaphaseCnnModelParams,
         )
-
-        # Test (no sampler to keep order)
-        dataset_test = MetaphaseCnnDataSet(
-            nuclei_crops,
-            is_train=False,
-            names=[f"{idx}.ext" for idx in range(len(nuclei_crops))],
-            data_manager=DefaultDataManager(""),
-            params=model_parameters,
-        )
-        test_dl = DataLoader(
-            dataset_test,
-            batch_size=128,
-            collate_fn=collate_dataset_output,
-        )
-
-        manager = CnnModelManager(
-            model, model_parameters, ClassificationAccuracy
-        )
-
-        predictions = manager.predict(
-            test_dl,
-            predict_mode=PredictMode.GetPrediction,
-            nb_images_to_save=0,
-        )  # careful, this is scores and not probabilities
-        predictions = [int(np.argmax(p)) for p in predictions]
-
         return predictions
 
     @staticmethod
