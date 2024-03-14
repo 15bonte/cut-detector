@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Optional
 
 import numpy as np
 
@@ -19,15 +20,17 @@ class Peak:
         circle_index=-1,
         prominence=0,
         width=0,
+        relative_width=0,
     ):
         self.relative_position = relative_position
         self.intensity = intensity
-        self.coordinates = coordinates
+        self.coordinates = coordinates  # (y, x)
         self.relative_intensity = relative_intensity
         self.position_index = position_index
         self.circle_index = circle_index
         self.prominence = prominence
         self.width = width
+        self.relative_width = relative_width
 
     def is_empty(self) -> bool:
         """
@@ -76,6 +79,14 @@ class Peak:
         return np.mean(widths)
 
     @classmethod
+    def get_average_relative_width(cls, peaks: list[Peak]) -> float:
+        """
+        Return the average relative width of a list of peaks.
+        """
+        relative_widths = [peak.relative_width for peak in peaks]
+        return np.mean(relative_widths)
+
+    @classmethod
     def group_peaks(
         cls,
         circle_peaks: list[list[Peak]],
@@ -118,6 +129,7 @@ class Peak:
         average_relative_intensity = cls.get_average_relative_intensity(peaks)
         average_prominence = cls.get_average_prominence(peaks)
         average_width = cls.get_average_width(peaks)
+        average_relative_width = cls.get_average_relative_width(peaks)
         return cls(
             relative_position=average_relative_position,
             intensity=average_intensity,
@@ -125,6 +137,7 @@ class Peak:
             relative_intensity=average_relative_intensity,
             prominence=average_prominence,
             width=average_width,
+            relative_width=average_relative_width,
         )
 
     @classmethod
@@ -192,3 +205,81 @@ class Peak:
             i += 1
 
         return window_peaks
+
+    def intersects(self, relative_position: float) -> bool:
+        """
+        Return True if the peak intersects the given relative position.
+        """
+        relative_difference = min(
+            abs(self.relative_position - relative_position),  # usual case
+            1 - abs(self.relative_position - relative_position),  # wrap around
+        )
+        return relative_difference < self.relative_width / 2
+
+    def enabled_augmentation(self) -> dict[str, int]:
+        """
+        Enable image augmentation.
+
+        NB: for some reason, zero is at the bottom.
+        Trigonometric rotation, so 0.25 is at the right, etc.
+        """
+
+        augmentations = {}
+
+        # Top/bottom
+        if self.intersects(0.25) or self.intersects(0.75):
+            augmentations["top"] = -1
+            augmentations["bottom"] = -1
+        else:
+            if (  # MT in top
+                self.relative_position > 0.25 and self.relative_position < 0.75
+            ):
+                augmentations["top"] = 1
+                augmentations["bottom"] = 0
+            else:  # MT in left
+                augmentations["top"] = 0
+                augmentations["bottom"] = 1
+
+        # Left/right
+        if self.intersects(0.0) or self.intersects(0.5):
+            augmentations["left"] = -1
+            augmentations["right"] = -1
+        else:
+            if self.relative_position > 0.5:  # MT in left
+                augmentations["left"] = 1
+                augmentations["right"] = 0
+            else:  # MT in right
+                augmentations["left"] = 0
+                augmentations["right"] = 1
+
+        # Top right/bottom left
+        if self.intersects(1 / 8) or self.intersects(5 / 8):
+            augmentations["top_right"] = -1
+            augmentations["bottom_left"] = -1
+        else:
+            if (  # MT in top right
+                self.relative_position > 1 / 8
+                and self.relative_position < 5 / 8
+            ):
+                augmentations["top_right"] = 1
+                augmentations["bottom_left"] = 0
+            else:  # MT in bottom left
+                augmentations["top_right"] = 0
+                augmentations["bottom_left"] = 1
+
+        # Bottom right/top left
+        if self.intersects(3 / 8) or self.intersects(7 / 8):
+            augmentations["bottom_right"] = -1
+            augmentations["top_left"] = -1
+        else:
+            if (  # MT in bottom right
+                self.relative_position < 3 / 8
+                or self.relative_position > 7 / 8
+            ):
+                augmentations["bottom_right"] = 1
+                augmentations["top_left"] = 0
+            else:  # MT in top left
+                augmentations["bottom_right"] = 0
+                augmentations["top_left"] = 1
+
+        return augmentations

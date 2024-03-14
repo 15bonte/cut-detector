@@ -32,8 +32,9 @@ class MidBodyTrack:
         for frame, position in expected_positions.items():
             if frame not in self.spots:
                 continue
+            spot = self.spots[frame]
             distances.append(
-                np.linalg.norm(np.array(self.spots[frame].position) - np.array(position))
+                np.linalg.norm(spot.get_position() - np.array(position))
             )
         # If there are no frames in common, for sure track is not the right one
         if len(distances) == 0:
