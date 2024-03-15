@@ -5,6 +5,8 @@ Replaces TODO_midbody...
 =====
 - [x] List main blob_log pipeline parameters (including pre and post processing)
 - [x] Investigate 2 other pictures: detection 10 and 31
+- [ ] Investigate new video
+- [ ] Reorganize code to have better debugging
 - [ ] Create Test files and metrics
 - [ ] Evaluate using said metrics:
     - time
