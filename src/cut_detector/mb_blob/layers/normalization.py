@@ -1,6 +1,7 @@
 """ Normalization layers
 """
 import numpy as np
+from skimage.morphology import area_closing, area_opening
 from .layer import BlobLayer
 
 
@@ -33,4 +34,23 @@ class HardBinaryNormalizer(BlobLayer):
     def apply(self, env: dict):
         img = env["img"]
         img = img > self.threshold
+        env["img"] = img
+
+class AreaOpeningNormalizer(BlobLayer):
+    def __init__(self, area_threshold: int = 64):
+        self.area_threshold = area_threshold
+    
+    def apply(self, env: dict):
+        img = env["img"]
+        img = area_opening(img, self.area_threshold)
+        env["img"] = img
+
+
+class AreaClosingNormalizer(BlobLayer):
+    def __init__(self, area_threshold: int = 64):
+        self.area_threshold = area_threshold
+    
+    def apply(self, env: dict):
+        img = env["img"]
+        img = area_closing(img, self.area_threshold)
         env["img"] = img

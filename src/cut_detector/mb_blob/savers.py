@@ -13,6 +13,7 @@ class Saver:
     def delayed_save(self):
         pass
 
+
 class SaveLogger(Saver):
     """Logs the saved data instead of saving it to the filesystem.
 

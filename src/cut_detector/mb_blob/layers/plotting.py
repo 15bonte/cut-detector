@@ -9,11 +9,14 @@ class PlotImage(BlobLayer):
     
     For now, image is shown in a blocking way
     """
-    def __init__(self, image_key: str = "img"):
+    def __init__(self, label: str = "Figure", image_key: str = "img"):
         self.image_key = image_key
+        self.image_label = label
     
     def apply(self, env: dict):
+        frame_idx = env["frame"]
         plt.imshow(env[self.image_key])
+        plt.title(f"{self.image_label}: {frame_idx}")
         plt.show()
 
 
