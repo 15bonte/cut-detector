@@ -19,9 +19,12 @@ Then 2 important constants are defined:
 ############################ Evaluation Constants ##############################
 ################################################################################
 # path to the test file, needs 4 channels
-TFRAME_SOURCE_FILE_PATH  = "./src/cut_detector/data/mitosis_movies/example_video_mitosis_t28-30.tiff"
+TFRAME_SOURCE_FILE_PATH  = "./src/cut_detector/data/mid_bodies_movies_test/example_video_mitosis_t28-30.tiff"
 TFRAME_GROUND_TRUTH_PATH = None
-# TFRAME_GROUND_TRUTH_PATH = "./src/cut_detector/data/mitosis_movies/example_video_mitosis_t28-30_truth.json"
+
+FULL_FRAME_SOURCE_FILE_PATH  = "./src/cut_detector/data/mid_bodies_movies_test/example_video_mitosis_0_0_to_4.tiff"
+FULL_FRAME_GROUND_TRUTH_PATH = None
+
 
 # Should the plots be displayed at the end (usually yes)
 PLOT_SHOW_AT_END = True
@@ -91,15 +94,38 @@ RAW_NORM_TEST = {
     ]
 }
 
+RAW_MAXMIN_NORM_TEST = {
+    "name": "Raw MaxMin Normalized Test",
+    "normalize": "maxmin",
+    "method": {
+        "kind": "lapgau",
+        "mSig": 5,
+        "MSig": 10,
+        "nSig": 30,
+        "threshold": .1
+    },
+    "debug": [
+        # "raw",
+        # "norm",
+        # "bin",
+        # "aop",
+        # "acl",
+        # "plot_cubes",
+        "blobs"
+    ]
+}
+
 ################################################################################
 TEST_ENV = [
-    {"src": TFRAME_SOURCE_FILE_PATH, "truth": TFRAME_GROUND_TRUTH_PATH}
+    {"src": TFRAME_SOURCE_FILE_PATH, "truth": TFRAME_GROUND_TRUTH_PATH},
+    {"src": FULL_FRAME_SOURCE_FILE_PATH, "truth": FULL_FRAME_GROUND_TRUTH_PATH}
 ]
 
 TESTS = [
-    SIMPLE_BIN_TEST,
+    # SIMPLE_BIN_TEST,
     # RAW_TEST,
     RAW_NORM_TEST,
+    RAW_MAXMIN_NORM_TEST,
 ]
 ################################################################################
 
@@ -119,6 +145,8 @@ from cnn_framework.utils.readers.tiff_reader import TiffReader
 
 def main():
     for env in TEST_ENV:
+        print("")
+        print("")
         print(f"### Running test environment ###")
         print("src:", env["src"])
         print("truth:", env["truth"])
@@ -171,6 +199,8 @@ def detect_movie_spots(movie: np.array, test_param: dict):
             # mklp_frame /= np.max(mklp_frame)
             # raw_image = mklp_frame / np.max(mklp_frame)
             mklp_frame = mklp_frame / np.max(mklp_frame)
+        elif norm_param == "maxmin":
+            mklp_frame = (mklp_frame - np.min(mklp_frame)) / (np.max(mklp_frame) - np.min(mklp_frame))
         elif frame == 0: 
             print("unknown value for parameter 'normalize'", file=sys.stderr)
         debug_image(mklp_frame, debug_param, "norm", f"Normalized image frame {frame}")
