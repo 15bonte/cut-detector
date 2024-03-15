@@ -249,7 +249,8 @@ class MidBodyDetectionFactory:
     
     @staticmethod
     def _compute_laplacian_of_gaussian(midbody_gs_img: np.array) -> np.array: #2 dimensions, blob and Y X R
-        midbody_gs_img = midbody_gs_img / np.max(midbody_gs_img)
+        # midbody_gs_img = midbody_gs_img / np.max(midbody_gs_img)
+        midbody_gs_img = (midbody_gs_img - np.min(midbody_gs_img)) / (np.max(midbody_gs_img) - np.min(midbody_gs_img))
         blobs_log = blob_log(midbody_gs_img, min_sigma=5, max_sigma=10, num_sigma=5, threshold=.1)
         # Compute radii in the 3rd column, since 3 column is sigma
         # and radius can be approximated by sigma * sqrt(2) according to doc
