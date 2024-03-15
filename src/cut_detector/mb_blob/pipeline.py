@@ -36,6 +36,7 @@ def run_pipeline(
     for frame_idx in range(frame_count):
         if logging: print(f"video {src_fp}, frame {frame_idx}:")
         env["frame"] = frame_idx
+        env["img"] = movie[frame_idx, :, :]
         for layer in pipeline:
             layer.apply(env=env)
 
@@ -44,10 +45,9 @@ def run_pipeline(
         s.delayed_save()
 
     # Return value
-    out_v = env.get("out")
+    out_v = env.get(out)
     if out_v is None:
-        keys = env.keys
-        raise RuntimeError(f"key {out} not found in env, among: {keys}")
+        raise RuntimeError(f"key {out} not found in env, among:\n{env}")
     if logging: print(f"Done, returning {out}")
     return out_v
 
