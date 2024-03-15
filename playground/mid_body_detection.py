@@ -3,6 +3,7 @@ from typing import Optional
 from cnn_framework.utils.readers.tiff_reader import TiffReader
 
 from cut_detector.data.tools import get_data_path
+from cut_detector.mb_blob.hello import hello_world
 from cut_detector.factories.mid_body_detection_factory import (
     MidBodyDetectionFactory,
 )
@@ -49,7 +50,7 @@ if __name__ == "__main__":
     # main()
     main(
         # "./src/cut_detector/data/mitosis_movies/example_video_mitosis_0_0_to_4.tiff",
-        # "./src/cut_detector/data/mid_bodies_movies_test/a_siLuci-1_mitosis_33_7_to_63.tiff",
-        "./src/cut_detector/data/mid_bodies_movies_test/example_video_mitosis_0_0_to_4.tiff",
+        "./src/cut_detector/data/mid_bodies_movies_test/a_siLuci-1_mitosis_33_7_to_63.tiff",
+        # "./src/cut_detector/data/mid_bodies_movies_test/example_video_mitosis_0_0_to_4.tiff",
         # get_data_path("mid_bodies_tests") 
     )

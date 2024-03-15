@@ -25,6 +25,8 @@ TFRAME_GROUND_TRUTH_PATH = None
 FULL_FRAME_SOURCE_FILE_PATH  = "./src/cut_detector/data/mid_bodies_movies_test/example_video_mitosis_0_0_to_4.tiff"
 FULL_FRAME_GROUND_TRUTH_PATH = None
 
+LUCI_140_SOURCE = "./src/cut_detector/data/mid_bodies_movies_test/a_siLuci-1_mitosis_33_7_to_63.tiff"
+LUCI_140_GT = None
 
 # Should the plots be displayed at the end (usually yes)
 PLOT_SHOW_AT_END = True
@@ -133,7 +135,6 @@ TESTS = [
 ################################################################################
 ################################################################################
 ################################################################################
-
 
 import os
 import sys
