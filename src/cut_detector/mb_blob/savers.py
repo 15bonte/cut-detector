@@ -1,15 +1,16 @@
 """ Defines some savers
 """
 import sys
-from abc import ABC, abstractmethod
 from typing import TextIO
 
-class Saver(ABC):
+class Saver:
     def __init__(self, delay: bool):
         self.delay = delay
 
-    @abstractmethod
     def save(self, data: dict):
+        pass
+
+    def delayed_save(self):
         pass
 
 class SaveLogger(Saver):
