@@ -1,6 +1,7 @@
 """ Plotting Layers
 """
 
+import sys
 import matplotlib.pyplot as plt
 from .layer import BlobLayer
 
@@ -33,10 +34,17 @@ class PlotBlobs(BlobLayer):
     
     def apply(self, env: dict):
         blobs = env.get(self.blobs_key, [])
-        fig, ax = plt.subplots()
-        ax.imshow(self.src_key)
-        for blob in blobs:
-            y, x, r = blob
-            circle = plt.Circle((x, y), r, linewidth=2, fill=False)
-            ax.add_patch(circle)
+        src_img = env.get(self.src_key)
+        if src_img is None:
+            print(f"Could not find key {self.src_key} in env:\n", env, file=sys.stderr)
+
+        if self.sbs:
+            raise RuntimeError("Side-By-Side (sbs) plotting not supported yet")
+        else:
+            fig, ax = plt.subplots()
+            ax.imshow(src_img)
+            for blob in blobs:
+                y, x, r = blob
+                circle = plt.Circle((x, y), r, linewidth=2, fill=False)
+                ax.add_patch(circle)
         plt.show()
