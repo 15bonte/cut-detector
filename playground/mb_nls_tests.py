@@ -14,15 +14,41 @@ HARD_BIN_AOC_PIPELINE = [
     nls.OnFrame([0], nls.PlotImage(label="Post Bin")),
     nls.AreaOpeningNormalizer(50),
     nls.AreaClosingNormalizer(200),
-    # nls.PlotImage(label="Post AO/AC")
     nls.OnFrame([0], nls.PlotImage(label="Post AO/AC")),
     nls.LapOfGauss(min_sig=3, max_sig=6, n_sig=10, threshold=0.1),
     nls.SaveStdBlobMetrics(),
     nls.OnFrame([0], nls.PlotBlobs())
 ]
 
+MINMAX_PIPELINE = [
+    nls.WriteImg(as_key="src"),
+    nls.WriteTime(),
+    nls.MinMaxNormalizer(),
+    nls.OnFrame(
+        [0], 
+        nls.LapOfGauss(5, 10, 5, 0.2, nls.BlobLogVisuSettings(0.2, [0, 4])),
+        nls.LapOfGauss(5, 10, 5, 0.2)
+    ),
+    nls.OnFrame([0], nls.PlotBlobs()),
+    nls.SaveStdBlobMetrics(),
+]
+
+BETTER_MINMAX_PIPELINE = [
+    nls.WriteImg(as_key="src"),
+    nls.WriteTime(),
+    nls.MinMaxNormalizer(),
+    nls.OnFrame(
+        [0], 
+        nls.Sequence(
+            nls.LapOfGauss(5, 10, 5, 0.2, nls.BlobLogVisuSettings(0.2, [0, 4])),
+            nls.PlotBlobs(),
+        ),
+        nls.LapOfGauss(5, 10, 5, 0.2)
+    ),
+]
+
 file = THREEFRAME_FP
-pipeline = HARD_BIN_AOC_PIPELINE
+pipeline = BETTER_MINMAX_PIPELINE
 
 o = simple_run(
     pipeline=pipeline,
