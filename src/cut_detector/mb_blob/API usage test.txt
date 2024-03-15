@@ -1,0 +1,36 @@
+# API usage test
+
+# V1: processing+debugging in same construct
+pipeline = [
+    Env(saveSource="src", saveTime="time"),
+    OnFrame(frames=[10,31], y=Plot("img")),
+    MinMaxNormalizer(),
+    OnFrame(frames=[10,31], y=Plot("img")),
+    SigmoidNormalizer(),
+    OnFrame(frames=[10,31], y=Plot("img")),
+    OnFrame(
+        frames=[10,31],
+        y=LapGau(blobs_t="blobs", min_sig=5, max_sig=10, n_sig=5, visu=LapGauVisu(cube=True)),
+        n=LapGau(blobs_t="blobs", min_sig=5, max_sig=10, n_sig=5)
+    ),
+    SaveResult(metrics=["frame", "yxs", "time"])
+    PlotPoints(src="blobs", bg="src", sqrt2=True, sbs=True),
+    WriteResults(file="results.csv", fmt="csv", delayed=True)
+]
+blobs = run_pipeline(pipeline, out="blobs", img=mklp_image, logging=True)
+blobs = run_pipeline_ext_blob(pipeline, out="blobs", img="path/to/src.tiff", logging=True)
+
+
+
+
+# V2: processing and debugging separated
+pipeline = [
+    MinMaxNormalizer(),
+    SigmoidNormalizer(),
+    LapGau(min_sig=5, max_sig=10, n_sig=5, LapGauVisu(cube=True))
+]
+debugging = {
+    "before_0": PlotImage(frames=[10,31]),
+    "after_0": PlotImage(frames=[10,31]),
+    "after_1": PlotImage(frames=[10,31])
+}
