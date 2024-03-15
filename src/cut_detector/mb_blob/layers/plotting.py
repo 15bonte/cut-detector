@@ -36,7 +36,8 @@ class PlotBlobs(BlobLayer):
         blobs = env.get(self.blobs_key, [])
         src_img = env.get(self.src_key)
         if src_img is None:
-            print(f"Could not find key {self.src_key} in env:\n", env, file=sys.stderr)
+            # print(f"Could not find key {self.src_key} in env:\n", env, file=sys.stderr)
+            raise RuntimeError(f"Could not find key {self.src_key} in environment")
 
         if self.sbs:
             raise RuntimeError("Side-By-Side (sbs) plotting not supported yet")
