@@ -25,7 +25,7 @@ def main(mitoses_folder: Optional[str] = get_data_path("mitoses")):
     for mitosis_track, mitosis_file in zip(mitoses_tracks, mitoses_files):
         # Ignore if triple division or not annotated mitosis
         if (
-            len(mitosis_track.daughter_track_ids) > 1
+            len(mitosis_track.daughter_track_ids) != 1
             or mitosis_track.gt_mid_body_spots is None
         ):
             continue
