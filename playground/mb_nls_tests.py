@@ -5,7 +5,14 @@ import cut_detector.mb_blob.layers as nls
 from cut_detector.mb_blob.savers import SaveLogger
 from cut_detector.mb_blob.mb_blob_runner import simple_run
 
+MB_MV_TEST = "./src/cut_detector/data/mid_bodies"
+MB_MV_PPLN_TEST = "./src/cut_detector/data/mid_bodies_movies_test_ppln" 
+SAVE_DIR = MB_MV_PPLN_TEST
+
 THREEFRAME_FP = "./src/cut_detector/data/mid_bodies_movies_test/example_video_mitosis_t28-30.tiff"
+LUCI_A_FP = "./src/cut_detector/data/mid_bodies_movies_test/a_siLuci-1_mitosis_33_7_to_63.tiff"
+
+
 HARD_BIN_AOC_PIPELINE = [
     nls.WriteImg(as_key="src"),
     nls.OnFrame([0], nls.PlotImage(label="Raw")),
@@ -38,16 +45,20 @@ BETTER_MINMAX_PIPELINE = [
     nls.WriteTime(),
     nls.MinMaxNormalizer(),
     nls.OnFrame(
-        [0], 
+        [29, 30, 31, 32], 
         nls.Sequence(
-            nls.LapOfGauss(5, 10, 5, 0.2, nls.BlobLogVisuSettings(0.2, [0, 4])),
-            nls.PlotBlobs(),
+            nls.LapOfGauss(5, 10, 5, 0.1, nls.BlobLogVisuSettings(0.4, [0, 4])),
+            nls.PlotBlobs(plt_saver=nls.PlotSaver(filedir=SAVE_DIR, filename="blobs_seen")),
         ),
-        nls.LapOfGauss(5, 10, 5, 0.2)
+        nls.Sequence(
+            nls.LapOfGauss(5, 10, 5, 0.1),
+            nls.PlotBlobs(plt_saver=nls.PlotSaver(filedir=SAVE_DIR, filename="blobs_seen"), should_show=False),
+        )
     ),
+    nls.SaveStdBlobMetrics(),
 ]
 
-file = THREEFRAME_FP
+file = LUCI_A_FP
 pipeline = BETTER_MINMAX_PIPELINE
 
 o = simple_run(

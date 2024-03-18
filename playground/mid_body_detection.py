@@ -3,7 +3,6 @@ from typing import Optional
 from cnn_framework.utils.readers.tiff_reader import TiffReader
 
 from cut_detector.data.tools import get_data_path
-from cut_detector.mb_blob.hello import hello_world
 from cut_detector.factories.mid_body_detection_factory import (
     MidBodyDetectionFactory,
 )
