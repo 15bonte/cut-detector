@@ -15,7 +15,9 @@ def main(mitoses_folder: Optional[str] = get_data_path("mitoses")):
     mitoses_files = os.listdir(mitoses_folder)
     for mitosis_file in mitoses_files:
         with open(os.path.join(mitoses_folder, mitosis_file), "rb") as f:
-            mitoses_tracks.append(pickle.load(f))
+            mitosis_track: MitosisTrack = pickle.load(f)
+            mitosis_track.adapt_deprecated_attributes()
+            mitoses_tracks.append(mitosis_track)
 
     # Iterate over mitoses
     mb_detected, mb_not_detected = 0, 0
