@@ -1,9 +1,12 @@
 import os
+from typing import Optional
 import pickle
+
 from cut_detector.utils.mitosis_track import MitosisTrack
+from cut_detector.data.tools import get_data_path
 
 
-def main(mitoses_folder):
+def main(mitoses_folder: Optional[str] = get_data_path("mitoses")):
     """
     Evaluate mid-body detection from annotated files.
     """
@@ -59,5 +62,4 @@ def main(mitoses_folder):
 
 
 if __name__ == "__main__":
-    MITOSES_FOLDER = ""
-    main(MITOSES_FOLDER)
+    main()
