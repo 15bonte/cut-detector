@@ -87,20 +87,20 @@ class TracksMergingFactory:
         # Loop through all tracks beginning at frame > 0 and try to plug them to the previous metaphase
         for track in reversed(ordered_tracks):
             # Break when reaching tracking starting at first frame, as they are ordered
-            track_first_frame = min(track.track_spots.keys())
+            track_first_frame = min(track.spots.keys())
             if track_first_frame == 0:
                 break
 
             # Get all spots at same frame
             contemporary_spots = [
-                raw_track.track_spots[track_first_frame]
+                raw_track.spots[track_first_frame]
                 for raw_track in raw_tracks
-                if track_first_frame in raw_track.track_spots
+                if track_first_frame in raw_track.spots
                 and raw_track.track_id != track.track_id
             ]
 
             # Keep only stuck spots
-            first_spot = track.track_spots[track_first_frame]
+            first_spot = track.spots[track_first_frame]
             stuck_spots: list[TrackMateSpot] = list(
                 filter(
                     lambda x: x.is_stuck_to(
@@ -298,8 +298,7 @@ class TracksMergingFactory:
         # Retrieve predictions
         predictions = {
             int(track.track_id): [
-                int(spot.predicted_phase)
-                for spot in track.track_spots.values()
+                int(spot.predicted_phase) for spot in track.spots.values()
             ]
             for track in tracks
         }

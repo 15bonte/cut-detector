@@ -37,8 +37,8 @@ def get_whole_box_dimensions_dln(
 
     # For all tracks: mother and daughter(s)
     for track in tracks:
-        if frame in track.track_spots:
-            current_spot = track.track_spots[frame]
+        if frame in track.spots:
+            current_spot = track.spots[frame]
             track_frame_points = track_frame_points + current_spot.spot_points
             box_dimensions_dln.update(
                 current_spot.abs_min_x,
@@ -75,12 +75,10 @@ class TrackMateTrack:
         self.start = int(float(trackmate_track["@TRACK_START"]))
         self.stop = int(float(trackmate_track["@TRACK_STOP"]))
 
-        self.track_spots: dict[
-            int, TrackMateSpot
-        ] = {}  # {frame: TrackMateSpot}
+        self.spots: dict[int, TrackMateSpot] = {}  # {frame: TrackMateSpot}
         self.metaphase_spots: list[TrackMateSpot] = []
 
-        # Can be different from len(self.track_spots) if we have a gap in the track
+        # Can be different from len(self.spots) if we have a gap in the track
         self.number_spots = 0
 
     def update_metaphase_spots(self, predictions: list[int]) -> None:
@@ -97,8 +95,8 @@ class TrackMateTrack:
         None.
 
         """
-        for idx, frame in enumerate(sorted(self.track_spots.keys())):
-            self.track_spots[frame].predicted_phase = predictions[idx]
+        for idx, frame in enumerate(sorted(self.spots.keys())):
+            self.spots[frame].predicted_phase = predictions[idx]
 
         # Store last metaphase spot of each group
         metaphase_finished = False
@@ -111,16 +109,16 @@ class TrackMateTrack:
 
             # From this point, get metaphase spots
             if (
-                frame in self.track_spots  # current frame contains a spot
+                frame in self.spots  # current frame contains a spot
                 and predictions[frame - self.start]
                 == METAPHASE_INDEX  # current spot is in metaphase
                 and frame != self.stop  # current spot is not last spot
                 and (
                     predictions[frame - self.start + 1] != METAPHASE_INDEX
-                    and frame in self.track_spots
+                    and frame in self.spots
                 )  # next frame is not a spot in metaphase
             ):
-                self.metaphase_spots.append(self.track_spots[frame])
+                self.metaphase_spots.append(self.spots[frame])
 
     def has_close_metaphase(
         self, spot: TrackMateSpot, target_frame: int
@@ -168,7 +166,7 @@ class TrackMateTrack:
 
         """
 
-        daughter_track_first_frame = min(daughter_track.track_spots.keys())
+        daughter_track_first_frame = min(daughter_track.spots.keys())
 
         # If current track starts at first frame, ignore as it cannot be a mother track
         if self.start == daughter_track_first_frame:
@@ -326,7 +324,7 @@ class TrackMateTrack:
                 )
                 # Store all spots
                 spot.track_id = self.track_id  # add track information
-                self.track_spots[spot.frame] = spot
+                self.spots[spot.frame] = spot
 
         # If no spot in track for current frame, use previous frame position
         for frame in range(self.start, self.stop + 1):
@@ -343,3 +341,16 @@ class TrackMateTrack:
 
         self.number_spots = len(cell_crops)
         return cell_crops
+
+    def adapt_deprecated_attributes(self) -> None:
+        """
+        Adapt deprecated attributes.
+
+        Returns
+        -------
+        None.
+
+        """
+        if hasattr(self, "track_spots"):
+            self.spots = self.track_spots
+            del self.track_spots

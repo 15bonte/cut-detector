@@ -190,12 +190,9 @@ class MitosisTrack:
         # Store first metaphase frame
         for frame in range(self.metaphase_frame, mother_track.start, -1):
             # Some frames may be missing since gap closing is allowed
-            if frame not in mother_track.track_spots:
+            if frame not in mother_track.spots:
                 continue
-            if (
-                mother_track.track_spots[frame].predicted_phase
-                != METAPHASE_INDEX
-            ):
+            if mother_track.spots[frame].predicted_phase != METAPHASE_INDEX:
                 self.key_events_frame["metaphase"] = frame + 1
                 break
 
@@ -325,17 +322,14 @@ class MitosisTrack:
 
         for idx, frame in enumerate(range(self.min_frame, self.max_frame + 1)):
             # Extreme case where mother track is not present at beginning of mitosis movie
-            if frame not in mother_track.track_spots:
+            if frame not in mother_track.spots:
                 mitosis_summary[idx + 1] = "interphase"
                 continue
             # Telophase defined as first frame after metaphase or daughters first frame
             if frame >= self.metaphase_frame or frame >= daughters_first_frame:
                 mitosis_summary[idx + 1] = "telophase"
             # Metaphase according to CNN + HMM prediction
-            elif (
-                mother_track.track_spots[frame].predicted_phase
-                == METAPHASE_INDEX
-            ):
+            elif mother_track.spots[frame].predicted_phase == METAPHASE_INDEX:
                 mitosis_summary[idx + 1] = "metaphase"
             # In other cases, interphase
             else:
