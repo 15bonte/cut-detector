@@ -1,0 +1,10 @@
+Things to do for tracking
+- [ ] Implement the binding to obtain MidBodyTrack from LapTrack
+- [X] Understand why some images don't work (*)
+- [ ] Add other features to LapTrack (such as MLPK and SIR channels values)
+- [ ] Performance metrics 
+
+
+(*) For now, when a frame does not contain a midbody, no line is added to the
+dataframe.
+Maybe instead a line should be added, but with no other values ?
