@@ -3,9 +3,10 @@ import os
 import numpy as np
 import xmltodict
 
+
 from ..utils.tools import perform_cnn_inference
 from ..utils.mitosis_track import MitosisTrack
-from ..utils.trackmate_spot import TrackMateSpot
+from ..utils.cell_spot import CellSpot
 from ..utils.trackmate_track import TrackMateTrack
 from ..utils.trackmate_frame_spots import TrackMateFrameSpots
 from ..utils.hidden_markov_models import HiddenMarkovModel
@@ -101,7 +102,7 @@ class TracksMergingFactory:
 
             # Keep only stuck spots
             first_spot = track.spots[track_first_frame]
-            stuck_spots: list[TrackMateSpot] = list(
+            stuck_spots: list[CellSpot] = list(
                 filter(
                     lambda x: x.is_stuck_to(
                         first_spot, self.max_spot_distance_for_split
