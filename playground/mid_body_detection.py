@@ -39,6 +39,16 @@ def main(
         mitosis_movie=mitosis_movie, mask_movie=mask_movie, mode="lapgau"
     )  # mode = "bigfish" or "h_maxima" (default)
 
+    for frame, spots in spots_candidates.items():
+        for spot in spots:
+            print({
+                "fr": frame,
+                "x": spot.position[0],
+                "y": spot.position[1],
+                "mlkp_int": spot.intensity,
+                "sir_int": spot.sir_intensity
+            })
+
     factory.generate_tracks_from_spots(
         spots_candidates,
     )

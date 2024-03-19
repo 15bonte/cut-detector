@@ -8,6 +8,7 @@ from skimage.morphology import extrema, opening
 from skimage.feature import blob_log
 from scipy import ndimage
 from scipy.optimize import linear_sum_assignment
+from scipy.spatial import distance
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -434,7 +435,9 @@ class MidBodyDetectionFactory:
         spots_df = pd.DataFrame({
             "frame": [],
             "x": [],
-            "y": []
+            "y": [],
+            "mlkp_intensity": [],
+            "sir_intensity": []
         })
         for frame, mb_spots in spots_candidates.items():
             if len(mb_spots) == 0:
@@ -442,6 +445,8 @@ class MidBodyDetectionFactory:
                         frame, 
                         None, 
                         None,
+                        None,
+                        None
                     ]
             else:
                 for mb_spot in mb_spots:
@@ -449,22 +454,52 @@ class MidBodyDetectionFactory:
                         frame, 
                         mb_spot.position[0], 
                         mb_spot.position[1],
+                        mb_spot.intensity,
+                        mb_spot.sir_intensity
                     ]
         print("spots_df:", spots_df, sep="\n")
 
+        # distance function:
+        def dist_metric(c1, c2):
+            """ Modified version of sqeuclidian distance
+
+            Square Euclidian distance is applied to spatial coordinates
+            x and y.
+            while an 'intensity' distance is computed with MLKP and
+            SIR intensities
+
+            Finally values are combined by weighted addition
+            """
+            # spatial coordinates: sqsqeuclidean
+            alpha = 1
+            (x1, y1, mlkp1, sir1), (x2, y2, mlkp2, sir2) = c1, c2
+            spatial_sqe = distance.sqeuclidean([x1, y1], [x2, y2])
+
+            # mlkp distance (linear for now)
+            beta = 0.10
+            mlkp_d = abs(mlkp1 - mlkp2)
+
+            # sir distance (linear for now)
+            gamma = 0.25
+            sir_d = abs(sir1 - sir2)
+
+            return alpha*spatial_sqe + beta*mlkp_d + gamma*sir_d
+
+
         # laptrack execution
         lt = LapTrack(
-            track_dist_metric="sqeuclidean",
+            track_dist_metric=dist_metric,
             track_cost_cutoff=self.mid_body_linking_max_distance**2,
-            gap_closing_dist_metric="sqeuclidean",
+            gap_closing_dist_metric=dist_metric,
             gap_closing_cost_cutoff=self.mid_body_linking_max_distance**2,
             gap_closing_max_frame_count=2,
             splitting_cost_cutoff=False,
-            merging_cost_cutoff=False
+            merging_cost_cutoff=False,
+            alternative_cost_percentile=90, # default value
         )
         track_df, split_df, merge_df = lt.predict_dataframe(
             spots_df, 
-            ["y", "x"],
+            ["x", "y", "mlkp_intensity", "sir_intensity"],
             only_coordinate_cols=True
         )
         # track_df.reset_index()
@@ -693,6 +728,7 @@ class MidBodyDetectionFactory:
         # Detect spots in each frame
         nb_frames = mitosis_movie.shape[0]
         for frame in range(nb_frames):
+            print(f"generating and saving frame ({frame+1}/{nb_frames})")
             image = mitosis_movie[frame, :, :, mid_body_channel].squeeze()
 
             # Bigfish spots
