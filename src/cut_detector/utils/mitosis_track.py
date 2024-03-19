@@ -739,13 +739,19 @@ class MitosisTrack:
         """
         # Predicted
         for mid_body_spot in self.mid_body_spots.values():
-            if mid_body_spot.position is not None:
+            if (
+                hasattr(mid_body_spot, "position")
+                and mid_body_spot.position is not None
+            ):
                 mid_body_spot.x = mid_body_spot.position[0]
                 mid_body_spot.y = mid_body_spot.position[1]
         # Ground truth
         if self.gt_mid_body_spots is None:
             return
         for mid_body_spot in self.gt_mid_body_spots.values():
-            if mid_body_spot.position is not None:
+            if (
+                hasattr(mid_body_spot, "position")
+                and mid_body_spot.position is not None
+            ):
                 mid_body_spot.x = mid_body_spot.position[0]
                 mid_body_spot.y = mid_body_spot.position[1]
