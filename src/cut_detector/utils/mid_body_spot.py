@@ -14,7 +14,7 @@ class MidBodySpot(Spot):
     def __init__(
         self,
         frame: int,
-        position: list[int],
+        position: list[int], # [X, Y]
         intensity: Optional[float] = None,
         sir_intensity: Optional[float] = None,
         area: Optional[float] = None,

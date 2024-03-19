@@ -38,6 +38,7 @@ def main(
         # mitosis_movie=mitosis_movie, mask_movie=mask_movie, mode="h_maxima"
         mitosis_movie=mitosis_movie, mask_movie=mask_movie, mode="lapgau"
     )  # mode = "bigfish" or "h_maxima" (default)
+
     factory.generate_tracks_from_spots(
         spots_candidates,
     )
@@ -49,7 +50,15 @@ if __name__ == "__main__":
     # main()
     main(
         # "./src/cut_detector/data/mitosis_movies/example_video_mitosis_0_0_to_4.tiff",
-        "./src/cut_detector/data/mid_bodies_movies_test/a_siLuci-1_mitosis_33_7_to_63.tiff",
+        # "./src/cut_detector/data/mid_bodies_movies_test/a_siLuci-1_mitosis_33_7_to_63.tiff",
+        # "./src/cut_detector/data/mid_bodies_movies_test/s1_siLuci-1_mitosis_14_158_to_227.tiff",
+        # "./src/cut_detector/data/mid_bodies_movies_test/s2_siLuci-1_mitosis_15_67_to_228,211.tiff",
+        # "./src/cut_detector/data/mid_bodies_movies_test/s3_siLuci-1_mitosis_17_170_to_195.tiff",
+        # "./src/cut_detector/data/mid_bodies_movies_test/s4_siLuci-1_mitosis_24_128_to_135.tiff",
+        # "./src/cut_detector/data/mid_bodies_movies_test/s5_siLuci-1_mitosis_27_22_to_93,87.tiff",
+        # "./src/cut_detector/data/mid_bodies_movies_test/s6_siLuci-1_mitosis_28_50_to_91.tiff",
+        # "./src/cut_detector/data/mid_bodies_movies_test/s7_siLuci-1_mitosis_31_19_to_73.tiff",
+        "./src/cut_detector/data/mid_bodies_movies_test/s9_siLuci-1_mitosis_34_21_to_68,62.tiff",
         # "./src/cut_detector/data/mid_bodies_movies_test/example_video_mitosis_0_0_to_4.tiff",
         # get_data_path("mid_bodies_tests") 
     )

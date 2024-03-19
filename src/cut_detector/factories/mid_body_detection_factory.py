@@ -9,6 +9,9 @@ from skimage.feature import blob_log
 from scipy import ndimage
 from scipy.optimize import linear_sum_assignment
 import matplotlib as mpl
+import matplotlib.pyplot as plt
+import pandas as pd
+from laptrack import LapTrack
 
 from cnn_framework.utils.display_tools import display_progress
 
@@ -367,26 +370,113 @@ class MidBodyDetectionFactory:
 
         """
 
-        # Update parent and child spots
-        for frame in spots_candidates.keys():
-            # Ignore if no spot detected in next frame
-            if not frame + 1 in spots_candidates:
-                continue
-            self._update_spots_hereditary(
-                spots_candidates[frame], spots_candidates[frame + 1]
-            )
+        # # Update parent and child spots
+        # for frame in spots_candidates.keys():
+        #     # Ignore if no spot detected in next frame
+        #     if not frame + 1 in spots_candidates:
+        #         continue
+        #     self._update_spots_hereditary(
+        #         spots_candidates[frame], spots_candidates[frame + 1]
+        #     )
 
-        tracks = []
-        for spots in spots_candidates.values():
+        # tracks = []
+        # for spots in spots_candidates.values():
+        #     for spot in spots:
+        #         if spot.track_id is None:
+        #             # Create new track
+        #             track_id = len(tracks)
+        #             new_track = MidBodyTrack(track_id)
+        #             new_track.add_spot(spot)
+        #             tracks.append(new_track)
+
+        # return tracks
+
+        return self._gen_laptrack_tracking(spots_candidates)
+    
+    @staticmethod
+    def get_track_end(track_df, keys, track_id, first=True):
+        df = track_df[track_df["track_id"] == track_id].sort_index(level="frame")
+        return df.iloc[0 if first else -1][keys]
+
+    @staticmethod
+    def _pd_concat(v: list) -> pd.DataFrame:
+        """
+        For some reason, pylance considered that pd.concat stops
+        code execution, so everything after that was marked as
+        'unreachable'.
+        Wrapping it in a function prevents it
+        """
+        return pd.concat(v)
+
+    def _gen_laptrack_tracking(
+            self, 
+            spots_candidates: dict[int, list[MidBodySpot]]) -> list[MidBodyTrack]:
+        # input data conversion
+        spots_list = []
+        for frame, spots in spots_candidates.items():
             for spot in spots:
-                if spot.track_id is None:
-                    # Create new track
-                    track_id = len(tracks)
-                    new_track = MidBodyTrack(track_id)
-                    new_track.add_spot(spot)
-                    tracks.append(new_track)
+                df = pd.DataFrame({
+                    "frame": [frame],
+                    "y": [spot.position[1]],
+                    "x": [spot.position[0]],
+                })
+                spots_list.append(df)
+        
+        # spots_df = pd.concat(spots_list)
+        spots_df = self._pd_concat(spots_list)
 
-        return tracks
+        # laptrack execution
+        lt = LapTrack(
+            track_dist_metric="sqeuclidean",
+            track_cost_cutoff=self.mid_body_linking_max_distance**2,
+            gap_closing_dist_metric="sqeuclidean",
+            gap_closing_cost_cutoff=self.mid_body_linking_max_distance**2,
+            gap_closing_max_frame_count=2,
+            splitting_cost_cutoff=False,
+            merging_cost_cutoff=False
+        )
+        track_df, split_df, merge_df = lt.predict_dataframe(
+            spots_df, 
+            ["y", "x"],
+            only_coordinate_cols=True # TODO: add other elements
+        )
+        track_df.reset_index()
+
+        print("Tracking result:", track_df, sep="\n")
+
+        ####################################################################
+        ####################################################################
+
+        keys = ["position_x", "position_y", "track_id", "tree_id"]
+
+        plt.figure(figsize=(3, 3))
+        frames = track_df.index.get_level_values("frame")
+        frame_range = [frames.min(), frames.max()]
+        # k1, k2 = "position_y", "position_x"
+        k1, k2 = "y", "x"
+        keys = [k1, k2]
+
+        for track_id, grp in track_df.groupby("track_id"):
+            df = grp.reset_index().sort_values("frame")
+            plt.scatter(df[k1], df[k2], c=df["frame"], vmin=frame_range[0], vmax=frame_range[1])
+            for i in range(len(df) - 1):
+                pos1 = df.iloc[i][keys]
+                pos2 = df.iloc[i + 1][keys]
+                plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], "-k")
+            for _, row in list(split_df.iterrows()) + list(merge_df.iterrows()):
+                pos1 = self.get_track_end(row["parent_track_id"], first=False)
+                pos2 = self.get_track_end(row["child_track_id"], first=True)
+                plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], "-k")
+
+
+        ####################################################################
+        ####################################################################
+
+
+        plt.show()
+
+        # output data conversion
+        raise RuntimeError("Laptrack tracking WIP")
 
     def _select_best_track(
         self,
