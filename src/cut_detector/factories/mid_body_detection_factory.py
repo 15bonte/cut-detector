@@ -409,18 +409,48 @@ class MidBodyDetectionFactory:
 
 
         # input data conversion
-        spots_list = []
-        for frame, spots in spots_candidates.items():
-            for spot in spots:
-                df = pd.DataFrame({
-                    "frame": [frame],
-                    "y": [spot.position[1]],
-                    "x": [spot.position[0]],
-                })
-                spots_list.append(df)
+        # spots_list = []
+        # for frame, spots in spots_candidates.items():
+            # print("spots:", spots)
+            # if len(spots) == 0:
+            #     df = pd.DataFrame({
+            #         "frame": [frame],
+            #         "y": [None],
+            #         "x": [None],
+            #     })
+            #     spots_list.append(df)
+            # else:
+            #     for spot in spots:
+            #         df = pd.DataFrame({
+            #             "frame": [frame],
+            #             "y": [spot.position[1]],
+            #             "x": [spot.position[0]],
+            #         })
+            #         spots_list.append(df)
         
         # spots_df = pd.concat(spots_list)
-        spots_df = pd_concat(spots_list)
+        # spots_df = pd_concat(spots_list)
+
+        spots_df = pd.DataFrame({
+            "frame": [],
+            "x": [],
+            "y": []
+        })
+        for frame, mb_spots in spots_candidates.items():
+            if len(mb_spots) == 0:
+                spots_df.loc[len(spots_df.index)] = [
+                        frame, 
+                        None, 
+                        None,
+                    ]
+            else:
+                for mb_spot in mb_spots:
+                    spots_df.loc[len(spots_df.index)] = [
+                        frame, 
+                        mb_spot.position[0], 
+                        mb_spot.position[1],
+                    ]
+        print("spots_df:", spots_df, sep="\n")
 
         # laptrack execution
         lt = LapTrack(
@@ -435,9 +465,9 @@ class MidBodyDetectionFactory:
         track_df, split_df, merge_df = lt.predict_dataframe(
             spots_df, 
             ["y", "x"],
-            only_coordinate_cols=True # TODO: add other elements
+            only_coordinate_cols=True
         )
-        track_df.reset_index()
+        # track_df.reset_index()
 
         print("Tracking result:", track_df, sep="\n")
 
@@ -472,14 +502,37 @@ class MidBodyDetectionFactory:
                 plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], "-k")
 
 
-        ####################################################################
-        ####################################################################
-
-
         plt.show()
+        ####################################################################
+        ####################################################################        
 
         # output data conversion
-        raise RuntimeError("Laptrack tracking WIP")
+        track_df.reset_index(inplace=True)
+        track_df.dropna(inplace=True)
+        print("filtered tracking result", track_df, sep="\n")
+        print("results columns:[", track_df.columns, "]")
+        print("results rows:[", track_df.index, "]")
+        track_id_to_mb_track = {}
+        spot_to_track_id = {}
+        for idx, row in track_df.iterrows():
+            track_id = row["track_id"]
+            x = row["x"]
+            y = row["y"]
+            frame = row["frame"]
+            if track_id_to_mb_track.get(track_id) is None:
+                track_id_to_mb_track[track_id] = MidBodyTrack(int(track_id))
+            spot_to_track_id[(frame, x, y)] = track_id
+        
+        for frame, mb_spots in spots_candidates.items():
+            for mb_spot in mb_spots:
+                track_id = spot_to_track_id[
+                    (frame,
+                    int(mb_spot.position[0]),
+                    int(mb_spot.position[1]))
+                ]
+                track_id_to_mb_track[track_id].add_spot(mb_spot)
+
+        return list(track_id_to_mb_track.values())
 
     def _select_best_track(
         self,
