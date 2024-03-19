@@ -393,24 +393,21 @@ class MidBodyDetectionFactory:
 
         return self._gen_laptrack_tracking(spots_candidates)
     
-    @staticmethod
-    def get_track_end(track_df, keys, track_id, first=True):
-        df = track_df[track_df["track_id"] == track_id].sort_index(level="frame")
-        return df.iloc[0 if first else -1][keys]
-
-    @staticmethod
-    def _pd_concat(v: list) -> pd.DataFrame:
-        """
-        For some reason, pylance considered that pd.concat stops
-        code execution, so everything after that was marked as
-        'unreachable'.
-        Wrapping it in a function prevents it
-        """
-        return pd.concat(v)
 
     def _gen_laptrack_tracking(
             self, 
             spots_candidates: dict[int, list[MidBodySpot]]) -> list[MidBodyTrack]:
+        # Small utility
+        def pd_concat(v: list) -> pd.DataFrame:
+            """
+            For some reason, pylance considered that pd.concat stops
+            code execution, so everything after that was marked as
+            'unreachable'.
+            Wrapping it in a function prevents it
+            """
+            return pd.concat(v)
+
+
         # input data conversion
         spots_list = []
         for frame, spots in spots_candidates.items():
@@ -423,7 +420,7 @@ class MidBodyDetectionFactory:
                 spots_list.append(df)
         
         # spots_df = pd.concat(spots_list)
-        spots_df = self._pd_concat(spots_list)
+        spots_df = pd_concat(spots_list)
 
         # laptrack execution
         lt = LapTrack(
@@ -445,7 +442,11 @@ class MidBodyDetectionFactory:
         print("Tracking result:", track_df, sep="\n")
 
         ####################################################################
-        ####################################################################
+        ########################### Visualization ##########################
+
+        def get_track_end(track_df, keys, track_id, first=True):
+            df = track_df[track_df["track_id"] == track_id].sort_index(level="frame")
+            return df.iloc[0 if first else -1][keys]
 
         keys = ["position_x", "position_y", "track_id", "tree_id"]
 
@@ -464,8 +465,10 @@ class MidBodyDetectionFactory:
                 pos2 = df.iloc[i + 1][keys]
                 plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], "-k")
             for _, row in list(split_df.iterrows()) + list(merge_df.iterrows()):
-                pos1 = self.get_track_end(row["parent_track_id"], first=False)
-                pos2 = self.get_track_end(row["child_track_id"], first=True)
+                # pos1 = self.get_track_end(row["parent_track_id"], first=False)
+                # pos2 = self.get_track_end(row["child_track_id"], first=True)
+                pos1 = get_track_end(row["parent_track_id"], first=False)
+                pos2 = get_track_end(row["child_track_id"], first=True)
                 plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], "-k")
 
 
