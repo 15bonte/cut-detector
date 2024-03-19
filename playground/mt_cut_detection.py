@@ -62,6 +62,7 @@ def main(
     video = re_organize_channels(image)  # TYXC
     with open(mitosis_path, "rb") as f:
         mitosis_track: MitosisTrack = pickle.load(f)
+        mitosis_track.adapt_deprecated_attributes()
 
     template_type = TemplateType.AVERAGE_CIRCLE
     factory = MtCutDetectionFactory(
