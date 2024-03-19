@@ -7,6 +7,7 @@ from aicsimageio.writers import OmeTiffWriter
 from ..factories.mid_body_detection_factory import MidBodyDetectionFactory
 
 from ..utils.mitosis_track import MitosisTrack
+from ..utils.trackmate_track import TrackMateTrack
 
 
 def perform_mid_body_detection(
@@ -25,13 +26,14 @@ def perform_mid_body_detection(
             continue
         # Load mitosis track
         with open(os.path.join(exported_mitoses_dir, state_path), "rb") as f:
-            mitosis_track = pickle.load(f)
+            mitosis_track: MitosisTrack = pickle.load(f)
+            mitosis_track.adapt_deprecated_attributes()
 
         # Add mitosis track to list
         mitosis_tracks.append(mitosis_track)
 
     # Load trackmate tracks
-    trackmate_tracks = []
+    trackmate_tracks: list[TrackMateTrack] = []
     # Iterate over "bin" files in exported_tracks_dir
     video_exported_tracks_dir = os.path.join(exported_tracks_dir, video_name)
     for state_path in os.listdir(video_exported_tracks_dir):
@@ -39,10 +41,9 @@ def perform_mid_body_detection(
         with open(
             os.path.join(video_exported_tracks_dir, state_path), "rb"
         ) as f:
-            trackmate_track = pickle.load(f)
-
-        # Add trackmate track to list
-        trackmate_tracks.append(trackmate_track)
+            trackmate_track: TrackMateTrack = pickle.load(f)
+            trackmate_track.adapt_deprecated_attributes()
+            trackmate_tracks.append(trackmate_track)
 
     # Generate movie for each mitosis and save
     mid_body_detector = MidBodyDetectionFactory()

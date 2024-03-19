@@ -22,29 +22,73 @@ def main(
     viewer.add_image(video[..., 1].squeeze(), name="mid-body")
     viewer.add_image(video[..., 2].squeeze(), name="phase contrast")
 
-    rectangle_mask = np.zeros((50, 600, 600, 3), dtype=np.uint8)
-    for _ in range(10):
-        color = np.random.randint(0, 255, 3)
-        random_position = np.random.randint(0, 500, 2)
-        rectangle_mask[
-            :,
-            random_position[0] : random_position[0] + 100,
-            random_position[1] : random_position[1] + 100,
-        ] = color
-    viewer.add_image(rectangle_mask, name="mask", opacity=0.4)
+    # Create a blue rectangle
+    rectangle_width = 50
+    rectangle_height = 30
+    rectangle_color = [0, 0, 1, 0]  # Blue color in RGB
 
-    # Load mitosis tracks
+    # Define the rectangle vertices
+    vertices = np.array(
+        [
+            [0, 0],
+            [rectangle_width, 0],
+            [rectangle_width, rectangle_height],
+            [0, rectangle_height],
+        ]
+    )
+
+    # Create a rectangle layer # affichage rectangle bleu
+    viewer.add_shapes(
+        data=vertices,
+        shape_type="rectangle",
+        edge_color="transparent",
+        face_color=rectangle_color,
+    )
+
+    # Load mitosis tracks  # masques rajoutés qui suivent les cellules
     mitosis_tracks: list[MitosisTrack] = []
     for state_path in os.listdir(mitoses_path):
         with open(os.path.join(mitoses_path, state_path), "rb") as f:
-            mitosis_track = pickle.load(f)
+            mitosis_track = pickle.load(
+                f
+            )  # sauvegarder une instance de classe et la rechercher après
         mitosis_tracks.append(mitosis_track)
 
+    # Colors list
+    colors = np.array(
+        [
+            [
+                np.random.randint(0, 255),
+                np.random.randint(0, 255),
+                np.random.randint(0, 255),
+                0.3,
+            ]
+            for i in range(100)
+        ]
+    )
+
     # Iterate over mitosis_tracks
+    mask = np.zeros((50, 600, 600, 4))
     for mitosis_track in mitosis_tracks:
         _, mask_movie = mitosis_track.generate_video_movie(video)
+        empty_indexes = np.where(mask_movie == 0)
+        cell_indexes = np.where(mask_movie == 1)
+
+        mask_movie = np.stack(
+            [mask_movie, mask_movie, mask_movie, mask_movie], axis=-1
+        )
+        mask_movie[empty_indexes] = [0, 0, 0, 0]
+        mask_movie[cell_indexes] = [255, 255, 255, 0.3]
+
         # Add mask_movie to viewer
-        # TODO
+        mask[
+            mitosis_track.min_frame : mitosis_track.max_frame + 1,
+            mitosis_track.position.min_y : mitosis_track.position.max_y,
+            mitosis_track.position.min_x : mitosis_track.position.max_x,
+            :,
+        ] = mask_movie
+
+    viewer.add_image(mask, name="masks", rgb=True)
 
     # Display the Napari viewer
     napari.run()

@@ -302,6 +302,7 @@ def upload_annotations(
         # Load mitosis track
         with open(os.path.join(mitoses_folder, state_path), "rb") as f:
             mitosis_track = pickle.load(f)
+            mitosis_track.adapt_deprecated_attributes()
 
         # Add mitosis track to list
         mitosis_tracks.append(mitosis_track)
