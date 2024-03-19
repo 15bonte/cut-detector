@@ -1,3 +1,5 @@
+from __future__ import annotations
+from abc import abstractmethod
 from typing import TypeVar, Generic
 
 from .cell_spot import CellSpot
@@ -19,3 +21,12 @@ class Track(Generic[T]):
         self.number_spots = (
             0  # can be different from length if we have a gap in the track
         )
+
+    @staticmethod
+    @abstractmethod
+    def generate_tracks_from_spots(
+        spots: dict[int, list[T]]
+    ) -> list[Track[T]]:
+        """
+        Generate tracks from spots.
+        """

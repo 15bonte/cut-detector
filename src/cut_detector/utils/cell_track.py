@@ -5,17 +5,16 @@ from scipy.spatial import ConvexHull, Delaunay
 import numpy as np
 
 
-from .trackmate_frame_spots import TrackMateFrameSpots
 from ..constants.tracking import (
     FRAMES_AROUND_METAPHASE,
     INTERPHASE_INDEX,
     METAPHASE_INDEX,
     MAX_FRAME_GAP,
 )
-from .trackmate_spot import TrackMateSpot
 from .track import Track
 from .box_dimensions_dln import BoxDimensionsDln
 from .box_dimensions import BoxDimensions
+from .cell_spot import CellSpot
 
 
 def get_whole_box_dimensions_dln(
@@ -52,7 +51,11 @@ def get_whole_box_dimensions_dln(
     return box_dimensions_dln, track_frame_points
 
 
-class CellTrack(Track[TrackMateSpot]):
+class CellTrack(Track[CellSpot]):
+    """
+    Cell track.
+    """
+
     def __init__(
         self, track_id: int, track_spots_ids: set[int], start: int, stop: int
     ) -> None:
@@ -61,7 +64,7 @@ class CellTrack(Track[TrackMateSpot]):
         self.start = start
         self.stop = stop
 
-        self.metaphase_spots: list[TrackMateSpot] = []
+        self.metaphase_spots: list[CellSpot] = []
 
     def update_metaphase_spots(self, predictions: list[int]) -> None:
         """
@@ -102,13 +105,11 @@ class CellTrack(Track[TrackMateSpot]):
             ):
                 self.metaphase_spots.append(self.spots[frame])
 
-    def has_close_metaphase(
-        self, spot: TrackMateSpot, target_frame: int
-    ) -> bool:
+    def has_close_metaphase(self, spot: CellSpot, target_frame: int) -> bool:
         """
         Parameters
         ----------
-        spot : TrackMateSpot
+        spot : CellSpot
             Only used to update corresponding metaphase spot.
 
         Returns
@@ -267,14 +268,14 @@ class CellTrack(Track[TrackMateSpot]):
         return box_dimensions_dln
 
     def get_spots_data(
-        self, raw_spots: list[TrackMateFrameSpots], raw_video: np.array
+        self, raw_spots: list[CellSpot], raw_video: np.array
     ) -> list[np.array]:
         """
         Generate crops around cells for metaphase CNN inference.
 
         Parameters
         ----------
-        raw_spots : list[TrackMateFrameSpots]
+        raw_spots : list[CellSpot]
             All video spots.
         raw_video : np.array
             TYXC
@@ -288,25 +289,23 @@ class CellTrack(Track[TrackMateSpot]):
         spot_abs_positions = {}  # {frame: BoxDimensions}
         cell_crops = []  # CYX
 
-        for frame_spots in raw_spots:
+        for spot in raw_spots:
             # Ignore spots before or after current track
-            if frame_spots.frame < self.start or frame_spots.frame > self.stop:
+            if spot.frame < self.start or spot.frame > self.stop:
                 continue
-            for spot in frame_spots.spots:
-                # Ignore spots not in current track
-                if spot.id not in self.track_spots_ids:
-                    continue
-
-                # Store positions
-                spot_abs_positions[spot.frame] = BoxDimensions(
-                    spot.abs_min_x,
-                    spot.abs_max_x,
-                    spot.abs_min_y,
-                    spot.abs_max_y,
-                )
-                # Store all spots
-                spot.track_id = self.track_id  # add track information
-                self.spots[spot.frame] = spot
+            # Ignore spots not in current track
+            if spot.id not in self.track_spots_ids:
+                continue
+            # Store positions
+            spot_abs_positions[spot.frame] = BoxDimensions(
+                spot.abs_min_x,
+                spot.abs_max_x,
+                spot.abs_min_y,
+                spot.abs_max_y,
+            )
+            # Store all spots
+            spot.track_id = self.track_id  # add track information
+            self.spots[spot.frame] = spot
 
         # If no spot in track for current frame, use previous frame position
         for frame in range(self.start, self.stop + 1):
@@ -323,3 +322,12 @@ class CellTrack(Track[TrackMateSpot]):
 
         self.number_spots = len(cell_crops)
         return cell_crops
+
+    @staticmethod
+    def generate_tracks_from_spots(
+        spots: dict[int, list[CellSpot]],
+    ) -> list[Track[CellTrack]]:
+        """
+        Generate tracks from spots.
+        """
+        raise NotImplementedError

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import numpy as np
 
 from .track import Track
@@ -8,9 +9,6 @@ class MidBodyTrack(Track[MidBodySpot]):
     """
     Mid-body candidate track
     """
-
-    def __init__(self, track_id: int):
-        super().__init__(track_id)
 
     def add_spot(self, spot: MidBodySpot) -> None:
         """
@@ -45,3 +43,12 @@ class MidBodyTrack(Track[MidBodySpot]):
         if mean_distance > max_distance:
             return np.inf
         return mean_distance
+
+    @staticmethod
+    def generate_tracks_from_spots(
+        spots: dict[int, list[MidBodySpot]],
+    ) -> list[Track[MidBodyTrack]]:
+        """
+        Generate tracks from spots.
+        """
+        raise NotImplementedError

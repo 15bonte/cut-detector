@@ -145,7 +145,7 @@ class MitosisTrack:
         ----------
         raw_video: np.array
             TYXC
-        ----------
+
         """
 
         max_height, max_width = raw_video.shape[1], raw_video.shape[2]
@@ -160,8 +160,9 @@ class MitosisTrack:
                 continue
 
             # get mid-body coordinates
-            x_rel = self.mid_body_spots[frame].position[0]
-            y_rel = self.mid_body_spots[frame].position[1]
+            mid_body_frame = self.mid_body_spots[frame]
+            x_rel = mid_body_frame.x
+            y_rel = mid_body_frame.y
 
             x_abs = x_rel + self.position.min_x
             y_abs = y_rel + self.position.min_y
@@ -604,7 +605,8 @@ class MitosisTrack:
                 continue
 
             # Get mid-body coordinates
-            x_pos, y_pos = self.mid_body_spots[frame].position
+            mid_body_frame = self.mid_body_spots[frame]
+            x_pos, y_pos = mid_body_frame.x, mid_body_frame.y
 
             # Extract image and crop on the midbody
             img = np.transpose(video[frame, ...], (2, 0, 1))  # CYX
@@ -712,8 +714,8 @@ class MitosisTrack:
             min_y = self.position.min_y
 
             # Get midbody coordinates
-            mb_coords = self.mid_body_spots[frame].position
-            x_pos, y_pos = min_x + mb_coords[0], min_y + mb_coords[1]
+            frame_mid_body = self.mid_body_spots[frame]
+            x_pos, y_pos = min_x + frame_mid_body.x, min_y + frame_mid_body.y
 
             # Extract frame image and crop around the midbody Sir-tubulin
             frame_image = (

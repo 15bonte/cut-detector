@@ -3,7 +3,8 @@ import os
 import numpy as np
 import xmltodict
 
-
+from ..utils.cell_track import CellTrack
+from ..utils.trackmate_spot import TrackMateSpot
 from ..utils.tools import perform_cnn_inference
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.cell_spot import CellSpot
@@ -15,9 +16,10 @@ from ..utils.cell_division_detection.metaphase_cnn_model_params import (
 )
 
 
-def get_track_from_id(
-    tracks: list[TrackMateTrack], track_id: int
-) -> TrackMateTrack:
+def get_track_from_id(tracks: list[CellTrack], track_id: int) -> CellTrack:
+    """
+    Used to get track from its id.
+    """
     for track in tracks:
         if track.track_id == track_id:
             return track
@@ -46,7 +48,7 @@ class TracksMergingFactory:
 
     def read_trackmate_xml(
         self, xml_model_path: str, raw_video_shape: np.ndarray
-    ) -> None:
+    ) -> tuple[list[TrackMateTrack], list[TrackMateSpot]]:
         """
         Read useful information from xml file.
         """
@@ -69,15 +71,21 @@ class TracksMergingFactory:
                 ],
             )
         )
-        raw_spots = [
+        raw_frames_spots = [
             TrackMateFrameSpots(spots, raw_video_shape)
             for spots in doc["TrackMate"]["Model"]["AllSpots"]["SpotsInFrame"]
         ]
+        # Merge all frames - to get rid of TrackMateFrameSpots
+        spots = [
+            spot
+            for raw_frame_spots in raw_frames_spots
+            for spot in raw_frame_spots.spots
+        ]
 
-        return trackmate_tracks, raw_spots
+        return trackmate_tracks, spots
 
     def get_tracks_to_merge(
-        self, raw_tracks: list[TrackMateTrack]
+        self, raw_tracks: list[CellTrack]
     ) -> list[MitosisTrack]:
         """
         Plug tracks occurring at frame>0 to closest metaphase.
@@ -191,8 +199,8 @@ class TracksMergingFactory:
 
     def pre_process_spots(
         self,
-        trackmate_tracks: list[TrackMateTrack],
-        raw_spots: list[TrackMateFrameSpots],
+        trackmate_tracks: list[CellTrack],
+        raw_spots: list[CellSpot],
         raw_video: np.array,
         metaphase_model_path: str,
         hmm_metaphase_parameters_file: str,
@@ -277,12 +285,12 @@ class TracksMergingFactory:
 
     @staticmethod
     def update_predictions_file(
-        tracks: list[TrackMateTrack], predictions_file: str, video_name: str
+        tracks: list[CellTrack], predictions_file: str, video_name: str
     ) -> None:
         """
         Parameters
         ----------
-        tracks: [TrackMateTrack]
+        tracks: [CellTrack]
         predictions_file: str
         video_name: str
         """
