@@ -1,19 +1,21 @@
 import numpy as np
 
+from .track import Track
 from .mid_body_spot import MidBodySpot
 
 
-class MidBodyTrack:
+class MidBodyTrack(Track[MidBodySpot]):
     """
     Mid-body candidate track
     """
 
     def __init__(self, track_id: int):
-        self.track_id = track_id
-        self.spots: dict[int, MidBodySpot] = {}
-        self.length = 0
+        super().__init__(track_id)
 
     def add_spot(self, spot: MidBodySpot) -> None:
+        """
+        Add spot to track.
+        """
         self.spots[spot.frame] = spot
         spot.track_id = self.track_id
         self.length += 1

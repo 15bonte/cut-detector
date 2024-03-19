@@ -81,7 +81,7 @@ class TracksMergingFactory:
         """
         Plug tracks occurring at frame>0 to closest metaphase.
         """
-        ordered_tracks = sorted(raw_tracks, key=lambda x: x.track_start)
+        ordered_tracks = sorted(raw_tracks, key=lambda x: x.start)
         mitosis_tracks: list[MitosisTrack] = []
 
         # Loop through all tracks beginning at frame > 0 and try to plug them to the previous metaphase

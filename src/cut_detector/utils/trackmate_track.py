@@ -3,6 +3,7 @@ from typing import Optional, Tuple
 from scipy.spatial import ConvexHull, Delaunay
 import numpy as np
 
+
 from ..constants.tracking import (
     FRAMES_AROUND_METAPHASE,
     INTERPHASE_INDEX,
@@ -13,6 +14,7 @@ from .box_dimensions import BoxDimensions
 from .box_dimensions_dln import BoxDimensionsDln
 from .trackmate_spot import TrackMateSpot
 from .trackmate_frame_spots import TrackMateFrameSpots
+from .track import Track
 
 
 def get_whole_box_dimensions_dln(
@@ -49,14 +51,14 @@ def get_whole_box_dimensions_dln(
     return box_dimensions_dln, track_frame_points
 
 
-class TrackMateTrack:
+class TrackMateTrack(Track[TrackMateSpot]):
     """
     Parse TrackMate track from xml file.
     """
 
     def __init__(self, trackmate_track):
-        self.track_start = int(float(trackmate_track["@TRACK_START"]))
-        self.track_id = int(trackmate_track["@TRACK_ID"])
+        track_id = int(trackmate_track["@TRACK_ID"])
+        super().__init__(track_id)
 
         self.track_spots_ids: set[int] = set()
 
@@ -75,11 +77,7 @@ class TrackMateTrack:
         self.start = int(float(trackmate_track["@TRACK_START"]))
         self.stop = int(float(trackmate_track["@TRACK_STOP"]))
 
-        self.spots: dict[int, TrackMateSpot] = {}  # {frame: TrackMateSpot}
         self.metaphase_spots: list[TrackMateSpot] = []
-
-        # Can be different from len(self.spots) if we have a gap in the track
-        self.number_spots = 0
 
     def update_metaphase_spots(self, predictions: list[int]) -> None:
         """
