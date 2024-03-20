@@ -3,6 +3,7 @@ import pickle
 from typing import Optional
 
 from cut_detector.data.tools import get_data_path
+from cut_detector.utils.cell_spot import CellSpot
 from cut_detector.utils.trackmate_track import TrackMateTrack
 from cut_detector.utils.trackmate_spot import TrackMateSpot
 
@@ -84,10 +85,10 @@ def main(
     
     for s in trackmate_spots:
         if s.frame == frame:
-            list = s.spot_points
-            for i in range(len(list)):
-                x.append(list[i][0])
-                y.append(600 - list[i][1])
+            point_list = s.spot_points
+            for i in range(len(point_list)):
+                x.append(point_list[i][0])
+                y.append(600 - point_list[i][1])
     plt.scatter(x,y)
     plt.show()
 
@@ -96,6 +97,9 @@ def main(
         indices = np.where(cellpose_results[frame]==i)
         #print(indices)
 
+    # TODO: generate CellSpot instances
+    cell_dictionary: dict[int, list[CellSpot]] = {}
+    # cell_spot = CellSpot(frame, x, y, id_number, abs_min_x, abs_max_x, abs_min_y, abs_max_y, spot_points)
 
 if __name__ == "__main__":
     main()
