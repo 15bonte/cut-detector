@@ -340,3 +340,12 @@ class ResultsSavingFactory:
                 )
                 f.write(f"{second_cut_time};\n")
         f.close()
+
+
+    def generate_napari_tracking_mask(
+        self,
+        mitosis_tracks: list[MitosisTrack],
+    ) -> np.ndarray:
+        """
+        To be written.
+        """

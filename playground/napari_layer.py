@@ -6,6 +6,7 @@ import napari
 import pickle
 from cut_detector.data.tools import get_data_path
 from cut_detector.utils.mitosis_track import MitosisTrack
+from cut_detector.factories.results_saving_factory import ResultsSavingFactory
 
 
 def main(
@@ -26,7 +27,8 @@ def main(
     mitosis_tracks: list[MitosisTrack] = []
     for state_path in os.listdir(mitoses_path):
         with open(os.path.join(mitoses_path, state_path), "rb") as f:
-            mitosis_track = pickle.load(f) # sauvegarder une instance de classe et la rechercher après
+            mitosis_track: MitosisTrack = pickle.load(f) # sauvegarder une instance de classe et la rechercher après
+            mitosis_track.adapt_deprecated_attributes()
         mitosis_tracks.append(mitosis_track)
 
     # Colors list
@@ -48,10 +50,12 @@ def main(
         mask[mitosis_track.min_frame:mitosis_track.max_frame+1, mitosis_track.position.min_y:mitosis_track.position.max_y, mitosis_track.position.min_x:mitosis_track.position.max_x,:] = mask_movie
     
     viewer.add_image(mask, name="masks", rgb=True, opacity=0.4)
-        
 
     # Display the Napari viewer
     napari.run()
+
+    # TODO: move everything to this function:
+    ResultsSavingFactory().generate_napari_tracking_mask()
 
 
 if __name__ == "__main__":
