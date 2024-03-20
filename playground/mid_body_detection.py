@@ -7,6 +7,7 @@ from cut_detector.factories.mid_body_detection_factory import (
     MidBodyDetectionFactory,
 )
 
+
 # origine des points en haut à gauche, D>G, H>B
 # autre test
 def main(
@@ -36,18 +37,22 @@ def main(
     # int: frame
     spots_candidates = factory.detect_mid_body_spots(
         # mitosis_movie=mitosis_movie, mask_movie=mask_movie, mode="h_maxima"
-        mitosis_movie=mitosis_movie, mask_movie=mask_movie, mode="lapgau"
+        mitosis_movie=mitosis_movie,
+        mask_movie=mask_movie,
+        mode="lapgau",
     )  # mode = "bigfish" or "h_maxima" (default)
 
     for frame, spots in spots_candidates.items():
         for spot in spots:
-            print({
-                "fr": frame,
-                "x": spot.position[0],
-                "y": spot.position[1],
-                "mlkp_int": spot.intensity,
-                "sir_int": spot.sir_intensity
-            })
+            print(
+                {
+                    "fr": frame,
+                    "x": spot.x,
+                    "y": spot.y,
+                    "mlkp_int": spot.intensity,
+                    "sir_int": spot.sir_intensity,
+                }
+            )
 
     factory.generate_tracks_from_spots(
         spots_candidates,
@@ -55,6 +60,7 @@ def main(
     factory.save_mid_body_tracking(
         spots_candidates, mitosis_movie, path_output
     )
+
 
 if __name__ == "__main__":
     # main()
@@ -71,5 +77,5 @@ if __name__ == "__main__":
         # "./src/cut_detector/data/mid_bodies_movies_test/s9_siLuci-1_mitosis_34_21_to_68,62.tiff",
         "./src/cut_detector/data/mid_bodies_movies_test/cep_1.tiff",
         # "./src/cut_detector/data/mid_bodies_movies_test/example_video_mitosis_0_0_to_4.tiff",
-        # get_data_path("mid_bodies_tests") 
+        # get_data_path("mid_bodies_tests")
     )

@@ -148,6 +148,7 @@ class MidBodyDetectionFactory:
         return spots_dictionary
 
     SPOT_DETECTION_MODE = Literal["bigfish", "h_maxima", "lapgau", "concom"]
+
     def _spot_detection(
         self,
         image: np.array,
@@ -228,10 +229,10 @@ class MidBodyDetectionFactory:
         elif mode == "lapgau":
             # raise "Laplacian of Gaussian not implemtented yet"
             spots = [
-                (int(spot[0]), int(spot[1])) 
+                (int(spot[0]), int(spot[1]))
                 for spot in self._compute_laplacian_of_gaussian(image_mklp)
             ]
-        
+
         elif mode == "concom":
             raise RuntimeError("Connected Components not implemented yet")
 
@@ -251,18 +252,27 @@ class MidBodyDetectionFactory:
         ]
 
         return mid_body_spots
-    
+
     @staticmethod
-    def _compute_laplacian_of_gaussian(midbody_gs_img: np.array) -> np.array: #2 dimensions, blob and Y X R
+    def _compute_laplacian_of_gaussian(
+        midbody_gs_img: np.array,
+    ) -> np.array:  # 2 dimensions, blob and Y X R
         # midbody_gs_img = midbody_gs_img / np.max(midbody_gs_img)
-        midbody_gs_img = (midbody_gs_img - np.min(midbody_gs_img)) / (np.max(midbody_gs_img) - np.min(midbody_gs_img))
-        blobs_log = blob_log(midbody_gs_img, min_sigma=5, max_sigma=10, num_sigma=5, threshold=.1)
+        midbody_gs_img = (midbody_gs_img - np.min(midbody_gs_img)) / (
+            np.max(midbody_gs_img) - np.min(midbody_gs_img)
+        )
+        blobs_log = blob_log(
+            midbody_gs_img,
+            min_sigma=5,
+            max_sigma=10,
+            num_sigma=5,
+            threshold=0.1,
+        )
         # Compute radii in the 3rd column, since 3 column is sigma
         # and radius can be approximated by sigma * sqrt(2) according to doc
         blobs_log[:, 2] = blobs_log[:, 2] * sqrt(2)
         print("found blobs:", blobs_log, sep="\n")
         return blobs_log
-        
 
     @staticmethod
     def _get_average_intensity(
@@ -392,11 +402,10 @@ class MidBodyDetectionFactory:
         # return tracks
 
         return self._gen_laptrack_tracking(spots_candidates)
-    
 
     def _gen_laptrack_tracking(
-            self, 
-            spots_candidates: dict[int, list[MidBodySpot]]) -> list[MidBodyTrack]:
+        self, spots_candidates: dict[int, list[MidBodySpot]]
+    ) -> list[MidBodyTrack]:
         # Small utility
         def pd_concat(v: list) -> pd.DataFrame:
             """
@@ -407,60 +416,61 @@ class MidBodyDetectionFactory:
             """
             return pd.concat(v)
 
-
         # input data conversion
         # spots_list = []
         # for frame, spots in spots_candidates.items():
-            # print("spots:", spots)
-            # if len(spots) == 0:
-            #     df = pd.DataFrame({
-            #         "frame": [frame],
-            #         "y": [None],
-            #         "x": [None],
-            #     })
-            #     spots_list.append(df)
-            # else:
-            #     for spot in spots:
-            #         df = pd.DataFrame({
-            #             "frame": [frame],
-            #             "y": [spot.position[1]],
-            #             "x": [spot.position[0]],
-            #         })
-            #         spots_list.append(df)
-        
+        # print("spots:", spots)
+        # if len(spots) == 0:
+        #     df = pd.DataFrame({
+        #         "frame": [frame],
+        #         "y": [None],
+        #         "x": [None],
+        #     })
+        #     spots_list.append(df)
+        # else:
+        #     for spot in spots:
+        #         df = pd.DataFrame({
+        #             "frame": [frame],
+        #             "y": [spot.y],
+        #             "x": [spot.x],
+        #         })
+        #         spots_list.append(df)
+
         # spots_df = pd.concat(spots_list)
         # spots_df = pd_concat(spots_list)
 
-        spots_df = pd.DataFrame({
-            "frame": [],
-            "x": [],
-            "y": [],
-            "mlkp_intensity": [],
-            "sir_intensity": []
-        })
+        spots_df = pd.DataFrame(
+            {
+                "frame": [],
+                "x": [],
+                "y": [],
+                "mlkp_intensity": [],
+                "sir_intensity": [],
+            }
+        )
         for frame, mb_spots in spots_candidates.items():
             if len(mb_spots) == 0:
                 spots_df.loc[len(spots_df.index)] = [
-                        frame, 
-                        None, 
-                        None,
-                        None,
-                        None
-                    ]
+                    frame,
+                    None,
+                    None,
+                    None,
+                    None,
+                ]
             else:
                 for mb_spot in mb_spots:
                     spots_df.loc[len(spots_df.index)] = [
-                        frame, 
-                        mb_spot.position[0], 
-                        mb_spot.position[1],
+                        frame,
+                        mb_spot.x,
+                        mb_spot.y,
                         mb_spot.intensity,
-                        mb_spot.sir_intensity
+                        mb_spot.sir_intensity,
                     ]
         print("spots_df:", spots_df, sep="\n")
 
         # distance function:
         def dist_metric(c1, c2):
-            """ Modified version of sqeuclidian distance
+            """Modified version of sqeuclidian distance
 
             Square Euclidian distance is applied to spatial coordinates
             x and y.
@@ -482,8 +492,7 @@ class MidBodyDetectionFactory:
             gamma = 0.25
             sir_d = abs(sir1 - sir2)
 
-            return alpha*spatial_sqe + beta*mlkp_d + gamma*sir_d
-
+            return alpha * spatial_sqe + beta * mlkp_d + gamma * sir_d
 
         # laptrack execution
         lt = LapTrack(
@@ -494,12 +503,12 @@ class MidBodyDetectionFactory:
             gap_closing_max_frame_count=2,
             splitting_cost_cutoff=False,
             merging_cost_cutoff=False,
-            alternative_cost_percentile=90, # default value
+            alternative_cost_percentile=90,  # default value
         )
         track_df, split_df, merge_df = lt.predict_dataframe(
-            spots_df, 
+            spots_df,
             ["x", "y", "mlkp_intensity", "sir_intensity"],
-            only_coordinate_cols=True
+            only_coordinate_cols=True,
         )
         # track_df.reset_index()
 
@@ -509,7 +518,9 @@ class MidBodyDetectionFactory:
         ########################### Visualization ##########################
 
         def get_track_end(track_df, keys, track_id, first=True):
-            df = track_df[track_df["track_id"] == track_id].sort_index(level="frame")
+            df = track_df[track_df["track_id"] == track_id].sort_index(
+                level="frame"
+            )
             return df.iloc[0 if first else -1][keys]
 
         keys = ["position_x", "position_y", "track_id", "tree_id"]
@@ -523,22 +534,29 @@ class MidBodyDetectionFactory:
 
         for track_id, grp in track_df.groupby("track_id"):
             df = grp.reset_index().sort_values("frame")
-            plt.scatter(df[k1], df[k2], c=df["frame"], vmin=frame_range[0], vmax=frame_range[1])
+            plt.scatter(
+                df[k1],
+                df[k2],
+                c=df["frame"],
+                vmin=frame_range[0],
+                vmax=frame_range[1],
+            )
             for i in range(len(df) - 1):
                 pos1 = df.iloc[i][keys]
                 pos2 = df.iloc[i + 1][keys]
                 plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], "-k")
-            for _, row in list(split_df.iterrows()) + list(merge_df.iterrows()):
+            for _, row in list(split_df.iterrows()) + list(
+                merge_df.iterrows()
+            ):
                 # pos1 = self.get_track_end(row["parent_track_id"], first=False)
                 # pos2 = self.get_track_end(row["child_track_id"], first=True)
                 pos1 = get_track_end(row["parent_track_id"], first=False)
                 pos2 = get_track_end(row["child_track_id"], first=True)
                 plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], "-k")
 
-
         plt.show()
         ####################################################################
-        ####################################################################        
+        ####################################################################
 
         # output data conversion
         track_df.reset_index(inplace=True)
@@ -556,13 +574,11 @@ class MidBodyDetectionFactory:
             if track_id_to_mb_track.get(track_id) is None:
                 track_id_to_mb_track[track_id] = MidBodyTrack(int(track_id))
             spot_to_track_id[(frame, x, y)] = track_id
-        
+
         for frame, mb_spots in spots_candidates.items():
             for mb_spot in mb_spots:
                 track_id = spot_to_track_id[
-                    (frame,
-                    int(mb_spot.position[0]),
-                    int(mb_spot.position[1]))
+                    (frame, int(mb_spot.x), int(mb_spot.y))
                 ]
                 track_id_to_mb_track[track_id].add_spot(mb_spot)
 

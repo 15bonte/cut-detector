@@ -32,33 +32,29 @@ Set choice to the correct key, to choose which file to process.
 SRC_CHOICE = 9
 SOURCES = {
     #### 4 Channels ####
-    0:  "example_video_mitosis_0_0_to_4.tiff",
-
-    1:  "a_siLuci-1_mitosis_33_7_to_63.tiff",
-    2:  "s1_siLuci-1_mitosis_14_158_to_227.tiff",
-    3:  "s2_siLuci-1_mitosis_15_67_to_228,211.tiff",
-    4:  "s3_siLuci-1_mitosis_17_170_to_195.tiff",
-    5:  "s4_siLuci-1_mitosis_24_128_to_135.tiff",
-    6:  "s5_siLuci-1_mitosis_27_22_to_93,87.tiff",
-    7:  "s6_siLuci-1_mitosis_28_50_to_91.tiff",
-    8:  "s7_siLuci-1_mitosis_31_19_to_73.tiff",
-    9:  "s9_siLuci-1_mitosis_34_21_to_68,62.tiff",
-
+    0: "example_video_mitosis_0_0_to_4.tiff",
+    1: "a_siLuci-1_mitosis_33_7_to_63.tiff",
+    2: "s1_siLuci-1_mitosis_14_158_to_227.tiff",
+    3: "s2_siLuci-1_mitosis_15_67_to_228,211.tiff",
+    4: "s3_siLuci-1_mitosis_17_170_to_195.tiff",
+    5: "s4_siLuci-1_mitosis_24_128_to_135.tiff",
+    6: "s5_siLuci-1_mitosis_27_22_to_93,87.tiff",
+    7: "s6_siLuci-1_mitosis_28_50_to_91.tiff",
+    8: "s7_siLuci-1_mitosis_31_19_to_73.tiff",
+    9: "s9_siLuci-1_mitosis_34_21_to_68,62.tiff",
     #### 3 Channels ####
     10: "cep_1.tiff",
 }
 
 TIFF_TYPE_CHOICE: 1
-TIFF_TYPE = {
-    0: "4 Channels",
-    1: "3 Channels"
-}
+TIFF_TYPE = {0: "4 Channels", 1: "3 Channels"}
 
 """The directory containing the source file. It is prepended to the source name"""
 SOURCE_DIR = "./src/cut_detector/data/mid_bodies_movies_test"
 
 """The directory containing the result files. It is prepended to the result filename"""
 OUTPUT_DIR = "./src/cut_detector/data/mid_bodies"
+
 
 def mk_filepath(dir: str, filename: str) -> str:
     """Makes a file path from a name and a directory.
@@ -67,12 +63,14 @@ def mk_filepath(dir: str, filename: str) -> str:
         return f"{dir}{filename}"
     else:
         return f"{dir}/{filename}"
-    
+
+
 def main():
     image_path = mk_filepath()
     image = TiffReader(image_path, respect_initial_type=True).image  # TCZYX
 
     pass
+
 
 # origine des points en haut à gauche, D>G, H>B
 # autre test
@@ -103,18 +101,22 @@ def main(
     # int: frame
     spots_candidates = factory.detect_mid_body_spots(
         # mitosis_movie=mitosis_movie, mask_movie=mask_movie, mode="h_maxima"
-        mitosis_movie=mitosis_movie, mask_movie=mask_movie, mode="lapgau"
+        mitosis_movie=mitosis_movie,
+        mask_movie=mask_movie,
+        mode="lapgau",
     )  # mode = "bigfish" or "h_maxima" (default)
 
     for frame, spots in spots_candidates.items():
         for spot in spots:
-            print({
-                "fr": frame,
-                "x": spot.position[0],
-                "y": spot.position[1],
-                "mlkp_int": spot.intensity,
-                "sir_int": spot.sir_intensity
-            })
+            print(
+                {
+                    "fr": frame,
+                    "x": spot.x,
+                    "y": spot.y,
+                    "mlkp_int": spot.intensity,
+                    "sir_int": spot.sir_intensity,
+                }
+            )
 
     factory.generate_tracks_from_spots(
         spots_candidates,
@@ -122,6 +124,7 @@ def main(
     factory.save_mid_body_tracking(
         spots_candidates, mitosis_movie, path_output
     )
+
 
 if __name__ == "__main__":
     # main()
@@ -138,5 +141,5 @@ if __name__ == "__main__":
         # "./src/cut_detector/data/mid_bodies_movies_test/s9_siLuci-1_mitosis_34_21_to_68,62.tiff",
         "./src/cut_detector/data/mid_bodies_movies_test/cep_1.tiff",
         # "./src/cut_detector/data/mid_bodies_movies_test/example_video_mitosis_0_0_to_4.tiff",
-        # get_data_path("mid_bodies_tests") 
+        # get_data_path("mid_bodies_tests")
     )
