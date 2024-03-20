@@ -35,24 +35,34 @@ class TrackMateSpot(CellSpot):
         ]
         spot_points = [[x, y] for x, y in zip(positions_x, positions_y)]
 
+        # Get min and max positions
+        abs_min_x, abs_max_x = (
+            int(x + rel_min_x),
+            int(x + rel_max_x),
+        )
+        abs_min_y, abs_max_y = (
+            int(y + rel_min_y),
+            int(y + rel_max_y),
+        )
+
+        # Clip to video size
+        abs_min_x, abs_max_x = (
+            max(abs_min_x, 0),
+            min(abs_max_x, raw_video_shape[2]),
+        )
+        abs_min_y, abs_max_y = (
+            max(abs_min_y, 0),
+            min(abs_max_y, raw_video_shape[1]),
+        )
+
         super().__init__(
             frame,
             x,
             y,
             id_number,
-            rel_min_x,
-            rel_max_x,
-            rel_min_y,
-            rel_max_y,
+            abs_min_x,
+            abs_max_x,
+            abs_min_y,
+            abs_max_y,
             spot_points,
-        )
-
-        # Clip to video size
-        self.abs_min_x, self.abs_max_x = (
-            max(self.abs_min_x, 0),
-            min(self.abs_max_x, raw_video_shape[2]),
-        )
-        self.abs_min_y, self.abs_max_y = (
-            max(self.abs_min_y, 0),
-            min(self.abs_max_y, raw_video_shape[1]),
         )
