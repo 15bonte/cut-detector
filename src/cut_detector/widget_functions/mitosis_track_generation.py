@@ -6,8 +6,7 @@ from matplotlib import pyplot as plt
 
 from cnn_framework.utils.display_tools import display_progress
 
-
-from ..utils.trackmate_frame_spots import TrackMateFrameSpots
+from ..utils.cell_spot import CellSpot
 from ..utils.trackmate_track import TrackMateTrack
 from ..factories.tracks_merging_factory import TracksMergingFactory
 from ..models.tools import get_model_path
@@ -15,14 +14,16 @@ from ..utils.mitosis_track import MitosisTrack
 
 
 def plot_predictions_evolution(
-    raw_spots: list[TrackMateFrameSpots],
+    raw_spots: list[CellSpot],
     raw_tracks: list[TrackMateTrack],
     mitosis_tracks: list[MitosisTrack],
 ) -> None:
     # Spots detected by Cellpose
-    detected_spots = {
-        raw_spot.frame: len(raw_spot.spots) for raw_spot in raw_spots
-    }
+    detected_spots = {}
+    for raw_spot in raw_spots:
+        if raw_spot.frame not in detected_spots:
+            detected_spots[raw_spot.frame] = 0
+        detected_spots[raw_spot.frame] += 1
 
     # Mitoses identified by current method, minus ending tracks
     detected_mitoses = {frame: detected_spots[0] for frame in detected_spots}
@@ -142,18 +143,18 @@ def perform_mitosis_track_generation(
 
     # Read useful information from xml file
     xml_model_path = os.path.join(xml_model_dir, f"{video_name}_model.xml")
-    trackmate_tracks, raw_spots = tracks_merging_factory.read_trackmate_xml(
+    cell_tracks, cell_spots = tracks_merging_factory.read_trackmate_xml(
         xml_model_path, raw_video.shape
     )
 
     # Missing xml file case
-    if trackmate_tracks is None:
+    if cell_tracks is None:
         return None
 
     # Get dictionary of TrackMate spots (from xml file) for each track and detect metaphase spots
     tracks_merging_factory.pre_process_spots(
-        trackmate_tracks,
-        raw_spots,
+        cell_tracks,
+        cell_spots,
         raw_video,
         metaphase_model_path,
         hmm_metaphase_parameters_file,
@@ -169,22 +170,18 @@ def perform_mitosis_track_generation(
     print("\nGet tracks to merge...")
 
     # Plug tracks occurring at frame>0 to closest metaphase
-    mitosis_tracks = tracks_merging_factory.get_tracks_to_merge(
-        trackmate_tracks
-    )
+    mitosis_tracks = tracks_merging_factory.get_tracks_to_merge(cell_tracks)
 
     # Plot predictions evolution
     if plot_evolution:
-        plot_predictions_evolution(raw_spots, trackmate_tracks, mitosis_tracks)
+        plot_predictions_evolution(cell_spots, cell_tracks, mitosis_tracks)
 
     # Update useful attributes for each track
     for i, mitosis_track in enumerate(mitosis_tracks):
         mitosis_track.id = i
-        mitosis_track.update_mitosis_start_end(
-            trackmate_tracks, mitosis_tracks
-        )
-        mitosis_track.update_key_events_frame(trackmate_tracks)
-        mitosis_track.update_mitosis_position_dln(trackmate_tracks)
+        mitosis_track.update_mitosis_start_end(cell_tracks, mitosis_tracks)
+        mitosis_track.update_key_events_frame(cell_tracks)
+        mitosis_track.update_mitosis_position_dln(cell_tracks)
         mitosis_track.update_is_near_border(raw_video)
 
         # Save mitosis track
@@ -207,15 +204,15 @@ def perform_mitosis_track_generation(
             additional_message=f"Mitosis {i + 1}/{len(mitosis_tracks)}",
         )
 
-    # Save updated trackmate tracks
+    # Save updated cell tracks
     if video_tracks_save_dir is not None:
-        for trackmate_track in trackmate_tracks:
-            state_path = f"track_{trackmate_track.track_id}.bin"
+        for cell_track in cell_tracks:
+            state_path = f"track_{cell_track.track_id}.bin"
             save_path = os.path.join(
                 video_tracks_save_dir,
                 state_path,
             )
             with open(save_path, "wb") as f:
-                pickle.dump(trackmate_track, f)
+                pickle.dump(cell_track, f)
 
     return mitosis_tracks

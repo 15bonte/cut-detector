@@ -392,21 +392,19 @@ class MidBodyDetectionFactory:
         ):
             # If one cell does not exist anymore, stop
             if (
-                frame not in daughter_track.track_spots
-                or frame not in mother_track.track_spots
+                frame not in daughter_track.spots
+                or frame not in mother_track.spots
             ):
                 continue
             # Compute mid-body expected relative position at current frame
             closest_points = []
             min_distance = np.inf
-            for mother_point in mother_track.track_spots[frame].spot_points:
+            for mother_point in mother_track.spots[frame].spot_points:
                 position_mother = [
                     int(mother_point[0]) - mitosis_track.position.min_x,
                     int(mother_point[1]) - mitosis_track.position.min_y,
                 ]
-                for daughter_point in daughter_track.track_spots[
-                    frame
-                ].spot_points:
+                for daughter_point in daughter_track.spots[frame].spot_points:
                     position_daughter = [
                         int(daughter_point[0]) - mitosis_track.position.min_x,
                         int(daughter_point[1]) - mitosis_track.position.min_y,

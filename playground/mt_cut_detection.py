@@ -1,9 +1,10 @@
 import os
-import numpy as np
-import pickle
 from typing import Optional
-from cnn_framework.utils.readers.tiff_reader import TiffReader
+import pickle
+import numpy as np
 from matplotlib import pyplot as plt
+
+from cnn_framework.utils.readers.tiff_reader import TiffReader
 
 from cut_detector.data.tools import get_data_path
 from cut_detector.models.tools import get_model_path
@@ -61,6 +62,7 @@ def main(
     video = re_organize_channels(image)  # TYXC
     with open(mitosis_path, "rb") as f:
         mitosis_track: MitosisTrack = pickle.load(f)
+        mitosis_track.adapt_deprecated_attributes()
 
     template_type = TemplateType.AVERAGE_CIRCLE
     factory = MtCutDetectionFactory(
