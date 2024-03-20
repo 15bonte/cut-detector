@@ -242,7 +242,8 @@ class MidBodyDetectionFactory:
         mid_body_spots = [
             MidBodySpot(
                 frame,
-                (position[1], position[0]),
+                x=position[1],
+                y=position[0],
                 intensity=self._get_average_intensity(position, image_mklp),
                 sir_intensity=self._get_average_intensity(position, image_sir),
             )
@@ -322,9 +323,7 @@ class MidBodyDetectionFactory:
                     / (spot1.sir_intensity + spot2.sir_intensity)
                 )
                 penalty = 1 + intensity_penalty + sir_intensity_penalty
-                distance = np.linalg.norm(
-                    np.array(spot1.position) - np.array(spot2.position)
-                )
+                distance = spot1.distance_to(spot2)
                 if distance > self.mid_body_linking_max_distance:
                     cost_matrix[i, j] = np.inf
                 else:
@@ -579,6 +578,10 @@ class MidBodyDetectionFactory:
     ) -> MidBodyTrack:
         """
         Select best track from mid-body tracks.
+
+        Parameters
+        ----------
+        mitosis_movie: TYXC
         """
         (
             mother_track,
@@ -594,21 +597,19 @@ class MidBodyDetectionFactory:
         ):
             # If one cell does not exist anymore, stop
             if (
-                frame not in daughter_track.track_spots
-                or frame not in mother_track.track_spots
+                frame not in daughter_track.spots
+                or frame not in mother_track.spots
             ):
                 continue
             # Compute mid-body expected relative position at current frame
             closest_points = []
             min_distance = np.inf
-            for mother_point in mother_track.track_spots[frame].spot_points:
+            for mother_point in mother_track.spots[frame].spot_points:
                 position_mother = [
                     int(mother_point[0]) - mitosis_track.position.min_x,
                     int(mother_point[1]) - mitosis_track.position.min_y,
                 ]
-                for daughter_point in daughter_track.track_spots[
-                    frame
-                ].spot_points:
+                for daughter_point in daughter_track.spots[frame].spot_points:
                     position_daughter = [
                         int(daughter_point[0]) - mitosis_track.position.min_x,
                         int(daughter_point[1]) - mitosis_track.position.min_y,
@@ -641,7 +642,7 @@ class MidBodyDetectionFactory:
         ]
 
         # Compute mean intensity on sir-tubulin channel for each track
-        image_sir = mitosis_movie[:, :, :, sir_channel]
+        image_sir = mitosis_movie[..., sir_channel]  # TYX
         sir_intensity_track = [0 for _ in mid_body_tracks]
         for idx, track in enumerate(mid_body_tracks):
             abs_track_frames = [
@@ -662,13 +663,11 @@ class MidBodyDetectionFactory:
                 if frame not in abs_track_frames:
                     continue
                 frame_count += 1
-                track_position = track.spots[
-                    frame - mitosis_track.min_frame
-                ].position
+                track_spot = track.spots[frame - mitosis_track.min_frame]
                 sir_intensity_track[idx] += image_sir[
                     frame - mitosis_track.min_frame,
-                    track_position[1],
-                    track_position[0],
+                    track_spot.y,
+                    track_spot.x,
                 ]
 
             if frame_count < (abs_max_frame - abs_min_frame + 1) / 2:
@@ -733,8 +732,7 @@ class MidBodyDetectionFactory:
 
             # Bigfish spots
             frame_spots = [
-                [spot.position[1], spot.position[0]]
-                for spot in spots_candidates[frame]
+                [spot.y, spot.x] for spot in spots_candidates[frame]
             ]
             colors = [
                 (

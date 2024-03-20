@@ -145,7 +145,7 @@ class MitosisTrack:
         ----------
         raw_video: np.array
             TYXC
-        ----------
+
         """
 
         max_height, max_width = raw_video.shape[1], raw_video.shape[2]
@@ -160,8 +160,9 @@ class MitosisTrack:
                 continue
 
             # get mid-body coordinates
-            x_rel = self.mid_body_spots[frame].position[0]
-            y_rel = self.mid_body_spots[frame].position[1]
+            mid_body_frame = self.mid_body_spots[frame]
+            x_rel = mid_body_frame.x
+            y_rel = mid_body_frame.y
 
             x_abs = x_rel + self.position.min_x
             y_abs = y_rel + self.position.min_y
@@ -190,12 +191,9 @@ class MitosisTrack:
         # Store first metaphase frame
         for frame in range(self.metaphase_frame, mother_track.start, -1):
             # Some frames may be missing since gap closing is allowed
-            if frame not in mother_track.track_spots:
+            if frame not in mother_track.spots:
                 continue
-            if (
-                mother_track.track_spots[frame].predicted_phase
-                != METAPHASE_INDEX
-            ):
+            if mother_track.spots[frame].predicted_phase != METAPHASE_INDEX:
                 self.key_events_frame["metaphase"] = frame + 1
                 break
 
@@ -325,17 +323,14 @@ class MitosisTrack:
 
         for idx, frame in enumerate(range(self.min_frame, self.max_frame + 1)):
             # Extreme case where mother track is not present at beginning of mitosis movie
-            if frame not in mother_track.track_spots:
+            if frame not in mother_track.spots:
                 mitosis_summary[idx + 1] = "interphase"
                 continue
             # Telophase defined as first frame after metaphase or daughters first frame
             if frame >= self.metaphase_frame or frame >= daughters_first_frame:
                 mitosis_summary[idx + 1] = "telophase"
             # Metaphase according to CNN + HMM prediction
-            elif (
-                mother_track.track_spots[frame].predicted_phase
-                == METAPHASE_INDEX
-            ):
+            elif mother_track.spots[frame].predicted_phase == METAPHASE_INDEX:
                 mitosis_summary[idx + 1] = "metaphase"
             # In other cases, interphase
             else:
@@ -381,12 +376,8 @@ class MitosisTrack:
             square_size = 2
             spots_video[
                 absolute_frame - self.min_frame,
-                spot.position[1]
-                - square_size : spot.position[1]
-                + square_size,
-                spot.position[0]
-                - square_size : spot.position[0]
-                + square_size,
+                spot.y - square_size : spot.y + square_size,
+                spot.x - square_size : spot.x + square_size,
             ] = 1
 
         # Add empty dimension at end
@@ -449,7 +440,7 @@ class MitosisTrack:
                 )
                 # Create associated spot
                 self.gt_mid_body_spots[frame + self.min_frame] = MidBodySpot(
-                    frame, (x_pos, y_pos)
+                    frame, x=x_pos, y=y_pos
                 )
 
             # If Name is missing of wrong, assume it is i
@@ -536,9 +527,8 @@ class MitosisTrack:
                 position_difference.append(1e3)  # random huge value
                 continue
             position_difference.append(
-                np.linalg.norm(
-                    np.array(self.gt_mid_body_spots[frame].position)
-                    - np.array(self.mid_body_spots[frame].position)
+                self.gt_mid_body_spots[frame].distance_to(
+                    self.mid_body_spots[frame]
                 )
             )
 
@@ -615,7 +605,8 @@ class MitosisTrack:
                 continue
 
             # Get mid-body coordinates
-            x_pos, y_pos = self.mid_body_spots[frame].position
+            mid_body_frame = self.mid_body_spots[frame]
+            x_pos, y_pos = mid_body_frame.x, mid_body_frame.y
 
             # Extract image and crop on the midbody
             img = np.transpose(video[frame, ...], (2, 0, 1))  # CYX
@@ -723,8 +714,8 @@ class MitosisTrack:
             min_y = self.position.min_y
 
             # Get midbody coordinates
-            mb_coords = self.mid_body_spots[frame].position
-            x_pos, y_pos = min_x + mb_coords[0], min_y + mb_coords[1]
+            frame_mid_body = self.mid_body_spots[frame]
+            x_pos, y_pos = min_x + frame_mid_body.x, min_y + frame_mid_body.y
 
             # Extract frame image and crop around the midbody Sir-tubulin
             frame_image = (
@@ -736,3 +727,27 @@ class MitosisTrack:
             bridge_images.append(crop)
 
         return bridge_images
+
+    def adapt_deprecated_attributes(self) -> None:
+        """
+        Used to adapt deprecated attributes to new ones.
+        In particular, x and y instead of position for mid_body_spots.
+        """
+        # Predicted
+        for mid_body_spot in self.mid_body_spots.values():
+            if (
+                hasattr(mid_body_spot, "position")
+                and mid_body_spot.position is not None
+            ):
+                mid_body_spot.x = mid_body_spot.position[0]
+                mid_body_spot.y = mid_body_spot.position[1]
+        # Ground truth
+        if self.gt_mid_body_spots is None:
+            return
+        for mid_body_spot in self.gt_mid_body_spots.values():
+            if (
+                hasattr(mid_body_spot, "position")
+                and mid_body_spot.position is not None
+            ):
+                mid_body_spot.x = mid_body_spot.position[0]
+                mid_body_spot.y = mid_body_spot.position[1]
