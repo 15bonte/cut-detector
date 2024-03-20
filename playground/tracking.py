@@ -18,7 +18,9 @@ def load_tracks_and_spots(
     trackmate_tracks: list[TrackMateTrack] = []
     for track_file in os.listdir(trackmate_tracks_path):
         with open(os.path.join(trackmate_tracks_path, track_file), "rb") as f:
-            trackmate_tracks.append(pickle.load(f))
+            trackmate_track: TrackMateTrack = pickle.load(f)
+            trackmate_track.adapt_deprecated_attributes()
+            trackmate_tracks.append(trackmate_track)
 
     spots: list[TrackMateSpot] = []
     for spot_file in os.listdir(spots_path):

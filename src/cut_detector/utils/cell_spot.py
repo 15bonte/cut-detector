@@ -18,32 +18,22 @@ class CellSpot(Spot):
         x: int,
         y: int,
         id_number: int,
-        rel_min_x: int,
-        rel_max_x: int,
-        rel_min_y: int,
-        rel_max_y: int,
-        spot_points: list[list[int]],
+        abs_min_x: int,
+        abs_max_x: int,
+        abs_min_y: int,
+        abs_max_y: int,
+        spot_points: list[list[int]],  # (x, y)
     ):
         super().__init__(frame, x, y)
 
         self.id = id_number
-        self.rel_min_x = rel_min_x
-        self.rel_max_x = rel_max_x
-        self.rel_min_y = rel_min_y
-        self.rel_max_y = rel_max_y
+        self.abs_min_x = abs_min_x
+        self.abs_max_x = abs_max_x
+        self.abs_min_y = abs_min_y
+        self.abs_max_y = abs_max_y
         self.spot_points = spot_points
 
         self.track_id: int = -1
-
-        # Get min and max positions
-        self.abs_min_x, self.abs_max_x = (
-            int(self.x + self.rel_min_x),
-            int(self.x + self.rel_max_x),
-        )
-        self.abs_min_y, self.abs_max_y = (
-            int(self.y + self.rel_min_y),
-            int(self.y + self.rel_max_y),
-        )
 
         # Phase predicted by model
         self.predicted_phase: Optional[int] = None

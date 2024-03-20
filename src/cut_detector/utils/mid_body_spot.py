@@ -30,5 +30,3 @@ class MidBodySpot(Spot):
         self.child_spot: Optional[MidBodySpot] = None
 
         self.track_id: Optional[int] = None
-
-        self.position = None  # deprecated
