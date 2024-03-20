@@ -326,7 +326,7 @@ class CellTrack(Track[CellSpot]):
     @staticmethod
     def generate_tracks_from_spots(
         spots: dict[int, list[CellSpot]],
-    ) -> list[Track[CellTrack]]:
+    ) -> list[CellTrack]:
         """
         Generate tracks from spots.
         """

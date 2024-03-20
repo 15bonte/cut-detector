@@ -47,7 +47,7 @@ class MidBodyTrack(Track[MidBodySpot]):
     @staticmethod
     def generate_tracks_from_spots(
         spots: dict[int, list[MidBodySpot]],
-    ) -> list[Track[MidBodyTrack]]:
+    ) -> list[MidBodyTrack]:
         """
         Generate tracks from spots.
         """
