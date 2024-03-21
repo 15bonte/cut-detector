@@ -57,7 +57,8 @@ def main(
 
     factory.generate_tracks_from_spots(
         spots_candidates,
-        tracking_method="spatial_laptrack"
+        tracking_method="spatial_laptrack",
+        show_tracking=True,
     )
     if SHOULD_SAVE:
         factory.save_mid_body_tracking(
@@ -78,7 +79,8 @@ if __name__ == "__main__":
         # "./src/cut_detector/data/mid_bodies_movies_test/s6_siLuci-1_mitosis_28_50_to_91.tiff",
         # "./src/cut_detector/data/mid_bodies_movies_test/s7_siLuci-1_mitosis_31_19_to_73.tiff",
         # "./src/cut_detector/data/mid_bodies_movies_test/s9_siLuci-1_mitosis_34_21_to_68,62.tiff",
-        "./src/cut_detector/data/mid_bodies_movies_test/20231019-t1_siCep55-50-4_mitosis_21_25_to_117.tiff",
+        # "./src/cut_detector/data/mid_bodies_movies_test/20231019-t1_siCep55-50-4_mitosis_21_25_to_117.tiff",
+        "./src/cut_detector/data/mid_bodies_movies_test/cep2_20231019-t1_siCep55-50-4_mitosis_24_17_to_104.tiff",
         # "./src/cut_detector/data/mid_bodies_movies_test/cep_1.tiff",
         # "./src/cut_detector/data/mid_bodies_movies_test/example_video_mitosis_0_0_to_4.tiff",
         # get_data_path("mid_bodies_tests")

@@ -370,7 +370,8 @@ class MidBodyDetectionFactory:
     def generate_tracks_from_spots(
         self, 
         spots_candidates: dict[int, list[MidBodySpot]],
-        tracking_method: Literal["laptrack", "spatial_laptrack"] = "laptrack"
+        tracking_method: Literal["laptrack", "spatial_laptrack"] = "laptrack",
+        show_tracking: bool = False,
     ) -> list[MidBodyTrack]:
         """
         Use spots linked together to generate tracks.
@@ -406,12 +407,13 @@ class MidBodyDetectionFactory:
 
         # return tracks
 
-        return self._gen_laptrack_tracking(spots_candidates, tracking_method)
+        return self._gen_laptrack_tracking(spots_candidates, tracking_method, show_tracking)
 
     def _gen_laptrack_tracking(
         self, 
         spots_candidates: dict[int, list[MidBodySpot]],
-        tracking_method: Literal["laptrack", "spatial_laptrack"] = "laptrack"
+        tracking_method: Literal["laptrack", "spatial_laptrack"] = "laptrack",
+        show_tracking: bool = False
     ) -> list[MidBodyTrack]:
         
         spots_df = pd.DataFrame(
@@ -536,45 +538,45 @@ class MidBodyDetectionFactory:
 
         ####################################################################
         ########################### Visualization ##########################
+        if show_tracking:
+            def get_track_end(track_df, keys, track_id, first=True):
+                df = track_df[track_df["track_id"] == track_id].sort_index(
+                    level="frame"
+                )
+                return df.iloc[0 if first else -1][keys]
 
-        def get_track_end(track_df, keys, track_id, first=True):
-            df = track_df[track_df["track_id"] == track_id].sort_index(
-                level="frame"
-            )
-            return df.iloc[0 if first else -1][keys]
+            keys = ["position_x", "position_y", "track_id", "tree_id"]
 
-        keys = ["position_x", "position_y", "track_id", "tree_id"]
+            plt.figure(figsize=(3, 3))
+            frames = track_df.index.get_level_values("frame")
+            frame_range = [frames.min(), frames.max()]
+            # k1, k2 = "position_y", "position_x"
+            k1, k2 = "y", "x"
+            keys = [k1, k2]
 
-        plt.figure(figsize=(3, 3))
-        frames = track_df.index.get_level_values("frame")
-        frame_range = [frames.min(), frames.max()]
-        # k1, k2 = "position_y", "position_x"
-        k1, k2 = "y", "x"
-        keys = [k1, k2]
+            for track_id, grp in track_df.groupby("track_id"):
+                df = grp.reset_index().sort_values("frame")
+                plt.scatter(
+                    df[k1],
+                    df[k2],
+                    c=df["frame"],
+                    vmin=frame_range[0],
+                    vmax=frame_range[1],
+                )
+                for i in range(len(df) - 1):
+                    pos1 = df.iloc[i][keys]
+                    pos2 = df.iloc[i + 1][keys]
+                    plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], "-k")
+                for _, row in list(split_df.iterrows()) + list(
+                    merge_df.iterrows()
+                ):
+                    # pos1 = self.get_track_end(row["parent_track_id"], first=False)
+                    # pos2 = self.get_track_end(row["child_track_id"], first=True)
+                    pos1 = get_track_end(row["parent_track_id"], first=False)
+                    pos2 = get_track_end(row["child_track_id"], first=True)
+                    plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], "-k")
 
-        for track_id, grp in track_df.groupby("track_id"):
-            df = grp.reset_index().sort_values("frame")
-            plt.scatter(
-                df[k1],
-                df[k2],
-                c=df["frame"],
-                vmin=frame_range[0],
-                vmax=frame_range[1],
-            )
-            for i in range(len(df) - 1):
-                pos1 = df.iloc[i][keys]
-                pos2 = df.iloc[i + 1][keys]
-                plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], "-k")
-            for _, row in list(split_df.iterrows()) + list(
-                merge_df.iterrows()
-            ):
-                # pos1 = self.get_track_end(row["parent_track_id"], first=False)
-                # pos2 = self.get_track_end(row["child_track_id"], first=True)
-                pos1 = get_track_end(row["parent_track_id"], first=False)
-                pos2 = get_track_end(row["child_track_id"], first=True)
-                plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], "-k")
-
-        plt.show()
+            plt.show()
         ####################################################################
         ####################################################################
 
