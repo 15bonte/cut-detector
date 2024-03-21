@@ -31,8 +31,16 @@ def run_test_environment(
         print("####################")
         print("\n")
         pipeline_rv = []
-        for name, pipeline in pipelines:
-            pipeline_rv.append(simple_run(pipeline, path, out, mlkp_chan, clear_console=False, pipeline_name=name))
+        for name, pipeline in pipelines.items():
+            pipeline_rv.append(simple_run(
+                pipeline, 
+                path, 
+                savers,
+                out, 
+                mlkp_chan, 
+                clear_console=False, 
+                pipeline_name=name,
+            ))
         env_rv.append(pipeline_rv)
 
     return env_rv
@@ -70,5 +78,6 @@ def simple_run(
         movie=mlkp_movie,
         src_fp=tiff_path,
         logging=True,
-        savers=savers
+        savers=savers,
+        pipeline_name=pipeline_name
     )
