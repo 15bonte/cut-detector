@@ -233,7 +233,6 @@ def laptrack_run():
 
     print("laptrack df:", track_df, sep="\n")
 
-
     def visualize():
         plt.figure(figsize=(3, 3))
         frames = track_df.index.get_level_values("frame")
@@ -265,7 +264,6 @@ def laptrack_run():
     
     visualize()
 
-
 def make_coords_from_fakedata(fakedata):
     frame_list = []
     for frame, data in fakedata.items():
@@ -295,6 +293,8 @@ def laptrack_run_nodf(data):
     for edge in list(track_tree.edges()):
         print(edge)
 
+def spatial_laptrack_run():
+    pass
 
 if __name__ == "__main__":
     main()
