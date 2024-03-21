@@ -14,7 +14,8 @@ def run_pipeline(
         movie: np.array, 
         src_fp: str | None = None,
         logging: bool = False,
-        savers: list[Saver] = []
+        savers: list[Saver] = [],
+        pipeline_name: str | None = None
         ):
     """Executes the pipeline on the movie data.
     logging controls whether some simple info messages are sent or not.
@@ -28,7 +29,8 @@ def run_pipeline(
         "frame": 0,
         "img": None,
         "savers": savers,
-        "source_fp": src_fp
+        "source_fp": src_fp,
+        "pipeline_name": pipeline_name
     }
 
     # setting frame number and looping over frames

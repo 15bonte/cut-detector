@@ -14,10 +14,13 @@ class PlotSaver(BlobLayer):
     def apply(self, env: dict):
         src_fp = env["source_fp"].split("/")[-1]
         frame  = env["frame"]
+        pipeline_name = env["pipeline_name"]
+        if pipeline_name is None:
+            pipeline_name = ""
         if src_fp is None:
-            filepath = f"{self.filedir}/{self.filename}_f{frame}.png"
+            filepath = f"{self.filedir}/{self.filename}_{pipeline_name}_f{frame}.png"
         else:
-            filepath = f"{self.filedir}/{src_fp}_{self.filename}_f{frame}.png"
+            filepath = f"{self.filedir}/{src_fp}_{self.filename}_{pipeline_name}_f{frame}.png"
         plt.savefig(filepath)
 
 class PlotImage(BlobLayer):

@@ -39,6 +39,8 @@ class SaveStdBlobMetrics(BlobLayer):
         ## saving
         savers: list[Saver] = env.get("savers", [])
         for s in savers:
+            if len(blobs) == 0:
+                print("no blobs to save")
             for b in blobs:
                 s.save({
                     "source_fp": source_fp,
