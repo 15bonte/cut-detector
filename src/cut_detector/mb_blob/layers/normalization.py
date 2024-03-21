@@ -22,6 +22,17 @@ class MinMaxNormalizer(BlobLayer):
         img = (img-min) / (max-min)
         env["img"] = img
 
+class MinPercentileNormalizer(BlobLayer):
+    """Apply a normalization by substraction min, and dividing by percentile-min"""
+    def __init__(self, percentile: int = 90):
+        self.percentile = percentile
+    
+    def apply(self, env: dict):
+        img = env["img"]
+        min = np.min(img)
+        p = np.percentile(img, self.percentile)
+        img = (img-min) / (p-min)
+        env["img"] = img
 
 class HardBinaryNormalizer(BlobLayer):
     """Binarizes the img based on a hard-coded threshold value.

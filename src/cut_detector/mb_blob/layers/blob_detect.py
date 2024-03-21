@@ -2,7 +2,7 @@
 """
 
 import matplotlib.pyplot as plt
-from skimage.feature import blob_log
+from skimage.feature import blob_log, blob_dog, blob_doh
 from .layer import BlobLayer
 from .lapgau_helpers import blob_log_with_plotting, BlobLogVisuSettings
 
@@ -42,10 +42,30 @@ class LapOfGauss(BlobLayer):
                 
         env["blobs"] = blobs
 
+
 class DiffOfGauss(BlobLayer):
     """Applies a Difference of Gaussian to detect blobs"""
-    pass
+    def __init__(self, min_sig: int, max_sig: int, sig_ratio: float = 1.6, threshold: float = 0.2):
+        self.min_sig = min_sig
+        self.max_sig = max_sig
+        self.sig_ratio = sig_ratio
+        self.threshold = threshold
+    
+    def apply(self, env: dict):
+        img = env["img"]
+        blobs = blob_dog(img, self.min_sig, self.max_sig, self.sig_ratio, self.threshold)
+        env["blobs"] = blobs
+
 
 class DetOfHess(BlobLayer):
     """Applies a Difference of Gaussian to detect blobs"""
-    pass
+    def __init__(self, min_sig: int, max_sig: int, n_sig: int, threshold: float = 0.2):
+        self.min_sig = min_sig
+        self.max_sig = max_sig
+        self.n_sig = n_sig
+        self.threshold = threshold
+    
+    def apply(self, env: dict):
+        img = env["img"]
+        blobs = blob_doh(img, self.min_sig, self.max_sig, self.n_sig, self.threshold)
+        env["blobs"] = blobs
