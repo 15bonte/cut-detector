@@ -44,4 +44,5 @@ def main(
 
 
 if __name__ == "__main__":
-    main()
+    FOLDER = "/Users/paul/Mines_Programmation/DLIA/Projet Final/Données et PP Midbodies/Data cep55"
+    main(FOLDER)
