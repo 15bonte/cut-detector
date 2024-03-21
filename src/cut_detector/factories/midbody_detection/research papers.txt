@@ -1,0 +1,7 @@
+To read:
+
+Adaptative Local Contrast Normalisation
+https://arxiv.org/abs/2004.07945
+
+Whole Computer Vision Pipeline
+https://ieeexplore.ieee.org/document/5459469
