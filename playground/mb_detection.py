@@ -46,7 +46,7 @@ SOURCES = {
     10: "cep_1.tiff",
 }
 
-TIFF_TYPE_CHOICE: 1
+TIFF_TYPE_CHOICE: 10
 TIFF_TYPE = {0: "4 Channels", 1: "3 Channels"}
 
 """The directory containing the source file. It is prepended to the source name"""
