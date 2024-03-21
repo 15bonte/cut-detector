@@ -48,7 +48,8 @@ class MidBodyDetectionFactory:
         self,
         weight_mklp_intensity_factor=10.0,
         weight_sir_intensity_factor=3.33,
-        mid_body_linking_max_distance=100,
+        # mid_body_linking_max_distance=100,
+        mid_body_linking_max_distance=1000,
         h_maxima_threshold=5.0,
         sigma=2.0,
         threshold=1.0,
@@ -103,7 +104,8 @@ class MidBodyDetectionFactory:
         mask_movie: Optional[np.array] = None,
         mid_body_channel=1,
         sir_channel=0,
-        mode="h_maxima",
+        # mode="h_maxima",
+        mode="lapgau",
     ) -> dict[int, list[MidBodySpot]]:
         """
         Parameters
@@ -479,27 +481,42 @@ class MidBodyDetectionFactory:
 
             Finally values are combined by weighted addition
             """
-            # spatial coordinates: sqsqeuclidean
-            alpha = 1
+
+            # unwrapping
             (x1, y1, mlkp1, sir1), (x2, y2, mlkp2, sir2) = c1, c2
-            spatial_sqe = distance.sqeuclidean([x1, y1], [x2, y2])
 
-            # mlkp distance (linear for now)
-            beta = 0.10
-            mlkp_d = abs(mlkp1 - mlkp2)
+            # In case we have a None None point:
+            # if x1 is None or x2 is None:
+            #     return self.mid_body_linking_max_distance*2 # connection is invalid
+            if np.isnan([x1, y1, x2, y2]).any():
+                return self.mid_body_linking_max_distance*2 # connection is invalidated
 
-            # sir distance (linear for now)
-            gamma = 0.25
-            sir_d = abs(sir1 - sir2)
+            # spatial coordinates: euclidean
+            spatial_e = distance.euclidean([x1, y1], [x2, y2])
 
-            return alpha * spatial_sqe + beta * mlkp_d + gamma * sir_d
+            mkpl_penalty = (
+                3
+                * self.weight_mklp_intensity_factor
+                * np.abs(mlkp1 - mlkp2) / (mlkp1 + mlkp2)
+            )
+
+            sir_penalty = (
+                3
+                * self.weight_sir_intensity_factor
+                * np.abs(sir1 - sir2) / (sir1 + sir2)
+            )
+
+            penalty = 1 + mkpl_penalty + sir_penalty
+
+            return (spatial_e * penalty)**2 
 
         # laptrack execution
+        max_distance = self.mid_body_linking_max_distance
         lt = LapTrack(
             track_dist_metric=dist_metric,
-            track_cost_cutoff=self.mid_body_linking_max_distance**2,
+            track_cost_cutoff=max_distance**2,
             gap_closing_dist_metric=dist_metric,
-            gap_closing_cost_cutoff=self.mid_body_linking_max_distance**2,
+            gap_closing_cost_cutoff=max_distance**2,
             gap_closing_max_frame_count=2,
             splitting_cost_cutoff=False,
             merging_cost_cutoff=False,
