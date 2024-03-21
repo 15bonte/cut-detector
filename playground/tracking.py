@@ -9,6 +9,7 @@ from cut_detector.utils.trackmate_spot import TrackMateSpot
 
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.spatial import ConvexHull
 
 def load_tracks_and_spots(
     trackmate_tracks_path: str, spots_path: str
@@ -100,6 +101,11 @@ def main(
     # TODO: generate CellSpot instances
     cell_dictionary: dict[int, list[CellSpot]] = {}
     # cell_spot = CellSpot(frame, x, y, id_number, abs_min_x, abs_max_x, abs_min_y, abs_max_y, spot_points)
+    # Spot points can be created from the cell indices
+    # hull = ConvexHull(indices)
+    # The indices of points forming the convex hull
+    # convex_hull_indices = indices[hull.vertices][:, ::-1]  # (x, y)
+
 
 if __name__ == "__main__":
     main()
