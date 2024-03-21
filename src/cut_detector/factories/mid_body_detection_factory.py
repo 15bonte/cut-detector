@@ -23,6 +23,7 @@ from ..utils.mid_body_spot import MidBodySpot
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.trackmate_track import TrackMateTrack
 from ..utils.tools import plot_detection
+from ..mb_tracking import SpatialLapTrack
 
 
 class MidBodyDetectionFactory:
@@ -48,8 +49,8 @@ class MidBodyDetectionFactory:
         self,
         weight_mklp_intensity_factor=10.0,
         weight_sir_intensity_factor=3.33,
-        # mid_body_linking_max_distance=100,
-        mid_body_linking_max_distance=1000,
+        mid_body_linking_max_distance=100,
+        # mid_body_linking_max_distance=1000,
         h_maxima_threshold=5.0,
         sigma=2.0,
         threshold=1.0,
@@ -367,7 +368,9 @@ class MidBodyDetectionFactory:
                 spots2[j].parent_spot = spots1[i]
 
     def generate_tracks_from_spots(
-        self, spots_candidates: dict[int, list[MidBodySpot]]
+        self, 
+        spots_candidates: dict[int, list[MidBodySpot]],
+        tracking_method: Literal["laptrack", "spatial_laptrack"] = "laptrack"
     ) -> list[MidBodyTrack]:
         """
         Use spots linked together to generate tracks.
@@ -403,44 +406,14 @@ class MidBodyDetectionFactory:
 
         # return tracks
 
-        return self._gen_laptrack_tracking(spots_candidates)
+        return self._gen_laptrack_tracking(spots_candidates, tracking_method)
 
     def _gen_laptrack_tracking(
-        self, spots_candidates: dict[int, list[MidBodySpot]]
+        self, 
+        spots_candidates: dict[int, list[MidBodySpot]],
+        tracking_method: Literal["laptrack", "spatial_laptrack"] = "laptrack"
     ) -> list[MidBodyTrack]:
-        # Small utility
-        def pd_concat(v: list) -> pd.DataFrame:
-            """
-            For some reason, pylance considered that pd.concat stops
-            code execution, so everything after that was marked as
-            'unreachable'.
-            Wrapping it in a function prevents it
-            """
-            return pd.concat(v)
-
-        # input data conversion
-        # spots_list = []
-        # for frame, spots in spots_candidates.items():
-        # print("spots:", spots)
-        # if len(spots) == 0:
-        #     df = pd.DataFrame({
-        #         "frame": [frame],
-        #         "y": [None],
-        #         "x": [None],
-        #     })
-        #     spots_list.append(df)
-        # else:
-        #     for spot in spots:
-        #         df = pd.DataFrame({
-        #             "frame": [frame],
-        #             "y": [spot.y],
-        #             "x": [spot.x],
-        #         })
-        #         spots_list.append(df)
-
-        # spots_df = pd.concat(spots_list)
-        # spots_df = pd_concat(spots_list)
-
+        
         spots_df = pd.DataFrame(
             {
                 "frame": [],
@@ -510,18 +483,48 @@ class MidBodyDetectionFactory:
 
             return (spatial_e * penalty)**2 
 
-        # laptrack execution
+        
         max_distance = self.mid_body_linking_max_distance
-        lt = LapTrack(
-            track_dist_metric=dist_metric,
-            track_cost_cutoff=max_distance**2,
-            gap_closing_dist_metric=dist_metric,
-            gap_closing_cost_cutoff=max_distance**2,
-            gap_closing_max_frame_count=2,
-            splitting_cost_cutoff=False,
-            merging_cost_cutoff=False,
-            alternative_cost_percentile=90,  # default value
-        )
+
+        print("tracking method:", tracking_method)
+        if tracking_method == "laptrack":
+            lt = LapTrack(
+                track_dist_metric=dist_metric,
+                track_cost_cutoff=max_distance**2,
+                gap_closing_dist_metric=dist_metric,
+                gap_closing_cost_cutoff=max_distance**2,
+                gap_closing_max_frame_count=2,
+                splitting_cost_cutoff=False,
+                merging_cost_cutoff=False,
+                alternative_cost_percentile=90,  # default value
+            )
+        elif tracking_method == "spatial_laptrack":
+            lt = SpatialLapTrack(
+                spatial_coord_slice=slice(0,2),
+                spatial_metric="euclidean",
+                track_dist_metric=dist_metric,
+                track_cost_cutoff=max_distance,
+                gap_closing_dist_metric=dist_metric,
+                gap_closing_cost_cutoff=max_distance,
+                gap_closing_max_frame_count=2,
+                splitting_cost_cutoff=False,
+                merging_cost_cutoff=False,
+                alternative_cost_percentile=90,  # default value
+            )
+        else:
+            raise RuntimeError(f"Invalid tracking method '{tracking_method}'")
+
+        # laptrack execution
+        # lt = LapTrack(
+        #     track_dist_metric=dist_metric,
+        #     track_cost_cutoff=max_distance**2,
+        #     gap_closing_dist_metric=dist_metric,
+        #     gap_closing_cost_cutoff=max_distance**2,
+        #     gap_closing_max_frame_count=2,
+        #     splitting_cost_cutoff=False,
+        #     merging_cost_cutoff=False,
+        #     alternative_cost_percentile=90,  # default value
+        # )
         track_df, split_df, merge_df = lt.predict_dataframe(
             spots_df,
             ["x", "y", "mlkp_intensity", "sir_intensity"],

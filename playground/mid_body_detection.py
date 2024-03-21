@@ -7,6 +7,7 @@ from cut_detector.factories.mid_body_detection_factory import (
     MidBodyDetectionFactory,
 )
 
+SHOULD_SAVE = True
 
 # origine des points en haut à gauche, D>G, H>B
 # autre test
@@ -56,10 +57,12 @@ def main(
 
     factory.generate_tracks_from_spots(
         spots_candidates,
+        tracking_method="spatial_laptrack"
     )
-    factory.save_mid_body_tracking(
-        spots_candidates, mitosis_movie, path_output
-    )
+    if SHOULD_SAVE:
+        factory.save_mid_body_tracking(
+            spots_candidates, mitosis_movie, path_output
+        )
 
 
 if __name__ == "__main__":
