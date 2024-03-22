@@ -28,55 +28,6 @@ class SpatialLapTrack(LapTrack):
     This is only for filtering out values: 
     Optimisation is still run against the chosen metric.
     """
-    # def __init__(
-    #     self,
-    #     spatial_coord_slice,
-    #     spatial_metric: str | Callable = 'euclidean', # used for both dist and gap
-    #     track_dist_metric: str | Callable = 'sqeuclidean',
-    #     track_cost_cutoff: float = 225,
-    #     gap_closing_dist_metric: str | Callable = 'sqeuclidean',
-    #     gap_closing_cost_cutoff: Literal[False] | float = 225,
-    #     gap_closing_max_frame_count: int = 2,
-    #     splitting_dist_metric: str | Callable = 'sqeuclidean',
-    #     splitting_cost_cutoff: Literal[False] | float = False,
-    #     merging_dist_metric: str | Callable =  'sqeuclidean',
-    #     merging_cost_cutoff: Literal[False] | float = False,
-    #     track_start_cost: float | None = None,
-    #     track_end_cost: float | None = None,
-    #     segment_start_cost: float | None = None,
-    #     segment_end_cost: float | None = None,
-    #     no_splitting_cost: float | None = None,
-    #     no_merging_cost: float | None = None,
-    #     alternative_cost_factor: float = 1.05,
-    #     alternative_cost_percentile: float = 90,
-    #     alternative_cost_percentile_interpolation: str = "lower",
-    #     parallel_backend: ParallelBackend = ParallelBackend.serial,
-        
-    # ):
-    #     super().__init__(
-    #         spatial_coord_slice=spatial_coord_slice,
-    #         spatial_metric=spatial_metric,
-    #         track_dist_metric=track_dist_metric, 
-    #         track_cost_cutoff=track_cost_cutoff,
-    #         gap_closing_dist_metric=gap_closing_dist_metric,
-    #         gap_closing_cost_cutoff=gap_closing_cost_cutoff,
-    #         gap_closing_max_frame_count=gap_closing_max_frame_count,
-    #         splitting_dist_metric=splitting_dist_metric,
-    #         splitting_cost_cutoff=splitting_cost_cutoff,
-    #         merging_dist_metric=merging_dist_metric,
-    #         merging_cost_cutoff=merging_cost_cutoff,
-    #         track_start_cost=track_start_cost,
-    #         track_end_cost=track_end_cost,
-    #         segment_start_cost=segment_start_cost,
-    #         segment_end_cost=segment_end_cost,
-    #         no_splitting_cost=no_splitting_cost,
-    #         no_merging_cost=no_merging_cost,
-    #         alternative_cost_factor=alternative_cost_factor,
-    #         alternative_cost_percentile=alternative_cost_percentile,
-    #         alternative_cost_percentile_interpolation=alternative_cost_percentile_interpolation,
-    #         parallel_backend=parallel_backend)
-    #     self.spatial_coord_slice = spatial_coord_slice
-    #     self.spatial_metric = spatial_metric
 
     spatial_coord_slice: slice = Field(
         ...,
@@ -137,8 +88,8 @@ class SpatialLapTrack(LapTrack):
 
             # While this has not been checked, it is highly likely
             # that coord are ordered the way specified in predict_dataframe
-            spatial_coord1 = coord1[self.spatial_coord_slice]
-            spatial_coord2 = coord2[self.spatial_coord_slice]
+            spatial_coord1 = coord1[:,self.spatial_coord_slice]
+            spatial_coord2 = coord2[:,self.spatial_coord_slice]
 
             spatial_dist_matrix = cdist(
                 spatial_coord1, 
@@ -263,23 +214,24 @@ class SpatialLapTrack(LapTrack):
                     )
                     assert target_dist_matrix.shape[0] == 1
 
-                    print("def:")
-                    print("[target coord]:", [target_coord])
-                    print("target coord kind:", type(target_coord))
-                    print("target coord shape:", target_coord.shape)
-                    print("stack:", np.stack(df["first_frame_coords"].values))
-                    print("stack shape:", np.stack(df["first_frame_coords"].values).shape)
-                    print("----")
-                    print("spatial:")
-                    print("[target coord]:", [target_spatial_coord])
-                    print("target coord kind:", type(target_spatial_coord))
-                    print("target coord shape:", target_spatial_coord.shape)
-                    print("stack:", np.stack([df["first_frame_coords"].values[0][self.spatial_coord_slice]]))
-                    print("stack shape:", np.stack([df["first_frame_coords"].values[0][self.spatial_coord_slice]]).shape)
-                    print("@@@")
-                    print("stack alternative:", np.stack(df["first_frame_coords"].values)[:,self.spatial_coord_slice])
-                    print("   ")
-                    print("   ")
+                    # If Debug is needed
+                    # print("def:")
+                    # print("[target coord]:", [target_coord])
+                    # print("target coord kind:", type(target_coord))
+                    # print("target coord shape:", target_coord.shape)
+                    # print("stack:", np.stack(df["first_frame_coords"].values))
+                    # print("stack shape:", np.stack(df["first_frame_coords"].values).shape)
+                    # print("----")
+                    # print("spatial:")
+                    # print("[target coord]:", [target_spatial_coord])
+                    # print("target coord kind:", type(target_spatial_coord))
+                    # print("target coord shape:", target_spatial_coord.shape)
+                    # print("stack:", np.stack([df["first_frame_coords"].values[0][self.spatial_coord_slice]]))
+                    # print("stack shape:", np.stack([df["first_frame_coords"].values[0][self.spatial_coord_slice]]).shape)
+                    # print("@@@")
+                    # print("stack alternative:", np.stack(df["first_frame_coords"].values)[:,self.spatial_coord_slice])
+                    # print("   ")
+                    # print("   ")
 
                     # print("TARGET COORD:", target_coord)
                     # print("TARGET SPATIAL COORD:", target_spatial_coord)
