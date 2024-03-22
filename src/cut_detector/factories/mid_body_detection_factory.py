@@ -5,7 +5,7 @@ from math import sqrt
 import numpy as np
 from bigfish import stack, detection
 from skimage.morphology import extrema, opening
-from skimage.feature import blob_log
+from skimage.feature import blob_log, blob_dog, blob_doh
 from scipy import ndimage
 from scipy.optimize import linear_sum_assignment
 from scipy.spatial import distance
@@ -47,8 +47,8 @@ class MidBodyDetectionFactory:
 
     def __init__(
         self,
-        weight_mklp_intensity_factor=10.0,
-        weight_sir_intensity_factor=3.33,
+        weight_mklp_intensity_factor=5.0,
+        weight_sir_intensity_factor=1.50,
         mid_body_linking_max_distance=100,
         # mid_body_linking_max_distance=1000,
         h_maxima_threshold=5.0,
@@ -66,12 +66,16 @@ class MidBodyDetectionFactory:
         self.cytokinesis_duration = cytokinesis_duration
         self.minimum_mid_body_track_length = minimum_mid_body_track_length
 
+    SPOT_DETECTION_MODE = Literal["bigfish", "h_maxima", "lapgau", "diffgau", "concom"]
+
     def update_mid_body_spots(
         self,
         mitosis_track: MitosisTrack,
         mitosis_movie: np.array,
         mask_movie: np.array,
         tracks: list[TrackMateTrack],
+        mb_detect_method: SPOT_DETECTION_MODE = "lapgau",
+        mb_tracking_method: Literal["laptrack", "spatial_laptrack"] = "laptrack",
     ) -> None:
         """
         Get spots of best mitosis track.
@@ -84,9 +88,13 @@ class MidBodyDetectionFactory:
         """
 
         spots_candidates = self.detect_mid_body_spots(
-            mitosis_movie, mask_movie=mask_movie
+            mitosis_movie, mask_movie=mask_movie,
+            mode=mb_detect_method
         )
-        mid_body_tracks = self.generate_tracks_from_spots(spots_candidates)
+        mid_body_tracks = self.generate_tracks_from_spots(
+            spots_candidates,
+            tracking_method=mb_tracking_method
+        )
         kept_track = self._select_best_track(
             mitosis_track, mid_body_tracks, tracks, mitosis_movie
         )
@@ -106,7 +114,8 @@ class MidBodyDetectionFactory:
         mid_body_channel=1,
         sir_channel=0,
         # mode="h_maxima",
-        mode="lapgau",
+        # mode="lapgau",
+        mode: SPOT_DETECTION_MODE = "diffgau",
     ) -> dict[int, list[MidBodySpot]]:
         """
         Parameters
@@ -150,7 +159,6 @@ class MidBodyDetectionFactory:
 
         return spots_dictionary
 
-    SPOT_DETECTION_MODE = Literal["bigfish", "h_maxima", "lapgau", "concom"]
 
     def _spot_detection(
         self,
@@ -236,6 +244,12 @@ class MidBodyDetectionFactory:
                 for spot in self._compute_laplacian_of_gaussian(image_mklp)
             ]
 
+        elif mode == "diffgau":
+            spots = [
+                (int(spot[0]), int(spot[1]))
+                for spot in self._compute_diff_of_gaussian(image_mklp)
+            ]
+
         elif mode == "concom":
             raise RuntimeError("Connected Components not implemented yet")
 
@@ -271,11 +285,30 @@ class MidBodyDetectionFactory:
             num_sigma=5,
             threshold=0.1,
         )
+        print("found blobs (y/x/s):", blobs_log, sep="\n")
+
         # Compute radii in the 3rd column, since 3 column is sigma
         # and radius can be approximated by sigma * sqrt(2) according to doc
         blobs_log[:, 2] = blobs_log[:, 2] * sqrt(2)
-        print("found blobs:", blobs_log, sep="\n")
         return blobs_log
+    
+    @staticmethod
+    def _compute_diff_of_gaussian(
+        midbody_gs_img: np.array,
+    ) -> np.array:
+        min = np.min(midbody_gs_img)
+        max = np.max(midbody_gs_img)
+        midbody_gs_img = (midbody_gs_img - min) / (max - min)
+        blobs = blob_dog(
+            image=midbody_gs_img,
+            min_sigma=2,
+            max_sigma=5,
+            sigma_ratio=1.2,
+            threshold=0.1,
+        )
+        print("found blobs (y/x/s):", blobs, sep="\n")
+        blobs[:, 2] = blobs[:, 2] * sqrt(2)
+        return blobs
 
     @staticmethod
     def _get_average_intensity(
@@ -508,10 +541,10 @@ class MidBodyDetectionFactory:
                 track_cost_cutoff=max_distance,
                 gap_closing_dist_metric=dist_metric,
                 gap_closing_cost_cutoff=max_distance,
-                gap_closing_max_frame_count=2,
+                gap_closing_max_frame_count=3,
                 splitting_cost_cutoff=False,
                 merging_cost_cutoff=False,
-                alternative_cost_percentile=90,  # default value
+                alternative_cost_percentile=100,  # modified value
             )
         else:
             raise RuntimeError(f"Invalid tracking method '{tracking_method}'")
@@ -743,6 +776,29 @@ class MidBodyDetectionFactory:
         sorted_tracks = sorted(final_tracks, key=func_sir_intensity)
         return sorted_tracks[0] if len(sorted_tracks) > 0 else None
 
+
+    class MbTrackColorManager:
+        def __init__(self):
+            self.index = 0
+            self.color_list = [
+                mpl.colormaps["tab10"](i)[:3] for i in range(10)
+            ]
+            self.id2color = {}
+
+        def get_color_for_track(self, id: int):
+            color = self.id2color.get(id)
+            if color is None:
+                new_color = self.color_list[self.index]
+                self.id2color[id] = new_color
+                color = new_color
+                self.inc_index()
+            return color
+        
+        def inc_index(self):
+            self.index += 1
+            if self.index >= len(self.color_list):
+                self.index = 0
+
     def save_mid_body_tracking(
         self,
         spots_candidates,
@@ -757,10 +813,14 @@ class MidBodyDetectionFactory:
         if not os.path.exists(path_output):
             os.makedirs(path_output)
 
-        matplotlib_colors = [
-            mpl.colormaps["hsv"](i)[:3] for i in np.linspace(0, 0.9, 100)
-        ]
-        shuffle(matplotlib_colors)
+        # matplotlib_colors = [
+        #     mpl.colormaps["hsv"](i)[:3] for i in np.linspace(0, 0.9, 100)
+        # ]
+        # shuffle(matplotlib_colors)
+        # matplotlib_colors = [
+        #     mpl.colormaps["tab10"](i)[:3] for i in range(20)
+        # ]
+        color_lib = MidBodyDetectionFactory.MbTrackColorManager()
 
         # Detect spots in each frame
         nb_frames = mitosis_movie.shape[0]
@@ -774,7 +834,8 @@ class MidBodyDetectionFactory:
             ]
             colors = [
                 (
-                    matplotlib_colors[spot.track_id % len(matplotlib_colors)]
+                    # matplotlib_colors[spot.track_id % len(matplotlib_colors)]
+                    color_lib.get_color_for_track(spot.track_id)
                     if spot.track_id is not None
                     else (0, 0, 0)
                 )
