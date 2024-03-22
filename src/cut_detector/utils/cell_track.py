@@ -327,15 +327,11 @@ class CellTrack(Track[CellSpot]):
     @staticmethod
     def generate_tracks_from_spots(
         spots: dict[int, list[CellSpot]],
-        linking_max_distance: Optional[int] = None,
-        gap_closing_max_distance: Optional[int] = None,
-        max_frame_gap=max_frame_gap,
+        linking_max_distance: int,
+        gap_closing_max_distance: int,
     ) -> list[CellTrack]:
         """
         Generate tracks from spots.
         """
-        if linking_max_distance is None or gap_closing_max_distance is None:
-            raise ValueError(
-                "Missing linking_max_distance or gap_closing_max_distance"
-            )
+        max_frame_gap = CellTrack.max_frame_gap
         raise NotImplementedError

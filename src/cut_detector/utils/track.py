@@ -25,7 +25,9 @@ class Track(Generic[T]):
     @staticmethod
     @abstractmethod
     def generate_tracks_from_spots(
-        spots: dict[int, list[T]]
+        spots: dict[int, list[T]],
+        linking_max_distance: int,
+        gap_closing_max_distance: int,
     ) -> list[Track[T]]:
         """
         Generate tracks from spots.

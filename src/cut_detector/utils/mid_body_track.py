@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Callable, Optional
 import numpy as np
 
 from .track import Track
@@ -9,6 +10,8 @@ class MidBodyTrack(Track[MidBodySpot]):
     """
     Mid-body candidate track
     """
+
+    max_frame_gap = 2
 
     def add_spot(self, spot: MidBodySpot) -> None:
         """
@@ -47,8 +50,12 @@ class MidBodyTrack(Track[MidBodySpot]):
     @staticmethod
     def generate_tracks_from_spots(
         spots: dict[int, list[MidBodySpot]],
+        linking_max_distance: int,
+        gap_closing_max_distance: int = None,
+        track_dist_metric: str | Callable = "sqeuclidean",
     ) -> list[MidBodyTrack]:
         """
         Generate tracks from spots.
         """
+        max_frame_gap = MidBodyTrack.max_frame_gap
         raise NotImplementedError
