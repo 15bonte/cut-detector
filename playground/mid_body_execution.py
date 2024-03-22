@@ -10,6 +10,8 @@ from cut_detector.data.tools import get_data_path
 
 def main(
     data_set_path: Optional[str] = None,
+    mid_body_detection_method: str = "lapgau",
+    mid_body_tracking_method: str = "laptrack",
 ):
     """
     If data_set_path is not None, it has to be a path containing
@@ -40,9 +42,15 @@ def main(
             video_name,
             mitoses_folder,
             tracks_folder,
+            mid_body_detection_method=mid_body_detection_method,
+            mid_body_tracking_method=mid_body_tracking_method,
         )
 
 
 if __name__ == "__main__":
     FOLDER = "/Users/paul/Mines_Programmation/DLIA/Projet Final/Données et PP Midbodies/Data cep55"
-    main(FOLDER)
+    main(
+        FOLDER,
+        mid_body_detection_method="lapgau",
+        mid_body_tracking_method="laptrack"
+    )

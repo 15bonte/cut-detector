@@ -17,6 +17,8 @@ def perform_mid_body_detection(
     exported_tracks_dir: str,
     save_dir: Optional[str] = None,
     update_mitoses: bool = True,
+    mid_body_detection_method: str = "lapgau",
+    mb_tracking_method: str = "laptrack"
 ):
     mitosis_tracks: list[MitosisTrack] = []
     # Iterate over "bin" files in exported_mitoses_dir
@@ -57,7 +59,9 @@ def perform_mid_body_detection(
 
         # Search for mid-body in mitosis movie
         mid_body_detector.update_mid_body_spots(
-            mitosis_track, mitosis_movie, mask_movie, trackmate_tracks
+            mitosis_track, mitosis_movie, mask_movie, trackmate_tracks,
+            mb_detect_method=mid_body_detection_method,
+            mb_tracking_method=mb_tracking_method
         )
 
         # Save updated mitosis track
