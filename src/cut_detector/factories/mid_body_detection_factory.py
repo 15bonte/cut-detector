@@ -66,7 +66,7 @@ class MidBodyDetectionFactory:
         self.cytokinesis_duration = cytokinesis_duration
         self.minimum_mid_body_track_length = minimum_mid_body_track_length
 
-    SPOT_DETECTION_MODE = Literal["bigfish", "h_maxima", "lapgau", "diffgau", "concom"]
+    SPOT_DETECTION_MODE = Literal["bigfish", "h_maxima", "lapgau", "diffgau", "hessian", "concom"]
 
     def update_mid_body_spots(
         self,
@@ -250,6 +250,12 @@ class MidBodyDetectionFactory:
                 for spot in self._compute_diff_of_gaussian(image_mklp)
             ]
 
+        elif mode == "hessian":
+            spots = [
+                (int(spot[0]), int(spot[1]))
+                for spot in self._compute_det_of_hessian(image_mklp)
+            ]
+
         elif mode == "concom":
             raise RuntimeError("Connected Components not implemented yet")
 
@@ -305,6 +311,24 @@ class MidBodyDetectionFactory:
             max_sigma=5,
             sigma_ratio=1.2,
             threshold=0.1,
+        )
+        print("found blobs (y/x/s):", blobs, sep="\n")
+        blobs[:, 2] = blobs[:, 2] * sqrt(2)
+        return blobs
+    
+    @staticmethod
+    def _compute_det_of_hessian(
+        midbody_gs_img: np.array
+    ) -> np.array:
+        min = np.min(midbody_gs_img)
+        max = np.max(midbody_gs_img)
+        midbody_gs_img = (midbody_gs_img - min) / (max - min)
+        blobs = blob_doh(
+            midbody_gs_img,
+            min_sigma=5,
+            max_sigma=10,
+            num_sigma=5,
+            threshold=0.0040,
         )
         print("found blobs (y/x/s):", blobs, sep="\n")
         blobs[:, 2] = blobs[:, 2] * sqrt(2)
