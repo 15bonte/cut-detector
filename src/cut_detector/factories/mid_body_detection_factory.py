@@ -66,7 +66,16 @@ class MidBodyDetectionFactory:
         self.cytokinesis_duration = cytokinesis_duration
         self.minimum_mid_body_track_length = minimum_mid_body_track_length
 
-    SPOT_DETECTION_MODE = Literal["bigfish", "h_maxima", "lapgau", "diffgau", "hessian", "concom"]
+    SPOT_DETECTION_MODE = Literal[
+        "bigfish", 
+        "h_maxima", 
+        "lapgau",
+        "log2_wider",
+        "off_centered_log",
+        "diffgau", 
+        "hessian", 
+        "concom",
+    ]
 
     def update_mid_body_spots(
         self,
@@ -244,6 +253,30 @@ class MidBodyDetectionFactory:
                 for spot in self._compute_laplacian_of_gaussian(image_mklp)
             ]
 
+        elif mode == "log2_wider":
+            spots = [
+                (int(spot[0]), int(spot[1]))
+                for spot in self._compute_any_laplacian_of_gaussian(
+                    image_mklp,
+                    min_sigma=2,
+                    max_sigma=8,
+                    num_sigma=4,
+                    threshold=0.1
+                )
+            ]
+
+        elif mode == "off_centered_log":
+            spots = [
+                (int(spot[0]), int(spot[1]))
+                for spot in self._compute_any_laplacian_of_gaussian(
+                    image_mklp,
+                    min_sigma=3,
+                    max_sigma=11,
+                    num_sigma=5,
+                    threshold=0.1
+                )
+            ]
+
         elif mode == "diffgau":
             spots = [
                 (int(spot[0]), int(spot[1]))
@@ -297,6 +330,31 @@ class MidBodyDetectionFactory:
         # and radius can be approximated by sigma * sqrt(2) according to doc
         blobs_log[:, 2] = blobs_log[:, 2] * sqrt(2)
         return blobs_log
+    
+    @staticmethod
+    def _compute_any_laplacian_of_gaussian(
+        mklp_img: np.array,
+        min_sigma: int,
+        max_sigma: int,
+        num_sigma: int,
+        threshold: float
+        ) -> np.array:
+        """ Computes a MinMax Normalization followed by a laplacian
+        of gaussian with the given parameters
+        """
+        min = np.min(mklp_img)
+        max = np.max(mklp_img)
+        mklp_img = (mklp_img-min) / (max-min)
+        blobs = blob_log(
+            image=mklp_img,
+            min_sigma=min_sigma,
+            max_sigma=max_sigma,
+            num_sigma=num_sigma,
+            threshold=threshold
+        )
+        print("found blobs (y/x/s):", blobs, sep="\n")
+        blobs[:, 2] = blobs[:, 2] * sqrt(2)
+        return blobs
     
     @staticmethod
     def _compute_diff_of_gaussian(

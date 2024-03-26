@@ -17,8 +17,9 @@ SOURCE_DIR = "./src/cut_detector/data/mid_bodies_movies_test"
 OUT_DIR = "./src/cut_detector/data/mid_bodies"
 
 SHOULD_SAVE = True
+SHOW_TRACKING = False
 
-SOURCE_CHOICE = 0
+SOURCE_CHOICE = -1
 SOURCE_LIST = {
     ### Positive or null indices: 4 channels as usual ###
     0: "example_video_mitosis_0_0_to_4.tiff",
@@ -37,11 +38,32 @@ SOURCE_LIST = {
     -1: "longcep1_20231019-t1_siCep55-50-1.tif",
 }
 
-CANDIDATE_SELECTION = ["cur_log"]
+CANDIDATE_SELECTION = [
+    # "cur_log", 
+    "centered_log", 
+    "mini_centered_log",
+    "log2_wider",
+    "off_centered_log"
+]
 CANDIDATES = {
     "cur_log": (blob_log, {"min_sigma": 5, "max_sigma": 10, "num_sigma": 5, "threshold": 0.1}),
     "cur_dog": (blob_dog, {"min_sigma": 2, "max_sigma": 5, "sigma_ratio": 1.2, "threshold": 0.1}),
     "cur_doh": (blob_doh, {"min_sigma": 5, "max_sigma": 10, "num_sigma": 5, "threshold": 0.0040}),
+
+    "centered_log": (blob_log, {"min_sigma": 3, "max_sigma": 7, "num_sigma": 5, "threshold": 0.1}),
+    "mini_centered_log": (blob_log, {"min_sigma": 3, "max_sigma": 7, "num_sigma": 3, "threshold": 0.1}),
+    "off_centered_log": (blob_log, {"min_sigma": 3, "max_sigma": 11, "num_sigma": 5, "threshold": 0.1}),
+
+    "log2": (blob_log, {"min_sigma": 2, "max_sigma": 4, "num_sigma": 3, "threshold": 0.1}),
+    "log2_wider": (blob_log, {"min_sigma": 2, "max_sigma": 8, "num_sigma": 4, "threshold": 0.1}),
+
+    "mini_centered_log_0050": (blob_log, {"min_sigma": 3, "max_sigma": 7, "num_sigma": 3, "threshold": 0.05}),
+    "mini_centered_log_0075": (blob_log, {"min_sigma": 3, "max_sigma": 7, "num_sigma": 3, "threshold": 0.05}),
+    "mini_centered_log_0090": (blob_log, {"min_sigma": 3, "max_sigma": 7, "num_sigma": 3, "threshold": 0.05}),
+
+    "cur_log_0050": (blob_log, {"min_sigma": 5, "max_sigma": 10, "num_sigma": 5, "threshold": 0.05}),
+    "cur_log_0075": (blob_log, {"min_sigma": 5, "max_sigma": 10, "num_sigma": 5, "threshold": 0.075}),
+    "cur_log_0090": (blob_log, {"min_sigma": 5, "max_sigma": 10, "num_sigma": 5, "threshold": 0.09}),
 }
 
 def process_image(mklp, sir, fun_args: Tuple[Callable, dict]) -> np.array:
@@ -74,7 +96,7 @@ def main():
         factory.generate_tracks_from_spots(
             spots_candidates,
             tracking_method="spatial_laptrack",
-            show_tracking=True,
+            show_tracking=SHOW_TRACKING,
         )
 
         if SHOULD_SAVE:
@@ -153,12 +175,20 @@ def make_filepath(dir: str, filename: str) -> str:
 
 def load_movie(path: str, is_three_channel: bool) -> np.array:
     if is_three_channel:
-        raise RuntimeError("WIP")
+        # raise RuntimeError("WIP")
+        image = TiffReader(path, respect_initial_type=True).image  # ZCTYX
+        print("image shape:", image.shape)
+        movie = image[:, :3, ...].squeeze()  # Z C=3 TYX -> C=3 TYX
+        movie = movie.transpose(1, 2, 3, 0)  # CTYX -(1,2,3,0)> TYXC
+        # raise RuntimeError("WIP")
+        return movie # -> TYXC
     else:
         image = TiffReader(path, respect_initial_type=True).image  # TCZYX
+        print("image shape:", image.shape)
         movie = image[:, :3, ...].squeeze()  # T C=3 YX
         movie = movie.transpose(0, 2, 3, 1)  # TYXC
-        return movie
+        # raise RuntimeError("WIP")
+        return movie # -> TYXC
 
 if __name__ == "__main__":
     main()

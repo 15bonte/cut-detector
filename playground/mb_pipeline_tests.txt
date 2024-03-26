@@ -1,0 +1,148 @@
+source: example_video_mitosis_0_0_to_4.tiff
+results:
+- cur_log: good, could not find small point 17-25
+
+- centered_log: good, could not find small point 17-25, find small FP frame 5
+- mini_centered_log: like centered_log
+
+- log2: misses frame 10 (too big); some FP; could not find small point 17-25
+- log2_wider: good, some FP (expected because starts at 2); could not find small point 17-25
+
+- mini_centered_log_0050/75/90: find a small point 21-22. Some FP. Ok otherwise
+
+
+source: a_siLuci-1_mitosis_33_7_to_63.tiff (QUITE COMPLICATED)
+(improvement on this source may come frome threshold/normalization, not sigma
+probably a combination of both, + maybe a method where a threshold can be defined
+per sigma)
+results:
+- cur_log: Sometimes Loses points, but find them later. Not perfect but working
+
+- centered_log: Not much better than cur_log. More FP too
+- mini_centered_log: Like centered
+
+- log2: too small, some MB are not detected
+- log2_wider: Like mini_centered_log
+
+- mini_centered_log_00
+50: LOTS of FP at beginning, maybe some additional midbodies are found. Bigger are losts
+/75: 
+/90: 
+
+
+
+source: s1_siLuci-1_mitosis_14_158_to_227.tiff
+results:
+- cur_log: OK
+
+- centered_log: Rougly like cur_log
+- mini_centered_log: Same as centered
+
+- log2_wider: more FP because starts at 2
+- off_centered_log: For now, like centered
+
+
+source: s2_siLuci-1_mitosis_15_67_to_228,211.tiff
+results:
+- cur_log: The real important points are detected, faded lost on 13, 16+
+
+- centered_log: Detects additional point, lost 13-14 and 16+
+- mini_centered_log: like centered_log
+
+- log2_wider: 1-2 FP and lose 13-14 and 16+
+- >off_centered_log<: like cur_log for the big, additional point detected
+
+
+source: s3_siLuci-1_mitosis_17_170_to_195.tiff
+Too much noise, only 2 frames of MB among 13.
+
+
+source: s4_siLuci-1_mitosis_24_128_to_135.tiff
+results:
+- cur_log: MB lost frame 4, 7
+
+- centered_log: 3 miss
+- mini_centered_log: 3 miss
+
+- log2_wider: FP, 2 miss inf,
+- off_centered_log: 2 miss inf, 
+
+
+source: s5_siLuci-1_mitosis_27_22_to_93,87.tiff
+results:
+- cur_log: Perfect
+
+- centered_log: All MB + 1 FP (but OK not a pb)
+- mini_centered_log: All MB + 1 FP (but OK not a pb)
+
+- log2_wider: All MB + 1 FP (but OK not a pb)
+- off_centered_log: All MB + 1 FP (but OK not a pb) 
+
+
+source: s6_siLuci-1_mitosis_28_50_to_91.tiff
+results:
+- cur_log: Ok works
+ 
+- centered_log: same results as cur_log
+- mini_centered_log: same results as cur_log
+
+- log2_wider: same results as cur_log + FP (not really interesting)
+- off_centered_log: same results as cur_log
+
+
+source: s7_siLuci-1_mitosis_31_19_to_73.tiff
+results:
+- cur_log: FP at beginning, MB found, OK
+ 
+- centered_log: FP (more but OK) at beginning, MB found, OK
+- mini_centered_log: same as centered_log
+
+- log2_wider: more FP, then MB found
+- off_centered_log: same as cur_log
+
+
+source: s9_siLuci-1_mitosis_34_21_to_68,62.tiff
+results:
+- cur_log: MB found, no noise, OK
+ 
+- centered_log: 1 FP at beginning, MB found, OK
+- mini_centered_log: same as centered_log
+
+- log2_wider: a little bit of noise at beginning (but OK), MB found, OK
+- off_centered_log: a little bit of noise at beginning (but OK), MB found, OK
+
+
+source: 20231019-t1_siCep55-50-4_mitosis_21_25_to_117.tiff
+results:
+- cur_log: no FP, finds nearly everything, middle and bottom points end up missing
+ 
+- centered_log: like cur_log, middle and bottom are detected after going missing but
+  too late for gap closing. Additional detections are only a couple of frames long
+- mini_centered_log: same as centered_log
+
+- >log2_wider<: did better than the other. Could detect middle and bottom longer,
+  allowing gap closing to work
+- off_centered_log: like centered_log
+
+
+
+source: longcep1_20231019-t1_siCep55-50-1.tif
+results:
+Hard to compare, 
+moreover all the MBs are competing to have the maximum values.
+5 min runtime per test
+
+
+CONCLUSION
+Current Laplacian Of Gaussian works fine most of the time
+(even though it starts at sigma=5 instead of being centered around)
+
+Centered is really helping compared to cur_log.
+It is completely OK to only test 3-5-7  (mini_centered_log)
+No real differences spotted between those two.
+
+log2_wider and off_centered_log can be interesting to add because:
+- log2_wider: has a bigger area, some FP that could help
+- off_centered_log: covers more values that cur_log, this extra area can
+  sometimes be enough to gain a frame and then gap close.
+
