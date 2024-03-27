@@ -38,31 +38,98 @@ and add a kind of composite cost cutoff OR a cutoff per parameter ? <<
 
 Test 3: s2_siLuci-1_mitosis_15_67_to_228,211.tiff
 * Everything works as expected. Detection not perfect but should be enough 
->> No Change <<
+>> No change <<
 
 
 Test 4: s3_siLuci-1_mitosis_17_170_to_195.tiff
 * Everything works as expected. Some detection FP but there are OK 
->> No Change <<
+>> No change <<
 
 
 Test 5: s4_siLuci-1_mitosis_24_128_to_135.tiff
 * Works as expected 
->> No Change <<
+>> No change <<
 
 
 Test 6: s5_siLuci-1_mitosis_27_22_to_93,87.tiff
 * Works as expected 
->> No Change <<
+>> No change <<
 
 
 Test 7: s6_siLuci-1_mitosis_28_50_to_91.tiff
 * MB jumps between F5-6
 * with only spatial tracking: no results
 * lowering alternative percentile drastically: no effect...
+>> Same problem, will be handled at the TODO section <<
 
 
-==========
+Test 8: s7_siLuci-1_mitosis_31_19_to_73.tiff
+* Works as expected
+>> No change <<
+
+
+Test 9: s9_siLuci-1_mitosis_34_21_to_68,62.tiff
+* Works as expected
+>> No change << 
+
+
+Test 10: 20231019-t1_siCep55-50-4_mitosis_21_25_to_117.tiff
+* Several jumps:
+- F11-12: low priority 
+- F12-13: high priority ?
+* when removing intensity: no results
+* Points:
+(352,156|191,229)->(294,162|736,445): D=58.31
+(x:294 y:162 mklp:736 sir:445)->(x:291 y:174 mklp:625 sir:339): D=12.37
+
+Is F12->F13 an issue ? 
+The alternative is (x:269 y:172 mklp:623 sir:277) D=26.93, which is:
+- spatially farther
+- lower MKLP/SIR than the chosen option
+>> We need to add a notion of area to cover that case, because right now
+it is "fine" with our parameters <<
+
+Is F11-F12 an issue ?
+It is a jump between 2 midbodies. Algorithm does not want to create a point
+
+
+Test 11: a_siLuci-1_mitosis_33_7_to_63.tiff
+* Blue jump F142-143
+(x:514 y:558 mklp:171 sir:200)->(x:682 y:515 mklp:187 sir:244) D=173...
+Point not dropped.
+Normal Laptrack does not have this problem (instead it loses tracks too easily...)
+
+
+Test 12: "longcep1_20231019-t1_siCep55-50-1.tif"
+Overall it's great.
+No jumps.
+The only problems are caused by MBs not detected for 3+ frames,
+causing gap closing to be impossible.
+As imperfect as SpatialLaptrack is (see previous issues), it is
+good enough for complex videos like this one, and its mistakes
+are caused by the detection process not identifying points.
+
+
+**** Conclusion ******
+SpatialLaptrack is definitely an improvement over classic version.
+It is still buggy, causing it not to drop tracks and creating new ones,
+which then causes jumps:
+  - T2  F10-11 
+  - T7  F5-6
+  - T10 F11-12
+  - T11 F142-143
+
+Currently MB area is not used in the distance metric. Most of the time
+it is not required, but it could solve this case:
+- T10/F12-13
+
+Increasing max distance to 175 made test 11 harder, but while
+relying on spatial distance cutoff may solve test 11, it won't solve
+T2/7/10. So T11 should be solved as one of them
+
+
+
+==== TODO ===
 alternative_cost_percentile does nothing on Spatial LapTrack, while 
 it does somethoing on LapTrack:
 it allows new points to be created if the distance would be too high

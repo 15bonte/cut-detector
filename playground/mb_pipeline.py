@@ -19,7 +19,7 @@ OUT_DIR = "./src/cut_detector/data/mid_bodies"
 SHOULD_SAVE = True
 SHOW_TRACKING = False
 
-SOURCE_CHOICE = 7
+SOURCE_CHOICE = -1 
 SOURCE_LIST = {
     ### Positive or null indices: 4 channels as usual ###
     0: "example_video_mitosis_0_0_to_4.tiff",
@@ -40,21 +40,17 @@ SOURCE_LIST = {
 
 CANDIDATE_SELECTION = [
     "cur_log", 
-    # "centered_log", 
-    # "mini_centered_log",
-    # "log2_wider",
-    # "off_centered_log"
 ]
 CANDIDATES = {
     "cur_log": (blob_log, {"min_sigma": 5, "max_sigma": 10, "num_sigma": 5, "threshold": 0.1}),
     "cur_dog": (blob_dog, {"min_sigma": 2, "max_sigma": 5, "sigma_ratio": 1.2, "threshold": 0.1}),
     "cur_doh": (blob_doh, {"min_sigma": 5, "max_sigma": 10, "num_sigma": 5, "threshold": 0.0040}),
 
-    "centered_log": (blob_log, {"min_sigma": 3, "max_sigma": 7, "num_sigma": 5, "threshold": 0.1}),
+    "centered_log":      (blob_log, {"min_sigma": 3, "max_sigma": 7, "num_sigma": 5, "threshold": 0.1}),
     "mini_centered_log": (blob_log, {"min_sigma": 3, "max_sigma": 7, "num_sigma": 3, "threshold": 0.1}),
-    "off_centered_log": (blob_log, {"min_sigma": 3, "max_sigma": 11, "num_sigma": 5, "threshold": 0.1}),
+    "off_centered_log":  (blob_log, {"min_sigma": 3, "max_sigma": 11, "num_sigma": 5, "threshold": 0.1}),
 
-    "log2": (blob_log, {"min_sigma": 2, "max_sigma": 4, "num_sigma": 3, "threshold": 0.1}),
+    "log2":       (blob_log, {"min_sigma": 2, "max_sigma": 4, "num_sigma": 3, "threshold": 0.1}),
     "log2_wider": (blob_log, {"min_sigma": 2, "max_sigma": 8, "num_sigma": 4, "threshold": 0.1}),
 
     "mini_centered_log_0050": (blob_log, {"min_sigma": 3, "max_sigma": 7, "num_sigma": 3, "threshold": 0.05}),
@@ -93,10 +89,16 @@ def main():
             fun_args=fun_args
         )
 
+        print("=== detection results ===")
+        for frame, spots in spots_candidates.items():
+            print(f"\nframe{frame}")
+            for spot in spots:
+                print(f"x:{spot.x} y:{spot.y} mklp:{spot.intensity} sir:{spot.sir_intensity}")
+
         factory.generate_tracks_from_spots(
             spots_candidates,
-            # tracking_method="spatial_laptrack",
-            tracking_method="laptrack",
+            tracking_method="spatial_laptrack",
+            # tracking_method="laptrack",
             show_tracking=SHOW_TRACKING,
         )
 

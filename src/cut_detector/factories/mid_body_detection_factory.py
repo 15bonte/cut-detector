@@ -600,8 +600,8 @@ class MidBodyDetectionFactory:
 
             penalty = (
                 1
-                # + sir_penalty
-                # + mkpl_penalty
+                + sir_penalty
+                + mkpl_penalty
             )
             # penalty = 1 + mkpl_penalty + sir_penalty
 
