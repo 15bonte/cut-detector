@@ -49,7 +49,9 @@ class MidBodyDetectionFactory:
         self,
         weight_mklp_intensity_factor=5.0,
         weight_sir_intensity_factor=1.50,
-        mid_body_linking_max_distance=100,
+        # weight_sir_intensity_factor=15,
+        mid_body_linking_max_distance=175,
+        # mid_body_linking_max_distance=100,
         # mid_body_linking_max_distance=1000,
         h_maxima_threshold=5.0,
         sigma=2.0,
@@ -596,9 +598,15 @@ class MidBodyDetectionFactory:
                 * np.abs(sir1 - sir2) / (sir1 + sir2)
             )
 
-            penalty = 1 + mkpl_penalty + sir_penalty
+            penalty = (
+                1
+                # + sir_penalty
+                # + mkpl_penalty
+            )
+            # penalty = 1 + mkpl_penalty + sir_penalty
 
             return (spatial_e * penalty)**2 
+            # return penalty**2 
 
         
         max_distance = self.mid_body_linking_max_distance
@@ -613,9 +621,11 @@ class MidBodyDetectionFactory:
                 gap_closing_max_frame_count=2,
                 splitting_cost_cutoff=False,
                 merging_cost_cutoff=False,
-                alternative_cost_percentile=90,  # default value
+                # alternative_cost_percentile=90,  # default value
+                alternative_cost_percentile=0.01,
             )
         elif tracking_method == "spatial_laptrack":
+            # print("spatial laptrack")
             lt = SpatialLapTrack(
                 spatial_coord_slice=slice(0,2),
                 spatial_metric="euclidean",
@@ -626,7 +636,9 @@ class MidBodyDetectionFactory:
                 gap_closing_max_frame_count=3,
                 splitting_cost_cutoff=False,
                 merging_cost_cutoff=False,
+                # alternative_cost_percentile=1,
                 alternative_cost_percentile=100,  # modified value
+                # alternative_cost_percentile=90, # default value
             )
         else:
             raise RuntimeError(f"Invalid tracking method '{tracking_method}'")

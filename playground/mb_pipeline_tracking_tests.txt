@@ -1,0 +1,72 @@
+We are testing Current Laplacian Of Gaussian (cur_log).
+"cur_log": (blob_log, {"min_sigma": 5, "max_sigma": 10, "num_sigma": 5, "threshold": 0.1}),
+
+With Initial Spatial LapTrack Settings:
+- weight_mklp_intensity_factor=5.0
+- weight_sir_intensity_factor=1.50
+- mid_body_linking_max_distance=100
+- gap_closing_max_frame_count=3
+- alternative_cost_percentile=100
+
+Test 1: example_video_mitosis_0_0_to_4.tiff
+* MB lost frame 40-41, found back on 42
+* with only spatial tracking: same result
+* with much bigger (x10) max distance: solves it.
+   F39->40 (214,215)->(303,295) = 119.67
+   F40->41 (303,295)->(373,162) = 150.3
+>> mid_body_linking_max_distance to 175 <<
+
+Test 2: s1_siLuci-1_mitosis_14_158_to_227.tiff
+* Green jumps between F10-11
+* with only spatial tracking: same results
+@ Issue here is that detection lost most points
+* distance: (277,63)->(323,193) = 134
+* intensity: origine [174]->156; dest 150->[173]
+@ MKLP Intensity of target is nearly the same as the one from source.
+  Should we question the hypothesis of conservation of intensities ?
+>> No change. To improve, we will need a better detection <<
+(if we have a better detection, we have keep the point longer and can
+decrease the weight given to intensity, preventing the jump)
+? What if we used SIR Tubilin ?
+* Trying to disable MKLP: no results
+* intensity: SIR origine [166]->173; dest 328->[390];
+* Experimentation: disable MKLP AND distance, only keep SIR: no results
+* increase a lot SIR weigth (x10): no results
+>> No Change for now. Another way to improve may be to change Spatial Laptrack
+and add a kind of composite cost cutoff OR a cutoff per parameter ? <<
+
+
+Test 3: s2_siLuci-1_mitosis_15_67_to_228,211.tiff
+* Everything works as expected. Detection not perfect but should be enough 
+>> No Change <<
+
+
+Test 4: s3_siLuci-1_mitosis_17_170_to_195.tiff
+* Everything works as expected. Some detection FP but there are OK 
+>> No Change <<
+
+
+Test 5: s4_siLuci-1_mitosis_24_128_to_135.tiff
+* Works as expected 
+>> No Change <<
+
+
+Test 6: s5_siLuci-1_mitosis_27_22_to_93,87.tiff
+* Works as expected 
+>> No Change <<
+
+
+Test 7: s6_siLuci-1_mitosis_28_50_to_91.tiff
+* MB jumps between F5-6
+* with only spatial tracking: no results
+* lowering alternative percentile drastically: no effect...
+
+
+==========
+alternative_cost_percentile does nothing on Spatial LapTrack, while 
+it does somethoing on LapTrack:
+it allows new points to be created if the distance would be too high
+(higher than alternative_cost_percentile of the distribution)
+
+It seams that there is a bug somewhere in Spatial LapTrack that prevents
+it from working
