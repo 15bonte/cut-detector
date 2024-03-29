@@ -95,7 +95,9 @@ def update_source_choice_dropdown(value):
     try:
         children = ["Directory Found, you can choose the source file"]
         color = "success"
-        return [f.path for f in os.scandir(value) if f.is_file()], children, color
+        l = [f.path for f in os.scandir(value) if f.is_file()]
+        l.sort()
+        return l, children, color
     except FileNotFoundError:
         children = [f"Directory {value} not found"]
         color = "danger"
