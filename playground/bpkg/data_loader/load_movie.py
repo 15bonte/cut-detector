@@ -1,11 +1,12 @@
 import numpy as np
 
+from numpy.typing import NDArray
 from typing import Literal
 from cnn_framework.utils.readers.tiff_reader import TiffReader
 
 MOVIE_KIND_LITERAL = Literal["4c", "3c"]
 
-def load_movie(path: str, kind: MOVIE_KIND_LITERAL) -> np.array:
+def load_movie(path: str, kind: MOVIE_KIND_LITERAL) -> NDArray:
     print(f"loading {path} | {kind}")
     if kind == "4c":
         return load_std_movie(path)
