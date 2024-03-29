@@ -484,11 +484,14 @@ class MidBodyDetectionFactory:
                 spots1[i].child_spot = spots2[j]
                 spots2[j].parent_spot = spots1[i]
 
+    TRACKING_MODE = Literal["laptrack", "spatial_laptrack"]
+    
     def generate_tracks_from_spots(
         self, 
         spots_candidates: dict[int, list[MidBodySpot]],
-        tracking_method: Literal["laptrack", "spatial_laptrack"] = "laptrack",
+        tracking_method: TRACKING_MODE = "laptrack",
         show_tracking: bool = False,
+        use_custom_laptrack: LapTrack | None = None
     ) -> list[MidBodyTrack]:
         """
         Use spots linked together to generate tracks.
@@ -524,13 +527,19 @@ class MidBodyDetectionFactory:
 
         # return tracks
 
-        return self._gen_laptrack_tracking(spots_candidates, tracking_method, show_tracking)
+        return self._gen_laptrack_tracking(
+            spots_candidates, 
+            tracking_method, 
+            show_tracking,
+            use_custom_laptrack
+        )
 
     def _gen_laptrack_tracking(
         self, 
         spots_candidates: dict[int, list[MidBodySpot]],
-        tracking_method: Literal["laptrack", "spatial_laptrack"] = "laptrack",
-        show_tracking: bool = False
+        tracking_method: TRACKING_MODE = "laptrack",
+        show_tracking: bool = False,
+        use_custom_laptrack: LapTrack | None = None
     ) -> list[MidBodyTrack]:
         
         spots_df = pd.DataFrame(
@@ -642,6 +651,10 @@ class MidBodyDetectionFactory:
             )
         else:
             raise RuntimeError(f"Invalid tracking method '{tracking_method}'")
+        
+        if use_custom_laptrack is not None:
+            print("=== WARNING: overriding LapTrack with a custom LapTrack ===")
+            lt = use_custom_laptrack
 
         # laptrack execution
         # lt = LapTrack(
