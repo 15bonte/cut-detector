@@ -33,6 +33,10 @@ def main():
             from .lt_debug_wrapper import start_wrapped_lt_run
             start_wrapped_lt_run()
 
+        elif cmd == "w":
+            from .w import run_app
+            run_app()
+
         else:
             raise RuntimeError(f"Unknown command {cmd}")
 
