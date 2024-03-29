@@ -28,6 +28,11 @@ def main():
             from .visualizer import run_app
             run_app(flags)
 
+        elif cmd == "lt-debug":
+            print("starting wrapper lt debug run")
+            from .lt_debug_wrapper import start_wrapped_lt_run
+            start_wrapped_lt_run()
+
         else:
             raise RuntimeError(f"Unknown command {cmd}")
 
@@ -43,6 +48,7 @@ def print_help():
     print("")
     print("available CMDs:")
     print("visualize | v: The detection visualizer")
+    print("lt-debug: laptrack debug")
 
 if __name__ == "__main__":
     main()
