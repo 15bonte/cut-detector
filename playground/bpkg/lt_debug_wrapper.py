@@ -6,8 +6,9 @@ from scipy.spatial import distance
 from .laptrack_debug import start_debug_run, SpatialLaptrackDebug
 
 SOURCE_DIR = "./src/cut_detector/data/mid_bodies_movies_test"
+LOG_OUT_DIR = "./src/cut_detector/data/mid_bodies"
 OUT_DIR = "./src/cut_detector/data/mid_bodies"
-# OUT_DIR = None
+OUT_DIR = None
 
 SOURCE_CHOICE = 0
 SOURCE_LIST = {
@@ -107,6 +108,7 @@ def start_wrapped_lt_run():
         alternative_cost_percentile=100,
 
         show_predict_link_debug=True,
+        show_gap_closing_debug=True,
     )
 
     # if isinstance(LOG_FILE, str):
@@ -135,7 +137,7 @@ def start_wrapped_lt_run():
     #         out_dir=OUT_DIR
     #     )
     if isinstance(LOG_FILE, str):
-        log_fp = join(OUT_DIR, LOG_FILE)
+        log_fp = join(LOG_OUT_DIR, LOG_FILE)
     else:
         log_fp = None
     start_debug_run(

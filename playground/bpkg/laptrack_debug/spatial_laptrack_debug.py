@@ -16,7 +16,7 @@ from functools import partial
 from laptrack._typing_utils import NumArray, Int, EdgeType
 from laptrack._coo_matrix_builder import coo_matrix_builder
 from laptrack._optimization import lap_optimization
-from laptrack._cost_matrix import build_frame_cost_matrix
+from laptrack._cost_matrix import build_frame_cost_matrix, build_segment_cost_matrix
 
 class SpatialLaptrackDebug(LapTrack):
     """ SpatialLapTrack is a modification of LapTrack where
@@ -46,6 +46,11 @@ class SpatialLaptrackDebug(LapTrack):
     show_predict_link_debug: bool = Field(
         False,
         description="Enables the debugging on the 1st part of the tracking"
+    )
+
+    show_gap_closing_debug: bool = Field(
+        False,
+        description="Enables the debugging on the 2nd part of the tracking"
     )
 
     # show_coords: bool = Field(
@@ -114,6 +119,9 @@ class SpatialLaptrackDebug(LapTrack):
         edges_list = list(segment_connected_edges) + list(split_merge_edges)
         if self.show_predict_link_debug:
             print("edges_list:", edges_list)
+
+        if self.show_predict_link_debug:
+            print("@KEY_FRAME_LINK@")
 
 
         def _predict_link_single_frame(
@@ -271,7 +279,17 @@ class SpatialLaptrackDebug(LapTrack):
         """
         if self.gap_closing_cost_cutoff:
 
+            if self.show_gap_closing_debug:
+                print("@KEY_GAP_CLOSING@")
+
+                print("\n\n--- Starting Gap Closing ---")
+                print("\nsegments_df:\n", segments_df)
+
             def to_gap_closing_candidates(row, segments_df):
+
+                if self.show_gap_closing_debug:
+                    print("\nGap closing row:\n", row)
+
                 # if the index is in force_end_indices, do not add to gap closing candidates
                 if (row["last_frame"], row["last_index"]) in force_end_nodes:
                     return [], []
@@ -280,12 +298,25 @@ class SpatialLaptrackDebug(LapTrack):
                 target_spatial_coord = target_coord[self.spatial_coord_slice]
                 frame_diff = segments_df["first_frame"] - row["last_frame"]
 
+                if self.show_gap_closing_debug:
+                    print(
+                        "\nTarget coord:", target_coord, 
+                        "Target spatial coord:", target_spatial_coord,
+                        f"frame_diff (max:{self.gap_closing_max_frame_count}):", frame_diff,
+                        sep="\n",
+                    )
+
                 # only take the elements that are within the frame difference range.
                 # segments in df is later than the candidate segment (row)
                 indices = (1 <= frame_diff) & (
                     frame_diff <= self.gap_closing_max_frame_count
                 )
                 df = segments_df[indices]
+
+                if self.show_gap_closing_debug:
+                    print("\nValid segments_df indicies (valid: frame_diff>=1 \
+                          and frame_diff <= frame_cutoff):\n{indices}")
+                    print("\ndf:\n{df}")
                 force_start = df.apply(
                     lambda row: (row["first_frame"], row["first_index"])
                     in force_start_nodes,
@@ -305,6 +336,9 @@ class SpatialLaptrackDebug(LapTrack):
                     )
                     assert target_dist_matrix.shape[0] == 1
 
+                    if self.show_gap_closing_debug:
+                        print("\nTarget dist matrix:\n", target_dist_matrix)
+
                     # spatial distance
                     spatial_target_dist_matrix = cdist(
                         [target_spatial_coord],
@@ -314,10 +348,24 @@ class SpatialLaptrackDebug(LapTrack):
                     )
                     assert spatial_target_dist_matrix.shape[0] == 1
 
+                    if self.show_gap_closing_debug:
+                        print("\nTarget spatial matrix:\n", spatial_target_dist_matrix)
+                        print("Gap Closing cuttoff:", self.gap_closing_cost_cutoff)
+
                     indices2 = np.where(
                         # target_dist_matrix[0] < self.gap_closing_cost_cutoff
                         spatial_target_dist_matrix[0] < self.gap_closing_cost_cutoff
                     )[0]
+
+                    if self.show_gap_closing_debug:
+                        print("Indicies2 (spatial_dist) below cutoff:\n", indices2)
+
+                        print(
+                            "\nReturning:",
+                            "df values at indices2:", df.index[indices2].values,
+                            "'target_dist_matrix[0][indices2]:'", target_dist_matrix[0][indices2]
+                        )
+
                     return (
                         df.index[indices2].values,
                         target_dist_matrix[0][indices2],
@@ -329,6 +377,8 @@ class SpatialLaptrackDebug(LapTrack):
                 segments_df["gap_closing_candidates"] = segments_df.apply(
                     partial(to_gap_closing_candidates, segments_df=segments_df), axis=1
                 )
+                if self.show_gap_closing_debug:
+                    print("\nObtained modified segments_df:\n", segments_df)
             elif self.parallel_backend == ParallelBackend.ray:
                 try:
                     import ray # type: ignore
@@ -360,5 +410,115 @@ class SpatialLaptrackDebug(LapTrack):
                 (int(cast(int, ind)), candidate_inds)
             ] = candidate_costs
 
+        if self.show_gap_closing_debug:
+            print("@KEY_GAP_CLOSING_DIST_MAT@")
+            print("\nGap Closing dist matrix (dense):\n", gap_closing_dist_matrix.to_coo_matrix().todense())
+
         return segments_df, gap_closing_dist_matrix
+    
+
+
+
+    def _link_gap_split_merge_from_matrix(
+        self,
+        segments_df, # for resolution
+        track_tree, # inout return
+        gap_closing_dist_matrix, # << The one we are interested in
+        splitting_dist_matrix, # probably empty
+        merging_dist_matrix, # probably empty
+        splitting_all_candidates, # probably empty
+        merging_all_candidates, # probably empty
+    ):
+        if self.show_gap_closing_debug:
+            print("@KEY_FRAME_GSM_MATRIX@")
+            print(
+                "\n--- LinkGapSplitMerge other parameters ---"
+                "splitting dist matrix:", splitting_dist_matrix.to_coo_matrix().todense(),
+                "merging dist matrix", merging_dist_matrix.to_coo_matrix().todense(),
+                "splitting_all_candidates", splitting_all_candidates,
+                "merging_all_candidates", merging_all_candidates,
+                sep="\n"
+            )
+
+        cost_matrix = build_segment_cost_matrix(
+            gap_closing_dist_matrix,
+            splitting_dist_matrix,
+            merging_dist_matrix,
+            self.segment_start_cost,
+            self.segment_end_cost,
+            self.no_splitting_cost,
+            self.no_merging_cost,
+            self.alternative_cost_factor,
+            self.alternative_cost_percentile,
+            self.alternative_cost_percentile_interpolation,
+        )
+
+        if self.show_gap_closing_debug:
+            print("\nGapSplitMerge Cost Matrix:", cost_matrix, sep="\n")
+            old_options = np.get_printoptions()
+            np.set_printoptions(linewidth=np.inf)
+            print("\nSame but in dense mode:", cost_matrix.todense(), sep="\n")
+            np.set_printoptions(**old_options)
+
+        if not cost_matrix is None:
+            # FIXME connected_edges_list
+
+            xs, ys = lap_optimization(cost_matrix)
+            if self.show_gap_closing_debug:
+                print(f"\nLap Optimized:\nxs: {xs}\nys: {ys}")
+
+            M = gap_closing_dist_matrix.shape[0]
+            N1 = splitting_dist_matrix.shape[1]
+            N2 = merging_dist_matrix.shape[1]
+
+            if self.show_gap_closing_debug:
+                print(f"\nM:{M}\nN1:{N1}\nN2:{N2}")
+
+                print("col_ind Thresholds:")
+                print(f"idx < M({M}): Gap Closing")
+                print(f"M({M}) <= idx < M+N2({M+N2}): Merging")
+                print(f"M({M}) <= idx < M+N1({M+N1}): Splitting")
+                print(f"idx >= max(M+N1, M+N2)({max(M+N1, M+N2)}): Dropped")
+
+                print(f"\nReminder: segments_df:\n{segments_df}")
+
+            for ind, row in segments_df.iterrows():
+                col_ind = xs[ind]
+                if self.show_gap_closing_debug:
+                    print(f"\n-- row --\n{row}\n")
+                    print("-> col_ind (xs[ind]):", col_ind)
+                first_frame_index = (row["first_frame"], row["first_index"])
+                last_frame_index = (row["last_frame"], row["last_index"])
+                printed = False
+                if col_ind < M:
+                    target_frame_index = tuple(
+                        segments_df.loc[col_ind, ["first_frame", "first_index"]]
+                    )
+                    track_tree.add_edge(last_frame_index, target_frame_index)
+                    print(f"    > Gap Closing: last frame idx:{last_frame_index} target frame idx:{target_frame_index}")
+                    printed = True
+                elif col_ind < M + N2:
+                    print("    > Merging")
+                    track_tree.add_edge(
+                        last_frame_index,
+                        tuple(merging_all_candidates[col_ind - M]),
+                    )
+                    printed = True
+
+                row_ind = ys[ind]
+                if M <= row_ind and row_ind < M + N1:
+                    print("    > Splitting")
+                    track_tree.add_edge(
+                        first_frame_index,
+                        tuple(splitting_all_candidates[row_ind - M]),
+                    )
+                    printed = True
+
+                if not printed:
+                    print("    > Dropped")
+
+        if self.show_predict_link_debug or self.show_gap_closing_debug:
+            print("\n\n\n----- LapTrack Done -----\n\n\n\n")
+
+        return track_tree
 
