@@ -373,7 +373,7 @@ class MitosisTrack:
 
         for absolute_frame, spot in self.mid_body_spots.items():
             # Create 1 circle around spot position
-            square_size = 2
+            square_size = 10
             spots_video[
                 absolute_frame - self.min_frame,
                 spot.y - square_size : spot.y + square_size,

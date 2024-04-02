@@ -344,8 +344,37 @@ class ResultsSavingFactory:
 
     def generate_napari_tracking_mask(
         self,
-        mitosis_tracks: list[MitosisTrack],
+        mitosis_tracks: list[MitosisTrack], video
     ) -> np.ndarray:
         """
         To be written.
         """
+
+        # Video parameters:
+        nbframes, height, width, _ = video.shape
+        
+        # Colors list
+        colors = np.array([[np.random.randint(0,255), np.random.randint(0,255), np.random.randint(0,255)] for i in range(len(mitosis_tracks))], dtype=np.uint8)
+
+        # Iterate over mitosis_tracks
+        mask = np.zeros((nbframes,height,width,3), dtype=np.uint8)
+        print("generate mask")
+        for i,mitosis_track in enumerate(mitosis_tracks):
+            _, mask_movie = mitosis_track.generate_video_movie(video)
+            
+            cell_indexes = np.where(mask_movie == 1)
+
+            mid_body = np.where(mask_movie == 2)
+            
+            mask_movie = np.stack([mask_movie,mask_movie,mask_movie],axis=-1)
+            
+            mask_movie[cell_indexes] = colors[i]
+            mask_movie[mid_body] = [255, 0,0]
+            
+            # Add mask_movie to viewer
+
+            initial_mask= mask[mitosis_track.min_frame:mitosis_track.max_frame+1, mitosis_track.position.min_y:mitosis_track.position.max_y, mitosis_track.position.min_x:mitosis_track.position.max_x,:]
+        
+            mask[mitosis_track.min_frame:mitosis_track.max_frame+1, mitosis_track.position.min_y:mitosis_track.position.max_y, mitosis_track.position.min_x:mitosis_track.position.max_x,:] = np.maximum(mask_movie, initial_mask)
+        
+        return mask

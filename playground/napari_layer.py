@@ -30,36 +30,19 @@ def main(
             mitosis_track: MitosisTrack = pickle.load(f) # sauvegarder une instance de classe et la rechercher après
             mitosis_track.adapt_deprecated_attributes()
         mitosis_tracks.append(mitosis_track)
-
-    # Colors list
-    colors = np.array([[np.random.randint(0,255), np.random.randint(0,255), np.random.randint(0,255)] for i in range(len(mitosis_tracks))], dtype=np.uint8)
-
-    # Iterate over mitosis_tracks
-    mask = np.zeros((nbframes,height,width,3), dtype=np.uint8)
-    print("generate mask")
-    for i,mitosis_track in enumerate(mitosis_tracks):
-        _, mask_movie = mitosis_track.generate_video_movie(video)
-        
-        cell_indexes = np.where(mask_movie == 1)
-        
-        mask_movie = np.stack([mask_movie,mask_movie,mask_movie],axis=-1)
-        
-        mask_movie[cell_indexes] = colors[i]
-        
-        # Add mask_movie to viewer
-        mask[mitosis_track.min_frame:mitosis_track.max_frame+1, mitosis_track.position.min_y:mitosis_track.position.max_y, mitosis_track.position.min_x:mitosis_track.position.max_x,:] = mask_movie
+  
+    # TODO: move everything to this function:
+    mask= ResultsSavingFactory().generate_napari_tracking_mask(mitosis_tracks, video)
     
     viewer.add_image(mask, name="masks", rgb=True, opacity=0.4)
-
-    # Display the Napari viewer
+    
+     # Display the Napari viewer
     napari.run()
 
-    # TODO: move everything to this function:
-    ResultsSavingFactory().generate_napari_tracking_mask()
 
 
 if __name__ == "__main__":
     main(
-        image_path = r"C:\Users\gwenaelle\git\cut-detector",
-        mitoses_path = r"C:\Users\gwenaelle\git\cut-detector\mitoses"
+        image_path = r"C:\Users\camca\Documents\video_exemple",
+        mitoses_path = r"C:\Users\camca\Documents\video_exemple\mitoses"
     )
