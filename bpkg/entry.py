@@ -87,7 +87,7 @@ def run_bpkg():
         print(BPKG_HELP)
     else:
         cmd = sys.argv[1]
-        fn = FLAG_TABLE.get(sys.argv[1], None)
+        fn = FLAG_TABLE.get(cmd, None)
         if fn is None:
             print(f"Unknown command {cmd}, see help.")
         else:
