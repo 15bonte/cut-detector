@@ -87,8 +87,13 @@ venv/
 src/cut_detector/models/segmentation_model
 src/cut_detector/models/hmm_bridges_parameters.npz
 src/cut_detector/models/hmm_metaphase_parameters.npz
-src/cut_detector/models/metaphase_cnn/
-src/cut_detector/models/svc_bridges/
+
+src/cut_detector/models/metaphase_cnn*
+src/cut_detector/models/svc_bridges*
+src/cut_detector/models/hmm*
+src/cut_detector/models/segmentation*
+src/cut_detector/models/bridges_mt_cnn*
+
 
 # downloaded data
 src/cut_detector/data/mitoses/
@@ -100,3 +105,4 @@ src/cut_detector/data/mitosis_movies/
 src/cut_detector/data/mid_bodies/
 src/cut_detector/data/segmentation_results/
 src/cut_detector/data/spots/
+src/cut_detector/data/annotations/

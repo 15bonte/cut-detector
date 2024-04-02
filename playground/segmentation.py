@@ -15,7 +15,9 @@ from cut_detector.factories.segmentation_tracking_factory import (
 
 def main(
     image_path: Optional[str] = get_data_path("videos"),
-    model_path: Optional[str] = get_model_path("segmentation_model"),
+    model_path: Optional[str] = os.path.join(
+        get_model_path("segmentation"), "segmentation_model"
+    ),
     diameter=0,  # 0 means using segmentation model saved value
     channel_to_segment=3,  # index starts at 1
     nucleus_channel=0,  # 0 means no nucleus channel

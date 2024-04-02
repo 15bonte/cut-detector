@@ -1,19 +1,19 @@
+from __future__ import annotations
 import numpy as np
 
+from .track import Track
 from .mid_body_spot import MidBodySpot
 
 
-class MidBodyTrack:
+class MidBodyTrack(Track[MidBodySpot]):
     """
     Mid-body candidate track
     """
 
-    def __init__(self, track_id: int):
-        self.track_id = track_id
-        self.spots: dict[int, MidBodySpot] = {}
-        self.length = 0
-
     def add_spot(self, spot: MidBodySpot) -> None:
+        """
+        Add spot to track.
+        """
         self.spots[spot.frame] = spot
         spot.track_id = self.track_id
         self.length += 1
@@ -32,8 +32,9 @@ class MidBodyTrack:
         for frame, position in expected_positions.items():
             if frame not in self.spots:
                 continue
+            spot = self.spots[frame]
             distances.append(
-                np.linalg.norm(np.array(self.spots[frame].position) - np.array(position))
+                np.linalg.norm(spot.get_position() - np.array(position))
             )
         # If there are no frames in common, for sure track is not the right one
         if len(distances) == 0:
@@ -42,3 +43,12 @@ class MidBodyTrack:
         if mean_distance > max_distance:
             return np.inf
         return mean_distance
+
+    @staticmethod
+    def generate_tracks_from_spots(
+        spots: dict[int, list[MidBodySpot]],
+    ) -> list[MidBodyTrack]:
+        """
+        Generate tracks from spots.
+        """
+        raise NotImplementedError

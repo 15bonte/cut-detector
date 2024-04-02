@@ -2,40 +2,24 @@ import json
 import os
 import numpy as np
 import xmltodict
-import torch
-from torch.utils.data import DataLoader
 
-from cnn_framework.utils.model_managers.cnn_model_manager import (
-    CnnModelManager,
-)
-from cnn_framework.utils.data_managers.default_data_manager import (
-    DefaultDataManager,
-)
-from cnn_framework.utils.metrics.classification_accuracy import (
-    ClassificationAccuracy,
-)
-from cnn_framework.utils.data_loader_generators.data_loader_generator import (
-    collate_dataset_output,
-)
-from cnn_framework.utils.enum import PredictMode
-
-from ..utils.mitosis_track import MitosisTrack
+from ..utils.cell_track import CellTrack
 from ..utils.trackmate_spot import TrackMateSpot
+from ..utils.tools import perform_cnn_inference
+from ..utils.mitosis_track import MitosisTrack
+from ..utils.cell_spot import CellSpot
 from ..utils.trackmate_track import TrackMateTrack
 from ..utils.trackmate_frame_spots import TrackMateFrameSpots
 from ..utils.hidden_markov_models import HiddenMarkovModel
-from ..utils.cell_division_detection.metaphase_cnn_data_set import (
-    MetaphaseCnnDataSet,
-)
-from ..utils.cell_division_detection.metaphase_cnn import MetaphaseCnn
 from ..utils.cell_division_detection.metaphase_cnn_model_params import (
     MetaphaseCnnModelParams,
 )
 
 
-def get_track_from_id(
-    tracks: list[TrackMateTrack], track_id: int
-) -> TrackMateTrack:
+def get_track_from_id(tracks: list[CellTrack], track_id: int) -> CellTrack:
+    """
+    Used to get track from its id.
+    """
     for track in tracks:
         if track.track_id == track_id:
             return track
@@ -64,7 +48,7 @@ class TracksMergingFactory:
 
     def read_trackmate_xml(
         self, xml_model_path: str, raw_video_shape: np.ndarray
-    ) -> None:
+    ) -> tuple[list[TrackMateTrack], list[TrackMateSpot]]:
         """
         Read useful information from xml file.
         """
@@ -87,40 +71,46 @@ class TracksMergingFactory:
                 ],
             )
         )
-        raw_spots = [
+        raw_frames_spots = [
             TrackMateFrameSpots(spots, raw_video_shape)
             for spots in doc["TrackMate"]["Model"]["AllSpots"]["SpotsInFrame"]
         ]
+        # Merge all frames - to get rid of TrackMateFrameSpots
+        spots = [
+            spot
+            for raw_frame_spots in raw_frames_spots
+            for spot in raw_frame_spots.spots
+        ]
 
-        return trackmate_tracks, raw_spots
+        return trackmate_tracks, spots
 
     def get_tracks_to_merge(
-        self, raw_tracks: list[TrackMateTrack]
+        self, raw_tracks: list[CellTrack]
     ) -> list[MitosisTrack]:
         """
         Plug tracks occurring at frame>0 to closest metaphase.
         """
-        ordered_tracks = sorted(raw_tracks, key=lambda x: x.track_start)
+        ordered_tracks = sorted(raw_tracks, key=lambda x: x.start)
         mitosis_tracks: list[MitosisTrack] = []
 
         # Loop through all tracks beginning at frame > 0 and try to plug them to the previous metaphase
         for track in reversed(ordered_tracks):
             # Break when reaching tracking starting at first frame, as they are ordered
-            track_first_frame = min(track.track_spots.keys())
+            track_first_frame = min(track.spots.keys())
             if track_first_frame == 0:
                 break
 
             # Get all spots at same frame
             contemporary_spots = [
-                raw_track.track_spots[track_first_frame]
+                raw_track.spots[track_first_frame]
                 for raw_track in raw_tracks
-                if track_first_frame in raw_track.track_spots
+                if track_first_frame in raw_track.spots
                 and raw_track.track_id != track.track_id
             ]
 
             # Keep only stuck spots
-            first_spot = track.track_spots[track_first_frame]
-            stuck_spots: list[TrackMateSpot] = list(
+            first_spot = track.spots[track_first_frame]
+            stuck_spots: list[CellSpot] = list(
                 filter(
                     lambda x: x.is_stuck_to(
                         first_spot, self.max_spot_distance_for_split
@@ -209,8 +199,8 @@ class TracksMergingFactory:
 
     def pre_process_spots(
         self,
-        trackmate_tracks: list[TrackMateTrack],
-        raw_spots: list[TrackMateFrameSpots],
+        trackmate_tracks: list[CellTrack],
+        raw_spots: list[CellSpot],
         raw_video: np.array,
         metaphase_model_path: str,
         hmm_metaphase_parameters_file: str,
@@ -271,75 +261,36 @@ class TracksMergingFactory:
         metaphase_model_path: str, nuclei_crops: list[np.array]
     ) -> list[int]:
         """
-        Run CNN model to predict metaphase spots
+        Run CNN model to predict metaphase spots.
 
         Parameters
         ----------
-        metaphase_model: CNN model path
-        nuclei_crops: CYX
+        metaphase_model : str
+            CNN model path
+        nuclei_crops :  list[np.array]
+            list[CYX]
 
         Returns
         -------
-        predictions: [class predicted]
+        predictions : list[int]
+            predicted classes
         """
 
-        # Metaphase model parameters
-        model_parameters = MetaphaseCnnModelParams()
-        # Modify parameters for training
-        model_parameters.train_ratio = 0
-        model_parameters.val_ratio = 0
-        model_parameters.test_ratio = 1
-
-        # Model definition
-        # Load pretrained model
-        model = MetaphaseCnn(nb_classes=model_parameters.nb_classes)
-
-        map_location = None
-        if not torch.cuda.is_available():
-            map_location = torch.device("cpu")
-            print("No GPU found, using CPU.")
-        model.load_state_dict(
-            torch.load(
-                metaphase_model_path,
-                map_location=map_location,
-            )
+        predictions = perform_cnn_inference(
+            model_path=metaphase_model_path,
+            images=nuclei_crops,
+            cnn_model_params=MetaphaseCnnModelParams,
         )
-
-        # Test (no sampler to keep order)
-        dataset_test = MetaphaseCnnDataSet(
-            nuclei_crops,
-            is_train=False,
-            names=[f"{idx}.ext" for idx in range(len(nuclei_crops))],
-            data_manager=DefaultDataManager(""),
-            params=model_parameters,
-        )
-        test_dl = DataLoader(
-            dataset_test,
-            batch_size=128,
-            collate_fn=collate_dataset_output,
-        )
-
-        manager = CnnModelManager(
-            model, model_parameters, ClassificationAccuracy
-        )
-
-        predictions = manager.predict(
-            test_dl,
-            predict_mode=PredictMode.GetPrediction,
-            nb_images_to_save=0,
-        )  # careful, this is scores and not probabilities
-        predictions = [int(np.argmax(p)) for p in predictions]
-
         return predictions
 
     @staticmethod
     def update_predictions_file(
-        tracks: list[TrackMateTrack], predictions_file: str, video_name: str
+        tracks: list[CellTrack], predictions_file: str, video_name: str
     ) -> None:
         """
         Parameters
         ----------
-        tracks: [TrackMateTrack]
+        tracks: [CellTrack]
         predictions_file: str
         video_name: str
         """
@@ -356,8 +307,7 @@ class TracksMergingFactory:
         # Retrieve predictions
         predictions = {
             int(track.track_id): [
-                int(spot.predicted_phase)
-                for spot in track.track_spots.values()
+                int(spot.predicted_phase) for spot in track.spots.values()
             ]
             for track in tracks
         }

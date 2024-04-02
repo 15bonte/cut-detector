@@ -3,11 +3,13 @@ import pickle
 from typing import Optional
 
 from cut_detector.data.tools import get_data_path
+from cut_detector.utils.cell_spot import CellSpot
 from cut_detector.utils.trackmate_track import TrackMateTrack
 from cut_detector.utils.trackmate_spot import TrackMateSpot
 
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.spatial import ConvexHull
 
 def load_tracks_and_spots(
     trackmate_tracks_path: str, spots_path: str
@@ -18,7 +20,9 @@ def load_tracks_and_spots(
     trackmate_tracks: list[TrackMateTrack] = []
     for track_file in os.listdir(trackmate_tracks_path):
         with open(os.path.join(trackmate_tracks_path, track_file), "rb") as f:
-            trackmate_tracks.append(pickle.load(f))
+            trackmate_track: TrackMateTrack = pickle.load(f)
+            trackmate_track.adapt_deprecated_attributes()
+            trackmate_tracks.append(trackmate_track)
 
     spots: list[TrackMateSpot] = []
     for spot_file in os.listdir(spots_path):
@@ -42,7 +46,22 @@ def main(
     # Load Cellpose results
     with open(segmentation_results_path, "rb") as f:
         cellpose_results = pickle.load(f)
+    plt.figure()
+    plt.imshow(cellpose_results[0])
+    #plt.show()
+    plt.close()
+    
+    max = np.max(cellpose_results[0])
+    for i in range(max):
+           A = np.where(cellpose_results[0] == i)
+           Sx = np.sum(A[0])
+           Sy = np.sum(A[1])
+           mx=Sx/len(A[0])
+           my=Sy/len(A[1])
 
+
+
+            
     # TODO: create spots from Cellpose results
     # TODO: perform tracking using laptrack
 
@@ -67,40 +86,26 @@ def main(
     
     for s in trackmate_spots:
         if s.frame == frame:
-            list = s.spot_points
-            for i in range(len(list)):
-                x.append(list[i][0])
-                y.append(600 - list[i][1])
-
-    def barycenters(frame_number):
-        b = []
-        max = np.max(cellpose_results[0])
-        for i in range(1,max+1):
-            A = np.where(cellpose_results[frame_number]==i)
-            l = len(x)
-            if l == 0:
-                break
-            X = np.sum(A[0])
-            Y = np.sum(A[1])
-            b.append([X/len(A[0]),Y/len(A[1])])
-        return b
-    
-    b = barycenters(frame)
-    x_b = []
-    y_b = []
-    for i in range(len(b)):
-        y_b.append(b[i][0])
-        x_b.append(b[i][1])
-    plt.figure()
+            point_list = s.spot_points
+            for i in range(len(point_list)):
+                x.append(point_list[i][0])
+                y.append(600 - point_list[i][1])
     plt.scatter(x,y)
     plt.show()
-    plt.close()
 
-    plt.figure()
-    plt.imshow(cellpose_results[frame])
-    plt.scatter(x_b,y_b)
-    plt.show()
-    plt.close()
+    # Finding barycenters of each cell
+    for i in range(1,2):
+        indices = np.where(cellpose_results[frame]==i)
+        #print(indices)
+
+    # TODO: generate CellSpot instances
+    cell_dictionary: dict[int, list[CellSpot]] = {}
+    # cell_spot = CellSpot(frame, x, y, id_number, abs_min_x, abs_max_x, abs_min_y, abs_max_y, spot_points)
+    # Spot points can be created from the cell indices
+    # hull = ConvexHull(indices)
+    # The indices of points forming the convex hull
+    # convex_hull_indices = indices[hull.vertices][:, ::-1]  # (x, y)
+
 
 if __name__ == "__main__":
     main()

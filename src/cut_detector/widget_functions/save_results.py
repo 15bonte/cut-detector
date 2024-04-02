@@ -23,8 +23,9 @@ def perform_results_saving(
     # Iterate over "bin" files in exported_mitoses_dir
     for state_path in os.listdir(exported_mitoses_dir):
         with open(os.path.join(exported_mitoses_dir, state_path), "rb") as f:
-            mitosis_track = pickle.load(f)
-        mitosis_tracks.append(mitosis_track)
+            mitosis_track: MitosisTrack = pickle.load(f)
+            mitosis_track.adapt_deprecated_attributes()
+            mitosis_tracks.append(mitosis_track)
 
     # Define lists and dictionaries to store results
     results_saving_factory = ResultsSavingFactory()
