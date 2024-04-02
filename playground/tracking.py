@@ -46,22 +46,8 @@ def main(
     # Load Cellpose results
     with open(segmentation_results_path, "rb") as f:
         cellpose_results = pickle.load(f)
-    plt.figure()
-    plt.imshow(cellpose_results[0])
-    #plt.show()
-    plt.close()
     
-    max = np.max(cellpose_results[0])
-    for i in range(max):
-           A = np.where(cellpose_results[0] == i)
-           Sx = np.sum(A[0])
-           Sy = np.sum(A[1])
-           mx=Sx/len(A[0])
-           my=Sy/len(A[1])
-
-
-
-            
+       
     # TODO: create spots from Cellpose results
     # TODO: perform tracking using laptrack
 
@@ -74,7 +60,7 @@ def main(
     frame = 0
 
     # Plot cellpose_results
-    print(cellpose_results[frame])
+    
     plt.figure()
     plt.imshow(cellpose_results[frame])
     plt.show()
@@ -83,7 +69,6 @@ def main(
     # Plot trackmate_spots of frame number "frame" and their barycenters
     y = []
     x = []
-    
     for s in trackmate_spots:
         if s.frame == frame:
             point_list = s.spot_points
@@ -94,13 +79,34 @@ def main(
     plt.show()
 
     # Finding barycenters of each cell
-    for i in range(1,2):
-        indices = np.where(cellpose_results[frame]==i)
-        #print(indices)
+    def barycenters(frame):
+        max = np.max(cellpose_results[0])
+        mx=[]
+        my=[]
+        for i in range(1,max+1):
+            A = np.where(cellpose_results[0] == i)
+            Sx = np.sum(A[1])
+            Sy = np.sum(A[0])
+            mx.append(Sx/len(A[1]))
+            my.append(Sy/len(A[0]))
+        return(mx,my)
+    barycenters(frame)
+    plt.figure()
+    plt.imshow(cellpose_results[frame])
+    plt.plot(barycenters[0],barycenters[1],'o')
+    plt.show()
+    plt.close()
+
 
     # TODO: generate CellSpot instances
     cell_dictionary: dict[int, list[CellSpot]] = {}
-    # cell_spot = CellSpot(frame, x, y, id_number, abs_min_x, abs_max_x, abs_min_y, abs_max_y, spot_points)
+    for frame in range(len(cellpose_results)):
+        for id_number in range(1, np.max(cellpose_results[frame]) + 1):
+            spot_points = []
+            x,y = barycenters(frame)
+            A = np.where(cellpose_results[frame] == id_number)
+            abs_min_x, abs_max_x, abs_min_y, abs_max_y = np.abs(np.min())
+            cell_spot = CellSpot(frame, x, y, id_number, abs_min_x, abs_max_x, abs_min_y, abs_max_y, spot_points)
     # Spot points can be created from the cell indices
     # hull = ConvexHull(indices)
     # The indices of points forming the convex hull
