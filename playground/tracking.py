@@ -42,18 +42,16 @@ def main(
     # Load Cellpose results
     with open(segmentation_results_path, "rb") as f:
         cellpose_results = pickle.load(f)
-    plt.figure()
-    plt.imshow(cellpose_results[0])
-    #plt.show()
-    plt.close()
     
     max = np.max(cellpose_results[0])
-    for i in range(max):
+    mx=[]
+    my=[]
+    for i in range(1,max+1):
            A = np.where(cellpose_results[0] == i)
-           Sx = np.sum(A[0])
-           Sy = np.sum(A[1])
-           mx=Sx/len(A[0])
-           my=Sy/len(A[1])
+           Sx = np.sum(A[1])
+           Sy = np.sum(A[0])
+           mx.append(Sx/len(A[1]))
+           my.append(Sy/len(A[0]))
 
 
 
@@ -73,6 +71,7 @@ def main(
     print(cellpose_results[frame])
     plt.figure()
     plt.imshow(cellpose_results[frame])
+    plt.plot(mx,my,'o')
     plt.show()
     plt.close()
 
