@@ -19,7 +19,7 @@ OUT_DIR = "./src/cut_detector/data/mid_bodies"
 SHOULD_SAVE = True
 SHOW_TRACKING = False
 
-SOURCE_CHOICE = -1 
+SOURCE_CHOICE = 2
 SOURCE_LIST = {
     ### Positive or null indices: 4 channels as usual ###
     0: "example_video_mitosis_0_0_to_4.tiff",
@@ -40,6 +40,13 @@ SOURCE_LIST = {
 
 CANDIDATE_SELECTION = [
     "cur_log", 
+    "cur_dog",
+    "cur_doh",
+    "centered_log",
+    "mini_centered_log",
+    "off_centered_log",
+    "log2",
+    "log2_wider"
 ]
 CANDIDATES = {
     "cur_log": (blob_log, {"min_sigma": 5, "max_sigma": 10, "num_sigma": 5, "threshold": 0.1}),
