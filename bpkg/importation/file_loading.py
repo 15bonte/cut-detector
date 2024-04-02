@@ -3,7 +3,7 @@ from cnn_framework.utils.readers.tiff_reader import TiffReader
 import numpy as np
 
 
-MOVIE_FMT = Literal["c4", "c3"]
+MOVIE_FMT = Literal["4c", "3c"]
 
 
 def load_movie(path: str, fmt: MOVIE_FMT) -> np.ndarray:
