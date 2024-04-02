@@ -1,15 +1,5 @@
 import os
-from typing import Optional
-from matplotlib import pyplot as plt
 import numpy as np
-import pickle
-from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
-from scipy.signal import find_peaks
-
-from skimage.feature import graycomatrix, graycoprops
-
-from cnn_framework.utils.tools import save_tiff
 
 from ..utils.bridges_classification.bridges_mt_model_manager import (
     BridgesMtModelManager,
@@ -18,15 +8,11 @@ from ..utils.bridges_classification.bridges_mt_cnn_model_params import (
     BridgesMtCnnModelParams,
 )
 from ..utils.tools import apply_hmm, perform_cnn_inference
-from ..utils.peak import Peak
 from ..utils.bridges_classification.impossible_detection import (
     ImpossibleDetection,
 )
 from ..utils.bridges_classification.template_type import TemplateType
 from ..utils.mitosis_track import MitosisTrack
-from ..utils.bridges_classification.micro_tubules_augmentation import (
-    MicroTubulesAugmentation,
-)
 
 
 class MtCutDetectionFactory:

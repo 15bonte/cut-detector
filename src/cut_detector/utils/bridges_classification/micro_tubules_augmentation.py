@@ -1,8 +1,4 @@
-from typing import Optional
-
 import numpy as np
-
-from ..peak import Peak
 
 
 def zero_to_bottom_right(image):
@@ -70,18 +66,11 @@ class MicroTubulesAugmentation:
     Manage the augmentation of images for microtubules detection.
     """
 
-    def __init__(self, peaks: Optional[list[Peak]] = None):
-        peak_augmentations = []
-        if peaks is None:
-            peaks = []
-        for peak in peaks:
-            peak_augmentations.append(peak.enabled_augmentation())
-        self.augmentations = self.merge_augmentations(peak_augmentations)
+    def __init__(self):
+        self.augmentations = self.merge_augmentations()
 
     @classmethod
-    def merge_augmentations(
-        cls, peak_augmentations: list[dict[str, int]]
-    ) -> dict[str, int]:
+    def merge_augmentations(cls) -> dict[str, int]:
         """
         Merge values given to augmentation categories by different peaks.
         """
@@ -97,16 +86,6 @@ class MicroTubulesAugmentation:
             "bottom_left",
         ]:
             value = 0  # by default, no MT is seen
-            for peak_augmentation in peak_augmentations:  # iterate over peaks
-                if (
-                    peak_augmentation[category] == -1
-                ):  # if one peak forbids the augmentation
-                    value = None
-                    break
-                if (
-                    peak_augmentation[category] == 1
-                ):  # if at least one peak found
-                    value = 1
             if value is not None:
                 augmentations[category] = value
         return augmentations
