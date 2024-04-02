@@ -47,6 +47,11 @@ def main():
             from .detection_gt import run_bench_detection
             run_bench_detection()
 
+        elif cmd == "new-d-gt":
+            print("Starting the Detection Ground Truth app")
+            from .detection_gt.app import run_app_default
+            run_app_default()
+
         else:
             raise RuntimeError(f"Unknown command {cmd}")
 
