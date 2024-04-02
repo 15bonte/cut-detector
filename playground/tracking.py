@@ -90,7 +90,6 @@ def main(
             mx.append(Sx/len(A[1]))
             my.append(Sy/len(A[0]))
         return(mx,my)
-    barycenters(frame)
     plt.figure()
     plt.imshow(cellpose_results[frame])
     plt.plot(barycenters(frame)[0],barycenters(frame)[1],'o')
@@ -101,19 +100,21 @@ def main(
     # TODO: generate CellSpot instances
     cell_dictionary: dict[int, list[CellSpot]] = {}
     for frame in range(len(cellpose_results)):
+        L=[]
         for id_number in range(1, np.max(cellpose_results[frame]) + 1):
             x,y = barycenters(frame)
             A = np.where(cellpose_results[frame] == id_number)
-            hull = ConvexHull(A)
-            convex_hull_indices = A[hull.vertices][:, ::-1]  # (x, y)
+            B=[]
+            for i in range (len(A[0])):
+                B.append([A[1][i],A[0][i]])
+            B = np.array(B)
+            hull = ConvexHull(B)
+            convex_hull_indices = B[hull.vertices][:, ::-1]  # (x, y)
             spot_points = convex_hull_indices
-            plt.figure()
-            plt.plot(spot_points[:, 0], spot_points[:, 1], 'o')
-            plt.show()
-            plt.close()
             abs_min_x, abs_max_x, abs_min_y, abs_max_y = np.abs(np.min(A[1])), np.abs(np.max(A[1])), np.abs(np.min(A[0])), np.abs(np.max(A[0]))
-
             cell_spot = CellSpot(frame, x, y, id_number, abs_min_x, abs_max_x, abs_min_y, abs_max_y, spot_points)
+            L.append(cell_spot)
+        cell_dictionary[frame] = L
     # Spot points can be created from the cell indices
      
     # The indices of points forming the convex hull
