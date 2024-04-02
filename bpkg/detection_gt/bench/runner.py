@@ -12,7 +12,7 @@ def bench_detection_against_gt_runner():
     if stats.same_method_bench_gt:
         print("WARNING: ground truth has been generated with the same mode,")
         print("If you have not modified the file, the analysis will be biased")
-    print("min distance:", stats.min_dist)
-    print("max distance:", stats.max_dist)
-    print("avg distance:", stats.avg_dist)
+    print("min distance:", stats.min())
+    print("max distance:", stats.max())
+    print("avg distance:", stats.avg())
     print("n miss:", stats.n_miss)

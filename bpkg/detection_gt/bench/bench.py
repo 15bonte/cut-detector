@@ -39,15 +39,9 @@ def bench_detection_against_gt(
                     distances.append(best)
 
     distances = np.array(distances)
-    
-    d_min = distances.min()
-    d_max = distances.max()
-    d_mean = distances.mean()
 
     return BenchStat(
-        min_dist=d_min, 
-        max_dist=d_max, 
-        avg_dist=d_mean,
+        distances=distances,
         n_miss=n_miss,
         same_method_bench_gt=(detection_method==gt.detection_method)
     )
