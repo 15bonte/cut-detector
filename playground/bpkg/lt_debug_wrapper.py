@@ -32,26 +32,6 @@ SOURCE_LIST = {
 LOG_FILE = "log.txt"
 # LOG_FILE = None
 
-# weight_mklp_intensity_factor=5.0,
-#         weight_sir_intensity_factor=1.50,
-#         # weight_sir_intensity_factor=15,
-#         mid_body_linking_max_distance=175,
-
-# lt = SpatialLapTrack(
-#                 spatial_coord_slice=slice(0,2),
-#                 spatial_metric="euclidean",
-#                 track_dist_metric=dist_metric,
-#                 track_cost_cutoff=max_distance,
-#                 gap_closing_dist_metric=dist_metric,
-#                 gap_closing_cost_cutoff=max_distance,
-#                 gap_closing_max_frame_count=3,
-#                 splitting_cost_cutoff=False,
-#                 merging_cost_cutoff=False,
-#                 # alternative_cost_percentile=1,
-#                 alternative_cost_percentile=100,  # modified value
-#                 # alternative_cost_percentile=90, # default value
-#             )
-
 # MAX_LINKING_DISTANCE = 175
 MAX_LINKING_DISTANCE = 100
 MKLP_WEIGHT = 5.0
