@@ -24,3 +24,6 @@ def run_sandbox_project(name: str):
     elif name == "hw":
         from .hw import hello_world
         hello_world()
+    else:
+        print(f"Sandbox '{name}' does not exist")
+
