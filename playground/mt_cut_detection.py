@@ -1,9 +1,10 @@
 import os
-import numpy as np
-import pickle
 from typing import Optional
-from cnn_framework.utils.readers.tiff_reader import TiffReader
+import pickle
+import numpy as np
 from matplotlib import pyplot as plt
+
+from cnn_framework.utils.readers.tiff_reader import TiffReader
 
 from cut_detector.data.tools import get_data_path
 from cut_detector.models.tools import get_model_path
@@ -37,10 +38,14 @@ def re_organize_channels(image):
 def main(
     image_path: Optional[str] = get_data_path("videos"),
     mitosis_path: Optional[str] = get_data_path("mitoses"),
-    scaler_path: Optional[str] = get_model_path("svc_scaler"),
-    model_path: Optional[str] = get_model_path("svc_model"),
-    hmm_bridges_parameters_file: Optional[str] = get_model_path(
-        "hmm_bridges_parameters"
+    scaler_path: Optional[str] = os.path.join(
+        get_model_path("svc_bridges"), "scaler.pkl"
+    ),
+    model_path: Optional[str] = os.path.join(
+        get_model_path("svc_bridges"), "model.pkl"
+    ),
+    hmm_bridges_parameters_file: Optional[str] = os.path.join(
+        get_model_path("hmm"), "hmm_bridges_parameters.npz"
     ),
     display_svm_analysis=False,
     display_crops=False,
@@ -57,6 +62,7 @@ def main(
     video = re_organize_channels(image)  # TYXC
     with open(mitosis_path, "rb") as f:
         mitosis_track: MitosisTrack = pickle.load(f)
+        mitosis_track.adapt_deprecated_attributes()
 
     template_type = TemplateType.AVERAGE_CIRCLE
     factory = MtCutDetectionFactory(
@@ -98,7 +104,7 @@ def main(
         # Display series of crops
         for crop in results["crops"]:
             plt.figure()
-            plt.imshow(crop, cmap="gray")
+            plt.imshow(crop[0], cmap="gray")
             plt.show()
 
     if display_intensity_analysis and len(results["templates"]) > 0:
@@ -155,9 +161,9 @@ if __name__ == "__main__":
     FOLDER_MITOSIS = r"C:\Users\thoma\data\Data Nathalie\mitoses"
     FOLDER_VIDEO = r"C:\Users\thoma\data\Data Nathalie\videos"
     for mitosis_file in os.listdir(FOLDER_MITOSIS):
-        mitosis_path = os.path.join(FOLDER_MITOSIS, mitosis_file)
+        local_mitosis_path = os.path.join(FOLDER_MITOSIS, mitosis_file)
         image_name = mitosis_file.split("_mitosis")[0]
-        image_path = os.path.join(FOLDER_VIDEO, image_name + ".tif")
-        main(image_path, mitosis_path)
+        local_image_path = os.path.join(FOLDER_VIDEO, image_name + ".tif")
+        main(local_image_path, local_mitosis_path)
 
     # main()

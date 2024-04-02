@@ -3,11 +3,13 @@ import pickle
 from typing import Optional
 
 from cut_detector.data.tools import get_data_path
+from cut_detector.utils.cell_spot import CellSpot
 from cut_detector.utils.trackmate_track import TrackMateTrack
 from cut_detector.utils.trackmate_spot import TrackMateSpot
 
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.spatial import ConvexHull
 
 def load_tracks_and_spots(
     trackmate_tracks_path: str, spots_path: str
@@ -18,7 +20,9 @@ def load_tracks_and_spots(
     trackmate_tracks: list[TrackMateTrack] = []
     for track_file in os.listdir(trackmate_tracks_path):
         with open(os.path.join(trackmate_tracks_path, track_file), "rb") as f:
-            trackmate_tracks.append(pickle.load(f))
+            trackmate_track: TrackMateTrack = pickle.load(f)
+            trackmate_track.adapt_deprecated_attributes()
+            trackmate_tracks.append(trackmate_track)
 
     spots: list[TrackMateSpot] = []
     for spot_file in os.listdir(spots_path):
@@ -81,10 +85,10 @@ def main(
     
     for s in trackmate_spots:
         if s.frame == frame:
-            list = s.spot_points
-            for i in range(len(list)):
-                x.append(list[i][0])
-                y.append(600 - list[i][1])
+            point_list = s.spot_points
+            for i in range(len(point_list)):
+                x.append(point_list[i][0])
+                y.append(600 - point_list[i][1])
     plt.scatter(x,y)
     plt.show()
 
@@ -92,6 +96,14 @@ def main(
     for i in range(1,2):
         indices = np.where(cellpose_results[frame]==i)
         #print(indices)
+
+    # TODO: generate CellSpot instances
+    cell_dictionary: dict[int, list[CellSpot]] = {}
+    # cell_spot = CellSpot(frame, x, y, id_number, abs_min_x, abs_max_x, abs_min_y, abs_max_y, spot_points)
+    # Spot points can be created from the cell indices
+    # hull = ConvexHull(indices)
+    # The indices of points forming the convex hull
+    # convex_hull_indices = indices[hull.vertices][:, ::-1]  # (x, y)
 
 
 if __name__ == "__main__":

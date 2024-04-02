@@ -11,7 +11,9 @@ def perform_tracking(
     video_path: str,
     fiji_path: str,
     save_folder: str,
-    model_path: Optional[str] = get_model_path("segmentation_model"),
+    model_path: Optional[str] = os.path.join(
+        get_model_path("segmentation"), "segmentation_model"
+    ),
     fast_mode: Optional[bool] = False,
 ) -> None:
     # Create save directory if it doesn't exist
