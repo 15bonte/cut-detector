@@ -111,6 +111,3 @@ src/cut_detector/data/mid_bodies_movies_test/
 src/cut_detector/data/mid_bodies_movies_test_ppln/
 src/cut_detector/data/mb_results
 
-# Temporary, to commit everything that needs to
-# before starting the clean up
-/bpkg/
