@@ -40,6 +40,7 @@ def start_debug_run(
         run_laptrack(factory, laptrack_method, spots_candidates, show_tracking)
 
     if isinstance(out_dir, str):
+        print("saving images")
         factory.save_mid_body_tracking(
             spots_candidates, mitosis_movie, out_dir
         )

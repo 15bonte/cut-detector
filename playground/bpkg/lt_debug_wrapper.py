@@ -8,9 +8,8 @@ from .laptrack_debug import start_debug_run, SpatialLaptrackDebug
 SOURCE_DIR = "./src/cut_detector/data/mid_bodies_movies_test"
 LOG_OUT_DIR = "./src/cut_detector/data/mid_bodies"
 OUT_DIR = "./src/cut_detector/data/mid_bodies"
-OUT_DIR = None
 
-SOURCE_CHOICE = 0
+SOURCE_CHOICE = 3
 SOURCE_LIST = {
     ### Positive or null indices: 4 channels as usual ###
     0: "example_video_mitosis_0_0_to_4.tiff",
@@ -30,10 +29,8 @@ SOURCE_LIST = {
 }
 
 LOG_FILE = "log.txt"
-# LOG_FILE = None
 
-# MAX_LINKING_DISTANCE = 175
-MAX_LINKING_DISTANCE = 100
+MAX_LINKING_DISTANCE = 175
 MKLP_WEIGHT = 5.0
 SIR_WEIGHT = 1.50
 def dist_metric(c1, c2):
@@ -91,31 +88,6 @@ def start_wrapped_lt_run():
         show_gap_closing_debug=True,
     )
 
-    # if isinstance(LOG_FILE, str):
-    #     log_path = join(OUT_DIR, LOG_FILE)
-    #     print("logging to file: ", log_path)
-    #     original_stdout = sys.stdout
-    #     with open(log_path, "w") as f:
-    #         sys.stdout = f
-    #         start_debug_run(
-    #             dir=SOURCE_DIR,
-    #             filename=SOURCE_LIST[SOURCE_CHOICE],
-    #             movie_kind=movie_kind,
-    #             detection_method="lapgau",
-    #             laptrack_method=lt,
-    #             out_dir=OUT_DIR
-    #         )
-    #         sys.stdout = original_stdout
-
-    # else:
-    #     start_debug_run(
-    #         dir=SOURCE_DIR,
-    #         filename=SOURCE_LIST[SOURCE_CHOICE],
-    #         movie_kind=movie_kind,
-    #         detection_method="lapgau",
-    #         laptrack_method=lt,
-    #         out_dir=OUT_DIR
-    #     )
     if isinstance(LOG_FILE, str):
         log_fp = join(LOG_OUT_DIR, LOG_FILE)
     else:
