@@ -751,3 +751,33 @@ class MitosisTrack:
             ):
                 mid_body_spot.x = mid_body_spot.position[0]
                 mid_body_spot.y = mid_body_spot.position[1]
+
+    def get_mid_body_legend(
+        self,
+    ) -> dict[int, dict[str, Union[int, str]]]:
+        """
+        Get legend for mid-body spot.
+        """
+        mid_body_legend = {}
+        for frame, mid_body_spot in self.mid_body_spots.items():
+            # Get category
+            mid_body_category = "undefined"
+            for category, category_frame in self.key_events_frame.items():
+                if (
+                    category_frame > frame
+                ):  # make sure current step is before frame
+                    continue
+                if (
+                    mid_body_category
+                    in self.key_events_frame  # "undefined" case
+                    and self.key_events_frame[mid_body_category]
+                    > category_frame
+                ):  # make sure we are not going back
+                    continue
+                mid_body_category = category
+            mid_body_legend[frame] = {
+                "x": mid_body_spot.x,
+                "y": mid_body_spot.y,
+                "category": mid_body_category,
+            }
+        return mid_body_legend
