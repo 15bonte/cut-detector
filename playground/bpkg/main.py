@@ -37,6 +37,16 @@ def main():
             from .w import run_app
             run_app()
 
+        elif cmd == "gen-d-gt":
+            print("generating detection ground truth")
+            from .detection_gt import run_generate_ground_truth
+            run_generate_ground_truth()
+
+        elif cmd == "bench-d-gt":
+            print("benching detection against ground truth")
+            from .detection_gt import run_bench_detection
+            run_bench_detection()
+
         else:
             raise RuntimeError(f"Unknown command {cmd}")
 
@@ -51,8 +61,14 @@ def print_help():
     print("python next/main [CMD] <options...>")
     print("")
     print("available CMDs:")
-    print("visualize | v: The detection visualizer")
     print("lt-debug: laptrack debug")
+    print("gen-d-gt: generate detection ground truth (using defaults)")
+    print("bench-d-gt: bench detection against ground truth (with defaults)")
+    print("")
+    print("The following are still WIP:")
+    print("visualize | v: The detection visualizer")
+    print("w: V2 of the visualizer")
+
 
 if __name__ == "__main__":
     main()
