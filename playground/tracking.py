@@ -115,6 +115,8 @@ def main(
             cell_spot = CellSpot(frame, x, y, id_number, abs_min_x, abs_max_x, abs_min_y, abs_max_y, spot_points)
             L.append(cell_spot)
         cell_dictionary[frame] = L
+
+
     # Spot points can be created from the cell indices
      
     # The indices of points forming the convex hull
