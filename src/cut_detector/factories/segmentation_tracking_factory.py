@@ -5,7 +5,7 @@ import imagej
 import scyjava as sj
 from cellpose import models
 
-from ..constants.tracking import MAX_FRAME_GAP
+from ..utils.cell_track import CellTrack
 
 
 class SegmentationTrackingFactory:
@@ -30,7 +30,7 @@ class SegmentationTrackingFactory:
         flow_threshold=0.0,
         gap_closing_max_distance_ratio=0.5,
         linking_max_distance_ratio=1,
-        max_frame_gap=MAX_FRAME_GAP,
+        max_frame_gap=CellTrack.max_frame_gap,
     ) -> None:
         self.model_path = model_path
         self.augment = augment
@@ -155,9 +155,9 @@ class SegmentationTrackingFactory:
 
         if fast_mode:
             settings.detectorSettings["FLOW_THRESHOLD"] = self.flow_threshold
-            settings.detectorSettings[
-                "CELLPROB_THRESHOLD"
-            ] = self.cellprob_threshold
+            settings.detectorSettings["CELLPROB_THRESHOLD"] = (
+                self.cellprob_threshold
+            )
             settings.detectorSettings["AUGMENT"] = self.augment
 
         # Configure tracker
@@ -177,9 +177,9 @@ class SegmentationTrackingFactory:
         )
         settings.trackerSettings["ALLOW_TRACK_MERGING"] = False
         settings.trackerSettings["ALLOW_TRACK_SPLITTING"] = False
-        settings.trackerSettings[
-            "LINKING_FEATURE_PENALTIES"
-        ] = tracker_keys.DEFAULT_LINKING_FEATURE_PENALTIES
+        settings.trackerSettings["LINKING_FEATURE_PENALTIES"] = (
+            tracker_keys.DEFAULT_LINKING_FEATURE_PENALTIES
+        )
 
         settings.initialSpotFilterValue = -1.0
 
