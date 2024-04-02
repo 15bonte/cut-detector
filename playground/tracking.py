@@ -61,7 +61,7 @@ def main(
     plt.show()
     plt.close()
 
-    # Plot trackmate_spots of frame number "frame"
+    # Plot trackmate_spots of frame number "frame" and their barycenters
     y = []
     x = []
     
@@ -71,14 +71,36 @@ def main(
             for i in range(len(list)):
                 x.append(list[i][0])
                 y.append(600 - list[i][1])
+
+    def barycenters(frame_number):
+        b = []
+        max = np.max(cellpose_results[0])
+        for i in range(1,max+1):
+            A = np.where(cellpose_results[frame_number]==i)
+            l = len(x)
+            if l == 0:
+                break
+            X = np.sum(A[0])
+            Y = np.sum(A[1])
+            b.append([X/len(A[0]),Y/len(A[1])])
+        return b
+    
+    b = barycenters(frame)
+    x_b = []
+    y_b = []
+    for i in range(len(b)):
+        y_b.append(b[i][0])
+        x_b.append(b[i][1])
+    plt.figure()
     plt.scatter(x,y)
     plt.show()
+    plt.close()
 
-    # Finding barycenters of each cell
-    for i in range(1,2):
-        indices = np.where(cellpose_results[frame]==i)
-        #print(indices)
-
+    plt.figure()
+    plt.imshow(cellpose_results[frame])
+    plt.scatter(x_b,y_b)
+    plt.show()
+    plt.close()
 
 if __name__ == "__main__":
     main()
