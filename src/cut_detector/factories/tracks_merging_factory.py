@@ -46,44 +46,6 @@ class TracksMergingFactory:
         self.minimum_metaphase_interval = minimum_metaphase_interval
         self.max_spot_distance_for_split = max_spot_distance_for_split
 
-    def read_trackmate_xml(
-        self, xml_model_path: str, raw_video_shape: np.ndarray
-    ) -> tuple[list[TrackMateTrack], list[TrackMateSpot]]:
-        """
-        Read useful information from xml file.
-        """
-        if not os.path.exists(xml_model_path):
-            print("No xml file found for this video.")
-            return None, None
-        with open(xml_model_path) as fd:
-            doc = xmltodict.parse(fd.read())
-
-        # Define custom classes to read xml file
-        trackmate_tracks = list(
-            filter(
-                lambda track: len(track.track_spots_ids) > 2
-                and track.stop - track.start + 1 >= self.min_track_spots,
-                [
-                    TrackMateTrack(track)
-                    for track in doc["TrackMate"]["Model"]["AllTracks"][
-                        "Track"
-                    ]
-                ],
-            )
-        )
-        raw_frames_spots = [
-            TrackMateFrameSpots(spots, raw_video_shape)
-            for spots in doc["TrackMate"]["Model"]["AllSpots"]["SpotsInFrame"]
-        ]
-        # Merge all frames - to get rid of TrackMateFrameSpots
-        spots = [
-            spot
-            for raw_frame_spots in raw_frames_spots
-            for spot in raw_frame_spots.spots
-        ]
-
-        return trackmate_tracks, spots
-
     def get_tracks_to_merge(
         self, raw_tracks: list[CellTrack]
     ) -> list[MitosisTrack]:
