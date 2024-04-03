@@ -19,3 +19,5 @@ def detect_minmax_dog(img: np.ndarray, **kwargs) -> np.ndarray:
 def detect_minmax_doh(img: np.ndarray, **kwargs) -> np.ndarray:
     img_norm = min_max(img)
     return blob_doh(img_norm, **kwargs)
+
+
