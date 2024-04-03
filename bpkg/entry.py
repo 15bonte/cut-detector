@@ -53,11 +53,11 @@ def run_slt_debug():
     spatial_laptrack_debug_runner()
 
 def run_gen_d_gt():
-    from detection_gt.generation.runner import generate_ground_truth_runner
+    from detection_gt.generation.generation_runner import generate_ground_truth_runner
     generate_ground_truth_runner()
 
 def run_bench_d_gt():
-    from detection_gt.bench.runner import bench_detection_against_gt_runner
+    from detection_gt.bench.bench_runner import bench_detection_against_gt_runner
     bench_detection_against_gt_runner()
 
 def run_new_d_gt():
