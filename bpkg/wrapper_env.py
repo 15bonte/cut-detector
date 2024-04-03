@@ -6,9 +6,9 @@ from os.path import join
 
 class WrapperEnv:
     src_file: Source = SourceFiles.example
-    main_spot_detection_method = "lapgau"
+    main_spot_detection_method: MidBodyDetectionFactory.SPOT_DETECTION_MODE = "lapgau"
     out_dir: str = "src/cut_detector/data/mid_bodies_movies_test"
-    reference_detection_method: MidBodyDetectionFactory.SPOT_DETECTION_MODE = "lapgau"
+    # reference_detection_method: MidBodyDetectionFactory.SPOT_DETECTION_MODE = "lapgau"
 
     @staticmethod
     def gt_filepath_from_source(src: Source) -> str:
