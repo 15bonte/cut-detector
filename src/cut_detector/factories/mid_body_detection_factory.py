@@ -1,6 +1,6 @@
 import os
 from random import shuffle
-from typing import Literal, Optional
+from typing import Literal, Optional, Callable
 from math import sqrt
 import numpy as np
 from bigfish import stack, detection
@@ -23,7 +23,9 @@ from ..utils.mid_body_spot import MidBodySpot
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.trackmate_track import TrackMateTrack
 from ..utils.tools import plot_detection
+
 from ..mb_tracking import SpatialLapTrack
+from .mb_support import detection
 
 
 class MidBodyDetectionFactory:
@@ -71,12 +73,14 @@ class MidBodyDetectionFactory:
     SPOT_DETECTION_MODE = Literal[
         "bigfish", 
         "h_maxima", 
+        "cur_log",
         "lapgau",
         "log2_wider",
-        "off_centered_log",
+        "shifted_centered_log"
+        "cur_dog",
         "diffgau", 
+        "cur_doh"
         "hessian", 
-        "concom",
     ]
 
     def update_mid_body_spots(
@@ -85,7 +89,7 @@ class MidBodyDetectionFactory:
         mitosis_movie: np.array,
         mask_movie: np.array,
         tracks: list[TrackMateTrack],
-        mb_detect_method: SPOT_DETECTION_MODE = "lapgau",
+        mb_detect_method: SPOT_DETECTION_MODE | Callable[[np.ndarray], np.ndarray] = "lapgau",
         mb_tracking_method: Literal["laptrack", "spatial_laptrack"] = "laptrack",
     ) -> None:
         """
@@ -124,9 +128,7 @@ class MidBodyDetectionFactory:
         mask_movie: Optional[np.array] = None,
         mid_body_channel=1,
         sir_channel=0,
-        # mode="h_maxima",
-        # mode="lapgau",
-        mode: SPOT_DETECTION_MODE = "diffgau",
+        mode: SPOT_DETECTION_MODE | Callable[[np.ndarray], np.ndarray] = "diffgau",
     ) -> dict[int, list[MidBodySpot]]:
         """
         Parameters
@@ -177,8 +179,9 @@ class MidBodyDetectionFactory:
         mask: np.array,
         mid_body_channel: int,
         sir_channel: int,
-        mode: SPOT_DETECTION_MODE,
+        mode: SPOT_DETECTION_MODE | Callable[[np.ndarray], np.ndarray],
         frame=-1,
+        log_blob_spot: bool = True,
     ) -> list[MidBodySpot]:
         """
         Mode 'bigfish'
@@ -193,7 +196,47 @@ class MidBodyDetectionFactory:
         image_sir = image[:, :, sir_channel]
         image_mklp = image[:, :, mid_body_channel]  #
 
-        if mode == "bigfish":
+        if callable(mode):
+            # directly passsing a blob-like function
+            spots = [
+                (int(spot[0]), int(spot[1], int(spot[2])))
+                for spot in mode(image_mklp)
+            ]
+            if log_blob_spot:
+                for s in spots:
+                    print(f"found x:{s[1]}  y:{s[0]}  s:{s[2]}")
+
+        elif mode in [
+                "cur_log", "lapgau", "log2_wider", "shifted_centered_log",
+                "cur_dog", "diffgau"
+                "cur_doh", "hessian"
+                ]:
+            # blob-like function called referenced by name
+            
+            mapping = {
+                "cur_log": detection.current_log,
+                "cur_dog": detection.current_dog,
+                "cur_doh": detection.current_doh,
+
+                "lapgau": detection.lapgau,
+                "log2_wider": detection.log2_wider,
+                "rshit_log": detection.rshift_log,
+                
+                "diffgau": detection.diffgau,
+
+                "hessian": detection.hessian
+            }
+
+            spots = [
+                (int(spot[0]), int(spot[1], int(spot[2])))
+                for spot in mapping[mode](image_mklp)
+            ]
+
+            if log_blob_spot:
+                for s in spots:
+                    print(f"found x:{s[1]}  y:{s[0]}  s:{s[2]}")
+
+        elif mode == "bigfish":
             # Spots detection with bigfish functions
             filtered_image = stack.log_filter(image_mklp, sigma=self.sigma)
             # Filter out spots which are not maximal or outside convex hull
@@ -248,59 +291,61 @@ class MidBodyDetectionFactory:
                     (0, filtered_image.ndim)
                 )
 
-        elif mode == "lapgau":
-            # raise "Laplacian of Gaussian not implemtented yet"
-            spots = [
-                (int(spot[0]), int(spot[1]))
-                for spot in self._compute_laplacian_of_gaussian(image_mklp)
-            ]
+        # elif mode == "lapgau":
+        #     # raise "Laplacian of Gaussian not implemtented yet"
+        #     spots = [
+        #         (int(spot[0]), int(spot[1]))
+        #         for spot in self._compute_laplacian_of_gaussian(image_mklp)
+        #     ]
 
-        elif mode == "log2_wider":
-            spots = [
-                (int(spot[0]), int(spot[1]))
-                for spot in self._compute_any_laplacian_of_gaussian(
-                    image_mklp,
-                    min_sigma=2,
-                    max_sigma=8,
-                    num_sigma=4,
-                    threshold=0.1
-                )
-            ]
+        # elif mode == "log2_wider":
+        #     spots = [
+        #         (int(spot[0]), int(spot[1]))
+        #         for spot in self._compute_any_laplacian_of_gaussian(
+        #             image_mklp,
+        #             min_sigma=2,
+        #             max_sigma=8,
+        #             num_sigma=4,
+        #             threshold=0.1
+        #         )
+        #     ]
 
-        elif mode == "off_centered_log":
-            spots = [
-                (int(spot[0]), int(spot[1]))
-                for spot in self._compute_any_laplacian_of_gaussian(
-                    image_mklp,
-                    min_sigma=3,
-                    max_sigma=11,
-                    num_sigma=5,
-                    threshold=0.1
-                )
-            ]
+        # elif mode == "off_centered_log":
+        #     spots = [
+        #         (int(spot[0]), int(spot[1]))
+        #         for spot in self._compute_any_laplacian_of_gaussian(
+        #             image_mklp,
+        #             min_sigma=3,
+        #             max_sigma=11,
+        #             num_sigma=5,
+        #             threshold=0.1
+        #         )
+        #     ]
 
-        elif mode == "diffgau":
-            spots = [
-                (int(spot[0]), int(spot[1]))
-                for spot in self._compute_diff_of_gaussian(image_mklp)
-            ]
+        # elif mode == "diffgau":
+        #     spots = [
+        #         (int(spot[0]), int(spot[1]))
+        #         for spot in self._compute_diff_of_gaussian(image_mklp)
+        #     ]
 
-        elif mode == "hessian":
-            spots = [
-                (int(spot[0]), int(spot[1]))
-                for spot in self._compute_det_of_hessian(image_mklp)
-            ]
-
-        elif mode == "concom":
-            raise RuntimeError("Connected Components not implemented yet")
+        # elif mode == "hessian":
+        #     spots = [
+        #         (int(spot[0]), int(spot[1]))
+        #         for spot in self._compute_det_of_hessian(image_mklp)
+        #     ]
 
         else:
             raise ValueError(f"Unknown mode: {mode}")
 
-        # Convert spots to MidBodySpot objects (switch (y, x) to (x, y))
+
+        # WARNING:
+        # spots can be a list of Tuple with 2 or 3 values:
+        # 2 values: (y, x) if h_maxima or fish_eye used
+        # 3 values: (y, x, sigma) if any blob-based method used
         mid_body_spots = [
             MidBodySpot(
                 frame,
+                # Convert spots to MidBodySpot objects (switch (y, x) to (x, y))
                 x=position[1],
                 y=position[0],
                 intensity=self._get_average_intensity(position, image_mklp),
@@ -310,89 +355,91 @@ class MidBodyDetectionFactory:
         ]
 
         return mid_body_spots
+    
 
-    @staticmethod
-    def _compute_laplacian_of_gaussian(
-        midbody_gs_img: np.array,
-    ) -> np.array:  # 2 dimensions, blob and Y X R
-        # midbody_gs_img = midbody_gs_img / np.max(midbody_gs_img)
-        midbody_gs_img = (midbody_gs_img - np.min(midbody_gs_img)) / (
-            np.max(midbody_gs_img) - np.min(midbody_gs_img)
-        )
-        blobs_log = blob_log(
-            midbody_gs_img,
-            min_sigma=5,
-            max_sigma=10,
-            num_sigma=5,
-            threshold=0.1,
-        )
-        print("found blobs (y/x/s):", blobs_log, sep="\n")
 
-        # Compute radii in the 3rd column, since 3 column is sigma
-        # and radius can be approximated by sigma * sqrt(2) according to doc
-        blobs_log[:, 2] = blobs_log[:, 2] * sqrt(2)
-        return blobs_log
+    # @staticmethod
+    # def _compute_laplacian_of_gaussian(
+    #     midbody_gs_img: np.array,
+    # ) -> np.array:  # 2 dimensions, blob and Y X R
+    #     # midbody_gs_img = midbody_gs_img / np.max(midbody_gs_img)
+    #     midbody_gs_img = (midbody_gs_img - np.min(midbody_gs_img)) / (
+    #         np.max(midbody_gs_img) - np.min(midbody_gs_img)
+    #     )
+    #     blobs_log = blob_log(
+    #         midbody_gs_img,
+    #         min_sigma=5,
+    #         max_sigma=10,
+    #         num_sigma=5,
+    #         threshold=0.1,
+    #     )
+    #     print("found blobs (y/x/s):", blobs_log, sep="\n")
+
+    #     # Compute radii in the 3rd column, since 3 column is sigma
+    #     # and radius can be approximated by sigma * sqrt(2) according to doc
+    #     blobs_log[:, 2] = blobs_log[:, 2] * sqrt(2)
+    #     return blobs_log
     
-    @staticmethod
-    def _compute_any_laplacian_of_gaussian(
-        mklp_img: np.array,
-        min_sigma: int,
-        max_sigma: int,
-        num_sigma: int,
-        threshold: float
-        ) -> np.array:
-        """ Computes a MinMax Normalization followed by a laplacian
-        of gaussian with the given parameters
-        """
-        min = np.min(mklp_img)
-        max = np.max(mklp_img)
-        mklp_img = (mklp_img-min) / (max-min)
-        blobs = blob_log(
-            image=mklp_img,
-            min_sigma=min_sigma,
-            max_sigma=max_sigma,
-            num_sigma=num_sigma,
-            threshold=threshold
-        )
-        print("found blobs (y/x/s):", blobs, sep="\n")
-        blobs[:, 2] = blobs[:, 2] * sqrt(2)
-        return blobs
+    # @staticmethod
+    # def _compute_any_laplacian_of_gaussian(
+    #     mklp_img: np.array,
+    #     min_sigma: int,
+    #     max_sigma: int,
+    #     num_sigma: int,
+    #     threshold: float
+    #     ) -> np.array:
+    #     """ Computes a MinMax Normalization followed by a laplacian
+    #     of gaussian with the given parameters
+    #     """
+    #     min = np.min(mklp_img)
+    #     max = np.max(mklp_img)
+    #     mklp_img = (mklp_img-min) / (max-min)
+    #     blobs = blob_log(
+    #         image=mklp_img,
+    #         min_sigma=min_sigma,
+    #         max_sigma=max_sigma,
+    #         num_sigma=num_sigma,
+    #         threshold=threshold
+    #     )
+    #     print("found blobs (y/x/s):", blobs, sep="\n")
+    #     blobs[:, 2] = blobs[:, 2] * sqrt(2)
+    #     return blobs
     
-    @staticmethod
-    def _compute_diff_of_gaussian(
-        midbody_gs_img: np.array,
-    ) -> np.array:
-        min = np.min(midbody_gs_img)
-        max = np.max(midbody_gs_img)
-        midbody_gs_img = (midbody_gs_img - min) / (max - min)
-        blobs = blob_dog(
-            image=midbody_gs_img,
-            min_sigma=2,
-            max_sigma=5,
-            sigma_ratio=1.2,
-            threshold=0.1,
-        )
-        print("found blobs (y/x/s):", blobs, sep="\n")
-        blobs[:, 2] = blobs[:, 2] * sqrt(2)
-        return blobs
+    # @staticmethod
+    # def _compute_diff_of_gaussian(
+    #     midbody_gs_img: np.array,
+    # ) -> np.array:
+    #     min = np.min(midbody_gs_img)
+    #     max = np.max(midbody_gs_img)
+    #     midbody_gs_img = (midbody_gs_img - min) / (max - min)
+    #     blobs = blob_dog(
+    #         image=midbody_gs_img,
+    #         min_sigma=2,
+    #         max_sigma=5,
+    #         sigma_ratio=1.2,
+    #         threshold=0.1,
+    #     )
+    #     print("found blobs (y/x/s):", blobs, sep="\n")
+    #     blobs[:, 2] = blobs[:, 2] * sqrt(2)
+    #     return blobs
     
-    @staticmethod
-    def _compute_det_of_hessian(
-        midbody_gs_img: np.array
-    ) -> np.array:
-        min = np.min(midbody_gs_img)
-        max = np.max(midbody_gs_img)
-        midbody_gs_img = (midbody_gs_img - min) / (max - min)
-        blobs = blob_doh(
-            midbody_gs_img,
-            min_sigma=5,
-            max_sigma=10,
-            num_sigma=5,
-            threshold=0.0040,
-        )
-        print("found blobs (y/x/s):", blobs, sep="\n")
-        blobs[:, 2] = blobs[:, 2] * sqrt(2)
-        return blobs
+    # @staticmethod
+    # def _compute_det_of_hessian(
+    #     midbody_gs_img: np.array
+    # ) -> np.array:
+    #     min = np.min(midbody_gs_img)
+    #     max = np.max(midbody_gs_img)
+    #     midbody_gs_img = (midbody_gs_img - min) / (max - min)
+    #     blobs = blob_doh(
+    #         midbody_gs_img,
+    #         min_sigma=5,
+    #         max_sigma=10,
+    #         num_sigma=5,
+    #         threshold=0.0040,
+    #     )
+    #     print("found blobs (y/x/s):", blobs, sep="\n")
+    #     blobs[:, 2] = blobs[:, 2] * sqrt(2)
+    #     return blobs
 
     @staticmethod
     def _get_average_intensity(
