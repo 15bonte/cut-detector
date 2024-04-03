@@ -506,27 +506,6 @@ class MidBodyDetectionFactory:
 
         """
 
-        # # Update parent and child spots
-        # for frame in spots_candidates.keys():
-        #     # Ignore if no spot detected in next frame
-        #     if not frame + 1 in spots_candidates:
-        #         continue
-        #     self._update_spots_hereditary(
-        #         spots_candidates[frame], spots_candidates[frame + 1]
-        #     )
-
-        # tracks = []
-        # for spots in spots_candidates.values():
-        #     for spot in spots:
-        #         if spot.track_id is None:
-        #             # Create new track
-        #             track_id = len(tracks)
-        #             new_track = MidBodyTrack(track_id)
-        #             new_track.add_spot(spot)
-        #             tracks.append(new_track)
-
-        # return tracks
-
         return self._gen_laptrack_tracking(
             spots_candidates, 
             tracking_method, 
@@ -656,17 +635,6 @@ class MidBodyDetectionFactory:
             print("=== WARNING: overriding LapTrack with a custom LapTrack ===")
             lt = use_custom_laptrack
 
-        # laptrack execution
-        # lt = LapTrack(
-        #     track_dist_metric=dist_metric,
-        #     track_cost_cutoff=max_distance**2,
-        #     gap_closing_dist_metric=dist_metric,
-        #     gap_closing_cost_cutoff=max_distance**2,
-        #     gap_closing_max_frame_count=2,
-        #     splitting_cost_cutoff=False,
-        #     merging_cost_cutoff=False,
-        #     alternative_cost_percentile=90,  # default value
-        # )
         track_df, split_df, merge_df = lt.predict_dataframe(
             spots_df,
             ["x", "y", "mlkp_intensity", "sir_intensity"],
