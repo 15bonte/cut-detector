@@ -121,6 +121,7 @@ class MtCutDetectionFactory:
             mitosis_tracks, video, bridges_mt_cnn_model_path
         )
 
+        # Debug use
         results = {
             "list_class_bridges": list_class_bridges,
             "list_class_bridges_after_hmm": {},
@@ -262,6 +263,8 @@ class MtCutDetectionFactory:
             if debug_mode:
                 # In debug, expect only one mitosis track
                 return results
+
+        return results
 
     def classify_bridges(
         self,

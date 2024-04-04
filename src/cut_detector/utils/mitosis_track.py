@@ -701,6 +701,10 @@ class MitosisTrack:
             list of crops around the mid-body, TCYX
         """
 
+        # Case with no mid_body detected
+        if not self.mid_body_spots:
+            return []
+
         ordered_mb_frames = sorted(self.mid_body_spots.keys())
         first_mb_frame = ordered_mb_frames[0]
         last_mb_frame = ordered_mb_frames[-1]
