@@ -1,4 +1,0 @@
-To run the visualizer, additional packages must be installed:
-- dash
-- dash-bootstrap-components (for conda, use conda-forge)
-- plotly

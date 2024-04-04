@@ -1,8 +1,0 @@
-source_dir_field:
-    directory where movies are found
-
-source_choice_dropdown:
-    the file that has been chosen
-
-out_dir:
-    directory where outputs are written
