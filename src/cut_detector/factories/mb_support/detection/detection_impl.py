@@ -33,7 +33,7 @@ diffgau = partial(
     detect_minmax_dog,
     min_sigma=2,
     max_sigma=5,
-    sigma_ration=1.2,
+    sigma_ratio=1.2,
     threshold=0.1,
 )
 

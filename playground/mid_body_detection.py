@@ -6,6 +6,7 @@ from cut_detector.data.tools import get_data_path
 from cut_detector.factories.mid_body_detection_factory import (
     MidBodyDetectionFactory,
 )
+from cut_detector.factories.mb_support import detection, tracking
 
 SHOULD_SAVE = True
 
@@ -40,8 +41,7 @@ def main(
         # mitosis_movie=mitosis_movie, mask_movie=mask_movie, mode="h_maxima"
         mitosis_movie=mitosis_movie,
         mask_movie=mask_movie,
-        # mode="lapgau",
-        mode="diffgau",
+        mode=detection.cur_dog,
     )  # mode = "bigfish" or "h_maxima" (default)
 
     for frame, spots in spots_candidates.items():
@@ -58,10 +58,23 @@ def main(
 
     factory.generate_tracks_from_spots(
         spots_candidates,
-        tracking_method="spatial_laptrack",
-        # tracking_method="laptrack",
+        tracking_method=tracking.cur_spatial_laptrack,
         show_tracking=True,
     )
+
+    for frame, spots in spots_candidates.items():
+        for spot in spots:
+            print(
+                {
+                    "fr": frame,
+                    "x": spot.x,
+                    "y": spot.y,
+                    "mlkp_int": spot.intensity,
+                    "sir_int": spot.sir_intensity,
+                    "track_id": spot.track_id
+                }
+            )
+
     if SHOULD_SAVE:
         factory.save_mid_body_tracking(
             spots_candidates, mitosis_movie, path_output
