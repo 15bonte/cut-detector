@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial.distance import cdist
 from cut_detector.factories.mid_body_detection_factory import MidBodyDetectionFactory
-from importation import Source
+from data_loading import Source
 from ..data import load_gt_file
 from .bench_stat import BenchStat
 

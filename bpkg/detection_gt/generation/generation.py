@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from cut_detector.factories.mid_body_detection_factory import MidBodyDetectionFactory
-from importation import Source
+from data_loading import Source
 
 def generate_ground_truth(
         s: Source, 
