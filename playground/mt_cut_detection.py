@@ -75,7 +75,10 @@ def main(
 
     if display_predictions_analysis:
         plt.plot(results["list_class_bridges"][mitosis_track.id])
-        plt.plot(results["list_class_bridges_after_hmm"][mitosis_track.id])
+        if (
+            mitosis_track.id in results["list_class_bridges_after_hmm"]
+        ):  # if classification possible
+            plt.plot(results["list_class_bridges_after_hmm"][mitosis_track.id])
         plt.title("Class bridges")
         plt.show()
 
@@ -88,16 +91,12 @@ def main(
 
 
 if __name__ == "__main__":
-    # IMAGE_PATH = r"C:\Users\thoma\data\Data Nathalie\videos_debug\20231019-t1_siSpastin-50-2.tif"
-    # MITOSIS_PATH = r"C:\Users\thoma\OneDrive\Bureau\mitoses\20231019-t1_siSpastin-50-2_mitosis_32_5_to_37.bin"
-    # main(IMAGE_PATH, MITOSIS_PATH)
+    FOLDER_MITOSIS = r"C:\Users\thoma\data\Data Nathalie\mitoses"
+    FOLDER_VIDEO = r"C:\Users\thoma\data\Data Nathalie\videos"
+    for mitosis_file in os.listdir(FOLDER_MITOSIS):
+        local_mitosis_path = os.path.join(FOLDER_MITOSIS, mitosis_file)
+        image_name = mitosis_file.split("_mitosis")[0]
+        local_image_path = os.path.join(FOLDER_VIDEO, image_name + ".tif")
+        main(local_image_path, local_mitosis_path)
 
-    # FOLDER_MITOSIS = r"C:\Users\thoma\data\Data Nathalie\mitoses"
-    # FOLDER_VIDEO = r"C:\Users\thoma\data\Data Nathalie\videos"
-    # for mitosis_file in os.listdir(FOLDER_MITOSIS):
-    #     local_mitosis_path = os.path.join(FOLDER_MITOSIS, mitosis_file)
-    #     image_name = mitosis_file.split("_mitosis")[0]
-    #     local_image_path = os.path.join(FOLDER_VIDEO, image_name + ".tif")
-    #     main(local_image_path, local_mitosis_path)
-
-    main()
+    # main()
