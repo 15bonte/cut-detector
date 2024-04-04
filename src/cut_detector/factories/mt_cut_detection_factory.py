@@ -21,19 +21,7 @@ class MtCutDetectionFactory:
     Args:
         margin (int): Number of pixels on each side of the midbody.
 
-        # Bridges classification parameters
-
-        coeff_height_peak (float): Coeff for the height of the peak.
-        circle_radius (int): Middle circle radius.
-        circle_min_ratio (float): Min ratio distance on circle between two peaks.
-        coeff_width_peak (float): Coeff for the width of the peak.
-        diff_radius (float): Distance between the min/max and middle circle.
-        window_size (float): Window size for the peak detection (% of the circle perimeter).
-        min_peaks_by_group (int): Minimum number of peaks by window for the peak detection.
-        overlap (int): Overlap between two windows for the peak detection.
-
         # Light spot detection parameters
-
         intensity_threshold_light_spot (int): Intensity threshold for the light spot detection.
         h_maxima_light_spot (int): h for the h_maxima function (light spot detection).
         center_tolerance_light_spot (int): Center tolerance to not count the light spots that are
@@ -48,14 +36,6 @@ class MtCutDetectionFactory:
     def __init__(
         self,
         margin=50,
-        coeff_height_peak=1.071,
-        circle_radius=11,
-        circle_min_ratio=0.2025,
-        coeff_width_peak=0.25358974,
-        diff_radius=4.54,
-        window_size=0.04836,
-        min_peaks_by_group=4,
-        overlap=4,
         intensity_threshold_light_spot=350,
         h_maxima_light_spot=130,
         center_tolerance_light_spot=5,
@@ -64,21 +44,12 @@ class MtCutDetectionFactory:
         length_light_spot=3,
     ) -> None:
         self.margin = margin
-        self.coeff_height_peak = coeff_height_peak
-        self.circle_radius = circle_radius
-        self.circle_min_ratio = circle_min_ratio
-        self.coeff_width_peak = coeff_width_peak
-        self.diff_radius = diff_radius
-        self.window_size = window_size
-        self.min_peaks_by_group = min_peaks_by_group
-        self.overlap = overlap
         self.intensity_threshold_light_spot = intensity_threshold_light_spot
         self.h_maxima_light_spot = h_maxima_light_spot
         self.center_tolerance_light_spot = center_tolerance_light_spot
         self.min_percentage_light_spot = min_percentage_light_spot
         self.crop_size_light_spot = crop_size_light_spot
         self.length_light_spot = length_light_spot
-        self.template_type = template_type
 
     @staticmethod
     def _is_bridges_classification_impossible(
