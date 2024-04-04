@@ -3,7 +3,7 @@
 
 from .detection_impl import lapgau, diffgau, hessian
 
-cur_dog = lapgau
+cur_log = lapgau
 cur_dog = diffgau
 cur_doh = hessian
 
