@@ -11,9 +11,6 @@ from cut_detector.models.tools import get_model_path
 from cut_detector.factories.mt_cut_detection_factory import (
     MtCutDetectionFactory,
 )
-from cut_detector.utils.bridges_classification.template_type import (
-    TemplateType,
-)
 from cut_detector.utils.mitosis_track import MitosisTrack
 
 
@@ -60,10 +57,7 @@ def main(
         mitosis_track: MitosisTrack = pickle.load(f)
         mitosis_track.adapt_deprecated_attributes()
 
-    template_type = TemplateType.AVERAGE_CIRCLE
-    factory = MtCutDetectionFactory(
-        template_type=template_type,
-    )
+    factory = MtCutDetectionFactory()
 
     results = factory.update_mt_cut_detection(
         [mitosis_track],

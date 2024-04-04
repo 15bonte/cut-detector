@@ -11,7 +11,6 @@ from ..utils.tools import apply_hmm, perform_cnn_inference
 from ..utils.bridges_classification.impossible_detection import (
     ImpossibleDetection,
 )
-from ..utils.bridges_classification.template_type import TemplateType
 from ..utils.mitosis_track import MitosisTrack
 
 
@@ -32,7 +31,6 @@ class MtCutDetectionFactory:
         window_size (float): Window size for the peak detection (% of the circle perimeter).
         min_peaks_by_group (int): Minimum number of peaks by window for the peak detection.
         overlap (int): Overlap between two windows for the peak detection.
-        template_type (TemplateType): Template for SVC model.
 
         # Light spot detection parameters
 
@@ -64,7 +62,6 @@ class MtCutDetectionFactory:
         min_percentage_light_spot=0.1,
         crop_size_light_spot=20,
         length_light_spot=3,
-        template_type=TemplateType.ALL,
     ) -> None:
         self.margin = margin
         self.coeff_height_peak = coeff_height_peak
