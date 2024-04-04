@@ -76,7 +76,7 @@ class MidBodyDetectionFactory:
         "cur_log",
         "lapgau",
         "log2_wider",
-        "shifted_centered_log"
+        "rshift_log"
         "cur_dog",
         "diffgau", 
         "cur_doh"
@@ -90,7 +90,7 @@ class MidBodyDetectionFactory:
         mask_movie: np.array,
         tracks: list[TrackMateTrack],
         mb_detect_method: SPOT_DETECTION_MODE | Callable[[np.ndarray], np.ndarray] = "lapgau",
-        mb_tracking_method: Literal["laptrack", "spatial_laptrack"] = "laptrack",
+        mb_tracking_method: Literal["laptrack", "spatial_laptrack"] | LapTrack = "laptrack",
     ) -> None:
         """
         Get spots of best mitosis track.
@@ -103,7 +103,8 @@ class MidBodyDetectionFactory:
         """
 
         spots_candidates = self.detect_mid_body_spots(
-            mitosis_movie, mask_movie=mask_movie,
+            mitosis_movie, 
+            mask_movie=mask_movie,
             mode=mb_detect_method
         )
         mid_body_tracks = self.generate_tracks_from_spots(
@@ -207,7 +208,7 @@ class MidBodyDetectionFactory:
                     print(f"found x:{s[1]}  y:{s[0]}  s:{s[2]}")
 
         elif mode in [
-                "cur_log", "lapgau", "log2_wider", "shifted_centered_log",
+                "cur_log", "lapgau", "log2_wider", "rshift_log",
                 "cur_dog", "diffgau"
                 "cur_doh", "hessian"
                 ]:
@@ -536,9 +537,8 @@ class MidBodyDetectionFactory:
     def generate_tracks_from_spots(
         self, 
         spots_candidates: dict[int, list[MidBodySpot]],
-        tracking_method: TRACKING_MODE = "spatial_laptrack",
+        tracking_method: TRACKING_MODE | LapTrack = "spatial_laptrack",
         show_tracking: bool = False,
-        use_custom_laptrack: LapTrack | None = None
     ) -> list[MidBodyTrack]:
         """
         Use spots linked together to generate tracks.
@@ -556,8 +556,9 @@ class MidBodyDetectionFactory:
         return self._gen_laptrack_tracking(
             spots_candidates, 
             tracking_method, 
+            False,
             show_tracking,
-            use_custom_laptrack
+            False
         )
     
     def _gen_laptrack_tracking(
@@ -565,7 +566,7 @@ class MidBodyDetectionFactory:
             spots_candidates: dict[int, list[MidBodySpot]],
             tracking: TRACKING_MODE | LapTrack = "laptrack",
             show_df: bool = False,
-            show_tracking_df: False = True,
+            show_tracking_df: bool = True,
             show_tracking_plot: bool = False,
             ) -> List[MidBodyTrack]:
         df = self._convert_mb_spots_to_df(spots_candidates, show_df)
@@ -832,7 +833,7 @@ class MidBodyDetectionFactory:
             mapping: Dict[str, LapTrack] = {
                 "laptrack":         tracking.cur_laptrack,
                 "lt":               tracking.lt,
-                "spatial_laptrack": tracking.spatial_laptrack,
+                "spatial_laptrack": tracking.cur_spatial_laptrack,
                 "slt":              tracking.slt,
             }
             tracker = mapping.get(mode, None)
