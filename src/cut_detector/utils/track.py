@@ -65,8 +65,6 @@ class Track(Generic[T]):
 
 
 
-
-
 def generate_tracks_from_spot_dict(
         spot_kind: type, 
         spot_dict: Dict[int, List[Spot]],
