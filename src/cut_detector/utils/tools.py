@@ -31,6 +31,7 @@ from cnn_framework.utils.models.resnet_classifier import ResnetClassifier
 from cnn_framework.utils.model_params.base_model_params import BaseModelParams
 
 from .cnn_data_set import CnnDataSet
+from .hidden_markov_models import HiddenMarkovModel
 
 
 def re_organize_channels(image: np.ndarray) -> np.ndarray:
@@ -497,3 +498,19 @@ def perform_cnn_inference(
     predictions = [int(np.argmax(p)) for p in predictions]
 
     return predictions
+
+
+def apply_hmm(hmm_parameters, sequence):
+    """
+    Correct the sequence of classes using HMM.
+    """
+    # Define observation sequence
+    obs_seq = np.asarray(sequence, dtype=np.int32)
+
+    # Define HMM model & run inference
+    model = HiddenMarkovModel(
+        hmm_parameters["A"], hmm_parameters["B"], hmm_parameters["pi"]
+    )
+    states_seq, _ = model.viterbi_inference(obs_seq)
+
+    return states_seq

@@ -9,7 +9,6 @@ from ..constants.tracking import (
     FRAMES_AROUND_METAPHASE,
     INTERPHASE_INDEX,
     METAPHASE_INDEX,
-    MAX_FRAME_GAP,
 )
 from .track import Track
 from .box_dimensions_dln import BoxDimensionsDln
@@ -55,6 +54,8 @@ class CellTrack(Track[CellSpot]):
     """
     Cell track.
     """
+
+    max_frame_gap = 3
 
     def __init__(
         self, track_id: int, track_spots_ids: set[int], start: int, stop: int
@@ -235,7 +236,7 @@ class CellTrack(Track[CellSpot]):
                 return previous_box_dimensions_dln
 
             # ... or try with previous frame if not
-            for _ in range(MAX_FRAME_GAP):
+            for _ in range(CellTrack.max_frame_gap):
                 frame = frame - 1
                 (
                     box_dimensions_dln,
@@ -247,7 +248,7 @@ class CellTrack(Track[CellSpot]):
         # Should not be empty after this loop
         if box_dimensions_dln.is_empty():
             raise ValueError(
-                f"No previous dln & Tracks with no spots in {MAX_FRAME_GAP} frames in a row"
+                f"No previous dln & Tracks with no spots in {CellTrack.max_frame_gap} frames in a row"
             )
 
         # Else, compute convex hull and Delaunay triangulation
@@ -326,8 +327,11 @@ class CellTrack(Track[CellSpot]):
     @staticmethod
     def generate_tracks_from_spots(
         spots: dict[int, list[CellSpot]],
+        linking_max_distance: int,
+        gap_closing_max_distance: int,
     ) -> list[CellTrack]:
         """
         Generate tracks from spots.
         """
+        max_frame_gap = CellTrack.max_frame_gap
         raise NotImplementedError

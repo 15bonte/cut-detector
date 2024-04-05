@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Callable, Optional
 import numpy as np
 
 from .track import Track
@@ -9,6 +10,8 @@ class MidBodyTrack(Track[MidBodySpot]):
     """
     Mid-body candidate track
     """
+
+    max_frame_gap = 2
 
     def add_spot(self, spot: MidBodySpot) -> None:
         """
