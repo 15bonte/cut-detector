@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from typing import List, Any
+from typing import Any
 
 class Spot:
     """
@@ -29,7 +29,7 @@ class Spot:
         )
     
     @staticmethod
-    def get_extra_features_name() -> List[str]:
+    def get_extra_features_name() -> list[str]:
         """
         To have better tracking for classes that inherit from this one.
         These classes can declare here their extra coordinate fields.
@@ -39,7 +39,7 @@ class Spot:
         """
         return []
     
-    def get_extra_coordinates(self) -> List[Any]:
+    def get_extra_coordinates(self) -> list[Any]:
         """
         To have better tracking for classes that inherit from this one.
         These classes can return here their extra coordinate fields.

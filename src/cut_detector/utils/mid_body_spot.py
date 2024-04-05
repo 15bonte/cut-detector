@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, List, Any
+from typing import Optional, Any
 
 from .spot import Spot
 
@@ -32,8 +32,8 @@ class MidBodySpot(Spot):
         self.track_id: Optional[int] = None
 
     @staticmethod
-    def get_extra_features_name() -> List[str]:
+    def get_extra_features_name() -> list[str]:
         return ["mklp_intensity", "sir_intensity"]
     
-    def get_extra_coordinates(self) -> List[Any]:
+    def get_extra_coordinates(self) -> list[Any]:
         return [self.intensity, self.sir_intensity]
