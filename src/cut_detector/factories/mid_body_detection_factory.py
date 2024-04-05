@@ -26,6 +26,7 @@ from ..utils.tools import plot_detection
 
 from .mb_support import detection, tracking
 from .mb_support.tracking import SpatialLapTrack
+from .mid_body_track_color_manager import MbTrackColorManager
 
 
 class MidBodyDetectionFactory:
@@ -741,29 +742,6 @@ class MidBodyDetectionFactory:
         sorted_tracks = sorted(final_tracks, key=func_sir_intensity)
         return sorted_tracks[0] if len(sorted_tracks) > 0 else None
 
-
-    class MbTrackColorManager:
-        def __init__(self):
-            self.index = 0
-            self.color_list = [
-                mpl.colormaps["tab10"](i)[:3] for i in range(10)
-            ]
-            self.id2color = {}
-
-        def get_color_for_track(self, id: int):
-            color = self.id2color.get(id)
-            if color is None:
-                new_color = self.color_list[self.index]
-                self.id2color[id] = new_color
-                color = new_color
-                self.inc_index()
-            return color
-        
-        def inc_index(self):
-            self.index += 1
-            if self.index >= len(self.color_list):
-                self.index = 0
-
     def save_mid_body_tracking(
         self,
         spots_candidates,
@@ -778,7 +756,7 @@ class MidBodyDetectionFactory:
         if not os.path.exists(path_output):
             os.makedirs(path_output)
 
-        color_lib = MidBodyDetectionFactory.MbTrackColorManager()
+        color_lib = MbTrackColorManager()
 
         # Detect spots in each frame
         nb_frames = mitosis_movie.shape[0]
