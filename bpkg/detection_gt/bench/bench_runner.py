@@ -4,7 +4,7 @@ from .bench import bench_detection_against_gt
 def bench_detection_against_gt_runner():
     stats = bench_detection_against_gt(
         WrapperEnv.src_file,
-        WrapperEnv.gt_filepath_from_source(WrapperEnv.src_file),
+        WrapperEnv.gt_filepath_for_source(WrapperEnv.src_file),
         WrapperEnv.main_spot_detection_method,
         ignore_false_positives=True
     )
