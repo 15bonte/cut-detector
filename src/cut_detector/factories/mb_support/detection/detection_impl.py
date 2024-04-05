@@ -40,7 +40,7 @@ diffgau = partial(
 ############ Determinant of Hessian ############
 
 hessian = partial(
-    detect_minmax_dog,
+    detect_minmax_doh,
     min_sigma=5,
     max_sigma=10,
     num_sigma=5,
