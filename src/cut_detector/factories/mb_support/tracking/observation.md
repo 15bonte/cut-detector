@@ -1,10 +1,8 @@
-# Regarding the gap_closing/stack issue:
+# Regarding the gap_closing/stack issue (fixed):
 
 The file 
 20231019-t1_siCep55-50-4_mitosis_21_25_to_117.tiff
 was used for the observation
-
-
 
 DEFAULT:
 [ target_coord ] is a (std) list of the np.array
@@ -19,6 +17,5 @@ stack is a 2D npArray (line-col).
 SPATIAL right now is partially broken. It produces:
 [ target coord ] is OK
 
-stack is broken because it contains only one line, and drops the other.
-This could explain why points were not linked properly, since their connections
-were just dropped.
+stack is fixed now and produces a 2D np array with as many lines as candidates
+and m spatial columns
