@@ -30,7 +30,7 @@ class Track(Generic[T]):
             0  # can be different from length if we have a gap in the track
         )
 
-    def add_spot(self, spot: MidBodySpot) -> None:
+    def add_spot(self, spot: Spot) -> None:
         """
         Add spot to track.
         """
