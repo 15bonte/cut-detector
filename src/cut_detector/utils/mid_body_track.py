@@ -47,14 +47,3 @@ class MidBodyTrack(Track[MidBodySpot]):
             return np.inf
         return mean_distance
 
-
-    # Commented-out because we can use the one we inherit from
-    #
-    # @staticmethod
-    # def generate_tracks_from_spots(
-    #     spots: dict[int, list[MidBodySpot]],
-    # ) -> list[MidBodyTrack]:
-    #     """
-    #     Generate tracks from spots.
-    #     """
-    #     raise NotImplementedError
