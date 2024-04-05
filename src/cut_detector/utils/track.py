@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import abstractmethod
-from typing import TypeVar, Generic, Callable, Dict, List, Tuple
+from typing import TypeVar, Generic, Callable, Dict, List, Tuple, Type
 
 import numpy as np
 import pandas as pd
@@ -44,7 +44,7 @@ class Track(Generic[T]):
     @staticmethod
     @abstractmethod
     def generate_tracks_from_spots(
-        spot_type: type,
+        spot_type: Type[Spot],
         spots: dict[int, list[T]],
         mode: TRACKING_MODE | Callable[[np.ndarray], np.ndarray],
         show_post_conv_df: bool = False,
@@ -66,17 +66,14 @@ class Track(Generic[T]):
 
 
 def generate_tracks_from_spot_dict(
-        spot_kind: type, 
+        spot_kind: Type[Spot], 
         spot_dict: Dict[int, List[Spot]],
         mode: TRACKING_MODE | LapTrack = tracking.cur_spatial_laptrack,
         show_post_conv_df: bool = False,
         show_tracking_df: bool = False,
         show_tracking_plot: bool = False,
         ) -> List[Track]:
-    """
-    Although 'type' is used for spot_kind, the expected type
-    in reality is a class that implements Spot.
-    """
+    
     spot_df = convert_spots_to_spotdf(
         spot_kind,
         spot_dict,
@@ -95,7 +92,7 @@ def generate_tracks_from_spot_dict(
 
 
 def convert_spots_to_spotdf(
-        spot_kind: type, 
+        spot_kind: Type[Spot], 
         spot_dict: Dict[int, List[Spot]],
         show_post_conv_df: bool = False) -> List[Track]:
     
@@ -128,7 +125,7 @@ def convert_spots_to_spotdf(
 
 
 def apply_tracking(
-        spot: type,
+        spot: Type[Spot],
         spot_df: pd.DataFrame, 
         mode: TRACKING_MODE | LapTrack,  # str support is for legacy code
         show_tracking_df: bool = False
