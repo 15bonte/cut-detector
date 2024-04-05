@@ -11,10 +11,13 @@ class WrapperEnv:
     main_spot_detection_method: MidBodyDetectionFactory.SPOT_DETECTION_MODE = detection.cur_log
     main_tracking_method: SpatialLapTrack = tracking.cur_spatial_laptrack
     main_slt_tracking_method: SpatialLapTrack = tracking.cur_spatial_laptrack
+
     out_dir:    str = "src/cut_detector/data/mid_bodies"
     gt_dir:     str = "src/cut_detector/data/mid_bodies_movies_test/gt"
     log_dir:    str = "src/cut_detector/data/mid_bodies_movies_test/log"
     config_dir: str = "src/cut_detector/data/mid_bodies_movies_test/config"
+
+    detectors_config_fp: str = "src/cut_detector/data/mid_bodies_movies_test/config/detectors.json"
 
     @staticmethod
     def gt_filepath_for_source(src: Source) -> str:

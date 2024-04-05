@@ -43,7 +43,7 @@ slt-debug:
     Run a debug version of Spatial LapTrack, with a log file 
     and resulting images
 
-gen-d-bconf:
+gen-dbench-conf:
     Generate a new detection Bench Configuration file, with all
     current pipelines
 
@@ -51,7 +51,6 @@ sand <project>:
     starts the sandbox project <project>. To get a list of all sandbox
     projects, use 'sand list'. If you don't know what the
     sandbox projects are, use 'sand help'
-
 
 """
     

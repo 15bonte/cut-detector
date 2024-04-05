@@ -11,4 +11,4 @@ def write_config(config: BenchConfig, to_config_filepath: str):
         bench_d[name] = conf_d
     
     with open(to_config_filepath, "w") as file:
-        json.dump(bench_d, file)
+        json.dump(bench_d, file, indent=2)

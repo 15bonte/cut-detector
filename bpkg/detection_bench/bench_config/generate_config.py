@@ -11,20 +11,28 @@ def generate_config() -> BenchConfig:
     """ Creates a default bench config with all available detectors
     """
     detectors = {}
-    current_funcs = [f for _, f in detection_current if callable(f)]
-    all_funcs     = [f for _, f in detection_impl    if callable(f)]
-    
-    for f in current_funcs:
-        name, d_config = generate_detection(f)
-        detectors[name] = d_config
-    for f in all_funcs:
-        name, d_config = generate_detection(f)
-        detectors[name] = d_config
+    # current_funcs = [f for _, f in detection_current.__dict__.items() if callable(f)]
+    # all_funcs     = [f for _, f in detection_impl.__dict__.items()    if callable(f)]
+
+    funcs = {}
+    current_funcs = {k: f for k, f in detection_current.__dict__.items() if callable(f)}
+    all_funcs = {k: f for k, f in detection_impl.__dict__.items() if callable(f)}
+    funcs.update(current_funcs)
+    funcs.update(all_funcs)
+
+    filtered_funcs = {}
+    for k, f in funcs.items():
+        if not (k == "partial" or k.startswith("detect_")):
+            filtered_funcs[k] = f
+
+    for k, f in filtered_funcs.items():
+        d_config = generate_detection(f)
+        detectors[k] = d_config
 
     return BenchConfig(detectors)
 
 
-def generate_detection(fn: partial) -> Tuple[str, DetectionConfig]:
+def generate_detection(fn: partial) -> DetectionConfig:
     """ Creates a DetectionConfig from a partial function fn of a known type.
     Known types are:
     - detect_minmax_log
@@ -33,11 +41,12 @@ def generate_detection(fn: partial) -> Tuple[str, DetectionConfig]:
 
     If unknown, the function raises an error
     """
+
     if fn.func == detection.detect_minmax_log:
-        return ("log", DetectionConfig("log", fn.keywords))
+        return DetectionConfig("log", fn.keywords)
     elif fn.func == detection.detect_minmax_dog:
-        return ("dog", DetectionConfig("dog", fn.keywords))
+        return DetectionConfig("dog", fn.keywords)
     elif fn.func == detection.detect_minmax_doh:
-        return ("dog", DetectionConfig("doh", fn.keywords))
+        return DetectionConfig("doh", fn.keywords)
     else:
-        raise RuntimeError("Unknown function f{fn.func}")
+        raise RuntimeError(f"Unknown function f{fn.func}")
