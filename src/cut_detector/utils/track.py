@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import abstractmethod
-from typing import TypeVar, Generic, Callable, Dict, List, Tuple
+from typing import TypeVar, Generic, Callable, Tuple
 
 import numpy as np
 import pandas as pd
@@ -44,7 +44,7 @@ class Track(Generic[T]):
     @staticmethod
     @abstractmethod
     def generate_tracks_from_spots(
-        spot_type: type,
+        spot_type: type[Spot],
         spots: dict[int, list[T]],
         mode: TRACKING_MODE | Callable[[np.ndarray], np.ndarray],
         show_post_conv_df: bool = False,
@@ -54,50 +54,27 @@ class Track(Generic[T]):
         """
         Generate tracks from spots.
         """
-        return generate_tracks_from_spot_dict(
+        spot_df = convert_spots_to_spotdf(
             spot_type,
             spots,
-            mode,
             show_post_conv_df,
-            show_tracking_df,
-            show_tracking_plot
         )
+        track_df, _, _ = apply_tracking(
+            spot_type, 
+            spots,
+            mode,
+            show_tracking_df,
+        )
+        if show_tracking_plot:
+            generate_tracking_plot(track_df)
 
-
-
-def generate_tracks_from_spot_dict(
-        spot_kind: type, 
-        spot_dict: Dict[int, List[Spot]],
-        mode: TRACKING_MODE | LapTrack = tracking.cur_spatial_laptrack,
-        show_post_conv_df: bool = False,
-        show_tracking_df: bool = False,
-        show_tracking_plot: bool = False,
-        ) -> List[Track]:
-    """
-    Although 'type' is used for spot_kind, the expected type
-    in reality is a class that implements Spot.
-    """
-    spot_df = convert_spots_to_spotdf(
-        spot_kind,
-        spot_dict,
-        show_post_conv_df,
-    )
-    track_df, _, _ = apply_tracking(
-        spot_kind, 
-        spot_df,
-        mode,
-        show_tracking_df,
-    )
-    if show_tracking_plot:
-        generate_tracking_plot(track_df)
-
-    return track_df_to_mb_track(track_df, spot_dict)
+        return track_df_to_mb_track(track_df, spots)
 
 
 def convert_spots_to_spotdf(
-        spot_kind: type, 
-        spot_dict: Dict[int, List[Spot]],
-        show_post_conv_df: bool = False) -> List[Track]:
+        spot_kind: type[Spot], 
+        spot_dict: dict[int, list[Spot]],
+        show_post_conv_df: bool = False) -> list[Track]:
     
     cols = [
         "frame",
@@ -128,7 +105,7 @@ def convert_spots_to_spotdf(
 
 
 def apply_tracking(
-        spot: type,
+        spot: type[Spot],
         spot_df: pd.DataFrame, 
         mode: TRACKING_MODE | LapTrack,  # str support is for legacy code
         show_tracking_df: bool = False
@@ -136,7 +113,7 @@ def apply_tracking(
     
     tracker: LapTrack = None
     if isinstance(mode, str):
-        mapping: Dict[str, LapTrack] = {
+        mapping: dict[str, LapTrack] = {
             "laptrack":         tracking.cur_laptrack,
             "lt":               tracking.lt,
             "spatial_laptrack": tracking.cur_spatial_laptrack,
@@ -206,8 +183,8 @@ def generate_tracking_plot(track_df: pd.DataFrame):
 
 def track_df_to_mb_track(
         track_df: pd.DataFrame,
-        spots: Dict[int, List[Spot]],
-        ) -> List[Track]:
+        spots: dict[int, list[Spot]],
+        ) -> list[Track]:
     
     track_df.reset_index(inplace=True)
     track_df.dropna(inplace=True)
