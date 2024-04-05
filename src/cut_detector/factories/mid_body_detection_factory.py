@@ -88,7 +88,8 @@ class MidBodyDetectionFactory:
         tracks: list[TrackMateTrack],
         mb_detect_method: SPOT_DETECTION_MODE | Callable[[np.ndarray], np.ndarray] = "lapgau",
         mb_tracking_method: Literal["laptrack", "spatial_laptrack"] | LapTrack = "laptrack",
-        log_blob_spot: bool = False
+        log_blob_spot: bool = False,
+        show_tracking_plot: bool = False,
     ) -> None:
         """
         Get spots of best mitosis track.
@@ -106,9 +107,17 @@ class MidBodyDetectionFactory:
             mode=mb_detect_method,
             log_blob_spot=log_blob_spot,
         )
-        mid_body_tracks = self.generate_tracks_from_spots(
+        # mid_body_tracks = self.generate_tracks_from_spots(
+        #     spots_candidates,
+        #     tracking_method=mb_tracking_method
+        # )
+        mid_body_tracks = MidBodyTrack.generate_tracks_from_spots(
+            MidBodySpot,
             spots_candidates,
-            tracking_method=mb_tracking_method
+            mb_tracking_method,
+            False,
+            False,
+            show_tracking_plot
         )
         kept_track = self._select_best_track(
             mitosis_track, mid_body_tracks, tracks, mitosis_movie
@@ -408,41 +417,41 @@ class MidBodyDetectionFactory:
 
     TRACKING_MODE = Literal["laptrack", "spatial_laptrack"]
     
-    def generate_tracks_from_spots(
-        self, 
-        spots_candidates: dict[int, list[MidBodySpot]],
-        tracking_method: TRACKING_MODE | LapTrack = "spatial_laptrack",
-        show_tracking: bool = False,
-    ) -> list[MidBodyTrack]:
-        """
-        Use spots linked together to generate tracks.
+    # def generate_tracks_from_spots(
+    #     self, 
+    #     spots_candidates: dict[int, list[MidBodySpot]],
+    #     tracking_method: TRACKING_MODE | LapTrack = "spatial_laptrack",
+    #     show_tracking: bool = False,
+    # ) -> list[MidBodyTrack]:
+    #     """
+    #     Use spots linked together to generate tracks.
 
-        Parameters
-        ----------
-        spots_candidates : {frame: [MidBodySpot]}
+    #     Parameters
+    #     ----------
+    #     spots_candidates : {frame: [MidBodySpot]}
 
-        Returns
-        ----------
-        tracks: [MidBodyTrack]
+    #     Returns
+    #     ----------
+    #     tracks: [MidBodyTrack]
 
-        """
+    #     """
 
-        # return self._gen_laptrack_tracking(
-        #     spots_candidates, 
-        #     tracking_method, 
-        #     False,
-        #     False,
-        #     show_tracking,
-        # )
+    #     # return self._gen_laptrack_tracking(
+    #     #     spots_candidates, 
+    #     #     tracking_method, 
+    #     #     False,
+    #     #     False,
+    #     #     show_tracking,
+    #     # )
     
-        return MidBodyTrack.generate_tracks_from_spots(
-            MidBodySpot,
-            spots_candidates,
-            tracking_method,
-            False,
-            False,
-            show_tracking
-        )
+    #     return MidBodyTrack.generate_tracks_from_spots(
+    #         MidBodySpot,
+    #         spots_candidates,
+    #         tracking_method,
+    #         False,
+    #         False,
+    #         show_tracking
+    #     )
     
 
     # def _gen_laptrack_tracking(
