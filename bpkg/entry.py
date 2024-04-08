@@ -45,7 +45,11 @@ slt-debug:
 
 gen-dbench-conf:
     Generate a new detection Bench Configuration file, with all
-    current pipelines
+    current detectors
+
+run-dbench:
+    run the detection benching on the configuration pipelines,
+    using associated ground truth files
 
 sand <project>:
     starts the sandbox project <project>. To get a list of all sandbox
@@ -81,6 +85,10 @@ def run_gen_dbench_conf():
     from detection_bench.runner.gen_config_runner import gen_config_runner
     gen_config_runner()
 
+def run_dbench():
+    from detection_bench.runner.exec_config_runner import exec_runner
+    exec_runner()
+
 def run_sand():
     arg = sys.argv[2]
     from sandbox import run_sandbox_project
@@ -97,7 +105,8 @@ FLAG_TABLE = {
     "new-d-gt":        run_new_d_gt,
     "slt-debug":       run_slt_debug,
     "gen-dbench-conf": run_gen_dbench_conf,
-    "sand":            run_sand
+    "run-dbench":      run_dbench,
+    "sand":            run_sand,
 }
 
 def run_bpkg():
