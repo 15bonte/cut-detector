@@ -1,0 +1,59 @@
+=====
+Test 9 - Adjusting doh on tests - File 8
+Quite hard
+0.005 is best
+rest is not great
+=====
+image source: s7_siLuci-1_mitosis_31_19_to_73.tiff
+
+total frame: 14
+Reference function:
+log_cur
+{'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.1}
+
+Candidates:
+doh_005: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.05}
+doh_0025: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.025}
+doh_0010: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.01}
+doh_0005: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.005}
+doh_00040: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.004}
+doh_00034: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.0034}
+doh_00025: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.0025}
+doh_00017: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.0017}
+doh_00014: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.0014}
+doh_0001: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.001}
+
+--- Blobs ---
+reference found 8 blobs
+
+doh_005 found 0/8 blobs -- 0.00% blobs
+    8/8 miss | 0/8 FP
+    100.00% miss (m/n_ref) | 0.00% FP (fp/n_ref)
+doh_0025 found 0/8 blobs -- 0.00% blobs
+    8/8 miss | 0/8 FP
+    100.00% miss (m/n_ref) | 0.00% FP (fp/n_ref)
+doh_0010 found 4/8 blobs -- 50.00% blobs
+    4/8 miss | 0/8 FP
+    50.00% miss (m/n_ref) | 0.00% FP (fp/n_ref)
+doh_0005 found 7/8 blobs -- 87.50% blobs
+    3/8 miss | 2/8 FP
+    37.50% miss (m/n_ref) | 25.00% FP (fp/n_ref)
+doh_00040 found 14/8 blobs -- 175.00% blobs
+    0/8 miss | 6/8 FP
+    0.00% miss (m/n_ref) | 75.00% FP (fp/n_ref)
+doh_00034 found 14/8 blobs -- 175.00% blobs
+    0/8 miss | 6/8 FP
+    0.00% miss (m/n_ref) | 75.00% FP (fp/n_ref)
+doh_00025 found 14/8 blobs -- 175.00% blobs
+    0/8 miss | 6/8 FP
+    0.00% miss (m/n_ref) | 75.00% FP (fp/n_ref)
+doh_00017 found 21/8 blobs -- 262.50% blobs
+    0/8 miss | 13/8 FP
+    0.00% miss (m/n_ref) | 162.50% FP (fp/n_ref)
+doh_00014 found 33/8 blobs -- 412.50% blobs
+    0/8 miss | 25/8 FP
+    0.00% miss (m/n_ref) | 312.50% FP (fp/n_ref)
+doh_0001 found 172/8 blobs -- 2150.00% blobs
+    0/8 miss | 164/8 FP
+    0.00% miss (m/n_ref) | 2050.00% FP (fp/n_ref)
+
