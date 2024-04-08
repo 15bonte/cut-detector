@@ -51,18 +51,14 @@ class MidBodyDetectionFactory:
 
     def __init__(
         self,
-        weight_mklp_intensity_factor=5.0,
-        weight_sir_intensity_factor=1.50,
-        mid_body_linking_max_distance=175,
+        track_linking_max_distance=175,
         h_maxima_threshold=5.0,
         sigma=2.0,
         threshold=1.0,
         cytokinesis_duration=CYTOKINESIS_DURATION,
         minimum_mid_body_track_length=10,
     ) -> None:
-        self.weight_mklp_intensity_factor = weight_mklp_intensity_factor
-        self.weight_sir_intensity_factor = weight_sir_intensity_factor
-        self.mid_body_linking_max_distance = mid_body_linking_max_distance
+        self.track_linking_max_distance = track_linking_max_distance
         self.h_maxima_threshold = h_maxima_threshold
         self.sigma = sigma
         self.threshold = threshold
@@ -117,7 +113,11 @@ class MidBodyDetectionFactory:
             show_tracking_plot
         )
         kept_track = self._select_best_track(
-            mitosis_track, mid_body_tracks, tracks, mitosis_movie
+            mitosis_track, 
+            mid_body_tracks, 
+            tracks, 
+            mitosis_movie,
+            self.track_linking_max_distance
         )
 
         if kept_track is None:
@@ -350,75 +350,13 @@ class MidBodyDetectionFactory:
         # Return average intensity
         return int(np.mean(crop))
 
-    def _update_spots_hereditary(
-        self, spots1: list[MidBodySpot], spots2: list[MidBodySpot]
-    ) -> None:
-        """
-        Link spots together using Hungarian algorithm.
-        """
-        # Ignore empty spots list
-        if len(spots1) == 0 or len(spots2) == 0:
-            return
-
-        # Create cost matrix
-        # https://imagej.net/plugins/trackmate/algorithms
-        cost_matrix = np.zeros(
-            (len(spots1) + len(spots2), len(spots1) + len(spots2))
-        )
-        max_cost = 0
-        for i, spot1 in enumerate(spots1):
-            for j, spot2 in enumerate(spots2):
-                intensity_penalty = (
-                    3
-                    * self.weight_mklp_intensity_factor
-                    * np.abs(spot1.intensity - spot2.intensity)
-                    / (spot1.intensity + spot2.intensity)
-                )
-                sir_intensity_penalty = (
-                    3
-                    * self.weight_sir_intensity_factor
-                    * np.abs(spot1.sir_intensity - spot2.sir_intensity)
-                    / (spot1.sir_intensity + spot2.sir_intensity)
-                )
-                penalty = 1 + intensity_penalty + sir_intensity_penalty
-                distance = spot1.distance_to(spot2)
-                if distance > self.mid_body_linking_max_distance:
-                    cost_matrix[i, j] = np.inf
-                else:
-                    # Compared to original TrackMate algorithm, remove square to penalize no attribution to the closest spot
-                    cost_matrix[i, j] = (penalty * distance) ** 1
-                    max_cost = max(max_cost, cost_matrix[i, j])
-
-        min_cost = (
-            0
-            if np.max(cost_matrix) == 0
-            else np.min(cost_matrix[np.nonzero(cost_matrix)])
-        )
-
-        cost_matrix[len(spots1) :, : len(spots2)] = (
-            max_cost * 1.05
-        )  # bottom left
-        cost_matrix[: len(spots1), len(spots2) :] = (
-            max_cost * 1.05
-        )  # top right
-        cost_matrix[len(spots1) :, len(spots2) :] = min_cost  # bottom right
-
-        # Hungarian algorithm
-        row_ind, col_ind = linear_sum_assignment(cost_matrix)
-
-        # Update parent and child spots
-        for i, j in zip(row_ind, col_ind):
-            if i < len(spots1) and j < len(spots2):
-                spots1[i].child_spot = spots2[j]
-                spots2[j].parent_spot = spots1[i]
-
-
     def _select_best_track(
         self,
         mitosis_track: MitosisTrack,
         mid_body_tracks: list[MidBodyTrack],
         trackmate_tracks: list[TrackMateTrack],
         mitosis_movie: np.array,
+        mid_body_linking_max_distance: float,
         sir_channel=0,
     ) -> MidBodyTrack:
         """
@@ -524,7 +462,7 @@ class MidBodyDetectionFactory:
         expected_distances = []
         for track in mid_body_tracks:
             val = track.get_expected_distance(
-                expected_positions, self.mid_body_linking_max_distance
+                expected_positions, mid_body_linking_max_distance
             )
             expected_distances.append(val)
 
