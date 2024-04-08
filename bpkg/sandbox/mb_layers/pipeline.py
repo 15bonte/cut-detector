@@ -4,7 +4,9 @@ while exts functions takes a function path.
 Maybe an ext function that triggers the rest of the pipeline (tracking could be added) ?
 """
 
+from typing import Optional
 import numpy as np
+
 from .layers import BlobLayer
 from .savers import Saver
 
@@ -12,10 +14,10 @@ def run_pipeline(
         pipeline: list[BlobLayer], 
         out: str, 
         movie: np.array, 
-        src_fp: str | None = None,
+        src_fp: Optional[str] = None,
         logging: bool = False,
         savers: list[Saver] = [],
-        pipeline_name: str | None = None
+        pipeline_name: Optional[str] = None
         ):
     """Executes the pipeline on the movie data.
     logging controls whether some simple info messages are sent or not.

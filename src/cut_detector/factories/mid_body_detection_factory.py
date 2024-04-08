@@ -1,18 +1,9 @@
 import os
-from random import shuffle
-from typing import Literal, Optional, Callable, Dict, List, Tuple
-from math import sqrt
+from typing import Literal, Optional, Callable, Union
 import numpy as np
 from bigfish import stack, detection
 from skimage.morphology import extrema, opening
-from skimage.feature import blob_log, blob_dog, blob_doh
 from scipy import ndimage
-from scipy.optimize import linear_sum_assignment
-from scipy.spatial import distance
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import pandas as pd
-from laptrack import LapTrack
 
 from cnn_framework.utils.display_tools import display_progress
 
@@ -23,9 +14,9 @@ from ..utils.mid_body_spot import MidBodySpot
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.trackmate_track import TrackMateTrack
 from ..utils.tools import plot_detection
+from ..utils.track import TRACKING_METHOD
 
-from .mb_support import detection, tracking
-from .mb_support.tracking import SpatialLapTrack
+from ..utils.mid_body_track_color_manager import MbTrackColorManager
 
 
 class MidBodyDetectionFactory:
@@ -49,18 +40,14 @@ class MidBodyDetectionFactory:
 
     def __init__(
         self,
-        weight_mklp_intensity_factor=5.0,
-        weight_sir_intensity_factor=1.50,
-        mid_body_linking_max_distance=175,
+        track_linking_max_distance=175,
         h_maxima_threshold=5.0,
         sigma=2.0,
         threshold=1.0,
         cytokinesis_duration=CYTOKINESIS_DURATION,
         minimum_mid_body_track_length=10,
     ) -> None:
-        self.weight_mklp_intensity_factor = weight_mklp_intensity_factor
-        self.weight_sir_intensity_factor = weight_sir_intensity_factor
-        self.mid_body_linking_max_distance = mid_body_linking_max_distance
+        self.track_linking_max_distance = track_linking_max_distance
         self.h_maxima_threshold = h_maxima_threshold
         self.sigma = sigma
         self.threshold = threshold
@@ -68,16 +55,14 @@ class MidBodyDetectionFactory:
         self.minimum_mid_body_track_length = minimum_mid_body_track_length
 
     SPOT_DETECTION_MODE = Literal[
-        "bigfish", 
-        "h_maxima", 
+        "bigfish",
+        "h_maxima",
         "cur_log",
         "lapgau",
         "log2_wider",
-        "rshift_log"
-        "cur_dog",
-        "diffgau", 
-        "cur_doh"
-        "hessian", 
+        "rshift_log" "cur_dog",
+        "diffgau",
+        "cur_doh" "hessian",
     ]
 
     def update_mid_body_spots(
@@ -86,9 +71,12 @@ class MidBodyDetectionFactory:
         mitosis_movie: np.array,
         mask_movie: np.array,
         tracks: list[TrackMateTrack],
-        mb_detect_method: SPOT_DETECTION_MODE | Callable[[np.ndarray], np.ndarray] = "lapgau",
-        mb_tracking_method: Literal["laptrack", "spatial_laptrack"] | LapTrack = "laptrack",
-        log_blob_spot: bool = False
+        mb_detect_method: Union[
+            SPOT_DETECTION_MODE, Callable[[np.ndarray], np.ndarray]
+        ] = "lapgau",
+        mb_tracking_method: TRACKING_METHOD = "laptrack",
+        log_blob_spot: bool = False,
+        show_tracking_plot: bool = False,
     ) -> None:
         """
         Get spots of best mitosis track.
@@ -101,17 +89,24 @@ class MidBodyDetectionFactory:
         """
 
         spots_candidates = self.detect_mid_body_spots(
-            mitosis_movie, 
+            mitosis_movie,
             mask_movie=mask_movie,
             mode=mb_detect_method,
             log_blob_spot=log_blob_spot,
         )
-        mid_body_tracks = self.generate_tracks_from_spots(
+        mid_body_tracks = MidBodyTrack.generate_tracks_from_spots(
             spots_candidates,
-            tracking_method=mb_tracking_method
+            mb_tracking_method,
+            False,
+            False,
+            show_tracking_plot,
         )
         kept_track = self._select_best_track(
-            mitosis_track, mid_body_tracks, tracks, mitosis_movie
+            mitosis_track,
+            mid_body_tracks,
+            tracks,
+            mitosis_movie,
+            self.track_linking_max_distance,
         )
 
         if kept_track is None:
@@ -128,8 +123,10 @@ class MidBodyDetectionFactory:
         mask_movie: Optional[np.array] = None,
         mid_body_channel=1,
         sir_channel=0,
-        mode: SPOT_DETECTION_MODE | Callable[[np.ndarray], np.ndarray] = "diffgau",
-        log_blob_spot: bool = False
+        mode: Union[
+            SPOT_DETECTION_MODE, Callable[[np.ndarray], np.ndarray]
+        ] = "diffgau",
+        log_blob_spot: bool = False,
     ) -> dict[int, list[MidBodySpot]]:
         """
         Parameters
@@ -166,7 +163,7 @@ class MidBodyDetectionFactory:
                 sir_channel,
                 mode=mode,
                 frame=frame,
-                log_blob_spot=log_blob_spot
+                log_blob_spot=log_blob_spot,
             )
 
             # Update dictionary
@@ -174,14 +171,13 @@ class MidBodyDetectionFactory:
 
         return spots_dictionary
 
-
     def _spot_detection(
         self,
         image: np.array,
         mask: np.array,
         mid_body_channel: int,
         sir_channel: int,
-        mode: SPOT_DETECTION_MODE | Callable[[np.ndarray], np.ndarray],
+        mode: Union[SPOT_DETECTION_MODE, Callable[[np.ndarray], np.ndarray]],
         frame=-1,
         log_blob_spot: bool = False,
     ) -> list[MidBodySpot]:
@@ -209,24 +205,26 @@ class MidBodyDetectionFactory:
                     print(f"found x:{s[1]}  y:{s[0]}  s:{s[2]}")
 
         elif mode in [
-                "cur_log", "lapgau", "log2_wider", "rshift_log",
-                "cur_dog", "diffgau",
-                "cur_doh", "hessian",
-                ]:
+            "cur_log",
+            "lapgau",
+            "log2_wider",
+            "rshift_log",
+            "cur_dog",
+            "diffgau",
+            "cur_doh",
+            "hessian",
+        ]:
             # blob-like function called referenced by name
-            
+
             mapping = {
                 "cur_log": detection.cur_log,
                 "cur_dog": detection.cur_dog,
                 "cur_doh": detection.cur_doh,
-
                 "lapgau": detection.lapgau,
                 "log2_wider": detection.log2_wider,
                 "rshit_log": detection.rshift_log,
-                
                 "diffgau": detection.diffgau,
-
-                "hessian": detection.hessian
+                "hessian": detection.hessian,
             }
 
             spots = [
@@ -296,7 +294,6 @@ class MidBodyDetectionFactory:
         else:
             raise ValueError(f"Unknown mode: [{mode}]")
 
-
         # WARNING:
         # spots can be a list of Tuple with 2 or 3 values:
         # 2 values: (y, x) if h_maxima or fish_eye used
@@ -314,7 +311,6 @@ class MidBodyDetectionFactory:
         ]
 
         return mid_body_spots
-    
 
     @staticmethod
     def _get_average_intensity(
@@ -344,263 +340,13 @@ class MidBodyDetectionFactory:
         # Return average intensity
         return int(np.mean(crop))
 
-    def _update_spots_hereditary(
-        self, spots1: list[MidBodySpot], spots2: list[MidBodySpot]
-    ) -> None:
-        """
-        Link spots together using Hungarian algorithm.
-        """
-        # Ignore empty spots list
-        if len(spots1) == 0 or len(spots2) == 0:
-            return
-
-        # Create cost matrix
-        # https://imagej.net/plugins/trackmate/algorithms
-        cost_matrix = np.zeros(
-            (len(spots1) + len(spots2), len(spots1) + len(spots2))
-        )
-        max_cost = 0
-        for i, spot1 in enumerate(spots1):
-            for j, spot2 in enumerate(spots2):
-                intensity_penalty = (
-                    3
-                    * self.weight_mklp_intensity_factor
-                    * np.abs(spot1.intensity - spot2.intensity)
-                    / (spot1.intensity + spot2.intensity)
-                )
-                sir_intensity_penalty = (
-                    3
-                    * self.weight_sir_intensity_factor
-                    * np.abs(spot1.sir_intensity - spot2.sir_intensity)
-                    / (spot1.sir_intensity + spot2.sir_intensity)
-                )
-                penalty = 1 + intensity_penalty + sir_intensity_penalty
-                distance = spot1.distance_to(spot2)
-                if distance > self.mid_body_linking_max_distance:
-                    cost_matrix[i, j] = np.inf
-                else:
-                    # Compared to original TrackMate algorithm, remove square to penalize no attribution to the closest spot
-                    cost_matrix[i, j] = (penalty * distance) ** 1
-                    max_cost = max(max_cost, cost_matrix[i, j])
-
-        min_cost = (
-            0
-            if np.max(cost_matrix) == 0
-            else np.min(cost_matrix[np.nonzero(cost_matrix)])
-        )
-
-        cost_matrix[len(spots1) :, : len(spots2)] = (
-            max_cost * 1.05
-        )  # bottom left
-        cost_matrix[: len(spots1), len(spots2) :] = (
-            max_cost * 1.05
-        )  # top right
-        cost_matrix[len(spots1) :, len(spots2) :] = min_cost  # bottom right
-
-        # Hungarian algorithm
-        row_ind, col_ind = linear_sum_assignment(cost_matrix)
-
-        # Update parent and child spots
-        for i, j in zip(row_ind, col_ind):
-            if i < len(spots1) and j < len(spots2):
-                spots1[i].child_spot = spots2[j]
-                spots2[j].parent_spot = spots1[i]
-
-    TRACKING_MODE = Literal["laptrack", "spatial_laptrack"]
-    
-    def generate_tracks_from_spots(
-        self, 
-        spots_candidates: dict[int, list[MidBodySpot]],
-        tracking_method: TRACKING_MODE | LapTrack = "spatial_laptrack",
-        show_tracking: bool = False,
-    ) -> list[MidBodyTrack]:
-        """
-        Use spots linked together to generate tracks.
-
-        Parameters
-        ----------
-        spots_candidates : {frame: [MidBodySpot]}
-
-        Returns
-        ----------
-        tracks: [MidBodyTrack]
-
-        """
-
-        # return self._gen_laptrack_tracking(
-        #     spots_candidates, 
-        #     tracking_method, 
-        #     False,
-        #     False,
-        #     show_tracking,
-        # )
-    
-        return MidBodyTrack.generate_tracks_from_spots(
-            MidBodySpot,
-            spots_candidates,
-            tracking_method,
-            False,
-            False,
-            show_tracking
-        )
-    
-
-    # def _gen_laptrack_tracking(
-    #         self,
-    #         spots_candidates: dict[int, list[MidBodySpot]],
-    #         tracking: TRACKING_MODE | LapTrack = "laptrack",
-    #         show_df: bool = False,
-    #         show_tracking_df: bool = False,
-    #         show_tracking_plot: bool = False,
-    #         ) -> List[MidBodyTrack]:
-    #     df = self._convert_mb_spots_to_df(spots_candidates, show_df)
-    #     track_df, _, _ = self._apply_tracking(df, tracking, show_tracking_df)
-    #     if show_tracking_df:
-    #         print(track_df.to_string())
-    #     if show_tracking_plot:
-    #         self._generate_tracking_plot(track_df)
-    #     return self._track_df_to_mb_track(track_df, spots_candidates)
-    
-    # @staticmethod
-    # def _convert_mb_spots_to_df(
-    #         spots: Dict[int, List[MidBodySpot]],
-    #         print_df: bool = False) -> pd.DataFrame:
-        
-    #     spots_df = pd.DataFrame(
-    #         {
-    #             "frame": [],
-    #             "x": [],
-    #             "y": [],
-    #             "mlkp_intensity": [],
-    #             "sir_intensity": [],
-    #             "idx_in_frame": []
-    #         }
-    #     )
-    #     for frame, mb_spots in spots.items():
-    #         if len(mb_spots) == 0:
-    #             spots_df.loc[len(spots_df.index)] = [
-    #                 frame,
-    #                 None,
-    #                 None,
-    #                 None,
-    #                 None,
-    #                 None,
-    #             ]
-    #         else:
-    #             for idx, mb_spot in enumerate(mb_spots):
-    #                 spots_df.loc[len(spots_df.index)] = [
-    #                     frame,
-    #                     mb_spot.x,
-    #                     mb_spot.y,
-    #                     mb_spot.intensity,
-    #                     mb_spot.sir_intensity,
-    #                     idx
-    #                 ]
-        
-    #     if print_df:
-    #         print("spots_df:", spots_df, sep="\n")
-
-    #     return spots_df
-    
-    # @staticmethod
-    # def _apply_tracking(
-    #         spot_df: pd.DataFrame,
-    #         mode: TRACKING_MODE | LapTrack,
-    #         show_tracking_df: bool = False,
-    #         ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-        
-    #     tracker: LapTrack = None
-    #     if isinstance(mode, str):
-    #         mapping: Dict[str, LapTrack] = {
-    #             "laptrack":         tracking.cur_laptrack,
-    #             "lt":               tracking.lt,
-    #             "spatial_laptrack": tracking.cur_spatial_laptrack,
-    #             "slt":              tracking.slt,
-    #         }
-    #         tracker = mapping.get(mode, None)
-    #         if tracker is None:
-    #             raise RuntimeError(f"Unknown tracking string: {mode}")
-    #     elif isinstance(mode, LapTrack):
-    #         tracker = mode
-    #     else:
-    #         raise RuntimeError("mode must be either a str or a LapTrack object")
-        
-    #     df = tracker.predict_dataframe(
-    #         spot_df,
-    #         ["x", "y", "mlkp_intensity", "sir_intensity"],
-    #         only_coordinate_cols=False,
-    #     )
-
-    #     if show_tracking_df:
-    #         print("track df:")
-    #         print(df[0])
-    #         print("split df:")
-    #         print(df[1])
-    #         print("merge df:")
-    #         print(df[2])
-
-    #     return df
-    
-    # @staticmethod
-    # def _generate_tracking_plot(track_df: pd.DataFrame):
-    #     def get_track_end(track_df, keys, track_id, first=True):
-    #         df = track_df[track_df["track_id"] == track_id].sort_index(
-    #             level="frame"
-    #         )
-    #         return df.iloc[0 if first else -1][keys]
-
-    #     keys = ["position_x", "position_y", "track_id", "tree_id"]
-    #     plt.figure(figsize=(3, 3))
-    #     frames = track_df.index.get_level_values("frame")
-    #     frame_range = [frames.min(), frames.max()]
-    #     # k1, k2 = "position_y", "position_x"
-    #     k1, k2 = "y", "x"
-    #     keys = [k1, k2]
-
-    #     for track_id, grp in track_df.groupby("track_id"):
-    #         df = grp.reset_index().sort_values("frame")
-    #         plt.scatter(
-    #             df[k1],
-    #             df[k2],
-    #             c=df["frame"],
-    #             vmin=frame_range[0],
-    #             vmax=frame_range[1],
-    #         )
-    #         for i in range(len(df) - 1):
-    #             pos1 = df.iloc[i][keys]
-    #             pos2 = df.iloc[i + 1][keys]
-    #             plt.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], "-k")
-
-    #     plt.show()
-
-    # @staticmethod
-    # def _track_df_to_mb_track(
-    #         track_df: pd.DataFrame,
-    #         spots: Dict[int, List[MidBodySpot]],
-    #         ) -> List[MidBodyTrack]:
-
-    #     track_df.reset_index(inplace=True)
-    #     track_df.dropna(inplace=True)
-    #     id_to_track = {}
-    #     for _, row in track_df.iterrows():
-    #         track_id = row["track_id"]
-    #         track: MidBodyTrack = id_to_track.get(track_id)
-    #         if track is None:
-    #             id_to_track[track_id] = MidBodyTrack(len(id_to_track))
-    #             track = id_to_track[track_id]
-    #         frame        = row["frame"]
-    #         idx_in_frame = row["idx_in_frame"]
-    #         track.add_spot(spots[int(frame)][int(idx_in_frame)])
-
-    #     return list(id_to_track.values())
-
-
     def _select_best_track(
         self,
         mitosis_track: MitosisTrack,
         mid_body_tracks: list[MidBodyTrack],
         trackmate_tracks: list[TrackMateTrack],
         mitosis_movie: np.array,
+        mid_body_linking_max_distance: float,
         sir_channel=0,
     ) -> MidBodyTrack:
         """
@@ -706,7 +452,7 @@ class MidBodyDetectionFactory:
         expected_distances = []
         for track in mid_body_tracks:
             val = track.get_expected_distance(
-                expected_positions, self.mid_body_linking_max_distance
+                expected_positions, mid_body_linking_max_distance
             )
             expected_distances.append(val)
 
@@ -732,29 +478,6 @@ class MidBodyDetectionFactory:
         sorted_tracks = sorted(final_tracks, key=func_sir_intensity)
         return sorted_tracks[0] if len(sorted_tracks) > 0 else None
 
-
-    class MbTrackColorManager:
-        def __init__(self):
-            self.index = 0
-            self.color_list = [
-                mpl.colormaps["tab10"](i)[:3] for i in range(10)
-            ]
-            self.id2color = {}
-
-        def get_color_for_track(self, id: int):
-            color = self.id2color.get(id)
-            if color is None:
-                new_color = self.color_list[self.index]
-                self.id2color[id] = new_color
-                color = new_color
-                self.inc_index()
-            return color
-        
-        def inc_index(self):
-            self.index += 1
-            if self.index >= len(self.color_list):
-                self.index = 0
-
     def save_mid_body_tracking(
         self,
         spots_candidates,
@@ -769,7 +492,7 @@ class MidBodyDetectionFactory:
         if not os.path.exists(path_output):
             os.makedirs(path_output)
 
-        color_lib = MidBodyDetectionFactory.MbTrackColorManager()
+        color_lib = MbTrackColorManager()
 
         # Detect spots in each frame
         nb_frames = mitosis_movie.shape[0]

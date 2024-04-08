@@ -5,7 +5,7 @@
 import networkx as nx
 import numpy as np
 
-from typing import Callable, Literal, List, cast
+from typing import Callable, Literal, List, cast, Union
 from pydantic import Field
 from scipy.spatial.distance import cdist
 from laptrack import LapTrack, ParallelBackend
@@ -34,7 +34,7 @@ class SpatialLapTrack(LapTrack):
         description="A slice that is used to subset coords"
     )
 
-    spatial_metric: str | Callable  = Field(
+    spatial_metric: Union[str, Callable]  = Field(
         "euclidean",
         description="The metric to use to compute spatial distances"
     )
@@ -212,34 +212,6 @@ class SpatialLapTrack(LapTrack):
                         metric=self.gap_closing_dist_metric,
                     )
                     assert target_dist_matrix.shape[0] == 1
-
-                    # If Debug is needed
-                    # print("def:")
-                    # print("[target coord]:", [target_coord])
-                    # print("target coord kind:", type(target_coord))
-                    # print("target coord shape:", target_coord.shape)
-                    # print("stack:", np.stack(df["first_frame_coords"].values))
-                    # print("stack shape:", np.stack(df["first_frame_coords"].values).shape)
-                    # print("----")
-                    # print("spatial:")
-                    # print("[target coord]:", [target_spatial_coord])
-                    # print("target coord kind:", type(target_spatial_coord))
-                    # print("target coord shape:", target_spatial_coord.shape)
-                    # print("stack:", np.stack([df["first_frame_coords"].values[0][self.spatial_coord_slice]]))
-                    # print("stack shape:", np.stack([df["first_frame_coords"].values[0][self.spatial_coord_slice]]).shape)
-                    # print("@@@")
-                    # print("stack alternative:", np.stack(df["first_frame_coords"].values)[:,self.spatial_coord_slice])
-                    # print("   ")
-                    # print("   ")
-
-                    # print("TARGET COORD:", target_coord)
-                    # print("TARGET SPATIAL COORD:", target_spatial_coord)
-                    # # print("stack first_frame_coords:", np.stack(df["first_frame_coords"].values))
-                    # print("shapestack first_frame_coords:", np.stack(df["first_frame_coords"].values.shape))
-                    # print("nostack first_frame_coords:", df["first_frame_coords"].values)
-                    # print("nostack novalues first_frame_coords:", df["first_frame_coords"])
-                    # # print("stack modified ver:", np.stack([df["first_frame_coords"].values[0][self.spatial_coord_slice]]))
-                    # # print("--")
 
                     # spatial distance
                     spatial_target_dist_matrix = cdist(

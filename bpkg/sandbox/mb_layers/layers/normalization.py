@@ -1,7 +1,10 @@
 """ Normalization layers
 """
+from typing import Union
+
 import numpy as np
 from skimage.morphology import area_closing, area_opening
+
 from .layer import BlobLayer
 
 
@@ -39,7 +42,7 @@ class HardBinaryNormalizer(BlobLayer):
     pixels strictly greater than value are turned into 1
     pixels less than value are turned into 0
     """
-    def __init__(self, threshold: int | float):
+    def __init__(self, threshold: Union[int, float]):
         self.threshold = threshold
     
     def apply(self, env: dict):

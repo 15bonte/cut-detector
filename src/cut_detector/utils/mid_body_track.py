@@ -1,7 +1,9 @@
 from __future__ import annotations
-import numpy as np
 
-from .track import Track
+import numpy as np
+import pandas as pd
+
+from .track import Track, TRACKING_METHOD
 from .mid_body_spot import MidBodySpot
 
 
@@ -10,16 +12,44 @@ class MidBodyTrack(Track[MidBodySpot]):
     Mid-body candidate track
     """
 
-    def add_spot(self, spot: MidBodySpot) -> None:
-        """
-        Add spot to track.
-        """
-        self.spots[spot.frame] = spot
-        spot.track_id = self.track_id
-        self.length += 1
-        # Add children recursively
-        if spot.child_spot is not None:
-            self.add_spot(spot.child_spot)
+    @staticmethod
+    def generate_tracks_from_spots(
+        spots: dict[int, list[MidBodySpot]],
+        method: TRACKING_METHOD,
+        show_post_conv_df: bool = False,
+        show_tracking_df: bool = False,
+        show_tracking_plot: bool = False,
+    ) -> list[Track[MidBodySpot]]:
+        return Track[MidBodySpot].generate_tracks_from_spots(
+            MidBodySpot,
+            spots,
+            method,
+            show_post_conv_df,
+            show_tracking_df,
+            show_tracking_plot,
+        )
+
+    @staticmethod
+    def track_df_to_mb_track(
+        track_df: pd.DataFrame,
+        spots: dict[int, list[MidBodySpot]],
+    ) -> list[MidBodyTrack]:
+
+        track_df.reset_index(inplace=True)
+        track_df.dropna(inplace=True)
+        id_to_track = {}
+
+        for _, row in track_df.iterrows():
+            track_id = row["track_id"]
+            track: MidBodyTrack = id_to_track.get(track_id)
+            if track is None:
+                id_to_track[track_id] = MidBodyTrack(len(id_to_track))
+                track = id_to_track[track_id]
+            frame = row["frame"]
+            idx_in_frame = row["idx_in_frame"]
+            track.add_spot(spots[int(frame)][int(idx_in_frame)])
+
+        return list(id_to_track.values())
 
     def get_expected_distance(
         self, expected_positions: dict[int, list[int]], max_distance: float
@@ -43,15 +73,3 @@ class MidBodyTrack(Track[MidBodySpot]):
         if mean_distance > max_distance:
             return np.inf
         return mean_distance
-
-
-    # Commented-out because we can use the one we inherit from
-    #
-    # @staticmethod
-    # def generate_tracks_from_spots(
-    #     spots: dict[int, list[MidBodySpot]],
-    # ) -> list[MidBodyTrack]:
-    #     """
-    #     Generate tracks from spots.
-    #     """
-    #     raise NotImplementedError

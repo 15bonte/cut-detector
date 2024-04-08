@@ -2,7 +2,10 @@
 """
 
 import sys
+from typing import Optional
+
 import matplotlib.pyplot as plt
+
 from .layer import BlobLayer
 
 class PlotSaver(BlobLayer):
@@ -51,7 +54,7 @@ class PlotBlobs(BlobLayer):
             srcimg_key: str = "src", 
             sbs: bool = False, 
             title_prefix: str = "Blobs Found",
-            plt_saver: PlotSaver | None = None,
+            plt_saver: Optional[PlotSaver] = None,
             should_show: bool = True
             ):
         self.blobs_key = blobs_key

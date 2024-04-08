@@ -38,18 +38,14 @@ def re_organize_channels(image):
 def main(
     image_path: Optional[str] = get_data_path("videos"),
     mitosis_path: Optional[str] = get_data_path("mitoses"),
-    scaler_path: Optional[str] = os.path.join(
-        get_model_path("svc_bridges"), "scaler.pkl"
-    ),
-    model_path: Optional[str] = os.path.join(
-        get_model_path("svc_bridges"), "model.pkl"
-    ),
     hmm_bridges_parameters_file: Optional[str] = os.path.join(
         get_model_path("hmm"), "hmm_bridges_parameters.npz"
     ),
-    display_svm_analysis=False,
-    display_crops=False,
-    display_intensity_analysis=True,
+    bridges_mt_cnn_model_path: Optional[str] = get_model_path(
+        "bridges_mt_cnn"
+    ),
+    display_predictions_analysis=True,
+    display_crops=True,
 ):
     # If paths are directories, take their first file
     if os.path.isdir(image_path):
@@ -70,94 +66,31 @@ def main(
     )
 
     results = factory.update_mt_cut_detection(
-        mitosis_track,
+        [mitosis_track],
         video,
-        scaler_path,
-        model_path,
         hmm_bridges_parameters_file,
-        debug_plot=False,
+        bridges_mt_cnn_model_path,
+        debug_mode=True,
     )
 
-    if display_svm_analysis:
-        # Plot 4 subplots
-        _, axs = plt.subplots(2, 2)
-
-        axs[0, 0].plot(np.array(results["distances"])[:, 0, 0])
-        axs[0, 0].set_title("A vs rest")
-        axs[0, 0].axhline(y=0, color="r", linestyle="-")
-
-        axs[0, 1].plot(np.array(results["distances"])[:, 0, 1])
-        axs[0, 1].set_title("B vs rest")
-        axs[0, 1].axhline(y=0, color="r", linestyle="-")
-
-        axs[1, 0].plot(np.array(results["distances"])[:, 0, 2])
-        axs[1, 0].set_title("C vs rest")
-        axs[1, 0].axhline(y=0, color="r", linestyle="-")
-
-        axs[1, 1].plot(results["list_class_bridges"])
-        axs[1, 1].plot(results["list_class_bridges_after_hmm"])
-        axs[1, 1].set_title("Class bridges")
-
+    if display_predictions_analysis:
+        plt.plot(results["list_class_bridges"][mitosis_track.id])
+        if (
+            mitosis_track.id in results["list_class_bridges_after_hmm"]
+        ):  # if classification possible
+            plt.plot(results["list_class_bridges_after_hmm"][mitosis_track.id])
+        plt.title("Class bridges")
         plt.show()
 
     if display_crops:
         # Display series of crops
-        for crop in results["crops"]:
+        for crop in results["crops"][mitosis_track.id]:
             plt.figure()
             plt.imshow(crop[0], cmap="gray")
             plt.show()
 
-    if display_intensity_analysis and len(results["templates"]) > 0:
-        assert template_type == TemplateType.AVERAGE_CIRCLE
-
-        # Plot 2 subplots
-        _, axs = plt.subplots(2, 1)
-
-        # Possible that first frames are skipped
-        nb_points = len(np.array(results["templates"])[..., 0].squeeze())
-        frame_indexes = list(mitosis_track.mid_body_spots)[-nb_points:]
-        axs[0].plot(
-            frame_indexes,
-            np.array(results["templates"])[..., 0].squeeze(),
-        )
-        axs[0].set_title("First MT intensity")
-        if mitosis_track.gt_key_events_frame is not None:
-            axs[0].axvline(
-                x=mitosis_track.gt_key_events_frame["first_mt_cut"],
-                color="r",
-                linestyle="-",
-            )
-            axs[0].axvline(
-                x=mitosis_track.gt_key_events_frame["second_mt_cut"],
-                color="r",
-                linestyle="-",
-            )
-
-        axs[1].plot(
-            frame_indexes,
-            np.array(results["templates"])[..., 3].squeeze(),
-        )
-        axs[1].set_title("Second MT intensity")
-        if mitosis_track.gt_key_events_frame is not None:
-            axs[1].axvline(
-                x=mitosis_track.gt_key_events_frame["first_mt_cut"],
-                color="r",
-                linestyle="-",
-            )
-            axs[1].axvline(
-                x=mitosis_track.gt_key_events_frame["second_mt_cut"],
-                color="r",
-                linestyle="-",
-            )
-
-        plt.show()
-
 
 if __name__ == "__main__":
-    # IMAGE_PATH = r"C:\Users\thoma\data\Data Nathalie\videos_debug\20231019-t1_siSpastin-50-2.tif"
-    # MITOSIS_PATH = r"C:\Users\thoma\OneDrive\Bureau\mitoses\20231019-t1_siSpastin-50-2_mitosis_32_5_to_37.bin"
-    # main(IMAGE_PATH, MITOSIS_PATH)
-
     FOLDER_MITOSIS = r"C:\Users\thoma\data\Data Nathalie\mitoses"
     FOLDER_VIDEO = r"C:\Users\thoma\data\Data Nathalie\videos"
     for mitosis_file in os.listdir(FOLDER_MITOSIS):

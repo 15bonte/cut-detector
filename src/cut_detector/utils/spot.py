@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import numpy as np
 
-from typing import List, Any
+from typing import Any
+from abc import ABC, abstractmethod
 
-class Spot:
+class Spot(ABC):
     """
     Class used for both cell and mid-body spots.
     """
@@ -29,22 +30,34 @@ class Spot:
         )
     
     @staticmethod
-    def get_extra_features_name() -> List[str]:
+    @abstractmethod
+    def get_extra_features_name() -> list[str]:
         """
         To have better tracking for classes that inherit from this one.
         These classes can declare here their extra coordinate fields.
 
-        frame/x/y are already are base features, no need to return them here,
-        (or in subclasses).
+        Example:
+        If you have extra features, like 'color' and 'shape', implement this
+        the following way:
+        ```python
+        def get_extra_features_name() -> list[str]:
+            return ["color", "shape"]
+        ```
         """
         return []
     
-    def get_extra_coordinates(self) -> List[Any]:
+    @abstractmethod
+    def get_extra_coordinates(self) -> list[Any]:
         """
         To have better tracking for classes that inherit from this one.
         These classes can return here their extra coordinate fields.
 
-        frame/x/y are already are base features, no need to return them here,
-        (or in subclasses).
+        Example:
+        If you have extra features, like 'color' and 'shape', implement this
+        the following way:
+        ```python
+        def get_extra_features_name(self) -> list[str]:
+            return [self.color, self.shape]
+        ```
         """
         return []

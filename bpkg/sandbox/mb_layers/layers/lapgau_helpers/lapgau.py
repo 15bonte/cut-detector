@@ -6,7 +6,7 @@ or copy-pasted in lapgau_dep otherwise
 
 We are going to modify it to insert visualisation hooks for debugging.
 """
-
+from typing import Optional
 import numpy as np
 import scipy.ndimage as ndi
 import matplotlib.pyplot as plt
@@ -16,7 +16,11 @@ from skimage.feature.blob import _prune_blobs, _format_exclude_border
 from .lapgau_dep import _supported_float_type
 
 class BlobLogVisuSettings:
-    def __init__(self, cube_plotting_threshold: float | None = None, sig_layers_idx: list[int] = []) -> None:
+    def __init__(
+            self, 
+            cube_plotting_threshold: 
+            Optional[float] = None, 
+            sig_layers_idx: list[int] = []) -> None:
         self.cube_plotting_threshold = cube_plotting_threshold
         self.sig_layers_idx = sig_layers_idx
         

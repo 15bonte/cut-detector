@@ -3,8 +3,10 @@ and what is used in the project.
 """
 
 import os
+from typing import Optional
 
 from cnn_framework.utils.readers.tiff_reader import TiffReader
+
 from .savers import Saver
 from .layers import BlobLayer
 from .pipeline import run_pipeline
@@ -53,7 +55,7 @@ def simple_run(
         out: str = "blobs",
         mlkp_chan: int = 1,
         clear_console: bool = True,
-        pipeline_name: str | None = None) -> any:
+        pipeline_name: Optional[str] = None) -> any:
     
     # https://stackoverflow.com/a/2084628
     if clear_console:
