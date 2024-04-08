@@ -1,9 +1,9 @@
 from __future__ import annotations
-
 from typing import Optional, Tuple
+
 from scipy.spatial import ConvexHull, Delaunay
 import numpy as np
-
+import pandas as pd
 
 from ..constants.tracking import (
     FRAMES_AROUND_METAPHASE,
@@ -335,3 +335,11 @@ class CellTrack(Track[CellSpot]):
         """
         max_frame_gap = CellTrack.max_frame_gap
         raise NotImplementedError
+    
+    @staticmethod
+    def track_df_to_mb_track(
+            track_df: pd.DataFrame,
+            spots: dict[int, list[CellSpot]],
+            ) -> list[Track]:
+        # See MidBodyTrack for an implementation example
+        raise RuntimeError("Work In Progress")

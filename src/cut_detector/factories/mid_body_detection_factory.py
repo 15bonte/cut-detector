@@ -110,7 +110,6 @@ class MidBodyDetectionFactory:
             log_blob_spot=log_blob_spot,
         )
         mid_body_tracks = MidBodyTrack.generate_tracks_from_spots(
-            MidBodySpot,
             spots_candidates,
             mb_tracking_method,
             False,
