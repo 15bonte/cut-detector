@@ -225,6 +225,18 @@ class SegmentationTrackingFactory:
 
         return [], []
 
+    @staticmethod
+    def get_spots_from_cellpose(
+        cellpose_results: np.ndarray,
+    ) -> dict[int, list[CellSpot]]:
+        """
+        Extract spots from cellpose results.
+
+        Parameters:
+            cellpose_results (np.ndarray): TYX
+        """
+        raise RuntimeError("Work in Progress")
+
     def perform_segmentation_tracking(
         self,
         video: np.ndarray,
@@ -253,3 +265,5 @@ class SegmentationTrackingFactory:
             cellprob_threshold=self.cellprob_threshold,
             augment=self.augment,
         )
+
+        cell_spots_dictionary = self.get_spots_from_cellpose(cellpose_results)
