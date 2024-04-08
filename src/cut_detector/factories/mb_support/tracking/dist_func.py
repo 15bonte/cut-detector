@@ -1,10 +1,11 @@
+from typing import Union
 import numpy as np
 from scipy.spatial import distance
 
 def spatial_intensity_dist(
         c1, 
         c2, 
-        max_distance: int | float,
+        max_distance: Union[int, float],
         mklp_weight_factor: float,
         sir_weight_factor: float) -> float:
     

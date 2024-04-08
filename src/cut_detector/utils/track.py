@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TypeVar, Generic, Callable, Tuple, Literal, get_args
+from typing import TypeVar, Generic, Callable, Tuple, Literal, get_args, Union
 from abc import abstractmethod, ABC
 
 import numpy as np
@@ -14,7 +14,7 @@ from .mid_body_spot import MidBodySpot
 
 T = TypeVar("T", MidBodySpot, CellSpot)
 
-TRACKING_METHOD = Literal["laptrack", "spatial_laptrack"] | LapTrack
+TRACKING_METHOD = Union[Literal["laptrack", "spatial_laptrack"], LapTrack]
 
 class Track(ABC, Generic[T]):
     """

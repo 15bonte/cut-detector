@@ -1,6 +1,8 @@
 """ Layers that allow one to control layer execution flow
 """
 
+from typing import Optional
+
 from .layer import BlobLayer
 
 
@@ -9,7 +11,11 @@ class OnFrame(BlobLayer):
     If the current frame DOES match the condition, the layer is activated.
     If it does not and the off_layer is defined, then the off_layer is called.
     """
-    def __init__(self, frames: list[int], on_layer: BlobLayer | None, off_layer: BlobLayer | None = None):
+    def __init__(
+            self, 
+            frames: list[int], 
+            on_layer: Optional[BlobLayer], 
+            off_layer: Optional[BlobLayer] = None):
         self.frames = frames
         self.on_layer = on_layer
         self.off_layer = off_layer

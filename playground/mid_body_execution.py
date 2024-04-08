@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from typing import Optional, Callable
+from typing import Optional, Callable, Union
 from bigfish import stack
 from laptrack import LapTrack
 
@@ -13,8 +13,8 @@ from cut_detector.factories.mb_support import detection, tracking
 
 def main(
     data_set_path: Optional[str] = None,
-    mid_body_detection_method: str | Callable[[np.ndarray], np.ndarray] = detection.cur_log,
-    mid_body_tracking_method: str | LapTrack = tracking.cur_spatial_laptrack,
+    mid_body_detection_method: Union[str, Callable[[np.ndarray], np.ndarray]] = detection.cur_log,
+    mid_body_tracking_method: Union[str, LapTrack] = tracking.cur_spatial_laptrack,
 ):
     """
     If data_set_path is not None, it has to be a path containing

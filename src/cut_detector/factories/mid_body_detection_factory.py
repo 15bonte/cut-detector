@@ -1,6 +1,6 @@
 import os
 from random import shuffle
-from typing import Literal, Optional, Callable, Dict, List, Tuple
+from typing import Literal, Optional, Callable, Dict, List, Tuple, Union
 from math import sqrt
 import numpy as np
 from bigfish import stack, detection
@@ -88,7 +88,7 @@ class MidBodyDetectionFactory:
         mitosis_movie: np.array,
         mask_movie: np.array,
         tracks: list[TrackMateTrack],
-        mb_detect_method: SPOT_DETECTION_MODE | Callable[[np.ndarray], np.ndarray] = "lapgau",
+        mb_detect_method: Union[SPOT_DETECTION_MODE, Callable[[np.ndarray], np.ndarray]] = "lapgau",
         mb_tracking_method: TRACKING_METHOD = "laptrack",
         log_blob_spot: bool = False,
         show_tracking_plot: bool = False,
@@ -134,7 +134,7 @@ class MidBodyDetectionFactory:
         mask_movie: Optional[np.array] = None,
         mid_body_channel=1,
         sir_channel=0,
-        mode: SPOT_DETECTION_MODE | Callable[[np.ndarray], np.ndarray] = "diffgau",
+        mode: Union[SPOT_DETECTION_MODE, Callable[[np.ndarray], np.ndarray]] = "diffgau",
         log_blob_spot: bool = False
     ) -> dict[int, list[MidBodySpot]]:
         """
@@ -187,7 +187,7 @@ class MidBodyDetectionFactory:
         mask: np.array,
         mid_body_channel: int,
         sir_channel: int,
-        mode: SPOT_DETECTION_MODE | Callable[[np.ndarray], np.ndarray],
+        mode: Union[SPOT_DETECTION_MODE, Callable[[np.ndarray], np.ndarray]],
         frame=-1,
         log_blob_spot: bool = False,
     ) -> list[MidBodySpot]:

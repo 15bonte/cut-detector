@@ -5,7 +5,7 @@
 import networkx as nx
 import numpy as np
 
-from typing import Callable, Literal, List, cast
+from typing import Callable, Literal, List, cast, Union
 from pydantic import Field
 from scipy.spatial.distance import cdist
 from laptrack import LapTrack, ParallelBackend
@@ -34,7 +34,7 @@ class SpatialLapTrack(LapTrack):
         description="A slice that is used to subset coords"
     )
 
-    spatial_metric: str | Callable  = Field(
+    spatial_metric: Union[str, Callable]  = Field(
         "euclidean",
         description="The metric to use to compute spatial distances"
     )

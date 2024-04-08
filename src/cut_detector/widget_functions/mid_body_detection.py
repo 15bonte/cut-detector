@@ -1,6 +1,6 @@
 import os
 import pickle
-from typing import Optional, Callable
+from typing import Optional, Callable, Union
 import numpy as np
 from aicsimageio.writers import OmeTiffWriter
 from laptrack import LapTrack
@@ -19,8 +19,8 @@ def perform_mid_body_detection(
     exported_tracks_dir: str,
     save_dir: Optional[str] = None,
     update_mitoses: bool = True,
-    mid_body_detection_method: str | Callable[[np.ndarray], np.ndarray] = detection.cur_log,
-    mid_body_tracking_method: str | LapTrack = tracking.cur_spatial_laptrack
+    mid_body_detection_method: Union[str, Callable[[np.ndarray], np.ndarray]] = detection.cur_log,
+    mid_body_tracking_method: Union[str, LapTrack] = tracking.cur_spatial_laptrack
 ):
     mitosis_tracks: list[MitosisTrack] = []
     # Iterate over "bin" files in exported_mitoses_dir

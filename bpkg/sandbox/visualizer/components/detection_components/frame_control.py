@@ -2,6 +2,8 @@ from dash import callback, Input, Output, State, dcc, html, no_update
 import dash_bootstrap_components as dbc
 import plotly.express as px
 
+from typing import Optional
+
 def generate_slider_side_buttons(slider_id: str, marks: bool) -> dbc.Row:
     right_button = dbc.Button(
         id=f"{slider_id}-right-button",
@@ -87,7 +89,7 @@ def update_frame_slider_right_button(n_clicks: int, slider_value: int):
     Input("detection-frame-input", "value"),
     prevent_initial_call=True,
 )
-def update_frame_slider_from_input(value: int | None):
+def update_frame_slider_from_input(value: Optional[int]):
     if isinstance(value, int):
         return value
     else:
