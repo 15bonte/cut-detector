@@ -6,7 +6,7 @@ import numpy as np
 @dataclass
 class Source:
     path: str
-    fmt: str
+    fmt: MOVIE_FMT
 
     def load(self) -> np.ndarray:
         return load_movie(self.path, self.fmt)
