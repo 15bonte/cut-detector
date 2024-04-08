@@ -189,22 +189,13 @@ class Track(ABC, Generic[T]):
             track_df: pd.DataFrame,
             spots: dict[int, list[Spot]],
             ) -> list[Track]:
+        """ This is the last step of the 'generate_tracks_from_spots'.
+        It takes as input the pandas dataframe produced by 'generate_tracks_from_spots'.
+        From there you have to implement the code that will transform this dataframe
+        into a list of Track.
 
-        # track_df.reset_index(inplace=True)
-        # track_df.dropna(inplace=True)
-        # id_to_track = {}
-
-        # for _, row in track_df.iterrows():
-        #     track_id = row["track_id"]
-        #     track: Track = id_to_track.get(track_id)
-        #     if track is None:
-        #         id_to_track[track_id] = Track(len(id_to_track))
-        #         track = id_to_track[track_id]
-        #     frame        = row["frame"]
-        #     idx_in_frame = row["idx_in_frame"]
-        #     track.add_spot(spots[int(frame)][int(idx_in_frame)])
-
-        # return list(id_to_track.values())
+        You can use MidbodyTrack's implementation as a starting point.
+        """
         return []
 
 
