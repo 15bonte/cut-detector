@@ -1,15 +1,20 @@
 import os
-from typing import Optional
+import numpy as np
+from typing import Optional, Callable, Union
 from bigfish import stack
+from laptrack import LapTrack
 
 from cut_detector.widget_functions.mid_body_detection import (
     perform_mid_body_detection,
 )
 from cut_detector.data.tools import get_data_path
+from cut_detector.factories.mb_support import detection, tracking
 
 
 def main(
     data_set_path: Optional[str] = None,
+    mid_body_detection_method: Union[str, Callable[[np.ndarray], np.ndarray]] = detection.cur_log,
+    mid_body_tracking_method: Union[str, LapTrack] = tracking.cur_spatial_laptrack,
 ):
     """
     If data_set_path is not None, it has to be a path containing
@@ -40,8 +45,15 @@ def main(
             video_name,
             mitoses_folder,
             tracks_folder,
+            mid_body_detection_method=mid_body_detection_method,
+            mid_body_tracking_method=mid_body_tracking_method,
         )
 
 
 if __name__ == "__main__":
-    main()
+    FOLDER = "/Users/paul/Mines_Programmation/DLIA/Projet Final/Données et PP Midbodies/Data cep55"
+    main(
+        FOLDER,
+        mid_body_detection_method=detection.cur_dog,
+        mid_body_tracking_method=tracking.cur_spatial_laptrack
+    )
