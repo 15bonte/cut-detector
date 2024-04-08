@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import abstractmethod
-from typing import TypeVar, Generic, Callable, Tuple
+from typing import TypeVar, Generic, Callable, Tuple, Literal
 
 import numpy as np
 import pandas as pd
@@ -13,8 +13,8 @@ from .cell_spot import CellSpot
 from .mid_body_spot import MidBodySpot
 
 T = TypeVar("T", MidBodySpot, CellSpot)
-TRACKING_MODE = str
 
+TRACKING_METHOD = Literal["laptrack", "spatial_laptrack"] | LapTrack
 
 class Track(Generic[T]):
     """
@@ -46,7 +46,7 @@ class Track(Generic[T]):
     def generate_tracks_from_spots(
         spot_type: type[Spot],
         spots: dict[int, list[T]],
-        mode: TRACKING_MODE | Callable[[np.ndarray], np.ndarray],
+        method: TRACKING_METHOD,
         show_post_conv_df: bool = False,
         show_tracking_df: bool = False,
         show_tracking_plot: bool = False,
@@ -62,7 +62,8 @@ class Track(Generic[T]):
         track_df, _, _ = apply_tracking(
             spot_type, 
             spots,
-            mode,
+            # mode,
+            method,
             show_tracking_df,
         )
         if show_tracking_plot:
@@ -107,23 +108,23 @@ def convert_spots_to_spotdf(
 def apply_tracking(
         spot: type[Spot],
         spot_df: pd.DataFrame, 
-        mode: TRACKING_MODE | LapTrack,  # str support is for legacy code
+        method: TRACKING_METHOD,
         show_tracking_df: bool = False
         ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     
     tracker: LapTrack = None
-    if isinstance(mode, str):
+    if isinstance(method, str):
         mapping: dict[str, LapTrack] = {
             "laptrack":         tracking.cur_laptrack,
             "lt":               tracking.lt,
             "spatial_laptrack": tracking.cur_spatial_laptrack,
             "slt":              tracking.slt,
         }
-        tracker = mapping.get(mode, None)
+        tracker = mapping.get(method, None)
         if tracker is None:
-            raise RuntimeError(f"Unknown tracking string: [{mode}]")
-    elif isinstance(mode, LapTrack):
-        tracker = mode
+            raise RuntimeError(f"Unknown tracking string: [{method}]")
+    elif isinstance(method, LapTrack):
+        tracker = method
     else:
         raise RuntimeError("mode must be either a str or a LapTrack object")
     

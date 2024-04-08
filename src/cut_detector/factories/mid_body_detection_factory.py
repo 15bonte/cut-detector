@@ -23,6 +23,7 @@ from ..utils.mid_body_spot import MidBodySpot
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.trackmate_track import TrackMateTrack
 from ..utils.tools import plot_detection
+from ..utils.track import TRACKING_METHOD
 
 from .mb_support import detection, tracking
 from .mb_support.tracking import SpatialLapTrack
@@ -88,7 +89,7 @@ class MidBodyDetectionFactory:
         mask_movie: np.array,
         tracks: list[TrackMateTrack],
         mb_detect_method: SPOT_DETECTION_MODE | Callable[[np.ndarray], np.ndarray] = "lapgau",
-        mb_tracking_method: Literal["laptrack", "spatial_laptrack"] | LapTrack = "laptrack",
+        mb_tracking_method: TRACKING_METHOD = "laptrack",
         log_blob_spot: bool = False,
         show_tracking_plot: bool = False,
     ) -> None:
@@ -108,10 +109,6 @@ class MidBodyDetectionFactory:
             mode=mb_detect_method,
             log_blob_spot=log_blob_spot,
         )
-        # mid_body_tracks = self.generate_tracks_from_spots(
-        #     spots_candidates,
-        #     tracking_method=mb_tracking_method
-        # )
         mid_body_tracks = MidBodyTrack.generate_tracks_from_spots(
             MidBodySpot,
             spots_candidates,
@@ -415,8 +412,6 @@ class MidBodyDetectionFactory:
             if i < len(spots1) and j < len(spots2):
                 spots1[i].child_spot = spots2[j]
                 spots2[j].parent_spot = spots1[i]
-
-    TRACKING_MODE = Literal["laptrack", "spatial_laptrack"]
 
 
     def _select_best_track(
