@@ -42,7 +42,7 @@ class MidBodyTrack(Track[MidBodySpot]):
 
         for _, row in track_df.iterrows():
             track_id = row["track_id"]
-            track: Track = id_to_track.get(track_id)
+            track: MidBodyTrack = id_to_track.get(track_id)
             if track is None:
                 id_to_track[track_id] = MidBodyTrack(len(id_to_track))
                 track = id_to_track[track_id]
