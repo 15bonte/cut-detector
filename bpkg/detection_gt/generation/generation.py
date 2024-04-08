@@ -1,11 +1,18 @@
 import json
+from typing import Union, Callable
+
+import numpy as np
+
 from pathlib import Path
 from cut_detector.factories.mid_body_detection_factory import MidBodyDetectionFactory
 from data_loading import Source
 
 def generate_ground_truth(
         s: Source, 
-        detection_method: MidBodyDetectionFactory.SPOT_DETECTION_MODE,
+        detection_method: Union[
+            MidBodyDetectionFactory.SPOT_DETECTION_MODE,
+            Callable[[np.ndarray], np.ndarray]
+        ],
         gt_filepath: str):
     print("gt filepath:", gt_filepath)
     print("generating Ground Truth for", s.path, "using", detection_method)
@@ -15,9 +22,16 @@ def generate_ground_truth(
     spots_idx_list = list(spots_dict.keys())
     spots_idx_list.sort()
     max_frame_idx = spots_idx_list[-1]
+
+
+    if callable(detection_method):
+        detection_method_str = "some callable"
+    else:
+        detection_method_str = detection_method
+
     output = {
         "file": s.path,
-        "detection_method": detection_method,
+        "detection_method": detection_method_str,
         "max_frame_idx": max_frame_idx,
         "spots": {k: [{"x": v.x, "y": v.y} for v in spots_dict[k]] for k in spots_dict}
     }

@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Union, Callable
 from scipy.spatial.distance import cdist
 from cut_detector.factories.mid_body_detection_factory import MidBodyDetectionFactory
 from data_loading import Source
@@ -8,8 +9,13 @@ from .bench_stat import BenchStat
 def bench_detection_against_gt(
         src: Source, 
         gt_filepath: str, 
-        detection_method: MidBodyDetectionFactory.SPOT_DETECTION_MODE,
-        ignore_false_positives: bool = True):
+        detection_method: Union[
+            MidBodyDetectionFactory.SPOT_DETECTION_MODE, 
+            Callable[[np.ndarray], np.ndarray]
+        ],
+        ignore_false_positives: bool = True
+        ) -> BenchStat:
+    
     if not ignore_false_positives:
         raise RuntimeError("stats on false positives are not implemented yet")
 
