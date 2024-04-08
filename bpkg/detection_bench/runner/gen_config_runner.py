@@ -5,5 +5,5 @@ def gen_config_runner():
     conf = generate_config()
     write_config(
         conf,
-        WrapperEnv.detectors_config_fp
+        WrapperEnv.get_config_file_path("detectors.json")
     )

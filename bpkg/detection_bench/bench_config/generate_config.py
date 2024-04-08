@@ -11,8 +11,6 @@ def generate_config() -> BenchConfig:
     """ Creates a default bench config with all available detectors
     """
     detectors = {}
-    # current_funcs = [f for _, f in detection_current.__dict__.items() if callable(f)]
-    # all_funcs     = [f for _, f in detection_impl.__dict__.items()    if callable(f)]
 
     funcs = {}
     current_funcs = {k: f for k, f in detection_current.__dict__.items() if callable(f)}
