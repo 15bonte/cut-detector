@@ -1,13 +1,12 @@
 from __future__ import annotations
-from typing import TypeVar, Generic, Callable, Tuple, Literal, get_args, Union
+from typing import TypeVar, Generic, Tuple, Literal, Union
 from abc import abstractmethod, ABC
 
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from laptrack import LapTrack
 
-from cut_detector.factories.mb_support import tracking
+from ..factories.mb_support import tracking
 from .spot import Spot
 from .cell_spot import CellSpot
 from .mid_body_spot import MidBodySpot
@@ -15,6 +14,7 @@ from .mid_body_spot import MidBodySpot
 T = TypeVar("T", MidBodySpot, CellSpot)
 
 TRACKING_METHOD = Union[Literal["laptrack", "spatial_laptrack"], LapTrack]
+
 
 class Track(ABC, Generic[T]):
     """
@@ -59,7 +59,7 @@ class Track(ABC, Generic[T]):
             show_post_conv_df,
         )
         track_df, _, _ = Track.apply_tracking(
-            spot_type, 
+            spot_type,
             spot_df,
             method,
             show_tracking_df,
@@ -71,9 +71,10 @@ class Track(ABC, Generic[T]):
 
     @staticmethod
     def convert_spots_to_spotdf(
-            spot: T,
-            spot_dict: dict[int, list[Spot]],
-            show_post_conv_df: bool = False) -> list[Track]:
+        spot: T,
+        spot_dict: dict[int, list[Spot]],
+        show_post_conv_df: bool = False,
+    ) -> list[Track]:
 
         cols = [
             "frame",
@@ -90,7 +91,9 @@ class Track(ABC, Generic[T]):
             if len(spots) == 0:
                 spot_df.loc[len(spot_df.index)] = [
                     frame,
-                    *[None for _ in range(len(cols)-1)] # fills the rest of the cols with None
+                    *[
+                        None for _ in range(len(cols) - 1)
+                    ],  # fills the rest of the cols with None
                 ]
             else:
                 for idx, spot in enumerate(spots):
@@ -103,22 +106,21 @@ class Track(ABC, Generic[T]):
 
         return spot_df
 
-
     @staticmethod
     def apply_tracking(
-            spot: T,
-            spot_df: pd.DataFrame, 
-            method: TRACKING_METHOD,
-            show_tracking_df: bool = False
-            ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        spot: T,
+        spot_df: pd.DataFrame,
+        method: TRACKING_METHOD,
+        show_tracking_df: bool = False,
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
 
         tracker: LapTrack = None
         if isinstance(method, str):
             mapping: dict[str, LapTrack] = {
-                "laptrack":         tracking.cur_laptrack,
-                "lt":               tracking.lt,
+                "laptrack": tracking.cur_laptrack,
+                "lt": tracking.lt,
                 "spatial_laptrack": tracking.cur_spatial_laptrack,
-                "slt":              tracking.slt,
+                "slt": tracking.slt,
             }
             tracker = mapping.get(method, None)
             if tracker is None:
@@ -126,7 +128,9 @@ class Track(ABC, Generic[T]):
         elif isinstance(method, LapTrack):
             tracker = method
         else:
-            raise RuntimeError("mode must be either a str or a LapTrack object")
+            raise RuntimeError(
+                "mode must be either a str or a LapTrack object"
+            )
 
         coord_cols = ["x", "y"]
         coord_cols.extend(spot.get_extra_features_name())
@@ -145,20 +149,12 @@ class Track(ABC, Generic[T]):
             # Pandas by default has a print size limit. You can change the settings
             # or call the 'to_string()' method on the dataframe
             # (as long as it is not too big, our case should be fine).
-            print(df[0]) 
+            print(df[0])
 
         return df
 
-
     @staticmethod
     def generate_tracking_plot(track_df: pd.DataFrame):
-        def get_track_end(track_df, keys, track_id, first=True):
-            df = track_df[track_df["track_id"] == track_id].sort_index(
-                level="frame"
-            )
-            return df.iloc[0 if first else -1][keys]
-
-        keys = ["position_x", "position_y", "track_id", "tree_id"]
         plt.figure(figsize=(3, 3))
         frames = track_df.index.get_level_values("frame")
         frame_range = [frames.min(), frames.max()]
@@ -166,7 +162,7 @@ class Track(ABC, Generic[T]):
         k1, k2 = "y", "x"
         keys = [k1, k2]
 
-        for track_id, grp in track_df.groupby("track_id"):
+        for _, grp in track_df.groupby("track_id"):
             df = grp.reset_index().sort_values("frame")
             plt.scatter(
                 df[k1],
@@ -182,14 +178,13 @@ class Track(ABC, Generic[T]):
 
         plt.show()
 
-
     @staticmethod
     @abstractmethod
     def track_df_to_mb_track(
-            track_df: pd.DataFrame,
-            spots: dict[int, list[Spot]],
-            ) -> list[Track]:
-        """ This is the last step of the 'generate_tracks_from_spots'.
+        track_df: pd.DataFrame,
+        spots: dict[int, list[Spot]],
+    ) -> list[Track]:
+        """This is the last step of the 'generate_tracks_from_spots'.
         It takes as input the pandas dataframe produced by 'generate_tracks_from_spots'.
         From there you have to implement the code that will transform this dataframe
         into a list of Track.
@@ -197,7 +192,3 @@ class Track(ABC, Generic[T]):
         You can use MidbodyTrack's implementation as a starting point.
         """
         return []
-
-
-
-

@@ -50,12 +50,12 @@ class CellSpot(Spot):
             )
             < maximum_stuck_distance
         )
-    
+
     @staticmethod
     def get_extra_features_name() -> list[str]:
         # See Spot documentation and/or MidBodySpot for an implementation example
         raise RuntimeError("Work in Progress")
-    
+
     def get_extra_coordinates(self) -> list[Any]:
         # See Spot documentation and/or MidBodySpot for an implementation example
         raise RuntimeError("Work in Progress")

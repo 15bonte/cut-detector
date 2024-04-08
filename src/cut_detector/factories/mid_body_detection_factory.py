@@ -1,18 +1,9 @@
 import os
-from random import shuffle
-from typing import Literal, Optional, Callable, Dict, List, Tuple, Union
-from math import sqrt
+from typing import Literal, Optional, Callable, Union
 import numpy as np
 from bigfish import stack, detection
 from skimage.morphology import extrema, opening
-from skimage.feature import blob_log, blob_dog, blob_doh
 from scipy import ndimage
-from scipy.optimize import linear_sum_assignment
-from scipy.spatial import distance
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import pandas as pd
-from laptrack import LapTrack
 
 from cnn_framework.utils.display_tools import display_progress
 
@@ -25,9 +16,7 @@ from ..utils.trackmate_track import TrackMateTrack
 from ..utils.tools import plot_detection
 from ..utils.track import TRACKING_METHOD
 
-from .mb_support import detection, tracking
-from .mb_support.tracking import SpatialLapTrack
-from .mid_body_track_color_manager import MbTrackColorManager
+from ..utils.mid_body_track_color_manager import MbTrackColorManager
 
 
 class MidBodyDetectionFactory:
@@ -66,16 +55,14 @@ class MidBodyDetectionFactory:
         self.minimum_mid_body_track_length = minimum_mid_body_track_length
 
     SPOT_DETECTION_MODE = Literal[
-        "bigfish", 
-        "h_maxima", 
+        "bigfish",
+        "h_maxima",
         "cur_log",
         "lapgau",
         "log2_wider",
-        "rshift_log"
-        "cur_dog",
-        "diffgau", 
-        "cur_doh"
-        "hessian", 
+        "rshift_log" "cur_dog",
+        "diffgau",
+        "cur_doh" "hessian",
     ]
 
     def update_mid_body_spots(
@@ -84,7 +71,9 @@ class MidBodyDetectionFactory:
         mitosis_movie: np.array,
         mask_movie: np.array,
         tracks: list[TrackMateTrack],
-        mb_detect_method: Union[SPOT_DETECTION_MODE, Callable[[np.ndarray], np.ndarray]] = "lapgau",
+        mb_detect_method: Union[
+            SPOT_DETECTION_MODE, Callable[[np.ndarray], np.ndarray]
+        ] = "lapgau",
         mb_tracking_method: TRACKING_METHOD = "laptrack",
         log_blob_spot: bool = False,
         show_tracking_plot: bool = False,
@@ -100,7 +89,7 @@ class MidBodyDetectionFactory:
         """
 
         spots_candidates = self.detect_mid_body_spots(
-            mitosis_movie, 
+            mitosis_movie,
             mask_movie=mask_movie,
             mode=mb_detect_method,
             log_blob_spot=log_blob_spot,
@@ -110,14 +99,14 @@ class MidBodyDetectionFactory:
             mb_tracking_method,
             False,
             False,
-            show_tracking_plot
+            show_tracking_plot,
         )
         kept_track = self._select_best_track(
-            mitosis_track, 
-            mid_body_tracks, 
-            tracks, 
+            mitosis_track,
+            mid_body_tracks,
+            tracks,
             mitosis_movie,
-            self.track_linking_max_distance
+            self.track_linking_max_distance,
         )
 
         if kept_track is None:
@@ -134,8 +123,10 @@ class MidBodyDetectionFactory:
         mask_movie: Optional[np.array] = None,
         mid_body_channel=1,
         sir_channel=0,
-        mode: Union[SPOT_DETECTION_MODE, Callable[[np.ndarray], np.ndarray]] = "diffgau",
-        log_blob_spot: bool = False
+        mode: Union[
+            SPOT_DETECTION_MODE, Callable[[np.ndarray], np.ndarray]
+        ] = "diffgau",
+        log_blob_spot: bool = False,
     ) -> dict[int, list[MidBodySpot]]:
         """
         Parameters
@@ -172,14 +163,13 @@ class MidBodyDetectionFactory:
                 sir_channel,
                 mode=mode,
                 frame=frame,
-                log_blob_spot=log_blob_spot
+                log_blob_spot=log_blob_spot,
             )
 
             # Update dictionary
             spots_dictionary[frame] = spots
 
         return spots_dictionary
-
 
     def _spot_detection(
         self,
@@ -215,24 +205,26 @@ class MidBodyDetectionFactory:
                     print(f"found x:{s[1]}  y:{s[0]}  s:{s[2]}")
 
         elif mode in [
-                "cur_log", "lapgau", "log2_wider", "rshift_log",
-                "cur_dog", "diffgau",
-                "cur_doh", "hessian",
-                ]:
+            "cur_log",
+            "lapgau",
+            "log2_wider",
+            "rshift_log",
+            "cur_dog",
+            "diffgau",
+            "cur_doh",
+            "hessian",
+        ]:
             # blob-like function called referenced by name
-            
+
             mapping = {
                 "cur_log": detection.cur_log,
                 "cur_dog": detection.cur_dog,
                 "cur_doh": detection.cur_doh,
-
                 "lapgau": detection.lapgau,
                 "log2_wider": detection.log2_wider,
                 "rshit_log": detection.rshift_log,
-                
                 "diffgau": detection.diffgau,
-
-                "hessian": detection.hessian
+                "hessian": detection.hessian,
             }
 
             spots = [
@@ -302,7 +294,6 @@ class MidBodyDetectionFactory:
         else:
             raise ValueError(f"Unknown mode: [{mode}]")
 
-
         # WARNING:
         # spots can be a list of Tuple with 2 or 3 values:
         # 2 values: (y, x) if h_maxima or fish_eye used
@@ -320,7 +311,6 @@ class MidBodyDetectionFactory:
         ]
 
         return mid_body_spots
-    
 
     @staticmethod
     def _get_average_intensity(

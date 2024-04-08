@@ -1,5 +1,4 @@
 from __future__ import annotations
-from typing import Callable, Optional
 
 import numpy as np
 import pandas as pd
@@ -27,14 +26,14 @@ class MidBodyTrack(Track[MidBodySpot]):
             method,
             show_post_conv_df,
             show_tracking_df,
-            show_tracking_plot
+            show_tracking_plot,
         )
-    
+
     @staticmethod
     def track_df_to_mb_track(
-            track_df: pd.DataFrame,
-            spots: dict[int, list[MidBodySpot]],
-            ) -> list[MidBodyTrack]:
+        track_df: pd.DataFrame,
+        spots: dict[int, list[MidBodySpot]],
+    ) -> list[MidBodyTrack]:
 
         track_df.reset_index(inplace=True)
         track_df.dropna(inplace=True)
@@ -46,7 +45,7 @@ class MidBodyTrack(Track[MidBodySpot]):
             if track is None:
                 id_to_track[track_id] = MidBodyTrack(len(id_to_track))
                 track = id_to_track[track_id]
-            frame        = row["frame"]
+            frame = row["frame"]
             idx_in_frame = row["idx_in_frame"]
             track.add_spot(spots[int(frame)][int(idx_in_frame)])
 
@@ -74,4 +73,3 @@ class MidBodyTrack(Track[MidBodySpot]):
         if mean_distance > max_distance:
             return np.inf
         return mean_distance
-
