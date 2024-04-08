@@ -7,8 +7,14 @@ from pathlib import Path
 from os.path import join
 
 class WrapperEnv:
-    src_file: Source = SourceFiles.example
+    src_file: Source = SourceFiles.siCep
+    bench_src_files: list[Source] = [
+        SourceFiles.example,
+        SourceFiles.siCep
+    ]
+    
     main_spot_detection_method: MidBodyDetectionFactory.SPOT_DETECTION_MODE = detection.cur_log
+    
     main_tracking_method: SpatialLapTrack = tracking.cur_spatial_laptrack
     main_slt_tracking_method: SpatialLapTrack = tracking.cur_spatial_laptrack
 
@@ -17,8 +23,6 @@ class WrapperEnv:
     log_dir:    str = "src/cut_detector/data/mid_bodies_movies_test/log"
     config_dir: str = "src/cut_detector/data/mid_bodies_movies_test/config"
 
-    detectors_config_fp: str = "src/cut_detector/data/mid_bodies_movies_test/config/detectors.json"
-
     @staticmethod
     def gt_filepath_for_source(src: Source) -> str:
         p = Path(src.path)
@@ -26,9 +30,9 @@ class WrapperEnv:
     
     @staticmethod
     def log_filepath_for_purpose(purpose: str) -> str:
-        join(WrapperEnv.log_dir, purpose)
+        return join(WrapperEnv.log_dir, purpose)
 
     @staticmethod
     def get_config_file_path(name: str) -> str:
-        join(WrapperEnv.config_dir, name)
+        return join(WrapperEnv.config_dir, name)
 
