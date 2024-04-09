@@ -1,6 +1,3 @@
-# Tracking parameters
-MAX_FRAME_GAP = 3  # defined here as it is used in several factories
-
 # Metaphase links
 FRAMES_AROUND_METAPHASE = (
     10  # look for metaphase candidate spots in this range

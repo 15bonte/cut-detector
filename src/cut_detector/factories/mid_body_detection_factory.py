@@ -1,12 +1,9 @@
 import os
-from random import shuffle
-from typing import Optional
+from typing import Literal, Optional, Callable, Union
 import numpy as np
 from bigfish import stack, detection
 from skimage.morphology import extrema, opening
 from scipy import ndimage
-from scipy.optimize import linear_sum_assignment
-import matplotlib as mpl
 
 from cnn_framework.utils.display_tools import display_progress
 
@@ -17,6 +14,9 @@ from ..utils.mid_body_spot import MidBodySpot
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.trackmate_track import TrackMateTrack
 from ..utils.tools import plot_detection
+from ..utils.track import TRACKING_METHOD
+
+from ..utils.mid_body_track_color_manager import MbTrackColorManager
 
 
 class MidBodyDetectionFactory:
@@ -40,23 +40,30 @@ class MidBodyDetectionFactory:
 
     def __init__(
         self,
-        weight_mklp_intensity_factor=10.0,
-        weight_sir_intensity_factor=3.33,
-        mid_body_linking_max_distance=100,
+        track_linking_max_distance=175,
         h_maxima_threshold=5.0,
         sigma=2.0,
         threshold=1.0,
         cytokinesis_duration=CYTOKINESIS_DURATION,
         minimum_mid_body_track_length=10,
     ) -> None:
-        self.weight_mklp_intensity_factor = weight_mklp_intensity_factor
-        self.weight_sir_intensity_factor = weight_sir_intensity_factor
-        self.mid_body_linking_max_distance = mid_body_linking_max_distance
+        self.track_linking_max_distance = track_linking_max_distance
         self.h_maxima_threshold = h_maxima_threshold
         self.sigma = sigma
         self.threshold = threshold
         self.cytokinesis_duration = cytokinesis_duration
         self.minimum_mid_body_track_length = minimum_mid_body_track_length
+
+    SPOT_DETECTION_MODE = Literal[
+        "bigfish",
+        "h_maxima",
+        "cur_log",
+        "lapgau",
+        "log2_wider",
+        "rshift_log" "cur_dog",
+        "diffgau",
+        "cur_doh" "hessian",
+    ]
 
     def update_mid_body_spots(
         self,
@@ -64,6 +71,12 @@ class MidBodyDetectionFactory:
         mitosis_movie: np.array,
         mask_movie: np.array,
         tracks: list[TrackMateTrack],
+        mb_detect_method: Union[
+            SPOT_DETECTION_MODE, Callable[[np.ndarray], np.ndarray]
+        ] = "lapgau",
+        mb_tracking_method: TRACKING_METHOD = "laptrack",
+        log_blob_spot: bool = False,
+        show_tracking_plot: bool = False,
     ) -> None:
         """
         Get spots of best mitosis track.
@@ -76,11 +89,24 @@ class MidBodyDetectionFactory:
         """
 
         spots_candidates = self.detect_mid_body_spots(
-            mitosis_movie, mask_movie=mask_movie
+            mitosis_movie,
+            mask_movie=mask_movie,
+            mode=mb_detect_method,
+            log_blob_spot=log_blob_spot,
         )
-        mid_body_tracks = self.generate_tracks_from_spots(spots_candidates)
+        mid_body_tracks = MidBodyTrack.generate_tracks_from_spots(
+            spots_candidates,
+            mb_tracking_method,
+            False,
+            False,
+            show_tracking_plot,
+        )
         kept_track = self._select_best_track(
-            mitosis_track, mid_body_tracks, tracks, mitosis_movie
+            mitosis_track,
+            mid_body_tracks,
+            tracks,
+            mitosis_movie,
+            self.track_linking_max_distance,
         )
 
         if kept_track is None:
@@ -97,7 +123,10 @@ class MidBodyDetectionFactory:
         mask_movie: Optional[np.array] = None,
         mid_body_channel=1,
         sir_channel=0,
-        mode="h_maxima",
+        mode: Union[
+            SPOT_DETECTION_MODE, Callable[[np.ndarray], np.ndarray]
+        ] = "diffgau",
+        log_blob_spot: bool = False,
     ) -> dict[int, list[MidBodySpot]]:
         """
         Parameters
@@ -134,6 +163,7 @@ class MidBodyDetectionFactory:
                 sir_channel,
                 mode=mode,
                 frame=frame,
+                log_blob_spot=log_blob_spot,
             )
 
             # Update dictionary
@@ -147,8 +177,9 @@ class MidBodyDetectionFactory:
         mask: np.array,
         mid_body_channel: int,
         sir_channel: int,
-        mode: str,
+        mode: Union[SPOT_DETECTION_MODE, Callable[[np.ndarray], np.ndarray]],
         frame=-1,
+        log_blob_spot: bool = False,
     ) -> list[MidBodySpot]:
         """
         Mode 'bigfish'
@@ -158,13 +189,54 @@ class MidBodyDetectionFactory:
         Mode 'h_maxima'
             threshold_1: threshold for h_maxima
             threshold_2: unused
-
         """
 
         image_sir = image[:, :, sir_channel]
         image_mklp = image[:, :, mid_body_channel]  #
 
-        if mode == "bigfish":
+        if callable(mode):
+            # directly passsing a blob-like function
+            spots = [
+                (int(spot[0]), int(spot[1]), int(spot[2]))
+                for spot in mode(image_mklp)
+            ]
+            if log_blob_spot:
+                for s in spots:
+                    print(f"found x:{s[1]}  y:{s[0]}  s:{s[2]}")
+
+        elif mode in [
+            "cur_log",
+            "lapgau",
+            "log2_wider",
+            "rshift_log",
+            "cur_dog",
+            "diffgau",
+            "cur_doh",
+            "hessian",
+        ]:
+            # blob-like function called referenced by name
+
+            mapping = {
+                "cur_log": detection.cur_log,
+                "cur_dog": detection.cur_dog,
+                "cur_doh": detection.cur_doh,
+                "lapgau": detection.lapgau,
+                "log2_wider": detection.log2_wider,
+                "rshit_log": detection.rshift_log,
+                "diffgau": detection.diffgau,
+                "hessian": detection.hessian,
+            }
+
+            spots = [
+                (int(spot[0]), int(spot[1]), int(spot[2]))
+                for spot in mapping[mode](image_mklp)
+            ]
+
+            if log_blob_spot:
+                for s in spots:
+                    print(f"found x:{s[1]}  y:{s[0]}  s:{s[2]}")
+
+        elif mode == "bigfish":
             # Spots detection with bigfish functions
             filtered_image = stack.log_filter(image_mklp, sigma=self.sigma)
             # Filter out spots which are not maximal or outside convex hull
@@ -220,12 +292,16 @@ class MidBodyDetectionFactory:
                 )
 
         else:
-            raise ValueError(f"Unknown mode: {mode}")
+            raise ValueError(f"Unknown mode: [{mode}]")
 
-        # Convert spots to MidBodySpot objects (switch (y, x) to (x, y))
+        # WARNING:
+        # spots can be a list of Tuple with 2 or 3 values:
+        # 2 values: (y, x) if h_maxima or fish_eye used
+        # 3 values: (y, x, sigma) if any blob-based method used
         mid_body_spots = [
             MidBodySpot(
                 frame,
+                # Convert spots to MidBodySpot objects (switch (y, x) to (x, y))
                 x=position[1],
                 y=position[0],
                 intensity=self._get_average_intensity(position, image_mklp),
@@ -264,111 +340,13 @@ class MidBodyDetectionFactory:
         # Return average intensity
         return int(np.mean(crop))
 
-    def _update_spots_hereditary(
-        self, spots1: list[MidBodySpot], spots2: list[MidBodySpot]
-    ) -> None:
-        """
-        Link spots together using Hungarian algorithm.
-        """
-        # Ignore empty spots list
-        if len(spots1) == 0 or len(spots2) == 0:
-            return
-
-        # Create cost matrix
-        # https://imagej.net/plugins/trackmate/algorithms
-        cost_matrix = np.zeros(
-            (len(spots1) + len(spots2), len(spots1) + len(spots2))
-        )
-        max_cost = 0
-        for i, spot1 in enumerate(spots1):
-            for j, spot2 in enumerate(spots2):
-                intensity_penalty = (
-                    3
-                    * self.weight_mklp_intensity_factor
-                    * np.abs(spot1.intensity - spot2.intensity)
-                    / (spot1.intensity + spot2.intensity)
-                )
-                sir_intensity_penalty = (
-                    3
-                    * self.weight_sir_intensity_factor
-                    * np.abs(spot1.sir_intensity - spot2.sir_intensity)
-                    / (spot1.sir_intensity + spot2.sir_intensity)
-                )
-                penalty = 1 + intensity_penalty + sir_intensity_penalty
-                distance = spot1.distance_to(spot2)
-                if distance > self.mid_body_linking_max_distance:
-                    cost_matrix[i, j] = np.inf
-                else:
-                    # Compared to original TrackMate algorithm, remove square to penalize no attribution to the closest spot
-                    cost_matrix[i, j] = (penalty * distance) ** 1
-                    max_cost = max(max_cost, cost_matrix[i, j])
-
-        min_cost = (
-            0
-            if np.max(cost_matrix) == 0
-            else np.min(cost_matrix[np.nonzero(cost_matrix)])
-        )
-
-        cost_matrix[len(spots1) :, : len(spots2)] = (
-            max_cost * 1.05
-        )  # bottom left
-        cost_matrix[: len(spots1), len(spots2) :] = (
-            max_cost * 1.05
-        )  # top right
-        cost_matrix[len(spots1) :, len(spots2) :] = min_cost  # bottom right
-
-        # Hungarian algorithm
-        row_ind, col_ind = linear_sum_assignment(cost_matrix)
-
-        # Update parent and child spots
-        for i, j in zip(row_ind, col_ind):
-            if i < len(spots1) and j < len(spots2):
-                spots1[i].child_spot = spots2[j]
-                spots2[j].parent_spot = spots1[i]
-
-    def generate_tracks_from_spots(
-        self, spots_candidates: dict[int, list[MidBodySpot]]
-    ) -> list[MidBodyTrack]:
-        """
-        Use spots linked together to generate tracks.
-
-        Parameters
-        ----------
-        spots_candidates : {frame: [MidBodySpot]}
-
-        Returns
-        ----------
-        tracks: [MidBodyTrack]
-
-        """
-
-        # Update parent and child spots
-        for frame in spots_candidates.keys():
-            # Ignore if no spot detected in next frame
-            if not frame + 1 in spots_candidates:
-                continue
-            self._update_spots_hereditary(
-                spots_candidates[frame], spots_candidates[frame + 1]
-            )
-
-        tracks = []
-        for spots in spots_candidates.values():
-            for spot in spots:
-                if spot.track_id is None:
-                    # Create new track
-                    track_id = len(tracks)
-                    new_track = MidBodyTrack(track_id)
-                    new_track.add_spot(spot)
-                    tracks.append(new_track)
-
-        return tracks
-
     def _select_best_track(
         self,
         mitosis_track: MitosisTrack,
         mid_body_tracks: list[MidBodyTrack],
         trackmate_tracks: list[TrackMateTrack],
         mitosis_movie: np.array,
+        mid_body_linking_max_distance: float,
         sir_channel=0,
     ) -> MidBodyTrack:
         """
@@ -474,7 +452,7 @@ class MidBodyDetectionFactory:
         expected_distances = []
         for track in mid_body_tracks:
             val = track.get_expected_distance(
-                expected_positions, self.mid_body_linking_max_distance
+                expected_positions, mid_body_linking_max_distance
             )
             expected_distances.append(val)
 
@@ -514,14 +492,12 @@ class MidBodyDetectionFactory:
         if not os.path.exists(path_output):
             os.makedirs(path_output)
 
-        matplotlib_colors = [
-            mpl.colormaps["hsv"](i)[:3] for i in np.linspace(0, 0.9, 100)
-        ]
-        shuffle(matplotlib_colors)
+        color_lib = MbTrackColorManager()
 
         # Detect spots in each frame
         nb_frames = mitosis_movie.shape[0]
         for frame in range(nb_frames):
+            print(f"generating and saving frame ({frame+1}/{nb_frames})")
             image = mitosis_movie[frame, :, :, mid_body_channel].squeeze()
 
             # Bigfish spots
@@ -530,7 +506,8 @@ class MidBodyDetectionFactory:
             ]
             colors = [
                 (
-                    matplotlib_colors[spot.track_id % len(matplotlib_colors)]
+                    # matplotlib_colors[spot.track_id % len(matplotlib_colors)]
+                    color_lib.get_color_for_track(spot.track_id)
                     if spot.track_id is not None
                     else (0, 0, 0)
                 )

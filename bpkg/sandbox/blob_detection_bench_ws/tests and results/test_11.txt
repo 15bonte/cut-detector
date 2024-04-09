@@ -1,0 +1,57 @@
+=====
+Test 11 - Adjusting doh on tests - File 10
+best 0.0025 (others are great too)
+0.001-0.0040
+=====
+image source: 20231019-t1_siCep55-50-4_mitosis_21_25_to_117.tiff
+
+total frame: 92
+Reference function:
+log_cur
+{'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.1}
+
+Candidates:
+doh_005: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.05}
+doh_0025: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.025}
+doh_0010: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.01}
+doh_0005: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.005}
+doh_00040: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.004}
+doh_00034: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.0034}
+doh_00025: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.0025}
+doh_00017: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.0017}
+doh_00014: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.0014}
+doh_0001: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.001}
+
+--- Blobs ---
+reference found 296 blobs
+
+doh_005 found 0/296 blobs -- 0.00% blobs
+    296/296 miss | 0/296 FP
+    100.00% miss (m/n_ref) | 0.00% FP (fp/n_ref)
+doh_0025 found 28/296 blobs -- 9.46% blobs
+    268/296 miss | 0/296 FP
+    90.54% miss (m/n_ref) | 0.00% FP (fp/n_ref)
+doh_0010 found 193/296 blobs -- 65.20% blobs
+    103/296 miss | 0/296 FP
+    34.80% miss (m/n_ref) | 0.00% FP (fp/n_ref)
+doh_0005 found 254/296 blobs -- 85.81% blobs
+    43/296 miss | 1/296 FP
+    14.53% miss (m/n_ref) | 0.34% FP (fp/n_ref)
+doh_00040 found 265/296 blobs -- 89.53% blobs
+    33/296 miss | 2/296 FP
+    11.15% miss (m/n_ref) | 0.68% FP (fp/n_ref)
+doh_00034 found 272/296 blobs -- 91.89% blobs
+    26/296 miss | 2/296 FP
+    8.78% miss (m/n_ref) | 0.68% FP (fp/n_ref)
+doh_00025 found 286/296 blobs -- 96.62% blobs
+    13/296 miss | 3/296 FP
+    4.39% miss (m/n_ref) | 1.01% FP (fp/n_ref)
+doh_00017 found 301/296 blobs -- 101.69% blobs
+    9/296 miss | 14/296 FP
+    3.04% miss (m/n_ref) | 4.73% FP (fp/n_ref)
+doh_00014 found 307/296 blobs -- 103.72% blobs
+    8/296 miss | 19/296 FP
+    2.70% miss (m/n_ref) | 6.42% FP (fp/n_ref)
+doh_0001 found 327/296 blobs -- 110.47% blobs
+    4/296 miss | 35/296 FP
+    1.35% miss (m/n_ref) | 11.82% FP (fp/n_ref)
