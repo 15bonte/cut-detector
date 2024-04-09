@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 
 from cnn_framework.utils.display_tools import display_progress
 
+from ..utils.cell_track import CellTrack
 from ..utils.cell_spot import CellSpot
 from ..utils.trackmate_track import TrackMateTrack
 from ..factories.tracks_merging_factory import TracksMergingFactory
@@ -112,7 +113,8 @@ def plot_predictions_evolution(
 def perform_mitosis_track_generation(
     raw_video: np.ndarray,
     video_name: str,
-    xml_model_dir: str,
+    cell_spots: list[CellSpot],
+    cell_tracks: list[CellTrack],
     mitoses_save_dir: Optional[str] = None,
     tracks_save_dir: Optional[str] = None,
     metaphase_model_path: Optional[str] = get_model_path("metaphase_cnn"),
@@ -140,16 +142,6 @@ def perform_mitosis_track_generation(
 
     # Create factory instance, where useful functions are defined
     tracks_merging_factory = TracksMergingFactory()
-
-    # Read useful information from xml file
-    xml_model_path = os.path.join(xml_model_dir, f"{video_name}_model.xml")
-    cell_tracks, cell_spots = tracks_merging_factory.read_trackmate_xml(
-        xml_model_path, raw_video.shape
-    )
-
-    # Missing xml file case
-    if cell_tracks is None:
-        return None
 
     # Get dictionary of TrackMate spots (from xml file) for each track and detect metaphase spots
     tracks_merging_factory.pre_process_spots(

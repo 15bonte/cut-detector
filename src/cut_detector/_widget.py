@@ -6,7 +6,7 @@ from magicgui import magic_factory
 import tempfile
 
 
-from .utils.tools import re_organize_channels
+from .utils.tools import re_organize_channels, read_trackmate_xml
 
 from .widget_functions.tracking import perform_tracking
 from .widget_functions.mid_body_detection import perform_mid_body_detection
@@ -93,11 +93,18 @@ def whole_process(
 
     raw_video = re_organize_channels(img_layer.data)  # TXYC
 
+    # Read useful information from xml file
+    xml_model_path = os.path.join(xml_model_dir, f"{img_layer.name}_model.xml")
+    cell_tracks, cell_spots = read_trackmate_xml(
+        xml_model_path, raw_video.shape
+    )
+
     # Mitosis track_generation
     perform_mitosis_track_generation(
         raw_video,
         img_layer.name,
-        xml_model_dir,
+        cell_spots,
+        cell_tracks,
         exported_mitoses_dir,
         exported_tracks_dir,
     )
@@ -201,10 +208,18 @@ def mitosis_track_generation(
     tracks_save_dir: Optional[str],
 ):
     raw_video = re_organize_channels(img_layer.data)  # TXYC
+
+    # Read useful information from xml file
+    xml_model_path = os.path.join(xml_model_dir, f"{img_layer.name}_model.xml")
+    cell_tracks, cell_spots = read_trackmate_xml(
+        xml_model_path, raw_video.shape
+    )
+
     perform_mitosis_track_generation(
         raw_video,
         img_layer.name,
-        xml_model_dir,
+        cell_spots,
+        cell_tracks,
         mitoses_save_dir,
         tracks_save_dir,
     )

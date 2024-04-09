@@ -64,4 +64,5 @@ def main(mitoses_folder: Optional[str] = get_data_path("mitoses")):
 
 
 if __name__ == "__main__":
-    main()
+    FOLDER = r"/Users/paul/Mines_Programmation/DLIA/Projet Final/Données et PP Midbodies/Data cep55/mitoses"
+    main(FOLDER)

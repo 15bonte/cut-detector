@@ -1,0 +1,48 @@
+# API usage test
+
+# V1: processing+debugging in same construct
+
+debug_pipeline = [
+    WriteImg(as_entry="src"),
+    OnFrame(frames=[10,31], y=Plot("img")), # plotting should be disabled on perf tests
+    WriteTime()
+    MinMaxNormalizer(),
+    OnFrame(frames=[10,31], y=Plot("img")), # plotting should be disabled on perf tests
+    SigmoidNormalizer(),
+    OnFrame(frames=[10,31], y=Plot("img")), # plotting should be disabled on perf tests
+    OnFrame(
+        frames=[10,31],
+        y=LapGau(min_sig=5, max_sig=10, n_sig=5, visu=LapGauVisu(cube=True)),
+        n=LapGau(min_sig=5, max_sig=10, n_sig=5)
+    ),
+    SaveStdBlobMetrics(),
+    OnFrame(frames=[10,31], y=PlotBlobs(bg="src", sbs=True)),
+]
+blobs = run_pipeline(
+    debug_pipeline, 
+    out="blobs", 
+    img=mklp_image, 
+    logging=True, 
+    writing=CSVWriter("results.csv", delayed=True)
+)
+blobs = run_pipeline_ext_blob(
+    debug_pipeline,
+    out="blobs", 
+    img="path/to/src.tiff", 
+    logging=True, 
+    writing=CSVWriter("results.csv", delayed=True)
+)
+
+
+
+# V2: processing and debugging separated
+pipeline = [
+    MinMaxNormalizer(),
+    SigmoidNormalizer(),
+    LapGau(min_sig=5, max_sig=10, n_sig=5, LapGauVisu(cube=True))
+]
+debugging = {
+    "before_0": PlotImage(frames=[10,31]),
+    "after_0": PlotImage(frames=[10,31]),
+    "after_1": PlotImage(frames=[10,31])
+}
