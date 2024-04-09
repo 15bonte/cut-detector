@@ -97,9 +97,7 @@ class MidBodyDetectionFactory:
         mid_body_tracks = MidBodyTrack.generate_tracks_from_spots(
             spots_candidates,
             mb_tracking_method,
-            False,
-            False,
-            show_tracking_plot,
+            show_tracking_plot=show_tracking_plot,
         )
         kept_track = self._select_best_track(
             mitosis_track,

@@ -10,7 +10,7 @@ from ..constants.tracking import (
     INTERPHASE_INDEX,
     METAPHASE_INDEX,
 )
-from .track import Track
+from .track import Track, TRACKING_METHOD
 from .box_dimensions_dln import BoxDimensionsDln
 from .box_dimensions import BoxDimensions
 from .cell_spot import CellSpot
@@ -327,14 +327,19 @@ class CellTrack(Track[CellSpot]):
     @staticmethod
     def generate_tracks_from_spots(
         spots: dict[int, list[CellSpot]],
-        linking_max_distance: int,
-        gap_closing_max_distance: int,
-    ) -> list[CellTrack]:
-        """
-        Generate tracks from spots.
-        """
-        max_frame_gap = CellTrack.max_frame_gap
-        raise NotImplementedError
+        method: TRACKING_METHOD,
+        show_post_conv_df: bool = False,
+        show_tracking_df: bool = False,
+        show_tracking_plot: bool = False,
+    ) -> list[Track[CellSpot]]:
+        return Track[CellSpot].generate_tracks_from_spots(
+            CellSpot,
+            spots,
+            method,
+            show_post_conv_df,
+            show_tracking_df,
+            show_tracking_plot,
+        )
     
     @staticmethod
     def track_df_to_mb_track(

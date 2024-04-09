@@ -3,7 +3,9 @@ import pickle
 from typing import Optional
 
 from cut_detector.data.tools import get_data_path
+from cut_detector.factories.mb_support.tracking.spatial_laptrack import SpatialLapTrack
 from cut_detector.utils.cell_spot import CellSpot
+from cut_detector.utils.cell_track import CellTrack
 from cut_detector.utils.trackmate_track import TrackMateTrack
 from cut_detector.utils.trackmate_spot import TrackMateSpot
 
@@ -136,6 +138,12 @@ def main(
         axarr[1].scatter(plot_spots(frame)[0], plot_spots(frame)[1], s=1)
         plt.show()
 
+    #TODO Define tracking_method (cf src/cut_detector/factories/mb_support/tracking/tracking_impl)
+    tracking_method = SpatialLapTrack(...)
+    #TODO Call tracking method generate_tracks_from_spots
+    cell_tracks = CellTrack.generate_tracks_from_spots(cell_dictionary, tracking_method)
+
+    #TODO Compare cell_tracks with trackmate_tracks
 
 if __name__ == "__main__":
     main()
