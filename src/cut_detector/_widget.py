@@ -55,7 +55,7 @@ def whole_process(
     img_layer: "napari.layers.Image",
     img_viewer: "napari.Viewer",
     fiji_dir: str,
-    default_model_check_box: str,
+    default_model_check_box: bool,
     segmentation_model: str,
     fast_mode_check_box: bool,
     save_check_box: bool,
@@ -162,7 +162,7 @@ def segmentation_tracking(
     img_viewer: "napari.Viewer",
     fiji_dir: str,
     xml_model_dir: str,
-    default_model_check_box: str,
+    default_model_check_box: bool,
     segmentation_model: str,
     fast_mode_check_box: bool,
 ):
