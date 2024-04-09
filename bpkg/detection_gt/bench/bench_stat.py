@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Optional
 from dataclasses import dataclass
 
 @dataclass
@@ -7,6 +8,7 @@ class BenchStat:
     n_miss: int
 
     same_method_bench_gt: bool
+    runtime: Optional[float] = None
 
     def min(self) -> float:
         return np.min(self.distances)

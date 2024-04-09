@@ -6,7 +6,8 @@ def bench_detection_against_gt_runner():
         WrapperEnv.src_file,
         WrapperEnv.gt_filepath_for_source(WrapperEnv.src_file),
         WrapperEnv.main_spot_detection_method,
-        ignore_false_positives=True
+        ignore_false_positives=True,
+        measure_time=True,
     )
     print("-- Results --")
     if stats.same_method_bench_gt:
@@ -16,3 +17,5 @@ def bench_detection_against_gt_runner():
     print("max distance:", stats.max())
     print("avg distance:", stats.avg())
     print("n miss:", stats.n_miss)
+    print("factory time:", stats.runtime)
+

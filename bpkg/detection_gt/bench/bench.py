@@ -1,5 +1,7 @@
-import numpy as np
 from typing import Union, Callable
+from time import time
+
+import numpy as np
 from scipy.spatial.distance import cdist
 from cut_detector.factories.mid_body_detection_factory import MidBodyDetectionFactory
 from data_loading import Source
@@ -13,7 +15,8 @@ def bench_detection_against_gt(
             MidBodyDetectionFactory.SPOT_DETECTION_MODE, 
             Callable[[np.ndarray], np.ndarray]
         ],
-        ignore_false_positives: bool = True
+        ignore_false_positives: bool = True,
+        measure_time: bool = False
         ) -> BenchStat:
     
     if not ignore_false_positives:
@@ -25,8 +28,15 @@ def bench_detection_against_gt(
         print("WARNING: ground truth has been generated with the same mode:", detection_method)
         print("If you have not modified the file, the analysis will be biased")
     
-    factory = MidBodyDetectionFactory()
-    spots = factory.detect_mid_body_spots(movie_data, mode=detection_method)
+    factory = MidBodyDetectionFactory()    
+    if measure_time:
+        start = time()
+        spots = factory.detect_mid_body_spots(movie_data, mode=detection_method)
+        end = time()
+        time_diff = end - start
+    else:
+        spots = factory.detect_mid_body_spots(movie_data, mode=detection_method)
+        time_diff = None
 
     n_miss = 0
     distances = []
@@ -36,7 +46,6 @@ def bench_detection_against_gt(
             gt_spots_raw = np.array([[s.x, s.y] for s in gt_spots])
             test_spots_raw = np.array([[s.x, s.y] for s in spots.get(gt_frame, [])])
             if len(test_spots_raw.shape) == 1: # no spots here: empty array
-                # n_miss += 1
                 n_miss += len(gt_spots)
             else:
                 dists = cdist(gt_spots_raw, test_spots_raw, "euclidean")
@@ -49,5 +58,6 @@ def bench_detection_against_gt(
     return BenchStat(
         distances=distances,
         n_miss=n_miss,
-        same_method_bench_gt=(detection_method==gt.detection_method)
+        same_method_bench_gt=(detection_method==gt.detection_method),
+        runtime=time_diff
     )
