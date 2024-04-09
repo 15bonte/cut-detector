@@ -370,6 +370,9 @@ class ResultsSavingFactory:
             
             mask_movie[cell_indexes] = colors[i]
             mask_movie[mid_body] = [255, 0,0]
+
+            #TODO Use point + text instead of red point for mid_body
+            mid_body_legend = mitosis_track.get_mid_body_legend()
             
             # Add mask_movie to viewer
 
