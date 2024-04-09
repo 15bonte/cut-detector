@@ -1,0 +1,32 @@
+=======
+Test 1
+dog playground maybe better than dog current
+doh needs special tweaking
+=======
+---
+image source: example_video_mitosis_0_0_to_4.tiff
+Reference function:
+log_cur
+{'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.1}
+
+Candidates:
+dog_cur: {'min_sigma': 2, 'max_sigma': 5, 'sigma_ratio': 1.2, 'threshold': 0.1}
+dog_playground: {'min_sigma': 5, 'max_sigma': 10, 'sigma_ratio': 1.2, 'threshold': 0.1}
+doh_default: {'min_sigma': 1, 'max_sigma': 30, 'num_sigma': 10, 'threshold': 0.1}
+doh_loglike: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.1}
+
+reference found 39 blobs
+
+dog_cur found 102.56% blobs
+    1 miss | 2 FP
+    2.56% miss | 5.13% FP
+dog_playground found 100.00% blobs
+    0 miss | 0 FP
+    0.00% miss | 0.00% FP
+doh_default found 0.00% blobs
+    39 miss | 0 FP
+    100.00% miss | 0.00% FP
+doh_loglike found 0.00% blobs
+    39 miss | 0 FP
+    100.00% miss | 0.00% FP
+---

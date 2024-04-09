@@ -12,12 +12,6 @@ def perform_mt_cut_detection(
     raw_video: np.ndarray,
     video_name: str,
     exported_mitoses_dir: str,
-    scaler_path: Optional[str] = os.path.join(
-        get_model_path("svc_bridges"), "scaler.pkl"
-    ),
-    model_path: Optional[str] = os.path.join(
-        get_model_path("svc_bridges"), "model.pkl"
-    ),
     hmm_bridges_parameters_file: Optional[str] = os.path.join(
         get_model_path("hmm"), "hmm_bridges_parameters.npz"
     ),
@@ -48,25 +42,16 @@ def perform_mt_cut_detection(
         # Add mitosis track to list
         mitosis_tracks.append(mitosis_track)
 
-    # Generate a list of the first MT cut time for each mitosis track
+    # Perform cut detection
     mt_cut_detector = MtCutDetectionFactory()
-    list_class_bridges = mt_cut_detector.classify_bridges(
-        mitosis_tracks, raw_video, bridges_mt_cnn_model_path
+    mt_cut_detector.update_mt_cut_detection(
+        mitosis_tracks,
+        raw_video,
+        hmm_bridges_parameters_file,
+        bridges_mt_cnn_model_path,
     )
 
-    for i, mitosis_track in enumerate(mitosis_tracks):
-        print(f"Detect MT cut ({i+1}/{len(mitosis_tracks)})...")
-
-        # Perform cut detection
-        mt_cut_detector.update_mt_cut_detection(
-            mitosis_track,
-            raw_video,
-            scaler_path,
-            model_path,
-            hmm_bridges_parameters_file,
-            list_class_bridges=list_class_bridges[mitosis_track.id],
-        )
-
+    for mitosis_track in mitosis_tracks:
         # Save updated mitosis track
         if update_mitoses:
             daughter_track_ids = ",".join(
