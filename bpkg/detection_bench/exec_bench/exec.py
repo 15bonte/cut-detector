@@ -11,7 +11,8 @@ def exec_bench(
         config: BenchConfig, 
         on_sources: list[Source],
         against_gt: list[str],
-        ignore_false_positives: bool
+        ignore_false_positives: bool,
+        measure_time: bool
         ) -> dict[str, dict[str, BenchStat]]:
     """ 
     Benchmarks the benchconfig on the given source files, with the associated
@@ -26,7 +27,7 @@ def exec_bench(
         single_source_results = {}
         for det_name, det_conf in config.detections.items():
             print("\n--- pipeline:", det_name, "----")
-            stat = single_bench(source, gt, det_conf, ignore_false_positives)
+            stat = single_bench(source, gt, det_conf, ignore_false_positives, measure_time)
             single_source_results[det_name] = stat
         all_results[source.path] = single_source_results
 
@@ -37,7 +38,8 @@ def single_bench(
         source: Source, 
         gt_filepath: str, 
         det_config: DetectionConfig,
-        ignore_false_positives: bool
+        ignore_false_positives: bool,
+        measure_time: bool
         ) -> BenchStat:
     
     detector = det_config.make_associated_detector()
@@ -46,5 +48,6 @@ def single_bench(
         source,
         gt_filepath,
         detector,
-        ignore_false_positives
+        ignore_false_positives,
+        measure_time
     )

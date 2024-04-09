@@ -14,6 +14,7 @@ def exec_runner():
         WrapperEnv.bench_src_files,
         gt_files,
         ignore_false_positives=True,
+        measure_time=True,
     )
     print_result(result)
 
@@ -32,6 +33,7 @@ def print_result(result: dict[str, dict[str, BenchStat]]):
         for detec_name, stat in result[path].items():
             print("Pipeline:", detec_name)
             print("n miss:", stat.n_miss)
+            print(f"time: {stat.runtime:.3f}s")
             print("")
             print("min:", stat.min())
             print("max:", stat.max())
