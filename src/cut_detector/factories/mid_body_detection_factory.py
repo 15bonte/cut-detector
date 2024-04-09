@@ -1,7 +1,11 @@
+import inspect
 import os
+import sys
+import threading
 from typing import Literal, Optional, Callable, Union
 import numpy as np
 from bigfish import stack, detection
+import ray
 from skimage.morphology import extrema, opening
 from scipy import ndimage
 
@@ -17,7 +21,7 @@ from ..utils.tools import plot_detection
 from ..utils.track import TRACKING_METHOD
 
 from ..utils.mid_body_track_color_manager import MbTrackColorManager
-
+from .mb_support import detection as mbd
 
 class MidBodyDetectionFactory:
     """
@@ -77,6 +81,7 @@ class MidBodyDetectionFactory:
         mb_tracking_method: TRACKING_METHOD = "laptrack",
         log_blob_spot: bool = False,
         show_tracking_plot: bool = False,
+        parallel_detection: bool = False,
     ) -> None:
         """
         Get spots of best mitosis track.
@@ -93,6 +98,7 @@ class MidBodyDetectionFactory:
             mask_movie=mask_movie,
             mode=mb_detect_method,
             log_blob_spot=log_blob_spot,
+            parallelization=parallel_detection
         )
         mid_body_tracks = MidBodyTrack.generate_tracks_from_spots(
             spots_candidates,
@@ -127,6 +133,7 @@ class MidBodyDetectionFactory:
             SPOT_DETECTION_MODE, Callable[[np.ndarray], np.ndarray]
         ] = "diffgau",
         log_blob_spot: bool = False,
+        parallelization: bool = False,
     ) -> dict[int, list[MidBodySpot]]:
         """
         Parameters
@@ -143,16 +150,32 @@ class MidBodyDetectionFactory:
         if mask_movie is None:
             mask_movie = np.ones(mitosis_movie.shape[:-1])
 
+        if parallelization:
+            return self.parallel_detect_mid_body_spots(
+                mitosis_movie,
+                mask_movie,
+                mid_body_channel,
+                sir_channel,
+                mode,
+            )
+            # return self.std_parallel_detect_mid_body_spots(
+            #     mitosis_movie,
+            #     mask_movie,
+            #     mid_body_channel,
+            #     sir_channel,
+            #     mode,
+            # )
+
         # Detect spots in each frame
         spots_dictionary = {}
         nb_frames = mitosis_movie.shape[0]
         for frame in range(nb_frames):
-            display_progress(
-                "Detect mid-body spots...",
-                frame + 1,
-                nb_frames,
-                additional_message=f"Frame {frame + 1}/{nb_frames}",
-            )
+            # display_progress(
+            #     "Detect mid-body spots...",
+            #     frame + 1,
+            #     nb_frames,
+            #     additional_message=f"Frame {frame + 1}/{nb_frames}",
+            # )
 
             mitosis_frame = mitosis_movie[frame, :, :, :].squeeze()  # YXC
             mask_frame = mask_movie[frame, :, :].squeeze()  # YX
@@ -170,6 +193,84 @@ class MidBodyDetectionFactory:
             spots_dictionary[frame] = spots
 
         return spots_dictionary
+    
+    def parallel_detect_mid_body_spots(
+            self,
+            mitosis_movie: np.array,
+            mask_movie: Optional[np.array] = None,
+            mid_body_channel=1,
+            sir_channel=0,
+            blob_like: Callable[[np.ndarray], np.ndarray] = mbd.cur_log
+            ) -> dict[int, list[MidBodySpot]]:
+        
+        # For now, parallelization is only supported for blob-like functions
+        if not callable(blob_like):
+            raise RuntimeError("For now, parallelization is only supported for blob-like functions")
+
+        squeezed_movie = mitosis_movie[:, :, :, :].squeeze()  # squeezed TYXC
+        nb_frames = squeezed_movie.shape[0]
+
+        remote_func = ray.remote(lambda mv, msk, mbc, sc, bl, f, b: self._spot_detection(mv, msk, mbc, sc, bl, f, b))
+        results = [
+            remote_func.remote(
+                squeezed_movie[f,:,:,:],
+                mask_movie,
+                mid_body_channel,
+                sir_channel,
+                blob_like,
+                f,
+                False)
+            for f in range(nb_frames)
+        ]
+        results = ray.get(results)
+
+        return {f: results[f] for f in range(nb_frames)}
+    
+
+    def std_parallel_detect_mid_body_spots(
+            self,
+            mitosis_movie: np.array,
+            mask_movie: Optional[np.array] = None,
+            mid_body_channel=1,
+            sir_channel=0,
+            blob_like: Callable[[np.ndarray], np.ndarray] = mbd.cur_log
+            ) -> dict[int, list[MidBodySpot]]:
+        
+        print("\n\n")
+        print("##### STD PARA ######")
+        print("\n\n")
+        
+        squeezed_movie = mitosis_movie[:, :, :, :].squeeze()  # squeezed TYXC
+        nb_frames = squeezed_movie.shape[0]
+
+        def ret_writer(slots: list, index: int, fn: Callable, *args) -> None:
+            slots[index] = fn(*args)
+
+        slots = [None] * nb_frames
+        all_threads = [
+            threading.Thread(
+                target=ret_writer, 
+                args=[
+                    slots,
+                    f,
+                    self._spot_detection,
+                    squeezed_movie[f,:,:,:],
+                    None,
+                    mid_body_channel,
+                    sir_channel,
+                    blob_like,
+                    f
+                ]
+            )
+            for f in range(nb_frames)
+        ]
+        for t in all_threads:
+            t.start()
+        for t in all_threads:
+            t.join()
+
+        return {f: slots[f] for f in range(nb_frames)}
+    
 
     def _spot_detection(
         self,
@@ -217,14 +318,14 @@ class MidBodyDetectionFactory:
             # blob-like function called referenced by name
 
             mapping = {
-                "cur_log": detection.cur_log,
-                "cur_dog": detection.cur_dog,
-                "cur_doh": detection.cur_doh,
-                "lapgau": detection.lapgau,
-                "log2_wider": detection.log2_wider,
-                "rshit_log": detection.rshift_log,
-                "diffgau": detection.diffgau,
-                "hessian": detection.hessian,
+                "cur_log": mbd.cur_log,
+                "cur_dog": mbd.cur_dog,
+                "cur_doh": mbd.cur_doh,
+                "lapgau": mbd.lapgau,
+                "log2_wider": mbd.log2_wider,
+                "rshit_log": mbd.rshift_log,
+                "diffgau": mbd.diffgau,
+                "hessian": mbd.hessian,
             }
 
             spots = [
