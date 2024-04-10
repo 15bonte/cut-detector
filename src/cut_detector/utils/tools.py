@@ -494,6 +494,7 @@ def perform_cnn_inference(
         test_dl,
         predict_mode=PredictMode.GetPrediction,
         nb_images_to_save=0,
+        compute_own_mean_std=True,
     )  # careful, this is scores and not probabilities
     predictions = [int(np.argmax(p)) for p in predictions]
 
