@@ -53,6 +53,7 @@ class Track(ABC, Generic[T]):
         """
         Generate tracks from spots.
         """
+
         spot_df = Track.convert_spots_to_spotdf(
             spot_type,
             spots,
