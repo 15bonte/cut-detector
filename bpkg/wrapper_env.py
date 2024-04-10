@@ -7,7 +7,7 @@ from pathlib import Path
 from os.path import join
 
 class WrapperEnv:
-    src_file: Source = SourceFiles.siCep
+    src_file: Source = SourceFiles.longCep1
     bench_src_files: list[Source] = [
         SourceFiles.example,
         SourceFiles.siCep
