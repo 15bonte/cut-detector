@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import time
 from typing import Optional, Callable, Union
 from bigfish import stack
 from laptrack import LapTrack
@@ -10,11 +11,22 @@ from cut_detector.widget_functions.mid_body_detection import (
 from cut_detector.data.tools import get_data_path
 from cut_detector.factories.mb_support import detection, tracking
 
+SOURCE_CHOICE = 2
+SOURCES = {
+    0: "eval_data/Data Standard",
+    1: "eval_data/Data spastin",
+    2: "eval_data/Data cep55",
+}
+DETECTION_METHOD = detection.cur_dog
+TRACKING_METHOD  = tracking.cur_spatial_laptrack
+PARALLELIZATION = True
+
 
 def main(
     data_set_path: Optional[str] = None,
     mid_body_detection_method: Union[str, Callable[[np.ndarray], np.ndarray]] = detection.cur_log,
     mid_body_tracking_method: Union[str, LapTrack] = tracking.cur_spatial_laptrack,
+    parallel_detection: bool = False,
 ):
     """
     If data_set_path is not None, it has to be a path containing
@@ -40,6 +52,7 @@ def main(
         )  # TYXC
         video_name = os.path.basename(video_file).split(".")[0]
 
+        start = time.time()
         perform_mid_body_detection(
             raw_video,
             video_name,
@@ -47,13 +60,24 @@ def main(
             tracks_folder,
             mid_body_detection_method=mid_body_detection_method,
             mid_body_tracking_method=mid_body_tracking_method,
+            parallel_detection=parallel_detection
         )
+        end = time.time()
+        delta = end-start
+        print(f"\n\n== Time: {delta:.3f}s ==")
 
 
 if __name__ == "__main__":
-    FOLDER = "/Users/paul/Mines_Programmation/DLIA/Projet Final/Données et PP Midbodies/Data cep55"
+    print("========")
+    print("Executing:", SOURCES[SOURCE_CHOICE])
+    print("detection with:", DETECTION_METHOD)
+    print("Tracking with:", TRACKING_METHOD)
+    print("Parallelization:", PARALLELIZATION)
+    print("========")
+
     main(
-        FOLDER,
-        mid_body_detection_method=detection.cur_dog,
-        mid_body_tracking_method=tracking.cur_spatial_laptrack
+        SOURCES[SOURCE_CHOICE],
+        mid_body_detection_method=DETECTION_METHOD,
+        mid_body_tracking_method=TRACKING_METHOD,
+        parallel_detection=PARALLELIZATION,
     )

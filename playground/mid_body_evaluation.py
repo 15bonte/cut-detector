@@ -5,6 +5,12 @@ import pickle
 from cut_detector.utils.mitosis_track import MitosisTrack
 from cut_detector.data.tools import get_data_path
 
+SOURCE_CHOICE = 2
+SOURCES = {
+    0: "eval_data/Data Standard/mitoses",
+    1: "eval_data/Data spastin/mitoses",
+    2: "eval_data/Data cep55/mitoses",
+}
 
 def main(mitoses_folder: Optional[str] = get_data_path("mitoses")):
     """
@@ -64,5 +70,4 @@ def main(mitoses_folder: Optional[str] = get_data_path("mitoses")):
 
 
 if __name__ == "__main__":
-    FOLDER = r"/Users/paul/Mines_Programmation/DLIA/Projet Final/Données et PP Midbodies/Data cep55/mitoses"
-    main(FOLDER)
+    main(SOURCES[SOURCE_CHOICE])
