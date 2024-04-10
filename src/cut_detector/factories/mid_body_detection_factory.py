@@ -117,7 +117,6 @@ class MidBodyDetectionFactory:
         )
 
         if kept_track is None:
-            mitosis_track.mid_body_spots = {}
             return
 
         # Keep only spots of best mitosis track
@@ -353,11 +352,6 @@ class MidBodyDetectionFactory:
                 )
 
         elif mode == "h_maxima":
-
-            return []
-
-
-
             # Perform opening followed by closing to remove small spots
             filtered_image = opening(image_mklp, footprint=np.ones((3, 3)))
             # Get local maxima using h_maxima
