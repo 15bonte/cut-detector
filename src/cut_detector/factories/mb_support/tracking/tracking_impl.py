@@ -39,7 +39,7 @@ parallel_slt = SpatialLapTrack(
     splitting_cost_cutoff       = False,
     merging_cost_cutoff         = False,
     alternative_cost_percentile = 100,
-    parallel_backend= ParallelBackend.ray,
+    parallel_backend            = ParallelBackend.ray
 )
 
 

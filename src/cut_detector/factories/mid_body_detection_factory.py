@@ -100,6 +100,7 @@ class MidBodyDetectionFactory:
             log_blob_spot=log_blob_spot,
             parallelization=parallel_detection
         )
+
         mid_body_tracks = MidBodyTrack.generate_tracks_from_spots(
             spots_candidates,
             mb_tracking_method,
@@ -116,6 +117,7 @@ class MidBodyDetectionFactory:
         )
 
         if kept_track is None:
+            mitosis_track.mid_body_spots = {}
             return
 
         # Keep only spots of best mitosis track
@@ -151,20 +153,20 @@ class MidBodyDetectionFactory:
             mask_movie = np.ones(mitosis_movie.shape[:-1])
 
         if parallelization:
-            return self.parallel_detect_mid_body_spots(
-                mitosis_movie,
-                mask_movie,
-                mid_body_channel,
-                sir_channel,
-                mode,
-            )
-            # return self.std_parallel_detect_mid_body_spots(
+            # return self.parallel_detect_mid_body_spots(
             #     mitosis_movie,
             #     mask_movie,
             #     mid_body_channel,
             #     sir_channel,
             #     mode,
             # )
+            return self.std_parallel_detect_mid_body_spots(
+                mitosis_movie,
+                mask_movie,
+                mid_body_channel,
+                sir_channel,
+                mode,
+            )
 
         # Detect spots in each frame
         spots_dictionary = {}
@@ -235,10 +237,6 @@ class MidBodyDetectionFactory:
             sir_channel=0,
             blob_like: Callable[[np.ndarray], np.ndarray] = mbd.cur_log
             ) -> dict[int, list[MidBodySpot]]:
-        
-        print("\n\n")
-        print("##### STD PARA ######")
-        print("\n\n")
         
         squeezed_movie = mitosis_movie[:, :, :, :].squeeze()  # squeezed TYXC
         nb_frames = squeezed_movie.shape[0]
@@ -355,6 +353,11 @@ class MidBodyDetectionFactory:
                 )
 
         elif mode == "h_maxima":
+
+            return []
+
+
+
             # Perform opening followed by closing to remove small spots
             filtered_image = opening(image_mklp, footprint=np.ones((3, 3)))
             # Get local maxima using h_maxima
@@ -386,7 +389,6 @@ class MidBodyDetectionFactory:
             spots = np.asarray(spots, dtype=np.int64)
 
             # Here, do something to retrieve mid_body area and/or circularity...
-
             if len(spots) == 0:
                 spots = np.array([], dtype=np.int64).reshape(
                     (0, filtered_image.ndim)
