@@ -10,7 +10,7 @@ from cut_detector.factories.mid_body_detection_factory import (
 from cut_detector.factories.mb_support import detection, tracking
 from cut_detector.utils.mid_body_track import MidBodyTrack
 
-SHOULD_SAVE = False
+SHOULD_SAVE = True
 
 # origine des points en haut à gauche, D>G, H>B
 # autre test
@@ -98,7 +98,6 @@ def main(
 
 
 if __name__ == "__main__":
-    # main()
     main(
         # "./src/cut_detector/data/mitosis_movies/example_video_mitosis_0_0_to_4.tiff",
         # "./src/cut_detector/data/mid_bodies_movies_test/a_siLuci-1_mitosis_33_7_to_63.tiff",
