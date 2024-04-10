@@ -4,6 +4,9 @@ from typing import Optional
 from magicgui import magic_factory
 import tempfile
 
+import numpy as np
+from skimage import io
+
 
 from .utils.tools import re_organize_channels
 
@@ -16,8 +19,45 @@ from .widget_functions.mt_cut_detection import perform_mt_cut_detection
 from .widget_functions.save_results import perform_results_saving
 
 
+def video_whole_process(
+    video: np.ndarray,
+    video_name: np.ndarray,
+    default_model_check_box: bool,
+    segmentation_model: str,
+    save_check_box: bool,
+    movies_save_dir: str,
+    spots_dir_name: str,
+    tracks_dir_name: str,
+    mitoses_dir_name: str,
+) -> None:
+    """Perform the whole process on a single video."""
+
+    perform_tracking(
+        video,
+        str(Path(segmentation_model)) if not default_model_check_box else None,
+        video_name,
+        spots_dir_name,
+        tracks_dir_name,
+    )
+    perform_mitosis_track_generation(
+        video,
+        video_name,
+        spots_dir_name,
+        tracks_dir_name,
+        mitoses_dir_name,
+    )
+    perform_mid_body_detection(
+        video,
+        video_name,
+        mitoses_dir_name,
+        tracks_dir_name,
+        movies_save_dir if save_check_box else None,
+    )
+    perform_mt_cut_detection(video, video_name, mitoses_dir_name)
+
+
 @magic_factory(
-    call_button="Run Whole Process",
+    call_button="Run Whole Process (Single Video)",
     layout="vertical",
     default_model_check_box=dict(
         widget_type="CheckBox",
@@ -50,6 +90,7 @@ def whole_process(
     movies_save_dir: str,
     results_save_dir: str,
 ):
+
     # Create temporary folders
     spots_dir = tempfile.TemporaryDirectory()
     tracks_dir = tempfile.TemporaryDirectory()
@@ -57,36 +98,89 @@ def whole_process(
 
     video = re_organize_channels(img_layer.data)  # TXYC
 
-    # Segmentation and tracking
-    segmentation_model = str(Path(segmentation_model))
-    perform_tracking(
-        video,
-        segmentation_model if not default_model_check_box else None,
-        img_layer.name,
-        spots_dir.name,
-        tracks_dir.name,
-    )
-
-    # Mitosis track_generation
-    perform_mitosis_track_generation(
+    video_whole_process(
         video,
         img_layer.name,
+        default_model_check_box,
+        segmentation_model,
+        save_check_box,
+        movies_save_dir,
         spots_dir.name,
         tracks_dir.name,
         mitoses_dir.name,
     )
 
-    # Mid-body detection
-    perform_mid_body_detection(
-        video,
-        img_layer.name,
-        mitoses_dir.name,
-        tracks_dir.name,
-        movies_save_dir if save_check_box else None,
-    )
+    # Results saving
+    perform_results_saving(mitoses_dir.name, save_dir=results_save_dir)
 
-    # MT cut detection
-    perform_mt_cut_detection(video, img_layer.name, mitoses_dir.name)
+    # Delete temporary folders
+    spots_dir.cleanup()
+    tracks_dir.cleanup()
+    mitoses_dir.cleanup()
+
+    print("\nWhole process finished with success!")
+
+
+@magic_factory(
+    call_button="Run Whole Process (Folder)",
+    layout="vertical",
+    raw_data_dir=dict(
+        widget_type="FileEdit",
+        label="Data folder: ",
+        mode="d",
+    ),
+    default_model_check_box=dict(
+        widget_type="CheckBox",
+        text="Use default segmentation model?",
+        value=True,
+    ),
+    segmentation_model=dict(
+        widget_type="FileEdit",
+        label="If not checked, cellpose segmentation model: ",
+    ),
+    save_check_box=dict(
+        widget_type="CheckBox", text="Save cell divisions movies?", value=False
+    ),
+    movies_save_dir=dict(
+        widget_type="FileEdit",
+        label="If checked, directory to save division movies: ",
+        mode="d",
+    ),
+    results_save_dir=dict(
+        widget_type="FileEdit",
+        label="Directory to save results: ",
+        mode="d",
+    ),
+)
+def whole_process_folder(
+    raw_data_dir: str,
+    default_model_check_box: bool,
+    segmentation_model: str,
+    save_check_box: bool,
+    movies_save_dir: str,
+    results_save_dir: str,
+):
+
+    # Create temporary folders
+    spots_dir = tempfile.TemporaryDirectory()
+    tracks_dir = tempfile.TemporaryDirectory()
+    mitoses_dir = tempfile.TemporaryDirectory()
+
+    # Run process on each video
+    tiff_files = list(Path(raw_data_dir).rglob("*.tif"))
+    for tiff_file in tiff_files:
+        video = io.imread(tiff_file)  # TYXC
+        video_whole_process(
+            video,
+            tiff_file.stem,
+            default_model_check_box,
+            segmentation_model,
+            save_check_box,
+            movies_save_dir,
+            spots_dir.name,
+            tracks_dir.name,
+            mitoses_dir.name,
+        )
 
     # Results saving
     perform_results_saving(mitoses_dir.name, save_dir=results_save_dir)
