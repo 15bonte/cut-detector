@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from typing import Optional
 
@@ -6,7 +5,7 @@ from magicgui import magic_factory
 import tempfile
 
 
-from .utils.tools import re_organize_channels, read_trackmate_xml
+from .utils.tools import re_organize_channels
 
 from .widget_functions.tracking import perform_tracking
 from .widget_functions.mid_body_detection import perform_mid_body_detection
@@ -62,8 +61,8 @@ def whole_process(
     segmentation_model = str(Path(segmentation_model))
     perform_tracking(
         video,
-        img_layer.name,
         segmentation_model if not default_model_check_box else None,
+        img_layer.name,
         spots_dir.name,
         tracks_dir.name,
     )
@@ -138,6 +137,7 @@ def segmentation_tracking(
     perform_tracking(
         raw_video,
         segmentation_model if not default_model_check_box else None,
+        img_layer.name,
         spots_save_dir,
         tracks_save_dir,
     )
@@ -148,9 +148,14 @@ def segmentation_tracking(
 @magic_factory(
     call_button="Run Mitosis Track Generation",
     layout="vertical",
-    xml_model_dir=dict(
+    spots_save_dir=dict(
         widget_type="FileEdit",
-        label=".xml models directory: ",
+        label="Directory to save .bin cell spots: ",
+        mode="d",
+    ),
+    tracks_save_dir=dict(
+        widget_type="FileEdit",
+        label="Directory to save .bin cell tracks: ",
         mode="d",
     ),
     mitoses_save_dir=dict(
@@ -158,33 +163,21 @@ def segmentation_tracking(
         label="Directory to save .bin mitoses: ",
         mode="d",
     ),
-    tracks_save_dir=dict(
-        widget_type="FileEdit",
-        label="Directory to save .bin tracks: ",
-        mode="d",
-    ),
 )
 def mitosis_track_generation(
     img_layer: "napari.layers.Image",
-    xml_model_dir: str,
+    spots_save_dir: str,
+    tracks_save_dir: str,
     mitoses_save_dir: Optional[str],
-    tracks_save_dir: Optional[str],
 ):
     raw_video = re_organize_channels(img_layer.data)  # TXYC
-
-    # Read useful information from xml file
-    xml_model_path = os.path.join(xml_model_dir, f"{img_layer.name}_model.xml")
-    cell_tracks, cell_spots = read_trackmate_xml(
-        xml_model_path, raw_video.shape
-    )
 
     perform_mitosis_track_generation(
         raw_video,
         img_layer.name,
-        cell_spots,
-        cell_tracks,
-        mitoses_save_dir,
+        spots_save_dir,
         tracks_save_dir,
+        mitoses_save_dir,
     )
     print("\nMitosis tracks generated with success!")
 
@@ -205,7 +198,7 @@ def mitosis_track_generation(
     save_check_box=dict(
         widget_type="CheckBox", text="Save cell divisions movies?", value=False
     ),
-    save_dir=dict(
+    movies_save_dir=dict(
         widget_type="FileEdit",
         label="If checked, directory to save division movies: ",
         mode="d",
@@ -216,7 +209,7 @@ def mid_body_detection(
     exported_mitoses_dir: str,
     exported_tracks_dir: str,
     save_check_box: bool,
-    save_dir: str,
+    movies_save_dir: str,
 ):
     raw_video = re_organize_channels(img_layer.data)  # TXYC
     perform_mid_body_detection(
@@ -224,7 +217,7 @@ def mid_body_detection(
         img_layer.name,
         exported_mitoses_dir,
         exported_tracks_dir,
-        save_dir if save_check_box else None,
+        movies_save_dir if save_check_box else None,
     )
     print("\nMid-body detection finished with success!")
 

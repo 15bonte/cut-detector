@@ -17,10 +17,14 @@ def perform_mid_body_detection(
     video_name: str,
     exported_mitoses_dir: str,
     exported_tracks_dir: str,
-    save_dir: Optional[str] = None,
-    update_mitoses: bool = True,
-    mid_body_detection_method: Union[str, Callable[[np.ndarray], np.ndarray]] = detection.cur_log,
-    mid_body_tracking_method: Union[str, LapTrack] = tracking.cur_spatial_laptrack
+    movies_save_dir: Optional[str] = None,
+    save: bool = True,
+    mid_body_detection_method: Union[
+        str, Callable[[np.ndarray], np.ndarray]
+    ] = detection.cur_log,
+    mid_body_tracking_method: Union[
+        str, LapTrack
+    ] = tracking.cur_spatial_laptrack,
 ):
     mitosis_tracks: list[MitosisTrack] = []
     # Iterate over "bin" files in exported_mitoses_dir
@@ -61,13 +65,16 @@ def perform_mid_body_detection(
 
         # Search for mid-body in mitosis movie
         mid_body_detector.update_mid_body_spots(
-            mitosis_track, mitosis_movie, mask_movie, trackmate_tracks,
+            mitosis_track,
+            mitosis_movie,
+            mask_movie,
+            trackmate_tracks,
             mb_detect_method=mid_body_detection_method,
-            mb_tracking_method=mid_body_tracking_method
+            mb_tracking_method=mid_body_tracking_method,
         )
 
         # Save updated mitosis track
-        if update_mitoses:
+        if save:
             daughter_track_ids = ",".join(
                 [str(d) for d in mitosis_track.daughter_track_ids]
             )
@@ -79,13 +86,13 @@ def perform_mid_body_detection(
             with open(save_path, "wb") as f:
                 pickle.dump(mitosis_track, f)
 
-        if save_dir:
+        if movies_save_dir:
             # Save mitosis movie
             final_mitosis_movie = mitosis_track.add_mid_body_movie(
                 mitosis_movie, mask_movie
             )  # TYX C=C+1
             image_save_path = os.path.join(
-                save_dir,
+                movies_save_dir,
                 f"{video_name}_mitosis_{mitosis_track.id}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.tiff",
             )
             # Transpose to match TCYX

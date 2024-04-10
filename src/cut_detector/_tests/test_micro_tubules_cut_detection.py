@@ -24,5 +24,5 @@ def test_micro_tubules_cut_detection():
         video,
         "example_video",
         get_data_path("mitoses"),
-        update_mitoses=False,
+        save=False,
     )

@@ -12,8 +12,8 @@ from ..models.tools import get_model_path
 
 def perform_tracking(
     video: np.ndarray,
-    video_name: str,
     model_path: Optional[str],
+    video_name: Optional[str] = None,
     spots_save_dir: Optional[str] = None,
     tracks_save_dir: Optional[str] = None,
     save: bool = True,

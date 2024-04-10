@@ -132,8 +132,6 @@ def perform_mitosis_track_generation(
     if mitoses_dir is not None and not os.path.exists(mitoses_dir):
         os.makedirs(mitoses_dir)
 
-    # Load cell spots and tracks
-
     # Create factory instance, where useful functions are defined
     tracks_merging_factory = TracksMergingFactory()
 
@@ -141,7 +139,6 @@ def perform_mitosis_track_generation(
     cell_spots: list[CellSpot] = []
     video_spots_save_dir = os.path.join(spots_dir, video_name)
     for state_path in os.listdir(video_spots_save_dir):
-        # Load mitosis track
         with open(os.path.join(video_spots_save_dir, state_path), "rb") as f:
             cell_spot: CellSpot = pickle.load(f)
             cell_spots.append(cell_spot)
@@ -150,7 +147,6 @@ def perform_mitosis_track_generation(
     cell_tracks: list[CellTrack] = []
     video_tracks_save_dir = os.path.join(tracks_dir, video_name)
     for state_path in os.listdir(video_tracks_save_dir):
-        # Load mitosis track
         with open(os.path.join(video_tracks_save_dir, state_path), "rb") as f:
             cell_track: CellTrack = pickle.load(f)
             cell_tracks.append(cell_track)

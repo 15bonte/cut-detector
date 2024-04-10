@@ -26,6 +26,5 @@ def test_mid_body_detection_widget():
         "example_video",
         get_data_path("mitoses"),
         get_data_path("tracks"),
-        save_dir=None,
-        update_mitoses=False,
+        save=False,
     )
