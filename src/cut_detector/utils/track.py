@@ -54,6 +54,10 @@ class Track(ABC, Generic[T]):
         Generate tracks from spots.
         """
 
+        raise RuntimeError(
+            "Sorry, this is broken for now, please use gen_track.generate_tracks_from_spots instead"
+        )
+
         spot_df = Track.convert_spots_to_spotdf(
             spot_type,
             spots,

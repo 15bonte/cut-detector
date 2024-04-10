@@ -18,7 +18,7 @@ from ..utils.mid_body_spot import MidBodySpot
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.trackmate_track import TrackMateTrack
 from ..utils.tools import plot_detection
-from ..utils.track import TRACKING_METHOD
+from ..utils.gen_track import generate_tracks_from_spots, TRACKING_METHOD
 
 from ..utils.mid_body_track_color_manager import MbTrackColorManager
 from .mb_support import detection as mbd
@@ -101,13 +101,18 @@ class MidBodyDetectionFactory:
             parallelization=parallel_detection
         )
 
-        mid_body_tracks = MidBodyTrack.generate_tracks_from_spots(
+        # mid_body_tracks = MidBodyTrack.generate_tracks_from_spots(
+        #     spots_candidates,
+        #     mb_tracking_method,
+        #     False,
+        #     False,
+        #     show_tracking_plot,
+        # )
+        mid_body_tracks: list[MidBodyTrack] = generate_tracks_from_spots(
             spots_candidates,
-            mb_tracking_method,
-            False,
-            False,
-            show_tracking_plot,
+            mb_tracking_method
         )
+
         kept_track = self._select_best_track(
             mitosis_track,
             mid_body_tracks,

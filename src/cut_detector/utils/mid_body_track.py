@@ -20,6 +20,7 @@ class MidBodyTrack(Track[MidBodySpot]):
         show_tracking_df: bool = False,
         show_tracking_plot: bool = False,
     ) -> list[Track[MidBodySpot]]:
+        raise RuntimeError("Deprecated for now, please use track_gen.generate_tracks_from_spots")
         return Track[MidBodySpot].generate_tracks_from_spots(
             MidBodySpot,
             spots,
