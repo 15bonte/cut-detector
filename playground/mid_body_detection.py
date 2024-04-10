@@ -9,11 +9,16 @@ from cut_detector.factories.mid_body_detection_factory import (
 )
 from cut_detector.factories.mb_support import detection, tracking
 from cut_detector.utils.mid_body_track import MidBodyTrack
+from cut_detector.utils.gen_track import generate_tracks_from_spots
 
+D_METHOD = detection.cur_dog
+T_METHOD = tracking.cur_spatial_laptrack
+
+SHOW_POINTS = False
+SHOW_TRACKS = False
 SHOULD_SAVE = True
 
-# origine des points en haut à gauche, D>G, H>B
-# autre test
+
 def main(
     image_path: Optional[str] = get_data_path("mitosis_movies"),
     path_output: Optional[str] = get_data_path("mid_bodies"),
@@ -37,59 +42,47 @@ def main(
     # Search for mid-body in mitosis movie
     factory = MidBodyDetectionFactory()
 
-    # dict[int, list[MidBodySpot]]
-    # int: frame
-    spots_candidates = factory.detect_mid_body_spots(
-        # mitosis_movie=mitosis_movie, mask_movie=mask_movie, mode="h_maxima"
-        mitosis_movie=mitosis_movie,
-        mask_movie=mask_movie,
-        mode=detection.cur_dog,
-        parallelization=True,
-    )  # mode = "bigfish" or "h_maxima" (default)
     start = time()
     spots_candidates = factory.detect_mid_body_spots(
         # mitosis_movie=mitosis_movie, mask_movie=mask_movie, mode="h_maxima"
         mitosis_movie=mitosis_movie,
         mask_movie=mask_movie,
-        mode=detection.cur_dog,
+        mode=D_METHOD,
         parallelization=True,
     )
     end = time()
     delta = end - start
     print("====== delta:", delta, "=========")
 
-    for frame, spots in spots_candidates.items():
-        for spot in spots:
-            print(
-                {
-                    "fr": frame,
-                    "x": spot.x,
-                    "y": spot.y,
-                    "mlkp_int": spot.intensity,
-                    "sir_int": spot.sir_intensity,
-                }
-            )
+    if SHOW_POINTS:
+        for frame, spots in spots_candidates.items():
+            for spot in spots:
+                print(
+                    {
+                        "fr": frame,
+                        "x": spot.x,
+                        "y": spot.y,
+                        "mlkp_int": spot.intensity,
+                        "sir_int": spot.sir_intensity,
+                    }
+                )
 
-    MidBodyTrack.generate_tracks_from_spots(
-        spots_candidates,
-        tracking.slt,
-        False,
-        False,
-        False
-    )
+    generate_tracks_from_spots(spots_candidates, T_METHOD)
 
-    for frame, spots in spots_candidates.items():
-        for spot in spots:
-            print(
-                {
-                    "fr": frame,
-                    "x": spot.x,
-                    "y": spot.y,
-                    "mlkp_int": spot.intensity,
-                    "sir_int": spot.sir_intensity,
-                    "track_id": spot.track_id
-                }
-            )
+
+    if SHOW_TRACKS:
+        for frame, spots in spots_candidates.items():
+            for spot in spots:
+                print(
+                    {
+                        "fr": frame,
+                        "x": spot.x,
+                        "y": spot.y,
+                        "mlkp_int": spot.intensity,
+                        "sir_int": spot.sir_intensity,
+                        "track_id": spot.track_id
+                    }
+                )
 
     if SHOULD_SAVE:
         factory.save_mid_body_tracking(
