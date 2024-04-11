@@ -40,27 +40,28 @@ def main(
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = models.CellposeModel(pretrained_model=[model_path], device=device)
 
-    for frame in range(image.shape[0]):
-        frame_image = image[frame, ...].squeeze()
-        results, flows, _ = model.eval(
-            [frame_image],
-            channels=[channel_to_segment, nucleus_channel],
-            diameter=diameter,
-            flow_threshold=factory.flow_threshold,
-            cellprob_threshold=factory.cellprob_threshold,
-            augment=factory.augment,
-        )
+    results, flows, _ = model.eval(
+        image.squeeze(),  # TCYX
+        channels=[channel_to_segment, nucleus_channel],
+        diameter=diameter,
+        flow_threshold=factory.flow_threshold,
+        cellprob_threshold=factory.cellprob_threshold,
+        augment=factory.augment,
+    )
 
+    for frame in range(image.shape[0]):
         # Plot image_to_segment and segmented_image
         _, ax = plt.subplots(2, 2)
         ax[0, 0].set_title("Raw image")
-        ax[0, 0].imshow(frame_image[channel_to_segment - 1], cmap="gray")
+        ax[0, 0].imshow(
+            image[frame, channel_to_segment - 1].squeeze(), cmap="gray"
+        )
         ax[0, 1].set_title("Cellpose")
-        ax[0, 1].imshow(results[0], cmap="viridis")
+        ax[0, 1].imshow(results[frame], cmap="viridis")
         ax[1, 0].set_title("Flow")
-        ax[1, 0].imshow(flows[0][0])
+        ax[1, 0].imshow(flows[0][frame])
         ax[1, 1].set_title("Cell probability")
-        ax[1, 1].imshow(flows[0][2], cmap="gray")
+        ax[1, 1].imshow(flows[2][frame], cmap="gray")
         plt.show()
 
 
