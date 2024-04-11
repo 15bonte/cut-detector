@@ -9,13 +9,12 @@ from cut_detector.widget_functions.mt_cut_detection import (
 
 
 def test_open_micro_tubules_cut_detection_widget():
-    # Just try to open the widget
+    """Test opening the micro tubules cut detection widget."""
     micro_tubules_cut_detection()
 
 
 def test_micro_tubules_cut_detection():
-
-    # Add video
+    """Test micro tubules cut detection."""
     video = io.imread(
         os.path.join(get_data_path("videos"), "example_video.tif")  # TYXC
     )

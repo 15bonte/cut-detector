@@ -4,19 +4,15 @@ from cut_detector.widget_functions.save_results import perform_results_saving
 
 
 def test_open_results_saving_widget():
-    # Just try to open the widget
+    """Test opening the results saving widget."""
     results_saving()
 
 
 def test_results_saving():
+    """Test results saving."""
     perform_results_saving(
         get_data_path("mitoses"),
         show=False,
         save_dir=get_data_path("results"),
         verbose=True,
     )
-
-
-if __name__ == "__main__":
-    test_open_results_saving_widget()
-    test_results_saving()

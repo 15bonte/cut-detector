@@ -9,18 +9,17 @@ from cut_detector.widget_functions.mitosis_track_generation import (
 
 
 def test_open_track_generation_widget():
-    # Just try to open the widget
+    """Test opening the track generation widget."""
     mitosis_track_generation()
 
 
 def test_track_generation():
+    """Test track generation."""
 
-    # Add video
     video = io.imread(
         os.path.join(get_data_path("videos"), "example_video.tif")
     )  # TYXC
 
-    # Open the widget
     mitosis_tracks = perform_mitosis_track_generation(
         video,
         "example_video",
