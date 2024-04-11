@@ -7,10 +7,18 @@ from pathlib import Path
 from os.path import join
 
 class WrapperEnv:
-    src_file: Source = SourceFiles.longCep1
+    src_file: Source = SourceFiles.example
     bench_src_files: list[Source] = [
         SourceFiles.example,
-        SourceFiles.siCep
+        SourceFiles.s1,
+        SourceFiles.s2,
+        SourceFiles.s3,
+        SourceFiles.s4,
+        SourceFiles.s5,
+        SourceFiles.s6,
+        SourceFiles.s7,
+        SourceFiles.s9,
+        SourceFiles.siCep,
     ]
     
     main_spot_detection_method: MidBodyDetectionFactory.SPOT_DETECTION_MODE = detection.cur_log

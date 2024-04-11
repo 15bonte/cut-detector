@@ -18,6 +18,7 @@ SHOW_POINTS = False
 SHOW_TRACKS = False
 SHOULD_SAVE = True
 
+PARALLELIZE = True
 
 def main(
     image_path: Optional[str] = get_data_path("mitosis_movies"),
@@ -48,11 +49,11 @@ def main(
         mitosis_movie=mitosis_movie,
         mask_movie=mask_movie,
         mode=D_METHOD,
-        parallelization=True,
+        parallelization=PARALLELIZE,
     )
     end = time()
     delta = end - start
-    print("====== delta:", delta, "=========")
+    print("====== Detection time:", delta, "=========")
 
     if SHOW_POINTS:
         for frame, spots in spots_candidates.items():
