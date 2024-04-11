@@ -4,6 +4,8 @@ from typing import Optional
 
 import numpy as np
 
+from ..utils.cell_spot import CellSpot
+from ..utils.cell_track import CellTrack
 from ..factories.segmentation_tracking_factory import (
     SegmentationTrackingFactory,
 )
@@ -12,18 +14,18 @@ from ..models.tools import get_model_path
 
 def perform_tracking(
     video: np.ndarray,
-    model_path: Optional[str],
+    model_path: Optional[str] = None,
     video_name: Optional[str] = None,
     spots_save_dir: Optional[str] = None,
     tracks_save_dir: Optional[str] = None,
     save: bool = True,
-) -> None:
+) -> tuple[list[CellSpot], list[CellTrack]]:
     """
     Run cell segmentation and tracking on the given video.
 
     Parameters
     ----------
-    video : np.ndarray
+    video : np.ndarray, TXYC
         The video to run the segmentation and tracking on.
     """
     if model_path is None:
@@ -37,7 +39,7 @@ def perform_tracking(
     )
 
     if not save:
-        return
+        return cell_spots, cell_tracks
 
     assert spots_save_dir is not None
     assert tracks_save_dir is not None
@@ -69,3 +71,5 @@ def perform_tracking(
         )
         with open(save_path, "wb") as f:
             pickle.dump(cell_track, f)
+
+    return cell_spots, cell_tracks

@@ -227,10 +227,9 @@ def segmentation_tracking(
     raw_video = re_organize_channels(img_layer.data)  # TXYC
 
     # Segmentation and tracking
-    segmentation_model = str(Path(segmentation_model))
     perform_tracking(
         raw_video,
-        segmentation_model if not default_model_check_box else None,
+        str(Path(segmentation_model)) if not default_model_check_box else None,
         img_layer.name,
         spots_save_dir,
         tracks_save_dir,
