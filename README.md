@@ -52,16 +52,6 @@ cd cut-detector
 pip install -e .
 ```
 
-### Fiji
-
-This package relies on [Trackmate] to perform cell tracking. Trackmate is called through [Fiji], which has to be installed independently. Please follow the steps [here](https://imagej.net/software/fiji/downloads) to install it.
-
-Next, install openjdk which is necessary to call Fiji from python.
-
-```
-conda install -c conda-forge openjdk=8
-```
-
 ### GPU
 
 We highly recommend to use GPU to speed up segmentation. To use your NVIDIA GPU, the first step is to download the dedicated driver from [NVIDIA].
@@ -119,7 +109,6 @@ If you encounter any problems, please [file an issue] along with a detailed desc
 [pip]: https://pypi.org/project/pip/
 [PyPI]: https://pypi.org/
 [Anaconda]: https://www.anaconda.com/products/distribution
-[Trackmate]: https://imagej.net/plugins/trackmate/
 [Fiji]: https://imagej.net/software/fiji/
 [NVIDIA]: https://www.nvidia.com/Download/index.aspx?lang=en-us
 [conda]: https://docs.conda.io/en/latest/

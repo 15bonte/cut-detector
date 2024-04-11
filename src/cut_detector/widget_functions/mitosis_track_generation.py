@@ -151,7 +151,7 @@ def perform_mitosis_track_generation(
             cell_track: CellTrack = pickle.load(f)
             cell_tracks.append(cell_track)
 
-    # Get dictionary of TrackMate spots (from xml file) for each track and detect metaphase spots
+    # Detect metaphase spots
     tracks_merging_factory.pre_process_spots(
         cell_tracks,
         cell_spots,
