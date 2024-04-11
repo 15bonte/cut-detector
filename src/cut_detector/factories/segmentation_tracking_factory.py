@@ -267,3 +267,10 @@ class SegmentationTrackingFactory:
         )
 
         cell_spots_dictionary = self.get_spots_from_cellpose(cellpose_results)
+
+        # Extract values from dictionary
+        cell_spots = []
+        for _, spots in cell_spots_dictionary.items():
+            cell_spots.extend(spots)
+
+        return cell_spots, []

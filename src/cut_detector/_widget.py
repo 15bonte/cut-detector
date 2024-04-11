@@ -1,12 +1,14 @@
-import os
 from pathlib import Path
 from typing import Optional
 
 from magicgui import magic_factory
 import tempfile
 
+import numpy as np
+from skimage import io
 
-from .utils.tools import re_organize_channels, read_trackmate_xml
+
+from .utils.tools import re_organize_channels
 
 from .widget_functions.tracking import perform_tracking
 from .widget_functions.mid_body_detection import perform_mid_body_detection
@@ -17,14 +19,46 @@ from .widget_functions.mt_cut_detection import perform_mt_cut_detection
 from .widget_functions.save_results import perform_results_saving
 
 
+def video_whole_process(
+    video: np.ndarray,
+    video_name: np.ndarray,
+    default_model_check_box: bool,
+    segmentation_model: str,
+    save_check_box: bool,
+    movies_save_dir: str,
+    spots_dir_name: str,
+    tracks_dir_name: str,
+    mitoses_dir_name: str,
+) -> None:
+    """Perform the whole process on a single video."""
+
+    perform_tracking(
+        video,
+        str(Path(segmentation_model)) if not default_model_check_box else None,
+        video_name,
+        spots_dir_name,
+        tracks_dir_name,
+    )
+    perform_mitosis_track_generation(
+        video,
+        video_name,
+        spots_dir_name,
+        tracks_dir_name,
+        mitoses_dir_name,
+    )
+    perform_mid_body_detection(
+        video,
+        video_name,
+        mitoses_dir_name,
+        tracks_dir_name,
+        movies_save_dir if save_check_box else None,
+    )
+    perform_mt_cut_detection(video, video_name, mitoses_dir_name)
+
+
 @magic_factory(
-    call_button="Run Whole Process",
+    call_button="Run Whole Process (Single Video)",
     layout="vertical",
-    fiji_dir=dict(
-        widget_type="FileEdit",
-        label="Fiji path (likely named Fiji.app): ",
-        mode="d",
-    ),
     default_model_check_box=dict(
         widget_type="CheckBox",
         text="Use default segmentation model?",
@@ -33,9 +67,6 @@ from .widget_functions.save_results import perform_results_saving
     segmentation_model=dict(
         widget_type="FileEdit",
         label="If not checked, cellpose segmentation model: ",
-    ),
-    fast_mode_check_box=dict(
-        widget_type="CheckBox", text="Enable fast mode?", value=False
     ),
     save_check_box=dict(
         widget_type="CheckBox", text="Save cell divisions movies?", value=False
@@ -53,96 +84,49 @@ from .widget_functions.save_results import perform_results_saving
 )
 def whole_process(
     img_layer: "napari.layers.Image",
-    img_viewer: "napari.Viewer",
-    fiji_dir: str,
     default_model_check_box: bool,
     segmentation_model: str,
-    fast_mode_check_box: bool,
     save_check_box: bool,
     movies_save_dir: str,
     results_save_dir: str,
 ):
-    # Make sure we are working with the same image (same name)
-    video_path = None
-    for layer in img_viewer.layers:
-        local_video_path = layer.source.path
-        if img_layer.name == os.path.basename(local_video_path).split(".")[0]:
-            # This is the same image, we keep the link
-            video_path = local_video_path
-            break
-    assert video_path is not None
 
     # Create temporary folders
-    xml_model_dir_instance = tempfile.TemporaryDirectory()
-    xml_model_dir = xml_model_dir_instance.name
-    exported_mitoses_dir_instance = tempfile.TemporaryDirectory()
-    exported_mitoses_dir = exported_mitoses_dir_instance.name
-    exported_tracks_dir_instance = tempfile.TemporaryDirectory()
-    exported_tracks_dir = exported_tracks_dir_instance.name
+    spots_dir = tempfile.TemporaryDirectory()
+    tracks_dir = tempfile.TemporaryDirectory()
+    mitoses_dir = tempfile.TemporaryDirectory()
 
-    # Segmentation and tracking
-    video_path = str(Path(video_path))
-    segmentation_model = str(Path(segmentation_model))
-    perform_tracking(
-        video_path,
-        fiji_dir,
-        xml_model_dir,
-        segmentation_model if not default_model_check_box else None,
-        fast_mode_check_box,
-    )
+    video = re_organize_channels(img_layer.data)  # TXYC
 
-    raw_video = re_organize_channels(img_layer.data)  # TXYC
-
-    # Read useful information from xml file
-    xml_model_path = os.path.join(xml_model_dir, f"{img_layer.name}_model.xml")
-    cell_tracks, cell_spots = read_trackmate_xml(
-        xml_model_path, raw_video.shape
-    )
-
-    # Mitosis track_generation
-    perform_mitosis_track_generation(
-        raw_video,
+    video_whole_process(
+        video,
         img_layer.name,
-        cell_spots,
-        cell_tracks,
-        exported_mitoses_dir,
-        exported_tracks_dir,
+        default_model_check_box,
+        segmentation_model,
+        save_check_box,
+        movies_save_dir,
+        spots_dir.name,
+        tracks_dir.name,
+        mitoses_dir.name,
     )
-
-    # Mid-body detection
-    perform_mid_body_detection(
-        raw_video,
-        img_layer.name,
-        exported_mitoses_dir,
-        exported_tracks_dir,
-        movies_save_dir if save_check_box else None,
-    )
-
-    # MT cut detection
-    perform_mt_cut_detection(raw_video, img_layer.name, exported_mitoses_dir)
 
     # Results saving
-    perform_results_saving(exported_mitoses_dir, save_dir=results_save_dir)
+    perform_results_saving(mitoses_dir.name, save_dir=results_save_dir)
 
     # Delete temporary folders
-    xml_model_dir_instance.cleanup()
-    exported_mitoses_dir_instance.cleanup()
-    exported_tracks_dir_instance.cleanup()
+    spots_dir.cleanup()
+    tracks_dir.cleanup()
+    mitoses_dir.cleanup()
 
     print("\nWhole process finished with success!")
 
 
 @magic_factory(
-    call_button="Run Segmentation and Tracking",
+    call_button="Run Whole Process (Folder)",
     layout="vertical",
-    fiji_dir=dict(
+    raw_data_dir=dict(
         widget_type="FileEdit",
-        label="Fiji path (likely named Fiji.app): ",
-        mode="d",
-    ),
-    xml_model_dir=dict(
-        widget_type="FileEdit",
-        label=".xml models directory to save: ",
+        label="Data folder: ",
         mode="d",
     ),
     default_model_check_box=dict(
@@ -154,40 +138,117 @@ def whole_process(
         widget_type="FileEdit",
         label="If not checked, cellpose segmentation model: ",
     ),
-    fast_mode_check_box=dict(
-        widget_type="CheckBox", text="Enable fast mode?", value=False
+    save_check_box=dict(
+        widget_type="CheckBox", text="Save cell divisions movies?", value=False
+    ),
+    movies_save_dir=dict(
+        widget_type="FileEdit",
+        label="If checked, directory to save division movies: ",
+        mode="d",
+    ),
+    results_save_dir=dict(
+        widget_type="FileEdit",
+        label="Directory to save results: ",
+        mode="d",
+    ),
+)
+def whole_process_folder(
+    raw_data_dir: str,
+    default_model_check_box: bool,
+    segmentation_model: str,
+    save_check_box: bool,
+    movies_save_dir: str,
+    results_save_dir: str,
+):
+
+    # Create temporary folders
+    spots_dir = tempfile.TemporaryDirectory()
+    tracks_dir = tempfile.TemporaryDirectory()
+    mitoses_dir = tempfile.TemporaryDirectory()
+
+    # Run process on each video
+    tiff_files = list(Path(raw_data_dir).rglob("*.tif"))
+    for tiff_file in tiff_files:
+        video = io.imread(tiff_file)  # TYXC
+        video_whole_process(
+            video,
+            tiff_file.stem,
+            default_model_check_box,
+            segmentation_model,
+            save_check_box,
+            movies_save_dir,
+            spots_dir.name,
+            tracks_dir.name,
+            mitoses_dir.name,
+        )
+
+    # Results saving
+    perform_results_saving(mitoses_dir.name, save_dir=results_save_dir)
+
+    # Delete temporary folders
+    spots_dir.cleanup()
+    tracks_dir.cleanup()
+    mitoses_dir.cleanup()
+
+    print("\nWhole process finished with success!")
+
+
+@magic_factory(
+    call_button="Run Segmentation and Tracking",
+    layout="vertical",
+    spots_save_dir=dict(
+        widget_type="FileEdit",
+        label="Directory to save .bin cell spots: ",
+        mode="d",
+    ),
+    tracks_save_dir=dict(
+        widget_type="FileEdit",
+        label="Directory to save .bin cell tracks: ",
+        mode="d",
+    ),
+    default_model_check_box=dict(
+        widget_type="CheckBox",
+        text="Use default segmentation model?",
+        value=True,
+    ),
+    segmentation_model=dict(
+        widget_type="FileEdit",
+        label="If not checked, cellpose segmentation model: ",
     ),
 )
 def segmentation_tracking(
-    img_viewer: "napari.Viewer",
-    fiji_dir: str,
-    xml_model_dir: str,
+    img_layer: "napari.layers.Image",
+    spots_save_dir: str,
+    tracks_save_dir: str,
     default_model_check_box: bool,
     segmentation_model: str,
-    fast_mode_check_box: bool,
 ):
-    # Make sure there is only one image loaded as no layer has to be provided
-    assert len(img_viewer.layers) == 1
-    # Convert video path from windows to linux
-    video_path = img_viewer.layers[0].source.path
-    video_path = str(Path(video_path))
-    segmentation_model = str(Path(segmentation_model))
+
+    raw_video = re_organize_channels(img_layer.data)  # TXYC
+
+    # Segmentation and tracking
     perform_tracking(
-        video_path,
-        fiji_dir,
-        xml_model_dir,
-        segmentation_model if not default_model_check_box else None,
-        fast_mode_check_box,
+        raw_video,
+        str(Path(segmentation_model)) if not default_model_check_box else None,
+        img_layer.name,
+        spots_save_dir,
+        tracks_save_dir,
     )
+
     print("\nSegmentation and tracking finished with success!")
 
 
 @magic_factory(
     call_button="Run Mitosis Track Generation",
     layout="vertical",
-    xml_model_dir=dict(
+    spots_save_dir=dict(
         widget_type="FileEdit",
-        label=".xml models directory: ",
+        label="Directory to save .bin cell spots: ",
+        mode="d",
+    ),
+    tracks_save_dir=dict(
+        widget_type="FileEdit",
+        label="Directory to save .bin cell tracks: ",
         mode="d",
     ),
     mitoses_save_dir=dict(
@@ -195,33 +256,21 @@ def segmentation_tracking(
         label="Directory to save .bin mitoses: ",
         mode="d",
     ),
-    tracks_save_dir=dict(
-        widget_type="FileEdit",
-        label="Directory to save .bin tracks: ",
-        mode="d",
-    ),
 )
 def mitosis_track_generation(
     img_layer: "napari.layers.Image",
-    xml_model_dir: str,
+    spots_save_dir: str,
+    tracks_save_dir: str,
     mitoses_save_dir: Optional[str],
-    tracks_save_dir: Optional[str],
 ):
     raw_video = re_organize_channels(img_layer.data)  # TXYC
-
-    # Read useful information from xml file
-    xml_model_path = os.path.join(xml_model_dir, f"{img_layer.name}_model.xml")
-    cell_tracks, cell_spots = read_trackmate_xml(
-        xml_model_path, raw_video.shape
-    )
 
     perform_mitosis_track_generation(
         raw_video,
         img_layer.name,
-        cell_spots,
-        cell_tracks,
-        mitoses_save_dir,
+        spots_save_dir,
         tracks_save_dir,
+        mitoses_save_dir,
     )
     print("\nMitosis tracks generated with success!")
 
@@ -242,7 +291,7 @@ def mitosis_track_generation(
     save_check_box=dict(
         widget_type="CheckBox", text="Save cell divisions movies?", value=False
     ),
-    save_dir=dict(
+    movies_save_dir=dict(
         widget_type="FileEdit",
         label="If checked, directory to save division movies: ",
         mode="d",
@@ -253,7 +302,7 @@ def mid_body_detection(
     exported_mitoses_dir: str,
     exported_tracks_dir: str,
     save_check_box: bool,
-    save_dir: str,
+    movies_save_dir: str,
 ):
     raw_video = re_organize_channels(img_layer.data)  # TXYC
     perform_mid_body_detection(
@@ -261,7 +310,7 @@ def mid_body_detection(
         img_layer.name,
         exported_mitoses_dir,
         exported_tracks_dir,
-        save_dir if save_check_box else None,
+        movies_save_dir if save_check_box else None,
     )
     print("\nMid-body detection finished with success!")
 

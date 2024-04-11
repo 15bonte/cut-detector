@@ -17,8 +17,8 @@ def perform_mid_body_detection(
     video_name: str,
     exported_mitoses_dir: str,
     exported_tracks_dir: str,
-    save_dir: Optional[str] = None,
-    update_mitoses: bool = True,
+    movies_save_dir: Optional[str] = None,
+    save: bool = True,
     mid_body_detection_method: Union[
         str, Callable[[np.ndarray], np.ndarray]
     ] = detection.cur_log,
@@ -74,7 +74,7 @@ def perform_mid_body_detection(
         )
 
         # Save updated mitosis track
-        if update_mitoses:
+        if save:
             daughter_track_ids = ",".join(
                 [str(d) for d in mitosis_track.daughter_track_ids]
             )
@@ -86,13 +86,13 @@ def perform_mid_body_detection(
             with open(save_path, "wb") as f:
                 pickle.dump(mitosis_track, f)
 
-        if save_dir:
+        if movies_save_dir:
             # Save mitosis movie
             final_mitosis_movie = mitosis_track.add_mid_body_movie(
                 mitosis_movie, mask_movie
             )  # TYX C=C+1
             image_save_path = os.path.join(
-                save_dir,
+                movies_save_dir,
                 f"{video_name}_mitosis_{mitosis_track.id}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.tiff",
             )
             # Transpose to match TCYX

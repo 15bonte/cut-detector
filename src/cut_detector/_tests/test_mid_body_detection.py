@@ -9,13 +9,12 @@ from cut_detector.widget_functions.mid_body_detection import (
 
 
 def test_open_mid_body_detection_widget():
-    # Just try to open the widget
+    """Test opening the mid body detection widget."""
     mid_body_detection()
 
 
-def test_mid_body_detection_widget():
-
-    # Add video
+def test_mid_body_detection():
+    """Test mid body detection."""
     video = io.imread(
         os.path.join(get_data_path("videos"), "example_video.tif")
     )  # TYXC
@@ -26,6 +25,5 @@ def test_mid_body_detection_widget():
         "example_video",
         get_data_path("mitoses"),
         get_data_path("tracks"),
-        save_dir=None,
-        update_mitoses=False,
+        save=False,
     )

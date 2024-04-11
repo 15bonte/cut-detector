@@ -4,7 +4,10 @@ contributions:
   commands:
     - id: cut-detector.whole_process
       python_name: cut_detector._widget:whole_process
-      title: 0 - Whole Process
+      title: Whole Process (Single Video)
+    - id: cut-detector.whole_process_folder
+      python_name: cut_detector._widget:whole_process_folder
+      title: Whole Process (Folder)
     - id: cut-detector.segmentation_tracking
       python_name: cut_detector._widget:segmentation_tracking
       title: 1 - Segmentation & Tracking
@@ -22,7 +25,9 @@ contributions:
       title: 5 - Results Saving
   widgets:
     - command: cut-detector.whole_process
-      display_name: 0 - Whole Process
+      display_name: Whole Process (Single Video)
+    - command: cut-detector.whole_process_folder
+      display_name: Whole Process (Folder)
     - command: cut-detector.segmentation_tracking
       display_name: 1 - Segmentation & Tracking
     - command: cut-detector.mitosis_track_generation

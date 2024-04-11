@@ -8,7 +8,7 @@ def test_annotations_upload(
     video_folder=get_data_path("videos"),
     mitoses_folder=get_data_path("mitoses"),
 ):
-    # Initialize variables
+    """Test manual CellCounter annotations upload."""
     all_detected, all_not_detected = 0, 0
 
     video_paths = os.listdir(video_folder)

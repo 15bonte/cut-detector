@@ -109,12 +109,11 @@ def plot_predictions_evolution(
 
 
 def perform_mitosis_track_generation(
-    raw_video: np.ndarray,
+    video: np.ndarray,
     video_name: str,
-    cell_spots: list[CellSpot],
-    cell_tracks: list[CellTrack],
-    mitoses_save_dir: Optional[str] = None,
-    tracks_save_dir: Optional[str] = None,
+    spots_dir: str,
+    tracks_dir: str,
+    mitoses_dir: Optional[str] = None,
     metaphase_model_path: Optional[str] = get_model_path("metaphase_cnn"),
     hmm_metaphase_parameters_file: Optional[str] = os.path.join(
         get_model_path("hmm"), "hmm_metaphase_parameters.npz"
@@ -122,30 +121,39 @@ def perform_mitosis_track_generation(
     predictions_file: Optional[str] = None,
     only_predictions_update: bool = False,
     plot_evolution: bool = False,
+    save: bool = True,
 ) -> Union[list[MitosisTrack], None]:
     """
     Perform mitosis track generation.
     """
     # Create save_dir if not exists
-    if mitoses_save_dir is not None and not os.path.exists(mitoses_save_dir):
-        os.makedirs(mitoses_save_dir)
-
-    # Create video tracks save dir if not exists
-    if tracks_save_dir is not None:
-        video_tracks_save_dir = os.path.join(tracks_save_dir, video_name)
-        if not os.path.exists(video_tracks_save_dir):
-            os.makedirs(video_tracks_save_dir)
-    else:
-        video_tracks_save_dir = None
+    if mitoses_dir is not None and not os.path.exists(mitoses_dir):
+        os.makedirs(mitoses_dir)
 
     # Create factory instance, where useful functions are defined
     tracks_merging_factory = TracksMergingFactory()
+
+    # Load cell spots
+    cell_spots: list[CellSpot] = []
+    video_spots_save_dir = os.path.join(spots_dir, video_name)
+    for state_path in os.listdir(video_spots_save_dir):
+        with open(os.path.join(video_spots_save_dir, state_path), "rb") as f:
+            cell_spot: CellSpot = pickle.load(f)
+            cell_spots.append(cell_spot)
+
+    # Load cell tracks
+    cell_tracks: list[CellTrack] = []
+    video_tracks_save_dir = os.path.join(tracks_dir, video_name)
+    for state_path in os.listdir(video_tracks_save_dir):
+        with open(os.path.join(video_tracks_save_dir, state_path), "rb") as f:
+            cell_track: CellTrack = pickle.load(f)
+            cell_tracks.append(cell_track)
 
     # Detect metaphase spots
     tracks_merging_factory.pre_process_spots(
         cell_tracks,
         cell_spots,
-        raw_video,
+        video,
         metaphase_model_path,
         hmm_metaphase_parameters_file,
         predictions_file,
@@ -172,16 +180,16 @@ def perform_mitosis_track_generation(
         mitosis_track.update_mitosis_start_end(cell_tracks, mitosis_tracks)
         mitosis_track.update_key_events_frame(cell_tracks)
         mitosis_track.update_mitosis_position_dln(cell_tracks)
-        mitosis_track.update_is_near_border(raw_video)
+        mitosis_track.update_is_near_border(video)
 
         # Save mitosis track
-        if mitoses_save_dir is not None:
+        if mitoses_dir is not None and save:
             daughter_track_ids = ",".join(
                 [str(d) for d in mitosis_track.daughter_track_ids]
             )
             state_path = f"{video_name}_mitosis_{i}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.bin"
             save_path = os.path.join(
-                mitoses_save_dir,
+                mitoses_dir,
                 state_path,
             )
             with open(save_path, "wb") as f:
@@ -195,7 +203,7 @@ def perform_mitosis_track_generation(
         )
 
     # Save updated cell tracks
-    if video_tracks_save_dir is not None:
+    if save:
         for cell_track in cell_tracks:
             state_path = f"track_{cell_track.track_id}.bin"
             save_path = os.path.join(
