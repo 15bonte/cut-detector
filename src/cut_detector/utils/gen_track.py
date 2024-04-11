@@ -31,6 +31,9 @@ def generate_tracks_from_spots(
     they must all share the same type as the first one)
     """
 
+    if is_spot_dict_empty(spot_dict):
+        return []
+
     inferred_spot_kind: S = validate_inferred_spot_kind(
         infer_spot_kind(spot_dict)
     )
@@ -43,6 +46,17 @@ def generate_tracks_from_spots(
     return track_list
 
 
+def is_spot_dict_empty(spot_dict: dict[int, list[Spot]]) -> bool:
+    if len(spot_dict.values()) == 0:
+        return True
+    
+    for v in spot_dict.values():
+        if len(v) > 0:
+            return False
+    
+    return True
+
+
 def validate_inferred_spot_kind(inference: type) -> S:
     if inference == MidBodySpot or inference == CellSpot:
         return inference
@@ -51,10 +65,20 @@ def validate_inferred_spot_kind(inference: type) -> S:
 
 
 def infer_spot_kind(spot_dict: dict[int, list[Spot]]) -> type:
-    print("spot dict kind:", type(spot_dict))
     for v in spot_dict.values():
+        if v is None:
+            raise RuntimeError("v is None")
+        
         if len(v) != 0:
-            return type(v[0])
+            t = type(v[0])
+            if t is None:
+                raise RuntimeError("None in v[0] found")
+            return t
+    
+    # If we land here, it means that spot_dict.values is empty
+    # or only contains empty point lists.
+    # This case must be handled earlier
+    raise RuntimeError("No values in dict")
 
 
 def infer_specialized_track_kind(spot_kind: type[Spot]) -> type[Track]:
@@ -102,6 +126,7 @@ def convert_spots_to_spotdf(
                     features = [spot.frame, spot.x, spot.y, idx]
                     features.extend(spot.get_extra_coordinates())
                     spot_df.loc[len(spot_df.index)] = features
+
 
         return spot_df
 
