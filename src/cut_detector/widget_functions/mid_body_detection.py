@@ -54,6 +54,8 @@ def perform_mid_body_detection(
     mid_body_detector = MidBodyDetectionFactory()
     for i, mitosis_track in enumerate(mitosis_tracks):
 
+        print(f"track {i+1}/{len(mitosis_tracks)}...")
+
         # Generate mitosis movie
         mitosis_movie, mask_movie = mitosis_track.generate_video_movie(
             raw_video
