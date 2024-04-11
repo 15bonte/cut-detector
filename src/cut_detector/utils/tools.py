@@ -1,13 +1,13 @@
 import os
 import pickle
-from typing import Optional
-from matplotlib import pyplot as plt
-import numpy as np
-import torch
-from torch.utils.data import DataLoader
 import ast
 import csv
-import xmltodict
+from typing import Optional
+import torch
+from torch.utils.data import DataLoader
+
+from matplotlib import pyplot as plt
+import numpy as np
 
 import bigfish.stack as stack
 from bigfish.plot.utils import save_plot, get_minmax_values
@@ -33,9 +33,6 @@ from cnn_framework.utils.model_params.base_model_params import BaseModelParams
 
 from .cnn_data_set import CnnDataSet
 from .hidden_markov_models import HiddenMarkovModel
-from .trackmate_spot import TrackMateSpot
-from .trackmate_track import TrackMateTrack
-from .trackmate_frame_spots import TrackMateFrameSpots
 
 
 def re_organize_channels(image: np.ndarray) -> np.ndarray:
@@ -272,7 +269,7 @@ def plot_detection(
 def get_annotation_file(video_path, mitosis_track, annotations_files):
     video_file = os.path.basename(video_path).split(".")[0]
     mitosis_id = f"mitosis_{mitosis_track.id}_"
-    # Assume that mitosis id is consistent across all Trackmate runs
+    # Assume that mitosis id is consistent across all segmentation/tracking runs
     # (i.e. possible to use former annotations with new mitoses)
     annotation_path_candidates = extract_patterns(
         annotations_files, ["*" + video_file + "*" + mitosis_id + "*"]

@@ -9,7 +9,7 @@ from ..factories.mb_support import detection, tracking
 from ..factories.mid_body_detection_factory import MidBodyDetectionFactory
 
 from ..utils.mitosis_track import MitosisTrack
-from ..utils.trackmate_track import TrackMateTrack
+from ..utils.cell_track import CellTrack
 
 
 def perform_mid_body_detection(
@@ -40,8 +40,8 @@ def perform_mid_body_detection(
         # Add mitosis track to list
         mitosis_tracks.append(mitosis_track)
 
-    # Load trackmate tracks
-    trackmate_tracks: list[TrackMateTrack] = []
+    # Load cell tracks
+    cell_tracks: list[CellTrack] = []
     # Iterate over "bin" files in exported_tracks_dir
     video_exported_tracks_dir = os.path.join(exported_tracks_dir, video_name)
     for state_path in os.listdir(video_exported_tracks_dir):
@@ -49,9 +49,9 @@ def perform_mid_body_detection(
         with open(
             os.path.join(video_exported_tracks_dir, state_path), "rb"
         ) as f:
-            trackmate_track: TrackMateTrack = pickle.load(f)
-            trackmate_track.adapt_deprecated_attributes()
-            trackmate_tracks.append(trackmate_track)
+            cell_track: CellTrack = pickle.load(f)
+            cell_track.adapt_deprecated_attributes()
+            cell_tracks.append(cell_track)
 
     # Generate movie for each mitosis and save
     mid_body_detector = MidBodyDetectionFactory()
@@ -68,7 +68,7 @@ def perform_mid_body_detection(
             mitosis_track,
             mitosis_movie,
             mask_movie,
-            trackmate_tracks,
+            cell_tracks,
             mb_detect_method=mid_body_detection_method,
             mb_tracking_method=mid_body_tracking_method,
         )

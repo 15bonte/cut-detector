@@ -4,12 +4,12 @@ from typing import Optional
 
 from cut_detector.data.tools import get_data_path
 from cut_detector.utils.trackmate_track import TrackMateTrack
-from cut_detector.utils.trackmate_spot import TrackMateSpot
+from cut_detector.utils.cell_spot import CellSpot
 
 
 def load_tracks_and_spots(
     trackmate_tracks_path: str, spots_path: str
-) -> tuple[list[TrackMateTrack], list[TrackMateSpot]]:
+) -> tuple[list[TrackMateTrack], list[CellSpot]]:
     """
     Load saved spots and tracks generated from Trackmate xml file.
     """
@@ -20,7 +20,7 @@ def load_tracks_and_spots(
             trackmate_track.adapt_deprecated_attributes()
             trackmate_tracks.append(trackmate_track)
 
-    spots: list[TrackMateSpot] = []
+    spots: list[CellSpot] = []
     for spot_file in os.listdir(spots_path):
         with open(os.path.join(spots_path, spot_file), "rb") as f:
             spots.append(pickle.load(f))

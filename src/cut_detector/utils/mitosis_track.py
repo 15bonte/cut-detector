@@ -22,7 +22,7 @@ from ..constants.tracking import (
     MINIMUM_DISTANCE_TO_BORDER,
 )
 from .mid_body_spot import MidBodySpot
-from .trackmate_track import TrackMateTrack
+from .cell_track import CellTrack
 from .box_dimensions_dln import BoxDimensionsDln
 from .box_dimensions import BoxDimensions
 from .bridges_classification.impossible_detection import ImpossibleDetection
@@ -85,8 +85,9 @@ class MitosisTrack:
         self.daughter_track_ids.append(daughter_track_id)
 
     def get_mother_daughters_tracks(
-        self, tracks: list[TrackMateTrack]
-    ) -> Tuple[TrackMateTrack, list[TrackMateTrack]]:
+        self, tracks: list[CellTrack]
+    ) -> Tuple[CellTrack, list[CellTrack]]:
+        """Get mother and daughter tracks of current mitosis ."""
         mother_track = [
             track for track in tracks if track.track_id == self.mother_track_id
         ][0]
@@ -106,12 +107,13 @@ class MitosisTrack:
 
     def update_mitosis_start_end(
         self,
-        trackmate_tracks: list[TrackMateTrack],
+        cell_tracks: list[CellTrack],
         mitosis_tracks: list[MitosisTrack],
     ) -> None:
+        """Update min and max frame of current mitosis."""
         # Get all tracks involved in current mitosis
         mother_track, daughter_tracks = self.get_mother_daughters_tracks(
-            trackmate_tracks
+            cell_tracks
         )
 
         # Get min and max frame of current mitosis
@@ -180,12 +182,11 @@ class MitosisTrack:
 
         self.is_near_border = min_dist_to_border < MINIMUM_DISTANCE_TO_BORDER
 
-    def update_key_events_frame(
-        self, trackmate_tracks: list[TrackMateTrack]
-    ) -> None:
+    def update_key_events_frame(self, cell_tracks: list[CellTrack]) -> None:
+        """Update key events frame for current mitosis."""
         # Get all tracks involved in current mitosis
         mother_track, daughter_tracks = self.get_mother_daughters_tracks(
-            trackmate_tracks
+            cell_tracks
         )
 
         # Store first metaphase frame
@@ -207,15 +208,15 @@ class MitosisTrack:
         )
 
     def update_mitosis_position_dln(
-        self, trackmate_tracks: list[TrackMateTrack]
+        self, cell_tracks: list[CellTrack]
     ) -> None:
         """
-        Update positions of mitosis for each frame and Delaunay triangulation
+        Update positions of mitosis for each frame and Delaunay triangulation.
         """
 
         min_frame, max_frame = self.min_frame, self.max_frame
         mother_track, daughter_tracks = self.get_mother_daughters_tracks(
-            trackmate_tracks
+            cell_tracks
         )
 
         previous_box_dimensions_dln = None
@@ -308,7 +309,7 @@ class MitosisTrack:
         return mitosis_movie, mask_movie
 
     def generate_mitosis_summary(
-        self, raw_tracks: list[TrackMateTrack], save_path: str
+        self, cell_tracks: list[CellTrack], save_path: str
     ) -> None:
         """
         Unused so far.
@@ -317,7 +318,7 @@ class MitosisTrack:
         mitosis_summary = {}
 
         mother_track, daughter_tracks = self.get_mother_daughters_tracks(
-            raw_tracks
+            cell_tracks
         )
         daughters_first_frame = min([track.start for track in daughter_tracks])
 

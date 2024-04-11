@@ -31,7 +31,7 @@ def get_track_from_id(tracks: list[CellTrack], track_id: int) -> CellTrack:
 
 class TracksMergingFactory:
     """
-    Class to merge TrackMate tracks into mitosis tracks.
+    Class to merge cell tracks into mitosis tracks.
 
     Args:
         min_track_spots (int): Minimum spots in track to consider it.
@@ -164,7 +164,7 @@ class TracksMergingFactory:
 
     def pre_process_spots(
         self,
-        trackmate_tracks: list[CellTrack],
+        cell_tracks: list[CellTrack],
         raw_spots: list[CellSpot],
         raw_video: np.array,
         metaphase_model_path: str,
@@ -179,7 +179,7 @@ class TracksMergingFactory:
 
         nuclei_crops = []
         # Get list of possible metaphase spots
-        for track in trackmate_tracks:
+        for track in cell_tracks:
             # Get current track spots data & images
             current_nuclei_crops = track.get_spots_data(raw_spots, raw_video)
             # Merge current_nuclei_crops with nuclei_crops
@@ -202,7 +202,7 @@ class TracksMergingFactory:
             )
 
         # Get list of possible metaphase spots
-        for track in trackmate_tracks:
+        for track in cell_tracks:
             track_predictions = predictions[: track.number_spots]
             predictions = predictions[track.number_spots :]
 
@@ -217,9 +217,7 @@ class TracksMergingFactory:
             # Save prediction for each spot
             track.update_metaphase_spots(track_predictions)
 
-        self.update_predictions_file(
-            trackmate_tracks, predictions_file, video_name
-        )
+        self.update_predictions_file(cell_tracks, predictions_file, video_name)
 
     @staticmethod
     def _predict_metaphase_spots(
