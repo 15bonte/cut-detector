@@ -11,7 +11,7 @@ def get_model_path(model_name: str) -> None:
     if model_name == "segmentation":
         files = ["segmentation_model"]
     elif model_name == "metaphase_cnn":
-        model_name = "metaphase_cnn_v009"
+        model_name = "metaphase_cnn_v012"
         files = ["mean_std.json", "metaphase_cnn.pt", "parameters.csv"]
     elif model_name == "hmm":
         files = ["hmm_metaphase_parameters.npz", "hmm_bridges_parameters.npz"]
