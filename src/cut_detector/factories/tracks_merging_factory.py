@@ -2,6 +2,7 @@ import json
 import os
 import numpy as np
 
+
 from ..utils.cell_track import CellTrack
 from ..utils.tools import perform_cnn_inference
 from ..utils.mitosis_track import MitosisTrack
@@ -9,6 +10,12 @@ from ..utils.cell_spot import CellSpot
 from ..utils.hidden_markov_models import HiddenMarkovModel
 from ..utils.cell_division_detection.metaphase_cnn_model_params import (
     MetaphaseCnnModelParams,
+)
+from ..utils.cell_division_detection.metaphase_cnn_data_set import (
+    MetaphaseCnnDataSet,
+)
+from ..utils.cell_division_detection.metaphase_cnn_model import (
+    MetaphaseCnnModel,
 )
 
 
@@ -238,6 +245,8 @@ class TracksMergingFactory:
             model_path=metaphase_model_path,
             images=nuclei_crops,
             cnn_model_params=MetaphaseCnnModelParams,
+            cnn_data_set=MetaphaseCnnDataSet,
+            cnn_classifier=MetaphaseCnnModel,
         )
         return predictions
 
