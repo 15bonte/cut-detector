@@ -20,4 +20,4 @@ class MetaphaseCnnModelParams(BaseModelParams):
 
         self.batch_size = 128
 
-        self.encoder_name = "resnet18"
+        self.encoder_name = "resnet50"
