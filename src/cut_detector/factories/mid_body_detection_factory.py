@@ -2,6 +2,7 @@ import inspect
 import os
 import sys
 import threading
+import concurrent.futures
 from typing import Literal, Optional, Callable, Union
 import numpy as np
 from bigfish import stack, detection
@@ -157,6 +158,7 @@ class MidBodyDetectionFactory:
             mask_movie = np.ones(mitosis_movie.shape[:-1])
 
         if parallelization:
+            ## Ray parallelization
             # return self.parallel_detect_mid_body_spots(
             #     mitosis_movie,
             #     mask_movie,
@@ -164,24 +166,35 @@ class MidBodyDetectionFactory:
             #     sir_channel,
             #     mode,
             # )
-            return self.std_parallel_detect_mid_body_spots(
+
+            ## Thread-based parallelization
+            # return self.std_parallel_detect_mid_body_spots(
+            #     mitosis_movie,
+            #     mask_movie,
+            #     mid_body_channel,
+            #     sir_channel,
+            #     mode,
+            # )
+        
+            ## Process/Thread Executor parallelization
+            return self.thread_pool_detect_mid_body_spots(
                 mitosis_movie,
                 mask_movie,
                 mid_body_channel,
                 sir_channel,
-                mode,
+                mode
             )
 
         # Detect spots in each frame
         spots_dictionary = {}
         nb_frames = mitosis_movie.shape[0]
         for frame in range(nb_frames):
-            # display_progress(
-            #     "Detect mid-body spots...",
-            #     frame + 1,
-            #     nb_frames,
-            #     additional_message=f"Frame {frame + 1}/{nb_frames}",
-            # )
+            display_progress(
+                "Detect mid-body spots...",
+                frame + 1,
+                nb_frames,
+                additional_message=f"Frame {frame + 1}/{nb_frames}",
+            )
 
             mitosis_frame = mitosis_movie[frame, :, :, :].squeeze()  # YXC
             mask_frame = mask_movie[frame, :, :].squeeze()  # YX
@@ -273,6 +286,35 @@ class MidBodyDetectionFactory:
 
         return {f: slots[f] for f in range(nb_frames)}
     
+
+    def thread_pool_detect_mid_body_spots(
+            self,
+            mitosis_movie: np.array,
+            mask_movie: Optional[np.array] = None,
+            mid_body_channel=1,
+            sir_channel=0,
+            blob_like: Callable[[np.ndarray], np.ndarray] = mbd.cur_log
+            ) -> dict[int, list[MidBodySpot]]:
+        
+        squeezed_movie = mitosis_movie[:, :, :, :].squeeze()  # squeezed TYXC
+        nb_frames = squeezed_movie.shape[0]
+
+        framed_sd = lambda i, m, mbc, sc, d, f: (f, self._spot_detection(i, m, mbc, sc, d, f, False))
+
+        future_list = []
+        with concurrent.futures.ThreadPoolExecutor() as e:
+            for f in range(nb_frames):
+                future_list.append(e.submit(
+                    framed_sd,
+                    squeezed_movie[f,:,:,:],
+                    None,
+                    mid_body_channel,
+                    sir_channel,
+                    blob_like,
+                    f,
+                ))
+
+        return {res.result()[0]: res.result()[1] for res in concurrent.futures.as_completed(future_list)}
 
     def _spot_detection(
         self,
