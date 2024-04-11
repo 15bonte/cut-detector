@@ -335,11 +335,24 @@ class CellTrack(Track[CellSpot]):
         """
         max_frame_gap = CellTrack.max_frame_gap
         raise NotImplementedError
-    
+
     @staticmethod
     def track_df_to_mb_track(
-            track_df: pd.DataFrame,
-            spots: dict[int, list[CellSpot]],
-            ) -> list[Track]:
+        track_df: pd.DataFrame,
+        spots: dict[int, list[CellSpot]],
+    ) -> list[Track]:
         # See MidBodyTrack for an implementation example
         raise RuntimeError("Work In Progress")
+
+    def adapt_deprecated_attributes(self) -> None:
+        """
+        Adapt deprecated attributes.
+
+        Returns
+        -------
+        None.
+
+        """
+        if hasattr(self, "track_spots"):
+            self.spots = self.track_spots
+            del self.track_spots

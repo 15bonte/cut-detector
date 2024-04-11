@@ -8,7 +8,6 @@ from cnn_framework.utils.display_tools import display_progress
 
 from ..utils.cell_track import CellTrack
 from ..utils.cell_spot import CellSpot
-from ..utils.trackmate_track import TrackMateTrack
 from ..factories.tracks_merging_factory import TracksMergingFactory
 from ..models.tools import get_model_path
 from ..utils.mitosis_track import MitosisTrack
@@ -16,7 +15,7 @@ from ..utils.mitosis_track import MitosisTrack
 
 def plot_predictions_evolution(
     raw_spots: list[CellSpot],
-    raw_tracks: list[TrackMateTrack],
+    raw_tracks: list[CellTrack],
     mitosis_tracks: list[MitosisTrack],
 ) -> None:
     # Spots detected by Cellpose
@@ -35,7 +34,6 @@ def plot_predictions_evolution(
 
     min_frame, max_frame = 0, max(detected_spots.keys())
 
-    # Tracks identified by TrackMate
     detected_tracks = {}
     metaphase_spots = []
     for track in raw_tracks:
@@ -143,7 +141,7 @@ def perform_mitosis_track_generation(
     # Create factory instance, where useful functions are defined
     tracks_merging_factory = TracksMergingFactory()
 
-    # Get dictionary of TrackMate spots (from xml file) for each track and detect metaphase spots
+    # Detect metaphase spots
     tracks_merging_factory.pre_process_spots(
         cell_tracks,
         cell_spots,

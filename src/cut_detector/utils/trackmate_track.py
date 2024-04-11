@@ -27,16 +27,3 @@ class TrackMateTrack(CellTrack):
         stop = int(float(trackmate_track["@TRACK_STOP"]))
 
         super().__init__(track_id, track_spots_ids, start, stop)
-
-    def adapt_deprecated_attributes(self) -> None:
-        """
-        Adapt deprecated attributes.
-
-        Returns
-        -------
-        None.
-
-        """
-        if hasattr(self, "track_spots"):
-            self.spots = self.track_spots
-            del self.track_spots
