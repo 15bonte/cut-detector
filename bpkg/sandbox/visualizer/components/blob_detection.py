@@ -3,7 +3,9 @@ import dash_bootstrap_components as dbc
 import plotly.express as px
 
 from typing import List, Dict
-from importation import Movie
+
+import data_loading
+from data_loading import Movie
 from .detection_components.frame_control import generate_slider_side_buttons
 
 LocalMovie: Movie = None
@@ -102,9 +104,10 @@ def load_movie(info: str):
     global LocalMovie, LocalMovieInfo
     kind = info[0:2]
     path = info[3:]
+    data = data_loading.load_movie(path, kind)
     LocalMovie = Movie(
-        path,
-        kind
+        data,
+        path
     )
     LocalMovieInfo = info
 
@@ -148,7 +151,7 @@ def update_graph(movie_info: str, layer_idx: int, frame_idx: int) -> Dict:
     # if movie_info != LocalMovieInfo or LocalMovie is None:
     #     load_movie(movie_info)
     local_movie_guard(movie_info)
-    img = LocalMovie.get_layer_frame(frame_idx, layer_idx)
+    img = LocalMovie.get_any_layer(layer_idx, frame_idx)
     return px.imshow(img)
 
 

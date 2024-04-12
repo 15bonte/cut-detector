@@ -342,7 +342,7 @@ class CellTrack(Track[CellSpot]):
         )
     
     @staticmethod
-    def track_df_to_mb_track(
+    def track_df_to_track_list(
             track_df: pd.DataFrame,
             spots: dict[int, list[CellSpot]],
             ) -> list[Track]:

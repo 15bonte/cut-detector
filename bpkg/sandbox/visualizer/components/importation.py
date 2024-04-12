@@ -4,7 +4,8 @@ import dash_bootstrap_components as dbc
 import os
 import os.path
 from typing import List
-from importation import Movie
+# from importation import Movie
+# from data_loading import Movie
 
 DEFAULT_SRC_DIR = "./src/cut_detector/data/mid_bodies_movies_test"
 
