@@ -8,6 +8,7 @@ from cut_detector.utils.cell_spot import CellSpot
 from cut_detector.utils.cell_track import CellTrack
 from cut_detector.utils.trackmate_track import TrackMateTrack
 from cut_detector.utils.trackmate_spot import TrackMateSpot
+from cut_detector.utils.gen_track import generate_tracks_from_spots
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -141,7 +142,7 @@ def main(
     #TODO Define tracking_method (cf src/cut_detector/factories/mb_support/tracking/tracking_impl)
     tracking_method = SpatialLapTrack(...)
     #TODO Call tracking method generate_tracks_from_spots
-    cell_tracks = CellTrack.generate_tracks_from_spots(cell_dictionary, tracking_method)
+    cell_tracks = generate_tracks_from_spots(cell_dictionary, tracking_method)
 
     #TODO Compare cell_tracks with trackmate_tracks
 

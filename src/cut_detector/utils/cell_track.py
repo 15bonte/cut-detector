@@ -66,6 +66,23 @@ class CellTrack(Track[CellSpot]):
         self.stop = stop
 
         self.metaphase_spots: list[CellSpot] = []
+    @classmethod
+    def from_spots(cls,track_id: int, spots: list[CellSpot]) -> CellTrack:
+        """
+        Create a CellTrack from a list of CellSpot.
+
+        Parameters
+        ----------
+        track_id : int
+            Track identifier.
+        """
+        track_spots_ids = set([spot.id for spot in spots])
+        start = min([spot.frame for spot in spots])
+        stop = max([spot.frame for spot in spots])
+        track = cls(track_id, track_spots_ids, start, stop)
+        for spot in spots:
+            track.add_spot(spot)
+        return track
 
     def update_metaphase_spots(self, predictions: list[int]) -> None:
         """
@@ -347,4 +364,16 @@ class CellTrack(Track[CellSpot]):
             spots: dict[int, list[CellSpot]],
             ) -> list[Track]:
         # See MidBodyTrack for an implementation example
-        raise RuntimeError("Work In Progress")
+        track_df= track_df.dropna(inplace=True)
+        track_df.resetindex(drop=True, inplace=True)
+        id_to_track={}
+        for _,row in track_df.interrows():
+            track_id=row['track_id']
+            track:list = id_to_track.get(track_id)
+            if track is None:
+                id_to_track[track_id]= []
+                track= id_to_track[track_id]
+            frame = row['frame']
+            idx_in_frame = row['idx_in_frame']
+            track.append(spots[frame][idx_in_frame])
+        return [Celltrack.from_spots(track_id,spots) for track_id,spots in enumerate(id_to_track.values())]
