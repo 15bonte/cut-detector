@@ -1,6 +1,6 @@
 import json
 
-from .bench_config import BenchConfig, DetectionConfig
+from .bench_config import BenchConfig
 
 def write_config(config: BenchConfig, to_config_filepath: str):
     bench_d = {}
