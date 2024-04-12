@@ -3,7 +3,7 @@ import dash_bootstrap_components as dbc
 import plotly.express as px
 
 from typing import List, Dict
-from importation import Movie
+from data_loading import Movie
 
 LocalMovie: Movie = None
 

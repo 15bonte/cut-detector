@@ -1,7 +1,3 @@
-
-import blob_detection_bench_ws.blob_detection_bench
-
-
 SANDBOX_PROJECT_LIST = """
 === Sandbox Project List ===
 - hw: Hello World proof-of-concept
@@ -34,16 +30,16 @@ def run_sandbox_project(name: str):
         from .hw import hello_world
         hello_world()
     elif name == "d-bench":
-        from blob_detection_bench_ws import run_detec_bench
+        from .blob_detection_bench_ws import run_detec_bench
         run_detec_bench()
     elif name in ["visualizer", "v", "w"]:
-        from visualizer import run_app
+        from .visualizer import run_app
         run_app()
     elif name == "nls-example":
-        from mb_layers.example import run_example
+        from .mb_layers.example import run_example
         run_example()
     elif name == "multi-ppl":
-        from multi_pipeline import run_multi_pipeline
+        from .multi_pipeline import run_multi_pipeline
         run_multi_pipeline()
     else:
         print(f"Sandbox '{name}' does not exist")
