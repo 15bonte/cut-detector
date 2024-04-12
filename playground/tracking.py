@@ -3,7 +3,9 @@ import pickle
 from typing import Optional
 
 from cut_detector.data.tools import get_data_path
+from cut_detector.factories.mb_support.tracking.spatial_laptrack import SpatialLapTrack
 from cut_detector.utils.cell_spot import CellSpot
+from cut_detector.utils.cell_track import CellTrack
 from cut_detector.utils.trackmate_track import TrackMateTrack
 from cut_detector.utils.trackmate_spot import TrackMateSpot
 
@@ -53,75 +55,95 @@ def main(
 
     # Load TrackMate results to compare... make sure they match!
     trackmate_tracks, trackmate_spots = load_tracks_and_spots(
-        trackmate_tracks_path, spots_path
-    )
+        trackmate_tracks_path, spots_path)
     
     # Frame of interest
     frame = 0
 
     # Plot cellpose_results
     
-    plt.figure()
-    plt.imshow(cellpose_results[frame])
-    plt.show()
-    plt.close()
+    #plt.figure()
+    #plt.imshow(cellpose_results[frame])
+    #plt.show()
+    #plt.close()
 
-    # Plot trackmate_spots of frame number "frame" and their barycenters
-    y = []
-    x = []
-    for s in trackmate_spots:
-        if s.frame == frame:
-            point_list = s.spot_points
-            for i in range(len(point_list)):
-                x.append(point_list[i][0])
-                y.append(600 - point_list[i][1])
-    plt.scatter(x,y)
-    plt.show()
+    # Plot trackmate_spots of frame number "frame"
+    def plot_spots(frame):
+        y = []
+        x = []
+        for s in trackmate_spots:
+            if s.frame == frame:
+                point_list = s.spot_points
+                for i in range(len(point_list)):
+                    x.append(point_list[i][0])
+                    y.append(600 - point_list[i][1])
+        return(x,y)
+        #plt.scatter(x,y)
+        #plt.show()
 
     # Finding barycenters of each cell
-    def barycenters(frame):
-        max = np.max(cellpose_results[0])
-        mx=[]
-        my=[]
+    def barycenter(frame):
+        max = np.max(cellpose_results[frame])
+        mean_x=[]
+        mean_y=[]
+        cells_per_frame = []
         for i in range(1,max+1):
-            A = np.where(cellpose_results[0] == i)
-            Sx = np.sum(A[1])
-            Sy = np.sum(A[0])
-            mx.append(Sx/len(A[1]))
-            my.append(Sy/len(A[0]))
-        return(mx,my)
-    plt.figure()
-    plt.imshow(cellpose_results[frame])
-    plt.plot(barycenters(frame)[0],barycenters(frame)[1],'o')
-    plt.show()
-    plt.close()
+            cell_indices = np.where(cellpose_results[frame] == i)
+            if len(cell_indices[0])==0 or len(cell_indices[1])==0:
+                break
+            Sx = np.sum(cell_indices[1])
+            Sy = np.sum(cell_indices[0])
+            mean_x.append(Sx/len(cell_indices[1]))
+            mean_y.append(Sy/len(cell_indices[0]))
+            cells_per_frame.append(cell_indices)
+        return(mean_x,mean_y,cells_per_frame)
+    
 
 
     # TODO: generate CellSpot instances
     cell_dictionary: dict[int, list[CellSpot]] = {}
     for frame in range(len(cellpose_results)):
         L=[]
-        for id_number in range(1, np.max(cellpose_results[frame]) + 1):
-            x,y = barycenters(frame)
-            A = np.where(cellpose_results[frame] == id_number)
-            B=[]
-            for i in range (len(A[0])):
-                B.append([A[1][i],A[0][i]])
-            B = np.array(B)
-            hull = ConvexHull(B)
-            convex_hull_indices = B[hull.vertices][:, ::-1]  # (x, y)
+        X,Y,cellsframe = barycenter(frame)
+        for id_number in range(1, len(cellsframe) + 1):
+            cell_id = cellsframe[id_number-1]
+            cell_coords=[]
+            x,y= X[id_number-1],Y[id_number-1]
+            for i in range (len(cell_id[0])):
+                cell_coords.append([cell_id[1][i],cell_id[0][i]])
+            cell_coords = np.array(cell_coords)
+            hull = ConvexHull(cell_coords)
+            convex_hull_indices = cell_coords[hull.vertices][:, ::-1]  # (x, y)
             spot_points = convex_hull_indices
-            abs_min_x, abs_max_x, abs_min_y, abs_max_y = np.abs(np.min(A[1])), np.abs(np.max(A[1])), np.abs(np.min(A[0])), np.abs(np.max(A[0]))
+            abs_min_x, abs_max_x, abs_min_y, abs_max_y = np.abs(np.min(cell_id[1])), np.abs(np.max(cell_id[1])), np.abs(np.min(cell_id[0])), np.abs(np.max(cell_id[0]))
             cell_spot = CellSpot(frame, x, y, id_number, abs_min_x, abs_max_x, abs_min_y, abs_max_y, spot_points)
             L.append(cell_spot)
         cell_dictionary[frame] = L
-
+    a = cell_dictionary[21]
+    
 
     # Spot points can be created from the cell indices
      
     # The indices of points forming the convex hull
-    #zke
+    for frame in range(len(cellpose_results)):
+        fig, axarr = plt.subplots(1, 2)
+        axarr[0].imshow(cellpose_results[frame])
+        for i in range(len(cell_dictionary[frame])):
+            axarr[0].plot(cell_dictionary[frame][i].spot_points[:, 1], cell_dictionary[frame][i].spot_points[:, 0], 'o')
+            axarr[0].plot(cell_dictionary[frame][i].abs_max_x, cell_dictionary[frame][i].abs_max_y, 'x')
+            axarr[0].plot(cell_dictionary[frame][i].abs_min_x, cell_dictionary[frame][i].abs_max_y, 'x')
+            axarr[0].plot(cell_dictionary[frame][i].abs_min_x, cell_dictionary[frame][i].abs_min_y, 'x')
+            axarr[0].plot(cell_dictionary[frame][i].abs_max_x, cell_dictionary[frame][i].abs_min_y, 'x')
+        axarr[0].plot(barycenter(frame)[0],barycenter(frame)[1],'x')       
+        axarr[1].scatter(plot_spots(frame)[0], plot_spots(frame)[1], s=1)
+        plt.show()
 
+    #TODO Define tracking_method (cf src/cut_detector/factories/mb_support/tracking/tracking_impl)
+    tracking_method = SpatialLapTrack(...)
+    #TODO Call tracking method generate_tracks_from_spots
+    cell_tracks = CellTrack.generate_tracks_from_spots(cell_dictionary, tracking_method)
+
+    #TODO Compare cell_tracks with trackmate_tracks
 
 if __name__ == "__main__":
     main()

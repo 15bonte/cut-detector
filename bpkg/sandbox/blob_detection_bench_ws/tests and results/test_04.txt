@@ -1,0 +1,94 @@
+=====
+Test 3 - Adjusting doh on tests - File 3
+Best are 0.005 and 0.0025
+=====
+image source: s2_siLuci-1_mitosis_15_67_to_228,211.tiff
+
+total frame: 31
+Reference function:
+log_cur
+{'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.1}
+
+Candidates:
+doh_005: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.05}
+doh_0025: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.025}
+doh_0010: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.01}
+doh_0005: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.005}
+doh_00025: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.0025}
+doh_0001: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.001}
+
+--- Blobs ---
+reference found 39 blobs
+
+doh_005 found 0 blobs -- 0.00% blobs
+    39 miss | 0 FP
+    100.00% miss (m/n_ref) | 0.00% FP (fp/n_ref)
+doh_0025 found 8 blobs -- 20.51% blobs
+    31 miss | 0 FP
+    79.49% miss (m/n_ref) | 0.00% FP (fp/n_ref)
+doh_0010 found 32 blobs -- 82.05% blobs
+    7 miss | 0 FP
+    17.95% miss (m/n_ref) | 0.00% FP (fp/n_ref)
+doh_0005 found 35 blobs -- 89.74% blobs
+    4 miss | 0 FP
+    10.26% miss (m/n_ref) | 0.00% FP (fp/n_ref)
+doh_00025 found 39 blobs -- 100.00% blobs
+    3 miss | 3 FP
+    7.69% miss (m/n_ref) | 7.69% FP (fp/n_ref)
+doh_0001 found 52 blobs -- 133.33% blobs
+    1 miss | 14 FP
+    2.56% miss (m/n_ref) | 35.90% FP (fp/n_ref)
+
+
+
+
+
+Reference function:
+log_cur
+{'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.1}
+
+Candidates:
+doh_005: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.05}
+doh_0025: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.025}
+doh_0010: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.01}
+doh_0005: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.005}
+doh_00040: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.004}
+doh_00034: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.0034}
+doh_00025: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.0025}
+doh_00017: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.0017}
+doh_00014: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.0014}
+doh_0001: {'min_sigma': 5, 'max_sigma': 10, 'num_sigma': 5, 'threshold': 0.001}
+
+--- Blobs ---
+reference found 39 blobs
+
+doh_005 found 0/39 blobs -- 0.00% blobs
+    39/39 miss | 0/39 FP
+    100.00% miss (m/n_ref) | 0.00% FP (fp/n_ref)
+doh_0025 found 8/39 blobs -- 20.51% blobs
+    31/39 miss | 0/39 FP
+    79.49% miss (m/n_ref) | 0.00% FP (fp/n_ref)
+doh_0010 found 32/39 blobs -- 82.05% blobs
+    7/39 miss | 0/39 FP
+    17.95% miss (m/n_ref) | 0.00% FP (fp/n_ref)
+doh_0005 found 35/39 blobs -- 89.74% blobs
+    4/39 miss | 0/39 FP
+    10.26% miss (m/n_ref) | 0.00% FP (fp/n_ref)
+doh_00040 found 35/39 blobs -- 89.74% blobs
+    4/39 miss | 0/39 FP
+    10.26% miss (m/n_ref) | 0.00% FP (fp/n_ref)
+doh_00034 found 35/39 blobs -- 89.74% blobs
+    4/39 miss | 0/39 FP
+    10.26% miss (m/n_ref) | 0.00% FP (fp/n_ref)
+doh_00025 found 39/39 blobs -- 100.00% blobs
+    3/39 miss | 3/39 FP
+    7.69% miss (m/n_ref) | 7.69% FP (fp/n_ref)
+doh_00017 found 43/39 blobs -- 110.26% blobs
+    2/39 miss | 6/39 FP
+    5.13% miss (m/n_ref) | 15.38% FP (fp/n_ref)
+doh_00014 found 46/39 blobs -- 117.95% blobs
+    1/39 miss | 8/39 FP
+    2.56% miss (m/n_ref) | 20.51% FP (fp/n_ref)
+doh_0001 found 52/39 blobs -- 133.33% blobs
+    1/39 miss | 14/39 FP
+    2.56% miss (m/n_ref) | 35.90% FP (fp/n_ref)

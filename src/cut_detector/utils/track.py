@@ -1,14 +1,39 @@
-from __future__ import annotations
-from abc import abstractmethod
-from typing import TypeVar, Generic
+"""
+Track is the common ancestor for all specialized tracks of Specialized Points.
 
+To create a new specialized track, you must do the following:
+- Create your specialized XYZSpot class:
+    - Make it inherit from Spot
+    - implement (static function) Spot.get_extra_features_name()
+    - implement (method) Spot.get_extra_features()
+    (see their doc for additional help)
+    
+- Create your specialized XYZTrack class:
+    - Make it inherit from Track
+    - implement (static function) Track.track_df_to_track_list()
+
+- In gen_track.py:
+    - import your new specialized track,
+    - import your new specialized spot,
+    - add them to the SPOT_AND_TRACK_MAPPING dict,
+"""
+
+from __future__ import annotations
+from typing import TypeVar, Generic, Tuple, Literal, Union
+from abc import abstractmethod, ABC
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from laptrack import LapTrack
+
+from ..factories.mb_support import tracking
+from .spot import Spot
 from .cell_spot import CellSpot
 from .mid_body_spot import MidBodySpot
 
 T = TypeVar("T", MidBodySpot, CellSpot)
 
-
-class Track(Generic[T]):
+class Track(ABC, Generic[T]):
     """
     Class used for both cell and mid-body tracks.
     """
@@ -22,11 +47,29 @@ class Track(Generic[T]):
             0  # can be different from length if we have a gap in the track
         )
 
+    def add_spot(self, spot: Spot) -> None:
+        """
+        Add spot to track.
+        """
+        self.spots[spot.frame] = spot
+        spot.track_id = self.track_id
+        self.length += 1
+        # Add children recursively
+        if spot.child_spot is not None:
+            self.add_spot(spot.child_spot)
+
+
     @staticmethod
     @abstractmethod
-    def generate_tracks_from_spots(
-        spots: dict[int, list[T]]
-    ) -> list[Track[T]]:
+    def track_df_to_track_list(
+        track_df: pd.DataFrame,
+        spots: dict[int, list[Spot]],
+    ) -> list[Track]:
+        """This is the last step of the 'generate_tracks_from_spots'.
+        It takes as input the pandas dataframe produced by 'generate_tracks_from_spots'.
+        From there you have to implement the code that will transform this dataframe
+        into a list of Track.
+
+        You can use MidbodyTrack's implementation as a starting point.
         """
-        Generate tracks from spots.
-        """
+        return []

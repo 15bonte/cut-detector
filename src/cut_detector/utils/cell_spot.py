@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Optional, Any
 from shapely.geometry.polygon import Polygon
 from shapely import distance
 
@@ -50,3 +50,10 @@ class CellSpot(Spot):
             )
             < maximum_stuck_distance
         )
+
+    @staticmethod
+    def get_extra_features_name() -> list[str]:
+        return []
+
+    def get_extra_coordinates(self) -> list[Any]:
+        return []

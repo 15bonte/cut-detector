@@ -1,9 +1,11 @@
 import os
 import pickle
-from typing import Optional
+from typing import Optional, Callable, Union
 import numpy as np
 from aicsimageio.writers import OmeTiffWriter
+from laptrack import LapTrack
 
+from ..factories.mb_support import detection, tracking
 from ..factories.mid_body_detection_factory import MidBodyDetectionFactory
 
 from ..utils.mitosis_track import MitosisTrack
@@ -17,6 +19,11 @@ def perform_mid_body_detection(
     exported_tracks_dir: str,
     save_dir: Optional[str] = None,
     update_mitoses: bool = True,
+    mid_body_detection_method: Union[
+    	str, Callable[[np.ndarray], np.ndarray]
+    ] = detection.cur_log,
+    mid_body_tracking_method: Union[str, LapTrack] = tracking.cur_spatial_laptrack,
+    parallel_detection: bool = False,
 ):
     mitosis_tracks: list[MitosisTrack] = []
     # Iterate over "bin" files in exported_mitoses_dir
@@ -48,7 +55,8 @@ def perform_mid_body_detection(
     # Generate movie for each mitosis and save
     mid_body_detector = MidBodyDetectionFactory()
     for i, mitosis_track in enumerate(mitosis_tracks):
-        print(f"\nGenerate mitosis movies ({i+1}/{len(mitosis_tracks)})...")
+
+        print(f"track {i+1}/{len(mitosis_tracks)}...")
 
         # Generate mitosis movie
         mitosis_movie, mask_movie = mitosis_track.generate_video_movie(
@@ -57,7 +65,13 @@ def perform_mid_body_detection(
 
         # Search for mid-body in mitosis movie
         mid_body_detector.update_mid_body_spots(
-            mitosis_track, mitosis_movie, mask_movie, trackmate_tracks
+            mitosis_track,
+            mitosis_movie,
+            mask_movie,
+            trackmate_tracks,
+            mb_detect_method=mid_body_detection_method,
+            mb_tracking_method=mid_body_tracking_method,
+            parallel_detection=parallel_detection
         )
 
         # Save updated mitosis track

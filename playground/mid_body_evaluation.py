@@ -5,8 +5,14 @@ import pickle
 from cut_detector.utils.mitosis_track import MitosisTrack
 from cut_detector.data.tools import get_data_path
 
+SOURCE_CHOICE = 2
+SOURCES = {
+    0: "eval_data/Data Standard/mitoses",
+    1: "eval_data/Data spastin/mitoses",
+    2: "eval_data/Data cep55/mitoses",
+}
 
-def main(mitoses_folder: Optional[str] = get_data_path("mitoses")):
+def start_evaluation(mitoses_folder: Optional[str] = get_data_path("mitoses")) -> dict:
     """
     Evaluate mid-body detection from annotated files.
     """
@@ -62,6 +68,12 @@ def main(mitoses_folder: Optional[str] = get_data_path("mitoses")):
             f"\nMid-body detection evaluation: {mb_detected / (mb_detected + mb_not_detected) * 100:.2f}% | {mb_detected}/{mb_detected + mb_not_detected}"
         )
 
+    return {
+        "wrong_detections": wrong_detections,
+        "mb_detected": mb_detected,
+        "mb_not_detected": mb_not_detected
+    }
+
 
 if __name__ == "__main__":
-    main()
+    start_evaluation(SOURCES[SOURCE_CHOICE])

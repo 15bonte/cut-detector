@@ -106,3 +106,12 @@ src/cut_detector/data/mid_bodies/
 src/cut_detector/data/segmentation_results/
 src/cut_detector/data/spots/
 src/cut_detector/data/annotations/
+src/cut_detector/data/mid_bodies_tests/
+src/cut_detector/data/mid_bodies_movies_test/
+src/cut_detector/data/mid_bodies_movies_test_ppln/
+src/cut_detector/data/mb_results
+
+# Eval data
+eval_data/
+
+

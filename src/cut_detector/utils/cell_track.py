@@ -1,17 +1,16 @@
 from __future__ import annotations
-
 from typing import Optional, Tuple
+
 from scipy.spatial import ConvexHull, Delaunay
 import numpy as np
-
+import pandas as pd
 
 from ..constants.tracking import (
     FRAMES_AROUND_METAPHASE,
     INTERPHASE_INDEX,
     METAPHASE_INDEX,
-    MAX_FRAME_GAP,
 )
-from .track import Track
+from .track import Track, TRACKING_METHOD
 from .box_dimensions_dln import BoxDimensionsDln
 from .box_dimensions import BoxDimensions
 from .cell_spot import CellSpot
@@ -55,6 +54,8 @@ class CellTrack(Track[CellSpot]):
     """
     Cell track.
     """
+
+    max_frame_gap = 3
 
     def __init__(
         self, track_id: int, track_spots_ids: set[int], start: int, stop: int
@@ -235,7 +236,7 @@ class CellTrack(Track[CellSpot]):
                 return previous_box_dimensions_dln
 
             # ... or try with previous frame if not
-            for _ in range(MAX_FRAME_GAP):
+            for _ in range(CellTrack.max_frame_gap):
                 frame = frame - 1
                 (
                     box_dimensions_dln,
@@ -247,7 +248,7 @@ class CellTrack(Track[CellSpot]):
         # Should not be empty after this loop
         if box_dimensions_dln.is_empty():
             raise ValueError(
-                f"No previous dln & Tracks with no spots in {MAX_FRAME_GAP} frames in a row"
+                f"No previous dln & Tracks with no spots in {CellTrack.max_frame_gap} frames in a row"
             )
 
         # Else, compute convex hull and Delaunay triangulation
@@ -326,8 +327,24 @@ class CellTrack(Track[CellSpot]):
     @staticmethod
     def generate_tracks_from_spots(
         spots: dict[int, list[CellSpot]],
-    ) -> list[CellTrack]:
-        """
-        Generate tracks from spots.
-        """
-        raise NotImplementedError
+        method: TRACKING_METHOD,
+        show_post_conv_df: bool = False,
+        show_tracking_df: bool = False,
+        show_tracking_plot: bool = False,
+    ) -> list[Track[CellSpot]]:
+        return Track[CellSpot].generate_tracks_from_spots(
+            CellSpot,
+            spots,
+            method,
+            show_post_conv_df,
+            show_tracking_df,
+            show_tracking_plot,
+        )
+    
+    @staticmethod
+    def track_df_to_track_list(
+            track_df: pd.DataFrame,
+            spots: dict[int, list[CellSpot]],
+            ) -> list[Track]:
+        # See MidBodyTrack for an implementation example
+        raise RuntimeError("Work In Progress")
