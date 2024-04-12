@@ -21,13 +21,16 @@ class Movie:
         self.sir_layer = sir_layer
 
     def get_framecount(self) -> int:
-        return self.movie.shape[0]
+        return self.data.shape[0]
+    
+    def get_max_frame_idx(self) -> int:
+        return self.get_framecount() - 1
     
     def get_layercount(self) -> int:
-        return self.movie.shape[3]
+        return self.data.shape[3]
     
     def get_frame(self, idx: int) -> np.ndarray:
-        return self.movie[idx, :, :, :].squeeze()
+        return self.data[idx, :, :, :].squeeze()
     
     def get_mklp_layer(self, idx: int) -> np.ndarray:
         frame = self.get_frame(idx)

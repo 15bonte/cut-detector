@@ -6,13 +6,13 @@ import numpy as np
 from skimage.feature import blob_dog, blob_log, blob_doh
 
 # from playground.blob_detection_bench_ws.minibencher import MiniBencher
-# from playground.blob_detection_bench_ws.test_data_loading import load_movie
+# from playground.blob_detection_bench_ws.try_data_loading import load_movie
 
 # from blob_detection_bench_ws.minibencher import MiniBencher
-# from blob_detection_bench_ws.test_data_loading import load_movie
+# from blob_detection_bench_ws.try_data_loading import load_movie
 
 from minibencher import MiniBencher
-from test_data_loading import load_movie
+from try_data_loading import load_movie
 
 TEST_DIR = "./src/cut_detector/data/mid_bodies_movies_test"
 

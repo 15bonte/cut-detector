@@ -1,5 +1,8 @@
 import os
+import threading
+import concurrent.futures
 from typing import Literal, Optional, Callable, Union
+
 import numpy as np
 from bigfish import stack, detection
 from skimage.morphology import extrema, opening
@@ -14,10 +17,11 @@ from ..utils.mid_body_spot import MidBodySpot
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.trackmate_track import TrackMateTrack
 from ..utils.tools import plot_detection
-from ..utils.track import TRACKING_METHOD
-
+from ..utils.gen_track import generate_tracks_from_spots, TRACKING_METHOD
 from ..utils.mid_body_track_color_manager import MbTrackColorManager
 
+from .mb_support import detection as mbd
+from .mb_support import tracking  as mbt
 
 class MidBodyDetectionFactory:
     """
@@ -54,29 +58,43 @@ class MidBodyDetectionFactory:
         self.cytokinesis_duration = cytokinesis_duration
         self.minimum_mid_body_track_length = minimum_mid_body_track_length
 
-    SPOT_DETECTION_MODE = Literal[
-        "bigfish",
-        "h_maxima",
-        "cur_log",
-        "lapgau",
-        "log2_wider",
-        "rshift_log" "cur_dog",
-        "diffgau",
-        "cur_doh" "hessian",
+    SPOT_DETECTION_METHOD = Union[
+        Callable[[np.ndarray], np.ndarray],
+        Literal[
+            "bigfish",
+            "h_maxima",
+
+            "cur_log",
+            "lapgau",
+            "log2_wider",
+            "rshift_log", 
+            
+            "cur_dog",
+            "diffgau",
+
+            "cur_doh",
+            "hessian",
+        ]
+    ]
+
+    DETECTION_PARALLELIZATION_METHOD = Union[
+        bool, 
+        Literal[
+            "pool",
+            "thread"
+        ]
     ]
 
     def update_mid_body_spots(
         self,
         mitosis_track: MitosisTrack,
-        mitosis_movie: np.array,
-        mask_movie: np.array,
-        tracks: list[TrackMateTrack],
-        mb_detect_method: Union[
-            SPOT_DETECTION_MODE, Callable[[np.ndarray], np.ndarray]
-        ] = "lapgau",
-        mb_tracking_method: TRACKING_METHOD = "laptrack",
-        log_blob_spot: bool = False,
-        show_tracking_plot: bool = False,
+        mitosis_movie: np.ndarray,
+        mask_movie:    np.ndarray,
+        tracks:        list[TrackMateTrack],
+        mb_detect_method:   SPOT_DETECTION_METHOD = mbd.cur_dog,
+        mb_tracking_method: TRACKING_METHOD       = mbt.cur_spatial_laptrack,
+        log_blob_spot:      bool = False,
+        parallel_detection: DETECTION_PARALLELIZATION_METHOD = False,
     ) -> None:
         """
         Get spots of best mitosis track.
@@ -93,14 +111,14 @@ class MidBodyDetectionFactory:
             mask_movie=mask_movie,
             mode=mb_detect_method,
             log_blob_spot=log_blob_spot,
+            parallelization=parallel_detection
         )
-        mid_body_tracks = MidBodyTrack.generate_tracks_from_spots(
+
+        mid_body_tracks: list[MidBodyTrack] = generate_tracks_from_spots(
             spots_candidates,
-            mb_tracking_method,
-            False,
-            False,
-            show_tracking_plot,
+            mb_tracking_method
         )
+
         kept_track = self._select_best_track(
             mitosis_track,
             mid_body_tracks,
@@ -118,16 +136,15 @@ class MidBodyDetectionFactory:
             mitosis_track.mid_body_spots[frame] = spot
 
     def detect_mid_body_spots(
-        self,
-        mitosis_movie: np.array,
-        mask_movie: Optional[np.array] = None,
-        mid_body_channel=1,
-        sir_channel=0,
-        mode: Union[
-            SPOT_DETECTION_MODE, Callable[[np.ndarray], np.ndarray]
-        ] = "diffgau",
-        log_blob_spot: bool = False,
-    ) -> dict[int, list[MidBodySpot]]:
+            self,
+            mitosis_movie: np.ndarray,
+            mask_movie: Optional[np.ndarray] = None,
+            mid_body_channel=1,
+            sir_channel=0,
+            mode: SPOT_DETECTION_METHOD = mbd.cur_dog,
+            log_blob_spot: bool = False,
+            parallelization: DETECTION_PARALLELIZATION_METHOD = False,
+            ) -> dict[int, list[MidBodySpot]]:
         """
         Parameters
         ----------
@@ -143,9 +160,63 @@ class MidBodyDetectionFactory:
         if mask_movie is None:
             mask_movie = np.ones(mitosis_movie.shape[:-1])
 
-        # Detect spots in each frame
+
+        if isinstance(parallelization, bool):
+            if parallelization:
+                return self.thread_pool_detect_mid_body_spots(
+                    mitosis_movie,
+                    mask_movie,
+                    mid_body_channel,
+                    sir_channel,
+                    mode
+                )
+            else:
+                return self.serial_detect_mid_body_spots(
+                    mitosis_movie,
+                    mask_movie,
+                    mid_body_channel,
+                    sir_channel,
+                    mode,
+                    log_blob_spot
+                )
+
+        elif isinstance(parallelization, str):
+            if parallelization == "pool":
+                return self.thread_pool_detect_mid_body_spots(
+                    mitosis_movie,
+                    mask_movie,
+                    mid_body_channel,
+                    sir_channel,
+                    mode
+                )
+            elif parallelization == "thread":
+                return self.std_parallel_detect_mid_body_spots(
+                    mitosis_movie,
+                    mask_movie,
+                    mid_body_channel,
+                    sir_channel,
+                    mode,
+                )
+            else:
+                raise RuntimeError(f"parallelization str must be either 'pool' or 'thread': found {parallelization}") 
+        
+        else:
+            raise RuntimeError("parallelization must be either a str or bool")            
+
+    
+    def serial_detect_mid_body_spots(
+            self,
+            mitosis_movie: np.ndarray,
+            mask_movie:    np.ndarray,
+            mid_body_channel = 1,
+            sir_channel      = 0,
+            mode: SPOT_DETECTION_METHOD = mbd.cur_dog,
+            log_blob_spot: bool = False,
+            ) -> dict[int, list[MidBodySpot]]:
+        
         spots_dictionary = {}
         nb_frames = mitosis_movie.shape[0]
+
         for frame in range(nb_frames):
             display_progress(
                 "Detect mid-body spots...",
@@ -154,16 +225,16 @@ class MidBodyDetectionFactory:
                 additional_message=f"Frame {frame + 1}/{nb_frames}",
             )
 
-            mitosis_frame = mitosis_movie[frame, :, :, :].squeeze()  # YXC
-            mask_frame = mask_movie[frame, :, :].squeeze()  # YX
+            mitosis_frame = mitosis_movie[frame]  # YXC
+            mask_frame = mask_movie[frame]  # YX
             spots = self._spot_detection(
                 mitosis_frame,
                 mask_frame,
                 mid_body_channel,
                 sir_channel,
-                mode=mode,
-                frame=frame,
-                log_blob_spot=log_blob_spot,
+                mode,
+                frame,
+                log_blob_spot,
             )
 
             # Update dictionary
@@ -171,14 +242,86 @@ class MidBodyDetectionFactory:
 
         return spots_dictionary
 
+
+    def std_parallel_detect_mid_body_spots(
+            self,
+            mitosis_movie: np.ndarray,
+            mask_movie:    np.ndarray,
+            mid_body_channel = 1,
+            sir_channel      = 0,
+            method: SPOT_DETECTION_METHOD = mbd.cur_dog,
+            ) -> dict[int, list[MidBodySpot]]:
+         
+        nb_frames = mitosis_movie.shape[0] # TYXC
+
+        def ret_writer(slots: list, index: int, fn: Callable, *args) -> None:
+            slots[index] = fn(*args)
+
+        slots = [None] * nb_frames
+        all_threads = [
+            threading.Thread(
+                target=ret_writer, 
+                args=[
+                    slots,
+                    f,
+                    self._spot_detection,
+                    mitosis_movie[f],
+                    mask_movie,
+                    mid_body_channel,
+                    sir_channel,
+                    method,
+                    f
+                ]
+            )
+            for f in range(nb_frames)
+        ]
+        for t in all_threads:
+            t.start()
+        for t in all_threads:
+            t.join()
+
+        return {f: slots[f] for f in range(nb_frames)}
+    
+
+    def thread_pool_detect_mid_body_spots(
+            self,
+            mitosis_movie: np.array,
+            mask_movie:    np.array,
+            mid_body_channel = 1,
+            sir_channel      = 0,
+            method: SPOT_DETECTION_METHOD = mbd.cur_log
+            ) -> dict[int, list[MidBodySpot]]:
+        
+        nb_frames = mitosis_movie.shape[0]
+
+        framed_sd = lambda i, m, mbc, sc, d, f: (f, self._spot_detection(i, m, mbc, sc, d, f, False))
+
+        future_list = []
+        with concurrent.futures.ThreadPoolExecutor() as e:
+            for f in range(nb_frames):
+                future_list.append(e.submit(
+                    framed_sd,
+                    mitosis_movie[f],
+                    mask_movie,
+                    mid_body_channel,
+                    sir_channel,
+                    method,
+                    f,
+                ))
+
+        return {
+            res.result()[0]: res.result()[1] 
+            for res in concurrent.futures.as_completed(future_list)
+        }
+
     def _spot_detection(
         self,
         image: np.array,
-        mask: np.array,
+        mask:  np.array,
         mid_body_channel: int,
-        sir_channel: int,
-        mode: Union[SPOT_DETECTION_MODE, Callable[[np.ndarray], np.ndarray]],
-        frame=-1,
+        sir_channel:      int,
+        mode: SPOT_DETECTION_METHOD,
+        frame: int,
         log_blob_spot: bool = False,
     ) -> list[MidBodySpot]:
         """
@@ -217,14 +360,14 @@ class MidBodyDetectionFactory:
             # blob-like function called referenced by name
 
             mapping = {
-                "cur_log": detection.cur_log,
-                "cur_dog": detection.cur_dog,
-                "cur_doh": detection.cur_doh,
-                "lapgau": detection.lapgau,
-                "log2_wider": detection.log2_wider,
-                "rshit_log": detection.rshift_log,
-                "diffgau": detection.diffgau,
-                "hessian": detection.hessian,
+                "cur_log":    mbd.cur_log,
+                "cur_dog":    mbd.cur_dog,
+                "cur_doh":    mbd.cur_doh,
+                "lapgau":     mbd.lapgau,
+                "log2_wider": mbd.log2_wider,
+                "rshit_log":  mbd.rshift_log,
+                "diffgau":    mbd.diffgau,
+                "hessian":    mbd.hessian,
             }
 
             spots = [
@@ -285,7 +428,6 @@ class MidBodyDetectionFactory:
             spots = np.asarray(spots, dtype=np.int64)
 
             # Here, do something to retrieve mid_body area and/or circularity...
-
             if len(spots) == 0:
                 spots = np.array([], dtype=np.int64).reshape(
                     (0, filtered_image.ndim)
@@ -309,7 +451,6 @@ class MidBodyDetectionFactory:
             )
             for position in spots
         ]
-
         return mid_body_spots
 
     @staticmethod
@@ -345,7 +486,7 @@ class MidBodyDetectionFactory:
         mitosis_track: MitosisTrack,
         mid_body_tracks: list[MidBodyTrack],
         trackmate_tracks: list[TrackMateTrack],
-        mitosis_movie: np.array,
+        mitosis_movie: np.ndarray,
         mid_body_linking_max_distance: float,
         sir_channel=0,
     ) -> MidBodyTrack:
