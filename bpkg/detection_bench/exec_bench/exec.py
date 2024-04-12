@@ -1,7 +1,5 @@
 from typing import Optional
 
-from cut_detector.factories.mid_body_detection_factory import MidBodyDetectionFactory
-
 from data_loading import Source
 from detection_gt import bench_detection_against_gt, BenchStat
 from ..bench_config import BenchConfig, DetectionConfig
