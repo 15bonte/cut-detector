@@ -1,4 +1,3 @@
-from typing import Callable, Tuple
 from functools import partial
 
 from cut_detector.factories.mb_support import detection
