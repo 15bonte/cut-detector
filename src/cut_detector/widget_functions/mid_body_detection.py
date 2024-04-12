@@ -5,7 +5,7 @@ import numpy as np
 from aicsimageio.writers import OmeTiffWriter
 from laptrack import LapTrack
 
-from cut_detector.factories.mb_support import detection, tracking
+from ..factories.mb_support import detection, tracking
 from ..factories.mid_body_detection_factory import MidBodyDetectionFactory
 
 from ..utils.mitosis_track import MitosisTrack
@@ -19,7 +19,9 @@ def perform_mid_body_detection(
     exported_tracks_dir: str,
     save_dir: Optional[str] = None,
     update_mitoses: bool = True,
-    mid_body_detection_method: Union[str, Callable[[np.ndarray], np.ndarray]] = detection.cur_log,
+    mid_body_detection_method: Union[
+    	str, Callable[[np.ndarray], np.ndarray]
+    ] = detection.cur_log,
     mid_body_tracking_method: Union[str, LapTrack] = tracking.cur_spatial_laptrack,
     parallel_detection: bool = False,
 ):
@@ -63,7 +65,10 @@ def perform_mid_body_detection(
 
         # Search for mid-body in mitosis movie
         mid_body_detector.update_mid_body_spots(
-            mitosis_track, mitosis_movie, mask_movie, trackmate_tracks,
+            mitosis_track,
+            mitosis_movie,
+            mask_movie,
+            trackmate_tracks,
             mb_detect_method=mid_body_detection_method,
             mb_tracking_method=mid_body_tracking_method,
             parallel_detection=parallel_detection

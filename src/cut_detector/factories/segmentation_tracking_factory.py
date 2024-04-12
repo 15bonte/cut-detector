@@ -1,10 +1,12 @@
 import os
 import sys
+import numpy as np
 import torch
 import imagej
 import scyjava as sj
 from cellpose import models
 
+from ..utils.cell_spot import CellSpot
 from ..utils.cell_track import CellTrack
 
 
@@ -220,3 +222,48 @@ class SegmentationTrackingFactory:
 
         # Force exit
         ij_instance.dispose()
+
+        return [], []
+
+    @staticmethod
+    def get_spots_from_cellpose(
+        cellpose_results: np.ndarray,
+    ) -> dict[int, list[CellSpot]]:
+        """
+        Extract spots from cellpose results.
+
+        Parameters:
+            cellpose_results (np.ndarray): TYX
+        """
+        raise RuntimeError("Work in Progress")
+
+    def perform_segmentation_tracking(
+        self,
+        video: np.ndarray,
+    ) -> tuple[list[CellSpot], list[CellTrack]]:
+        """
+
+        Parameters:
+            video (np.ndarray): TXYC
+        """
+
+        # Cellpose segmentation
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model = models.CellposeModel(
+            pretrained_model=[self.model_path], device=device
+        )
+
+        # Reorder video dimension from TXYC to TCYX
+        video = np.transpose(video, (0, 3, 2, 1))
+
+        # Expect TCYX
+        cellpose_results, _, _ = model.eval(  # TYX
+            video,
+            channels=[3, 0],
+            diameter=0,
+            flow_threshold=self.flow_threshold,
+            cellprob_threshold=self.cellprob_threshold,
+            augment=self.augment,
+        )
+
+        cell_spots_dictionary = self.get_spots_from_cellpose(cellpose_results)
