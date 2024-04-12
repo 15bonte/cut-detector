@@ -13,25 +13,7 @@ class MidBodyTrack(Track[MidBodySpot]):
     """
 
     @staticmethod
-    def generate_tracks_from_spots(
-        spots: dict[int, list[MidBodySpot]],
-        method: TRACKING_METHOD,
-        show_post_conv_df: bool = False,
-        show_tracking_df: bool = False,
-        show_tracking_plot: bool = False,
-    ) -> list[Track[MidBodySpot]]:
-        raise RuntimeError("Deprecated for now, please use track_gen.generate_tracks_from_spots")
-        return Track[MidBodySpot].generate_tracks_from_spots(
-            MidBodySpot,
-            spots,
-            method,
-            show_post_conv_df,
-            show_tracking_df,
-            show_tracking_plot,
-        )
-
-    @staticmethod
-    def track_df_to_mb_track(
+    def track_df_to_track_list(
         track_df: pd.DataFrame,
         spots: dict[int, list[MidBodySpot]],
     ) -> list[MidBodyTrack]:
@@ -51,6 +33,7 @@ class MidBodyTrack(Track[MidBodySpot]):
             track.add_spot(spots[int(frame)][int(idx_in_frame)])
 
         return list(id_to_track.values())
+
 
     def get_expected_distance(
         self, expected_positions: dict[int, list[int]], max_distance: float

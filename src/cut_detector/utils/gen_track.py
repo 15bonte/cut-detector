@@ -1,6 +1,10 @@
 """ A function that relies on the Track Abstract Base Class in order to
-generate specialized tracks from points
+generate specialized tracks from points.
+
+See Track documentation to learn how to create new specialized Tracks/Spots
 """
+
+
 from typing import Union, Literal, Tuple, TypeVar
 
 import pandas as pd
@@ -8,18 +12,24 @@ from laptrack import LapTrack
 
 from ..factories.mb_support import tracking
 from .track import Track
+from .spot import Spot
 from .mid_body_track import MidBodyTrack
 from .cell_track import CellTrack
-from .spot import Spot
 from .mid_body_spot import MidBodySpot
 from .cell_spot import CellSpot
 
+TRACKING_METHOD = Union[
+    Literal["laptrack", "spatial_laptrack"],
+    LapTrack
+]
 
-TRACKING_METHOD = Union[Literal["laptrack", "spatial_laptrack"], LapTrack]
+SPOT_AND_TRACK_MAPPING = {
+    MidBodySpot: MidBodyTrack,
+    CellSpot:    CellTrack,
+}
 
-T = TypeVar("T", MidBodyTrack, CellTrack)
-S = TypeVar("S", MidBodySpot, CellSpot)
-
+T = TypeVar("T", *SPOT_AND_TRACK_MAPPING.values())
+S = TypeVar("S", *SPOT_AND_TRACK_MAPPING.keys())
 
 def generate_tracks_from_spots(
         spot_dict: dict[int, list[S]], 
@@ -58,21 +68,18 @@ def is_spot_dict_empty(spot_dict: dict[int, list[Spot]]) -> bool:
 
 
 def validate_inferred_spot_kind(inference: type) -> S:
-    if inference == MidBodySpot or inference == CellSpot:
+    if inference in SPOT_AND_TRACK_MAPPING.keys():
         return inference
     else:
-        raise RuntimeError(f"Tracks can only be built from Spots, encounted {inference} instead")
+        raise RuntimeError(f"Tracks can only be built from {SPOT_AND_TRACK_MAPPING.keys()}, encountered {inference} instead")
 
 
 def infer_spot_kind(spot_dict: dict[int, list[Spot]]) -> type:
     for v in spot_dict.values():
-        if v is None:
-            raise RuntimeError("v is None")
-        
         if len(v) != 0:
             t = type(v[0])
             if t is None:
-                raise RuntimeError("None in v[0] found")
+                raise RuntimeError("None in v[0] found in spot_dict:\n{spot_dict}")
             return t
     
     # If we land here, it means that spot_dict.values is empty
@@ -88,7 +95,7 @@ def infer_specialized_track_kind(spot_kind: type[Spot]) -> type[Track]:
     """
     kind_mapping = {
         MidBodySpot: MidBodyTrack,
-        CellSpot: CellTrack
+        CellSpot:    CellTrack
     }
     inferred_specialized_track_kind = kind_mapping.get(spot_kind)
     if infer_specialized_track_kind is None:
@@ -123,6 +130,7 @@ def convert_spots_to_spotdf(
                 ]
             else:
                 for idx, spot in enumerate(spots):
+                    assert spot.frame == frame, "spot.frame and frame cols must be the same"
                     features = [spot.frame, spot.x, spot.y, idx]
                     features.extend(spot.get_extra_coordinates())
                     spot_df.loc[len(spot_df.index)] = features
