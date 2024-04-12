@@ -46,11 +46,15 @@ def main(
     # viewer.add_labels(label_mid_body, name='label du mid body')
     mid_body_legend = mitosis_track.get_mid_body_legend()
     points = []
-    text = []
+    features = {'category':[]}
+    text = {'string':'{category}',
+            'size':20,
+            'color':'red',
+            'translation':np.array([-30,0])}
     for frame, frame_dict in mid_body_legend.items():
         points += [np.array([frame,frame_dict['y'],frame_dict['x']])]
-        text += [frame_dict['category']]
-    
+        features['category'] += [frame_dict['category']]
+    features['category'] = np.array(features['category'])
     points_layer = viewer.add_points(points,text=text,size=10,face_color='red')
 
      # Display the Napari viewer
