@@ -51,7 +51,7 @@ def generate_tracks_from_spots(
 
     spot_df        = convert_spots_to_spotdf(spot_dict, inferred_spot_kind)
     track_df, _, _ = apply_tracking(inferred_spot_kind, spot_df, method)
-    track_list     = inferred_track_kind.track_df_to_mb_track(track_df, spot_dict)
+    track_list     = inferred_track_kind.track_df_to_track_list(track_df, spot_dict)
 
     return track_list
 

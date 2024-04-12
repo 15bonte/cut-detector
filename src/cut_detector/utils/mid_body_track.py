@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from .track import Track, TRACKING_METHOD
+from .track import Track
 from .mid_body_spot import MidBodySpot
 
 
