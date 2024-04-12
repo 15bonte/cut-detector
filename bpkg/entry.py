@@ -51,6 +51,10 @@ run-dbench:
     run the detection benching on the configuration pipelines,
     using associated ground truth files
 
+d-debug <mode>:
+    Starts the detection debugging tool. Mode can be one of the following:
+      - cli
+
 sand <project>:
     starts the sandbox project <project>. To get a list of all sandbox
     projects, use 'sand list'. If you don't know what the
@@ -81,6 +85,10 @@ def run_slt_debug():
     from slt_debug.slt_debug_runner import spatial_laptrack_debug_runner
     spatial_laptrack_debug_runner()
 
+def run_d_debug():
+    from detection_debug import run_app
+    run_app(sys.argv.get(1))
+
 def run_gen_dbench_conf():
     from detection_bench.runner.gen_config_runner import gen_config_runner
     gen_config_runner()
@@ -104,6 +112,7 @@ FLAG_TABLE = {
     "bench-d-gt":      run_bench_d_gt,
     "new-d-gt":        run_new_d_gt,
     "slt-debug":       run_slt_debug,
+    "d-debug":         run_d_debug,
     "gen-dbench-conf": run_gen_dbench_conf,
     "run-dbench":      run_dbench,
     "sand":            run_sand,
