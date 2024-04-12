@@ -34,7 +34,6 @@ def main(
     # TODO: move everything to this function:
     mask= ResultsSavingFactory().generate_napari_tracking_mask(mitosis_tracks, video)
 
-
     
     viewer.add_image(mask, name="masks", rgb=True, opacity=0.4)
 
@@ -46,11 +45,13 @@ def main(
 
     # viewer.add_labels(label_mid_body, name='label du mid body')
     mid_body_legend = mitosis_track.get_mid_body_legend()
+    points = []
+    text = []
+    for frame, frame_dict in mid_body_legend.items():
+        points += [np.array([frame,frame_dict['y'],frame_dict['x']])]
+        text += [frame_dict['category']]
     
-    points = np.array([[mid_body_legend['x'],mid_body_legend['y']]])
-    text={ 'string': {mid_body_legend['category']}, 'size': 15, 'color': 'red'}
-    
-    points_layer= viewer.add_points(points,text=text)
+    points_layer = viewer.add_points(points,text=text,size=10,face_color='red')
 
      # Display the Napari viewer
     napari.run()
@@ -59,6 +60,6 @@ def main(
 
 if __name__ == "__main__":
     main(
-        image_path = r"C:\Users\camca\Documents\video_exemple",
-        mitoses_path = r"C:\Users\camca\Documents\video_exemple\mitoses"
+    #     image_path = r"C:\Users\camca\Documents\video_exemple",
+    #     mitoses_path = r"C:\Users\camca\Documents\video_exemple\mitoses"
     )
