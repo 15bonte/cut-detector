@@ -48,14 +48,14 @@ def main(
     points = []
     features = {'category':[]}
     text = {'string':'{category}',
-            'size':20,
+            'size':5,
             'color':'red',
             'translation':np.array([-30,0])}
     for frame, frame_dict in mid_body_legend.items():
         points += [np.array([frame,frame_dict['y'],frame_dict['x']])]
         features['category'] += [frame_dict['category']]
     features['category'] = np.array(features['category'])
-    points_layer = viewer.add_points(points,text=text,size=10,face_color='red')
+    points_layer = viewer.add_points(points,features=features,text=text,size=10,face_color='red') 
 
      # Display the Napari viewer
     napari.run()
