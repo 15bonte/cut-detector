@@ -249,7 +249,7 @@ class MidBodyDetectionFactory:
             mask_movie:    np.ndarray,
             mid_body_channel = 1,
             sir_channel      = 0,
-            mode: SPOT_DETECTION_METHOD = mbd.cur_dog,
+            method: SPOT_DETECTION_METHOD = mbd.cur_dog,
             ) -> dict[int, list[MidBodySpot]]:
          
         nb_frames = mitosis_movie.shape[0] # TYXC
@@ -269,7 +269,7 @@ class MidBodyDetectionFactory:
                     mask_movie,
                     mid_body_channel,
                     sir_channel,
-                    mode,
+                    method,
                     f
                 ]
             )
@@ -289,10 +289,9 @@ class MidBodyDetectionFactory:
             mask_movie:    np.array,
             mid_body_channel = 1,
             sir_channel      = 0,
-            blob_like: Callable[[np.ndarray], np.ndarray] = mbd.cur_log
+            method: SPOT_DETECTION_METHOD = mbd.cur_log
             ) -> dict[int, list[MidBodySpot]]:
         
-        # squeezed_movie = mitosis_movie[:, :, :, :].squeeze()  # squeezed TYXC
         nb_frames = mitosis_movie.shape[0]
 
         framed_sd = lambda i, m, mbc, sc, d, f: (f, self._spot_detection(i, m, mbc, sc, d, f, False))
@@ -306,7 +305,7 @@ class MidBodyDetectionFactory:
                     mask_movie,
                     mid_body_channel,
                     sir_channel,
-                    blob_like,
+                    method,
                     f,
                 ))
 
