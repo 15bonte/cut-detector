@@ -43,11 +43,22 @@ slt-debug:
     Run a debug version of Spatial LapTrack, with a log file 
     and resulting images
 
+gen-dbench-conf:
+    Generate a new detection Bench Configuration file, with all
+    current detectors
+
+run-dbench:
+    run the detection benching on the configuration pipelines,
+    using associated ground truth files
+
+d-debug <mode>:
+    Starts the detection debugging tool. Mode can be one of the following:
+      - cli
+
 sand <project>:
     starts the sandbox project <project>. To get a list of all sandbox
     projects, use 'sand list'. If you don't know what the
     sandbox projects are, use 'sand help'
-
 
 """
     
@@ -74,22 +85,37 @@ def run_slt_debug():
     from slt_debug.slt_debug_runner import spatial_laptrack_debug_runner
     spatial_laptrack_debug_runner()
 
+def run_d_debug():
+    from detection_debug import run_app
+    run_app(sys.argv.get(1))
+
+def run_gen_dbench_conf():
+    from detection_bench.runner.gen_config_runner import gen_config_runner
+    gen_config_runner()
+
+def run_dbench():
+    from detection_bench.runner.exec_config_runner import exec_runner
+    exec_runner()
+
 def run_sand():
     arg = sys.argv[2]
     from sandbox import run_sandbox_project
     run_sandbox_project(arg)
 
 FLAG_TABLE = {
-    "help":       print_help,
-    "--help":     print_help,
-    "-h":         print_help,
-    "h":          print_help,
-    "slt-debug":  run_slt_debug,
-    "gen-d-gt":   run_gen_d_gt,
-    "bench-d-gt": run_bench_d_gt,
-    "new-d-gt":   run_new_d_gt,
-    "slt-debug":  run_slt_debug,
-    "sand":       run_sand
+    "help":            print_help,
+    "--help":          print_help,
+    "-h":              print_help,
+    "h":               print_help,
+    "slt-debug":       run_slt_debug,
+    "gen-d-gt":        run_gen_d_gt,
+    "bench-d-gt":      run_bench_d_gt,
+    "new-d-gt":        run_new_d_gt,
+    "slt-debug":       run_slt_debug,
+    "d-debug":         run_d_debug,
+    "gen-dbench-conf": run_gen_dbench_conf,
+    "run-dbench":      run_dbench,
+    "sand":            run_sand,
 }
 
 def run_bpkg():

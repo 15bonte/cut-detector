@@ -1,5 +1,4 @@
-from typing import Callable, Dict, List, Union, Optional
-from laptrack import LapTrack
+from typing import Dict, List, Optional
 from cut_detector.utils.mid_body_spot import MidBodySpot
 from cut_detector.factories.mb_support.tracking import SpatialLapTrack
 from cut_detector.factories.mid_body_detection_factory import MidBodyDetectionFactory
@@ -11,7 +10,7 @@ import sys
 def spatial_laptrack_debug(
         source: Source,
         slt: SpatialLapTrack,
-        detection_method: Union[MidBodyDetectionFactory.SPOT_DETECTION_MODE, Callable],
+        detection_method: MidBodyDetectionFactory.SPOT_DETECTION_METHOD,
         log_fp: Optional[str],
         out_dir: Optional[str],
         show_tracking: bool = False):
