@@ -33,9 +33,25 @@ def main(
   
     # TODO: move everything to this function:
     mask= ResultsSavingFactory().generate_napari_tracking_mask(mitosis_tracks, video)
+
+
     
     viewer.add_image(mask, name="masks", rgb=True, opacity=0.4)
+
+    # def label(points):
+    #     for p in points:
+    #         return 'Texte test'
+
+    # label_mid_body = label(spots_video)
+
+    # viewer.add_labels(label_mid_body, name='label du mid body')
+    mid_body_legend = mitosis_track.get_mid_body_legend()
     
+    points = np.array([[mid_body_legend['x'],mid_body_legend['y']]])
+    text={ 'string': {mid_body_legend['category']}, 'size': 15, 'color': 'red'}
+    
+    points_layer= viewer.add_points(points,text=text)
+
      # Display the Napari viewer
     napari.run()
 
