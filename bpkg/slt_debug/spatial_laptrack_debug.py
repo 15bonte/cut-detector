@@ -2,11 +2,10 @@
 and additional debug options
 """
 
-import sys 
 import networkx as nx
 import numpy as np
 
-from typing import Callable, Literal, List, cast, Any, Dict, TextIO, Union
+from typing import Callable, List, cast, Any, Dict, Union
 from numpy.typing import NDArray
 from pydantic import Field
 from scipy.spatial.distance import cdist

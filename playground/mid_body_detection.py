@@ -18,7 +18,7 @@ SHOW_POINTS = False
 SHOW_TRACKS = False
 SHOULD_SAVE = True
 
-PARALLELIZE = True
+PARALLELIZE = "thread"
 
 def main(
     image_path: Optional[str] = get_data_path("mitosis_movies"),

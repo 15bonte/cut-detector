@@ -9,11 +9,9 @@ from data_loading import Source
 
 def generate_ground_truth(
         s: Source, 
-        detection_method: Union[
-            MidBodyDetectionFactory.SPOT_DETECTION_MODE,
-            Callable[[np.ndarray], np.ndarray]
-        ],
+        detection_method: MidBodyDetectionFactory.SPOT_DETECTION_METHOD,
         gt_filepath: str):
+    
     print("gt filepath:", gt_filepath)
     print("generating Ground Truth for", s.path, "using", detection_method)
     movie_data = s.load()

@@ -11,10 +11,7 @@ from .bench_stat import BenchStat
 def bench_detection_against_gt(
         src: Source, 
         gt_filepath: str, 
-        detection_method: Union[
-            MidBodyDetectionFactory.SPOT_DETECTION_MODE, 
-            Callable[[np.ndarray], np.ndarray]
-        ],
+        detection_method: MidBodyDetectionFactory.SPOT_DETECTION_METHOD,
         ignore_false_positives: bool = True,
         measure_time: bool = False
         ) -> BenchStat:

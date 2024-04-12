@@ -1,6 +1,4 @@
 from contextlib import suppress
-import sys
-import time
 from typing import Optional, Tuple
 
 import numpy as np
