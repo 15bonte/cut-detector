@@ -66,8 +66,9 @@ class CellTrack(Track[CellSpot]):
         self.stop = stop
 
         self.metaphase_spots: list[CellSpot] = []
+
     @classmethod
-    def from_spots(cls,track_id: int, spots: list[CellSpot]) -> CellTrack:
+    def from_spots(cls, track_id: int, spots: list[CellSpot]) -> CellTrack:
         """
         Create a CellTrack from a list of CellSpot.
 
@@ -342,38 +343,24 @@ class CellTrack(Track[CellSpot]):
         return cell_crops
 
     @staticmethod
-    def generate_tracks_from_spots(
-        spots: dict[int, list[CellSpot]],
-        method: TRACKING_METHOD,
-        show_post_conv_df: bool = False,
-        show_tracking_df: bool = False,
-        show_tracking_plot: bool = False,
-    ) -> list[Track[CellSpot]]:
-        return Track[CellSpot].generate_tracks_from_spots(
-            CellSpot,
-            spots,
-            method,
-            show_post_conv_df,
-            show_tracking_df,
-            show_tracking_plot,
-        )
-    
-    @staticmethod
     def track_df_to_track_list(
-            track_df: pd.DataFrame,
-            spots: dict[int, list[CellSpot]],
-            ) -> list[Track]:
+        track_df: pd.DataFrame,
+        spots: dict[int, list[CellSpot]],
+    ) -> list[Track]:
         # See MidBodyTrack for an implementation example
-        track_df= track_df.dropna(inplace=True)
+        track_df = track_df.dropna(inplace=True)
         track_df.resetindex(drop=True, inplace=True)
-        id_to_track={}
-        for _,row in track_df.interrows():
-            track_id=row['track_id']
-            track:list = id_to_track.get(track_id)
+        id_to_track = {}
+        for _, row in track_df.interrows():
+            track_id = row["track_id"]
+            track: list = id_to_track.get(track_id)
             if track is None:
-                id_to_track[track_id]= []
-                track= id_to_track[track_id]
-            frame = row['frame']
-            idx_in_frame = row['idx_in_frame']
+                id_to_track[track_id] = []
+                track = id_to_track[track_id]
+            frame = row["frame"]
+            idx_in_frame = row["idx_in_frame"]
             track.append(spots[frame][idx_in_frame])
-        return [Celltrack.from_spots(track_id,spots) for track_id,spots in enumerate(id_to_track.values())]
+        return [
+            CellTrack.from_spots(track_id, spots)
+            for track_id, spots in enumerate(id_to_track.values())
+        ]
