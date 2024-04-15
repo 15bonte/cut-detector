@@ -1,7 +1,9 @@
 from typing import Literal, Optional
 
+from .prompt_parsing import parse_prompt
 
 APP_MODE = Literal["cli"]
+
 
 def run_app(mode: Optional[APP_MODE] = "cli"):
     if mode is None or mode == "cli":
@@ -17,7 +19,8 @@ def run_cli_app():
     print("")
     while True:
         ipt = input(">> ")
-        if ipt == "exit":
+        if ipt == "exit" or ipt == "exit()":
             break
-
-        print(ipt)
+        
+        print("ipt>:", ipt)
+        print(parse_prompt(ipt))

@@ -87,7 +87,8 @@ def run_slt_debug():
 
 def run_d_debug():
     from detection_debug import run_app
-    run_app(sys.argv.get(1))
+    arg = sys.argv[2] if len(sys.argv) >= 3 else None
+    run_app(arg)
 
 def run_gen_dbench_conf():
     from detection_bench.runner.gen_config_runner import gen_config_runner
@@ -115,6 +116,7 @@ FLAG_TABLE = {
     "d-debug":         run_d_debug,
     "gen-dbench-conf": run_gen_dbench_conf,
     "run-dbench":      run_dbench,
+    "d-debug":         run_d_debug,
     "sand":            run_sand,
 }
 
