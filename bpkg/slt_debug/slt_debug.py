@@ -31,7 +31,7 @@ def spatial_laptrack_debug(
 
     if isinstance(log_fp, str):
         original_stdout = sys.stdout
-        with open(log_fp, "r") as log_file:
+        with open(log_fp, "w") as log_file:
             sys.stdout = log_file
             run_laptrack(
                 factory,
