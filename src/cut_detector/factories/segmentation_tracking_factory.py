@@ -267,3 +267,7 @@ class SegmentationTrackingFactory:
         )
 
         cell_spots_dictionary = self.get_spots_from_cellpose(cellpose_results)
+
+        # TODO: perform tracking
+
+        return cell_spots, cell_tracks
