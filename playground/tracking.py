@@ -141,40 +141,39 @@ def main(
     # Spot points can be created from the cell indices
 
     # The indices of points forming the convex hull
-    # for frame in range(len(cellpose_results)):
-    #     fig, axarr = plt.subplots(1, 2)
-    #     axarr[0].imshow(cellpose_results[frame])
-    #     for i in range(len(cell_dictionary[frame])):
-    #         axarr[0].plot(
-    #             cell_dictionary[frame][i].spot_points[:, 1],
-    #             cell_dictionary[frame][i].spot_points[:, 0],
-    #             "o",
-    #         )
-    #         axarr[0].plot(
-    #             cell_dictionary[frame][i].abs_max_x,
-    #             cell_dictionary[frame][i].abs_max_y,
-    #             "x",
-    #         )
-    #         axarr[0].plot(
-    #             cell_dictionary[frame][i].abs_min_x,
-    #             cell_dictionary[frame][i].abs_max_y,
-    #             "x",
-    #         )
-    #         axarr[0].plot(
-    #             cell_dictionary[frame][i].abs_min_x,
-    #             cell_dictionary[frame][i].abs_min_y,
-    #             "x",
-    #         )
-    #         axarr[0].plot(
-    #             cell_dictionary[frame][i].abs_max_x,
-    #             cell_dictionary[frame][i].abs_min_y,
-    #             "x",
-    #         )
-    #     axarr[0].plot(barycenter(frame)[0], barycenter(frame)[1], "x")
-    #     axarr[1].scatter(plot_spots(frame)[0], plot_spots(frame)[1], s=1)
-    #     plt.show()
+    for frame in range(len(cellpose_results)):
+        fig, axarr = plt.subplots(1, 2)
+        axarr[0].imshow(cellpose_results[frame])
+        for i in range(len(cell_dictionary[frame])):
+            axarr[0].plot(
+                cell_dictionary[frame][i].spot_points[:, 1],
+                cell_dictionary[frame][i].spot_points[:, 0],
+                "o",
+            )
+            axarr[0].plot(
+                cell_dictionary[frame][i].abs_max_x,
+                cell_dictionary[frame][i].abs_max_y,
+                "x",
+            )
+            axarr[0].plot(
+                cell_dictionary[frame][i].abs_min_x,
+                cell_dictionary[frame][i].abs_max_y,
+                "x",
+            )
+            axarr[0].plot(
+                cell_dictionary[frame][i].abs_min_x,
+                cell_dictionary[frame][i].abs_min_y,
+                "x",
+            )
+            axarr[0].plot(
+                cell_dictionary[frame][i].abs_max_x,
+                cell_dictionary[frame][i].abs_min_y,
+                "x",
+            )
+        axarr[0].plot(barycenter(frame)[0], barycenter(frame)[1], "x")
+        axarr[1].scatter(plot_spots(frame)[0], plot_spots(frame)[1], s=1)
+        plt.show()
 
-    # TODO Define tracking_method (cf src/cut_detector/factories/mb_support/tracking/tracking_impl)
     tracking_method = SpatialLapTrack(
         spatial_coord_slice=slice(0, 2),
         spatial_metric="euclidean",
@@ -187,9 +186,7 @@ def main(
         merging_cost_cutoff=False,
         alternative_cost_percentile=100,
     )
-    # TODO Call tracking method generate_tracks_from_spots
     cell_tracks = generate_tracks_from_spots(cell_dictionary, tracking_method)
-    a = 0
     # TODO Compare cell_tracks with trackmate_tracks
 
 
