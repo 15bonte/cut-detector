@@ -155,12 +155,8 @@ def update_graph(movie_info: str, layer_idx: int, frame_idx: int) -> Dict:
     return px.imshow(img)
 
 
-
 #
-# Despite its name, 'horror' is actually very good
-# use it as a reference
-#
-# horror = dbc.Row([
+# possible_layout = dbc.Row([
 #         dbc.Col(children=[
 #             dbc.Alert("Laplacian of Gaussian", color="primary"),
 #             html.Div([
