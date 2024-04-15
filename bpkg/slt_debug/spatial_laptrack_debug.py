@@ -35,7 +35,7 @@ class SpatialLaptrackDebug(LapTrack):
     """
 
     spatial_coord_slice: slice = Field(
-        ...,
+        slice(0,2),
         description="A slice that is used to subset coords"
     )
 
