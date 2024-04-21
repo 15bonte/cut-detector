@@ -1,0 +1,71 @@
+### Globals (defined in app) ###
+sig_open_pannel: dmc.Store <- ["imp", "det", "trk", "viz"]
+    The pannel to open
+
+sig_cur_frame: dmc.Store <- int
+    The current frame number
+
+sig_imp_file: dmc.Store <- {path: str, fmt: str}
+    The file to import globally, written to once the file has been imported
+
+sig_det_param: dmc.Store <- dict of parameters
+    The parameters set for the detector
+
+### SideBar ###
+sb_imp_btn: dmc.ActionIcon
+    Importation pannel
+
+sb_det_btn: dmc.ActionIcon
+    Detection pannel
+
+sb_trk_btn: dmc.ActionIcon
+    Tracking pannel
+
+sb_viz_btn: dmc.ActionIcon
+    Vizualization pannel
+
+
+### Main pannel ###
+pannel_area: html.Div
+    Where the pannel will be generated
+
+@@ Imp pannel @@
+imp_dir_sel: dmc.Select
+    Select dirpath
+
+imp_file_sel: dmc.Select
+    Select filename
+
+imp_fmt_type: dmc.Select
+    Select format
+
+imp_btn: dmc.Button
+    Import button
+
+@@ Det pannel @@
+det_sel: dmc.Select (label:str value:Detector)
+    The base detector selector
+
+det_param_area: html.Div
+    Area where the parameters appear
+
+det_param: dmc.NumberInput (maybe use dash matching feature...)
+    The detector parameters
+
+
+### Viewer ###
+graph: dcc.Graph
+    The display for the image
+
+vctrl_pbtn: dmc.Button
+    Previous frame button
+
+vctrl_nbtn: dmc.Button
+    Next frame btn
+
+vctrl_frame_input: dmc.NumberInput
+    The current frame number input
+
+vctr_frame_max_text: dmc.Text
+    Max index for frames
+

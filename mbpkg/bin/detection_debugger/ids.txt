@@ -1,0 +1,67 @@
+##################### IDs #####################
+sig_import_movie_in : dcc.Store <- {path: str, fmt: str}
+    Request to load the movie with the given path and format
+
+sig_import_movie_out: dcc.Store <- {path: str, fmt: str}
+    Contains the movie path and format once it has been globally loaded
+
+
+imp_dir_dd : dcc.Dropdown
+    Allows to chose a source directory among the available ones
+
+imp_filename_dd : dcc.Dropdown
+    Allows to pick a source in the selected directory
+
+imp_fmt_dd: dcc.Dropdown
+    Pick the format between the available ones
+
+imp_load_btn : dcc.Btn
+    Starts the global import of the file
+
+
+
+vis_ppl_dd : dcc.Dropdown
+    Chose the base visualization parameters
+
+vis_ppl_override : html.Div
+    Div to generate the override parameters
+
+# Pipeline Parameters field 
+dbc.Input:
+- vis_ppl_p_min_sigma
+- vis_ppl_p_max_sigma
+- vis_ppl_p_num_sigma
+- vis_ppl_p_sigma_ratio
+- vis_ppl_p_threshold
+
+vis_spot_list : html.Div
+    List of found spots
+
+
+vis_graph : dcc.Graph
+    The visualization graph
+
+vis_graph_frame : dbc.Input
+    The frame Input
+
+vis_graph_maxframe : dbc.InputGroupText
+    The maximum frame value
+
+vis_graph_lbtn : dbc.Button
+    Previous frame button
+
+vis_graph_rbtn : dbc.Button
+    Next frame button
+
+
+vis_imp_btn : dbc.Button
+    Chose another file to load
+
+vis_imp_modal : dbc.Modal
+    Import modal
+
+vis_layer_dd : dcc.Dropdown
+    Choose layer among 'image', 's_layer', 's_cube',
+
+vis_layer_settings : html.Div
+    Set additional layer visualization settings
