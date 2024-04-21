@@ -16,9 +16,11 @@ T_METHOD = tracking.cur_spatial_laptrack
 
 SHOW_POINTS = False
 SHOW_TRACKS = False
-SHOULD_SAVE = True
+SHOULD_SAVE = False
 
-PARALLELIZE = "thread"
+PARALLELIZE = "pool"
+# PARALLELIZE = "thread"
+# PARALLELIZE = "np_thread"
 
 def main(
     image_path: Optional[str] = get_data_path("mitosis_movies"),
@@ -53,7 +55,7 @@ def main(
     )
     end = time()
     delta = end - start
-    print("====== Detection time:", delta, "=========")
+    print(f"====== Detection time: {delta:.3f}s =========")
 
     if SHOW_POINTS:
         for frame, spots in spots_candidates.items():
@@ -93,7 +95,7 @@ def main(
 
 if __name__ == "__main__":
     main(
-        # "./src/cut_detector/data/mitosis_movies/example_video_mitosis_0_0_to_4.tiff",
+        "./src/cut_detector/data/mitosis_movies/example_video_mitosis_0_0_to_4.tiff",
         # "./src/cut_detector/data/mid_bodies_movies_test/a_siLuci-1_mitosis_33_7_to_63.tiff",
         # "./src/cut_detector/data/mid_bodies_movies_test/s1_siLuci-1_mitosis_14_158_to_227.tiff",
         # "./src/cut_detector/data/mid_bodies_movies_test/s2_siLuci-1_mitosis_15_67_to_228,211.tiff",
@@ -103,7 +105,7 @@ if __name__ == "__main__":
         # "./src/cut_detector/data/mid_bodies_movies_test/s6_siLuci-1_mitosis_28_50_to_91.tiff",
         # "./src/cut_detector/data/mid_bodies_movies_test/s7_siLuci-1_mitosis_31_19_to_73.tiff",
         # "./src/cut_detector/data/mid_bodies_movies_test/s9_siLuci-1_mitosis_34_21_to_68,62.tiff",
-        "./src/cut_detector/data/mid_bodies_movies_test/20231019-t1_siCep55-50-4_mitosis_21_25_to_117.tiff",
+        # "./src/cut_detector/data/mid_bodies_movies_test/20231019-t1_siCep55-50-4_mitosis_21_25_to_117.tiff",
         # "./src/cut_detector/data/mid_bodies_movies_test/cep2_20231019-t1_siCep55-50-4_mitosis_24_17_to_104.tiff",
         # "./src/cut_detector/data/mid_bodies_movies_test/cep_1.tiff",
         # "./src/cut_detector/data/mid_bodies_movies_test/example_video_mitosis_0_0_to_4.tiff",
