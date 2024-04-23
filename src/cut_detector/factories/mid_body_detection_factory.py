@@ -17,7 +17,8 @@ from ..utils.image_tools import smart_cropping
 from ..utils.mid_body_spot import MidBodySpot
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.trackmate_track import TrackMateTrack
-from ..utils.tools import plot_detection
+# from ..utils.tools import plot_detection
+from ..utils.factory_plot_detection import plot_detection
 from ..utils.gen_track import generate_tracks_from_spots, TRACKING_METHOD
 from ..utils.mid_body_track_color_manager import MbTrackColorManager
 
@@ -68,8 +69,8 @@ class MidBodyDetectionFactory:
             "cur_log",
             "lapgau",
             "log2_wider",
-            "rshift_log", 
-            
+            "rshift_log",
+
             "cur_dog",
             "diffgau",
 
@@ -79,7 +80,7 @@ class MidBodyDetectionFactory:
     ]
 
     DETECTION_PARALLELIZATION_METHOD = Union[
-        bool, 
+        bool,
         Literal[
             "pool",
             "thread",
@@ -217,12 +218,12 @@ class MidBodyDetectionFactory:
                     mode,
                 )
             else:
-                raise RuntimeError(f"parallelization str must be either 'pool'/'thread'/'np_thread': found {parallelization}") 
-        
-        else:
-            raise RuntimeError("parallelization must be either a str or bool")            
+                raise RuntimeError(f"parallelization str must be either 'pool'/'thread'/'np_thread': found {parallelization}")
 
-    
+        else:
+            raise RuntimeError("parallelization must be either a str or bool")
+
+
     def serial_detect_mid_body_spots(
             self,
             mitosis_movie: np.ndarray,
@@ -232,7 +233,7 @@ class MidBodyDetectionFactory:
             mode: SPOT_DETECTION_METHOD = mbd.cur_dog,
             log_blob_spot: bool = False,
             ) -> dict[int, list[MidBodySpot]]:
-        
+
         spots_dictionary = {}
         nb_frames = mitosis_movie.shape[0]
 
@@ -270,17 +271,17 @@ class MidBodyDetectionFactory:
             sir_channel      = 0,
             method: SPOT_DETECTION_METHOD = mbd.cur_dog,
             ) -> dict[int, list[MidBodySpot]]:
-         
+
         nb_frames = mitosis_movie.shape[0] # TYXC
 
         def ret_writer(
-                slots: list, 
-                inc_frame_beg: int, 
-                ex_frame_end: int, 
+                slots: list,
+                inc_frame_beg: int,
+                ex_frame_end: int,
                 ) -> None:
-            
+
             # print(f"t: [{inc_frame_beg}-{ex_frame_end}[")
-            
+
             for frame in range(inc_frame_beg, ex_frame_end):
                 mitosis_frame = mitosis_movie[frame]
                 mask_frame = mask_movie[frame]
@@ -326,7 +327,7 @@ class MidBodyDetectionFactory:
             t.join()
 
         return {f: slots[f] for f in range(nb_frames)}
-    
+
     def std_np_parallel_detect_mid_body_spots(
             self,
             mitosis_movie: np.ndarray,
@@ -335,16 +336,16 @@ class MidBodyDetectionFactory:
             sir_channel      = 0,
             method: SPOT_DETECTION_METHOD = mbd.cur_dog,
             ) -> dict[int, list[MidBodySpot]]:
-         
+
         nb_frames = mitosis_movie.shape[0] # TYXC
         slots = {k: [] for k in range(nb_frames)}
 
         def slot_writer(
-                frames: list[int], 
+                frames: list[int],
                 ) -> None:
-            
+
             # print(f"frames:", frames)
-            
+
             for frame in frames:
                 mitosis_frame = mitosis_movie[frame]
                 mask_frame = mask_movie[frame]
@@ -380,7 +381,7 @@ class MidBodyDetectionFactory:
             t.join()
 
         return slots
-    
+
     def std_max_parallel_detect_mid_body_spots(
             self,
             mitosis_movie: np.ndarray,
@@ -389,16 +390,16 @@ class MidBodyDetectionFactory:
             sir_channel      = 0,
             method: SPOT_DETECTION_METHOD = mbd.cur_dog,
             ) -> dict[int, list[MidBodySpot]]:
-         
+
         nb_frames = mitosis_movie.shape[0] # TYXC
         slots = {k: [] for k in range(nb_frames)}
 
         def slot_writer(
-                frames: list[int], 
+                frames: list[int],
                 ) -> None:
-            
+
             # print(f"frames:", frames)
-            
+
             for frame in frames:
                 mitosis_frame = mitosis_movie[frame]
                 mask_frame = mask_movie[frame]
@@ -434,7 +435,7 @@ class MidBodyDetectionFactory:
             t.join()
 
         return slots
-    
+
 
     def thread_pool_detect_mid_body_spots(
             self,
@@ -444,7 +445,7 @@ class MidBodyDetectionFactory:
             sir_channel      = 0,
             method: SPOT_DETECTION_METHOD = mbd.cur_log
             ) -> dict[int, list[MidBodySpot]]:
-        
+
         nb_frames = mitosis_movie.shape[0]
 
         framed_sd = lambda i, m, mbc, sc, d, f: (f, self._spot_detection(i, m, mbc, sc, d, f, False))
@@ -463,7 +464,7 @@ class MidBodyDetectionFactory:
                 ))
 
         return {
-            res.result()[0]: res.result()[1] 
+            res.result()[0]: res.result()[1]
             for res in concurrent.futures.as_completed(future_list)
         }
 

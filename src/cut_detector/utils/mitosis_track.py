@@ -27,8 +27,19 @@ from .box_dimensions_dln import BoxDimensionsDln
 from .box_dimensions import BoxDimensions
 from .bridges_classification.impossible_detection import ImpossibleDetection
 from .image_tools import resize_image, smart_cropping
-from .tools import cell_counter_frame_to_video_frame
+# from .tools import cell_counter_frame_to_video_frame
 
+def cell_counter_frame_to_video_frame(
+    cell_counter_frame: int, nb_channels=4
+) -> int:
+    """
+    Cell counter index starts at 1, just like Fiji.
+
+    To count frame, it just concatenates all channels.
+    For example, with 4 channels, frames 1, 2, 3 and 4 will be frame 1,
+    frames 5, 6, 7 and 8 will be frame 2, etc.
+    """
+    return (cell_counter_frame - 1) // nb_channels
 
 class MitosisTrack:
     """

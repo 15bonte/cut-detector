@@ -1,7 +1,7 @@
 import os
 from time import time
 from typing import Optional
-from cnn_framework.utils.readers.tiff_reader import TiffReader
+# from cnn_framework.utils.readers.tiff_reader import TiffReader
 
 import numpy as np 
 
@@ -10,8 +10,8 @@ from cut_detector.factories.mid_body_detection_factory import (
     MidBodyDetectionFactory,
 )
 from cut_detector.utils.mb_support import detection, tracking
-from cut_detector.utils.mid_body_track import MidBodyTrack
 from cut_detector.utils.gen_track import generate_tracks_from_spots
+from cut_detector.utils.mini_tiff_reading import mini_read_tiff
 
 D_METHOD = detection.cur_dog
 T_METHOD = tracking.cur_spatial_laptrack
@@ -39,7 +39,8 @@ def main(
     print("//:", PARALLELIZE)
 
     # Read image
-    image = TiffReader(image_path, respect_initial_type=True).image  # TCZYX
+    # image = TiffReader(image_path, respect_initial_type=True).image  # TCZYX
+    image = mini_read_tiff(image_path)
 
     mitosis_movie = image[:, :3, ...].squeeze()  # T C=3 YX
     mitosis_movie = mitosis_movie.transpose(0, 2, 3, 1)  # TYXC
