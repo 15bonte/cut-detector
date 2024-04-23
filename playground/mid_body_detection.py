@@ -9,7 +9,7 @@ from cut_detector.data.tools import get_data_path
 from cut_detector.factories.mid_body_detection_factory import (
     MidBodyDetectionFactory,
 )
-from cut_detector.factories.mb_support import detection, tracking
+from cut_detector.utils.mb_support import detection, tracking
 from cut_detector.utils.mid_body_track import MidBodyTrack
 from cut_detector.utils.gen_track import generate_tracks_from_spots
 

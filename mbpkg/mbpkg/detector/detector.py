@@ -5,7 +5,7 @@ from typing import Optional, Union, Callable, Literal, get_args
 import numpy as np
 
 from cut_detector.factories.mid_body_detection_factory import MidBodyDetectionFactory
-from cut_detector.factories.mb_support import detection
+from cut_detector.utils.mb_support import detection
 
 
 class DetectorError(Exception):

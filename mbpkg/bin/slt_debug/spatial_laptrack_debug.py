@@ -17,7 +17,7 @@ from laptrack._coo_matrix_builder import coo_matrix_builder
 from laptrack._optimization import lap_optimization
 from laptrack._cost_matrix import build_frame_cost_matrix, build_segment_cost_matrix
 
-from cut_detector.factories.mb_support.tracking import SpatialLapTrack
+from cut_detector.utils.mb_support.tracking import SpatialLapTrack
 
 class SpatialLaptrackDebug(LapTrack):
     """ SpatialLapTrack is a modification of LapTrack where

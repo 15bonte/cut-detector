@@ -5,7 +5,7 @@ import subprocess
 from os.path import join
 from pathlib import Path
 from typing import Callable, Union
-from cut_detector.factories.mb_support import detection, tracking
+from cut_detector.utils.mb_support import detection, tracking
 
 from mid_body_execution import start_execution
 from mid_body_evaluation import start_evaluation

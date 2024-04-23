@@ -7,7 +7,7 @@ from typing import Union, Tuple, Callable, Any, Optional, get_args
 
 import numpy as np
 
-from cut_detector.factories.mb_support import detection
+from cut_detector.utils.mb_support import detection
 from cut_detector.factories.mid_body_detection_factory import MidBodyDetectionFactory
 SPOT_DETECTION_METHOD = MidBodyDetectionFactory.SPOT_DETECTION_METHOD
 

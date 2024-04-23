@@ -7,7 +7,7 @@ import dash_mantine_components as dmc
 import plotly.express as px
 import skimage.data
 
-from cut_detector.factories.mb_support import detection
+from cut_detector.utils.mb_support import detection
 
 from mbpkg.movie_loading import Movie
 from mbpkg.better_detector import Detector

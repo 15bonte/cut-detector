@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional
 
 from cut_detector.utils.mid_body_spot import MidBodySpot
-from cut_detector.factories.mb_support.tracking import SpatialLapTrack
+from cut_detector.utils.mb_support.tracking import SpatialLapTrack
 from cut_detector.factories.mid_body_detection_factory import MidBodyDetectionFactory
 
 from mbpkg.movie_loading import Source

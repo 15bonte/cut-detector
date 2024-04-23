@@ -7,7 +7,7 @@ from functools import partial
 from dash import html, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
 
-from cut_detector.factories.mb_support import detection
+from cut_detector.utils.mb_support import detection
 
 from mbpkg.better_detector import Detector
 
