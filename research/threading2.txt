@@ -1,0 +1,40 @@
+10 runs each
+
+src: example_video_mitosis_0_0_to_4.tiff
+
+//:   pool   thread  np_thread max_thread
+min:  1.80   4.78    1.75      1.80
+q1:   1.77   4.77    1.73      1.78
+med:  1.80   4.78    1.75      1.80
+q3:   1.81   4.79    1.76      1.83
+max:  1.80   4.78    1.75      1.80
+
+
+
+src: 20231019-t1_siCep55-50-4_mitosis_21_25_to_117.tiff
+
+//:	  pool	thread	np_thread	max_thread
+min:  1.80	2.83	1.85	    1.88
+q1:	  1.79	2.80	1.82	    1.85
+med:  1.80	2.83	1.85	    1.88
+q3:	  1.81	2.93	1.86	    1.90
+max:  1.80	2.83	1.85	    1.88
+
+
+
+
+src: s3_siLuci-1_mitosis_17_170_to_195.tiff
+
+//:	  pool	thread	np_thread	max_thread
+min:  0.12	0.16	0.12	    0.13
+q1:	  0.12	0.16	0.12	    0.12
+med:  0.12	0.16	0.12	    0.13
+q3:	  0.12	0.17	0.12	    0.13
+max:  0.12	0.16	0.12	    0.13
+
+
+
+
+Conclusion:
+Will have to test in with the full pipeline bench.
+Maybe pool

@@ -83,7 +83,8 @@ class MidBodyDetectionFactory:
         Literal[
             "pool",
             "thread",
-            "np_thread"
+            "np_thread",
+            "max_thread",
         ]
     ]
 
@@ -207,6 +208,14 @@ class MidBodyDetectionFactory:
                     sir_channel,
                     mode,
                 )
+            elif parallelization == "max_thread":
+                return self.std_max_parallel_detect_mid_body_spots(
+                    mitosis_movie,
+                    mask_movie,
+                    mid_body_channel,
+                    sir_channel,
+                    mode,
+                )
             else:
                 raise RuntimeError(f"parallelization str must be either 'pool'/'thread'/'np_thread': found {parallelization}") 
         
@@ -288,7 +297,7 @@ class MidBodyDetectionFactory:
         # print("nb_frames:", nb_frames)
 
         slots = [None] * nb_frames
-        target_thread_count = 25 if nb_frames >= 25 else (nb_frames / 4)
+        target_thread_count = 25 if nb_frames >= 25 else (math.floor(nb_frames / 4))
         frames_per_thread, rem = divmod(nb_frames, target_thread_count)
 
         all_threads = [
@@ -351,7 +360,61 @@ class MidBodyDetectionFactory:
 
         # print("nb_frames:", nb_frames)
 
-        target_thread_count = 25 if nb_frames >= 25 else (nb_frames / 4)
+        target_thread_count = 25 if nb_frames >= 25 else nb_frames
+        frames = np.arange(nb_frames)
+        splits = np.array_split(frames, target_thread_count)
+
+        all_threads = [
+            threading.Thread(
+                target=slot_writer,
+                args=[
+                    frame_split
+                ]
+            )
+            for frame_split in splits
+        ]
+
+        for t in all_threads:
+            t.start()
+        for t in all_threads:
+            t.join()
+
+        return slots
+    
+    def std_max_parallel_detect_mid_body_spots(
+            self,
+            mitosis_movie: np.ndarray,
+            mask_movie:    np.ndarray,
+            mid_body_channel = 1,
+            sir_channel      = 0,
+            method: SPOT_DETECTION_METHOD = mbd.cur_dog,
+            ) -> dict[int, list[MidBodySpot]]:
+         
+        nb_frames = mitosis_movie.shape[0] # TYXC
+        slots = {k: [] for k in range(nb_frames)}
+
+        def slot_writer(
+                frames: list[int], 
+                ) -> None:
+            
+            # print(f"frames:", frames)
+            
+            for frame in frames:
+                mitosis_frame = mitosis_movie[frame]
+                mask_frame = mask_movie[frame]
+                slots[frame] = self._spot_detection(
+                    mitosis_frame,
+                    mask_frame,
+                    mid_body_channel,
+                    sir_channel,
+                    method,
+                    frame,
+                    log_blob_spot=False
+                )
+
+        # print("nb_frames:", nb_frames)
+
+        target_thread_count = nb_frames
         frames = np.arange(nb_frames)
         splits = np.array_split(frames, target_thread_count)
 
