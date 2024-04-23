@@ -114,4 +114,5 @@ src/cut_detector/data/mb_results
 # Eval data
 eval_data/
 
-
+# illustrations
+research/import_time_perf/*.png
