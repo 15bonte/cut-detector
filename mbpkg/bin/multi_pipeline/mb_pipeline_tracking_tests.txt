@@ -137,3 +137,4 @@ it allows new points to be created if the distance would be too high
 
 It seams that there is a bug somewhere in Spatial LapTrack that prevents
 it from working
+

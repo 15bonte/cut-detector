@@ -8,3 +8,4 @@ if __name__ == "__main__":
         run_binaries(sys.argv[1])
     else:
         print("invalid syntax, see the command list ('python mbpkg l')")
+

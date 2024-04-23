@@ -1,6 +1,6 @@
 from mbpkg.movie_loading import Source
 
-from env import SourceFiles, get_associated_gt_path
+from bin_env import SourceFiles, get_associated_gt_path
 
 SOURCE = SourceFiles.example
 GT_FP = get_associated_gt_path(SOURCE)

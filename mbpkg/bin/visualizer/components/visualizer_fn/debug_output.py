@@ -22,4 +22,4 @@ def make_debug_output(d: dict[str, Any]) -> DebugOutput:
     else:
         raise DebugOutputError(f"Unsupported layer {layer} in dict {d}")
 
-    pass
+

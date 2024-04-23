@@ -32,3 +32,5 @@ def debug_blob_log_sigma_layer(image: np.ndarray, sigma: float) -> np.ndarray:
     image = image.astype(float_dtype, copy=False)
 
     return -ndi.gaussian_laplace(image, sigma) * np.mean(sigma)**2
+
+

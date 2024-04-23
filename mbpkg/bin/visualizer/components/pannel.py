@@ -53,3 +53,4 @@ def make_pannel() -> dmc.Paper:
         style={"height": "100vh"},
         withBorder=True,
     )
+

@@ -530,3 +530,5 @@ class SpatialLaptrackDebug(LapTrack):
 
         return track_tree
 
+
+

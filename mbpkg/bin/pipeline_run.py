@@ -7,9 +7,9 @@ from cut_detector.utils.mb_support import tracking
 from cut_detector.utils.gen_track import generate_tracks_from_spots
 
 from mbpkg.parallel_factory import ParallelFactory
-from env.sources import SourceFiles
-from env.better_detectors import Detectors
-from env.out import OUT_DIR
+from bin_env.sources import SourceFiles
+from bin_env.better_detectors import Detectors
+from bin_env.out import OUT_DIR
 
 SOURCE   = SourceFiles.siCep
 PLOT_DIR  = OUT_DIR
@@ -85,3 +85,5 @@ def simple_pipeline_run():
         factory.save_mid_body_tracking(
             spots_candidates, mitosis_movie, PLOT_DIR
         )
+
+

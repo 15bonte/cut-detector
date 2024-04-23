@@ -5,3 +5,5 @@ def make_trk_pannel() -> dmc.Card:
         dmc.CardSection("Tracking settings"),
         dmc.Text("tracking settings")
     ])
+
+

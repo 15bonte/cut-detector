@@ -24,3 +24,4 @@ class Source:
 
     def __str__(self) -> str:
         return f"{self.path}|{self.fmt}"
+    

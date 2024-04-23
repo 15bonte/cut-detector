@@ -67,3 +67,5 @@ def start_app(mitosis_src_dirpaths: list[str], detectors: list[Detector]):
         )
 
         app.run(debug=True)
+
+

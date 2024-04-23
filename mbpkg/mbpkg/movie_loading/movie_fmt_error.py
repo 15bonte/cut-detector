@@ -12,3 +12,4 @@ class MovieFmtError(Exception):
         ))
         self.invalid_fmt_str = invalid_fmt_str
         self.available_fmts = available_fmts
+

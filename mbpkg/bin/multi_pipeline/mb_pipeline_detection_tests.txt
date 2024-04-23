@@ -146,3 +146,5 @@ log2_wider and off_centered_log can be interesting to add because:
 - off_centered_log: covers more values that cur_log, this extra area can
   sometimes be enough to gain a frame and then gap close.
 
+
+

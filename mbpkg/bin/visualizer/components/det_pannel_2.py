@@ -180,3 +180,5 @@ def make_det_pannel() -> dmc.Stack:
             ],
         )
     ])
+
+

@@ -202,3 +202,5 @@ def load_movie(path: str, is_three_channel: bool) -> np.array:
 
 if __name__ == "__main__":
     run_multi_pipeline()
+
+

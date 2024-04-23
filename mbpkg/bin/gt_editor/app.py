@@ -374,3 +374,4 @@ def start_app(src: Source, annotation_fp: str):
     MovieData = Movie(Data, Src.path)
     
     app.run(debug=True)
+

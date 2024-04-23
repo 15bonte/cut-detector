@@ -121,3 +121,5 @@ def make_imp_pannel() -> list:
             ),
         ],
     align="stretch", gap="md")])
+
+

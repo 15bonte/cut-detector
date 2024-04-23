@@ -85,3 +85,4 @@ def make_viz_pannel() -> dmc.Stack:
             dmc.Text("[rendering settings]")
         ])
     ], align="stretch", gap="md")
+

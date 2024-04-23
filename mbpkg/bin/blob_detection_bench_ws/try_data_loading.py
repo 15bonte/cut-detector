@@ -20,3 +20,4 @@ def gen_filepath(dir: str, filename: str) -> str:
         return f"{dir}{filename}"
     else:
         return f"{dir}/{filename}"
+

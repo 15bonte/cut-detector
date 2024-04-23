@@ -3,8 +3,8 @@ detector or between several detectors
 """
 
 from mbpkg.detection_multi_bench import generate_multi_bench_stat
-from env import SourceFiles, Detectors, StrDetectors
-from env import get_associated_gt_path, make_log_file, make_data_path
+from bin_env import SourceFiles, Detectors, StrDetectors
+from bin_env import get_associated_gt_path, make_log_file, make_data_path
 
 SOURCE = SourceFiles.siCep
 GT = get_associated_gt_path(SOURCE)

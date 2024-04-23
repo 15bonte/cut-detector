@@ -12,3 +12,5 @@ Other elements exist as helpers:
 - `Source` wraps the Tuple (str, fmt) into an object. A source can be later
   loaded as a `Movie` (with `Source.load_movie`) or to a `np.ndarray` with
   `Source.load_data`
+
+

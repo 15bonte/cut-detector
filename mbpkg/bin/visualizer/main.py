@@ -1,7 +1,7 @@
 """ Main module is where one can set the constants use for app invocation
 """
 
-from env.better_detectors import Detectors
+from bin_env.better_detectors import Detectors
 
 SRC_DIRPATHS = [
     "src/cut_detector/data/mid_bodies_movies_test",
@@ -26,3 +26,4 @@ def drive_app():
         mitosis_src_dirpaths=SRC_DIRPATHS,
         detectors=DETECTORS,
     )
+

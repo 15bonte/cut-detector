@@ -41,3 +41,5 @@ def manage_logger(path: Optional[str] = None, should_print: bool = True):
         yield logger
     finally:
         logger.close()
+
+

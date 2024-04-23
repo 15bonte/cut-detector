@@ -36,3 +36,5 @@ def debug_blob_doh_sigma_layer(img: np.ndarray, sigma: float) -> np.ndarray:
     img = integral_image(img)
 
     return _hessian_matrix_det(img, sigma)
+
+

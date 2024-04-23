@@ -201,3 +201,5 @@ def convert_arg_to_str(arg: Union[bool, int, float]) -> str:
         return f"f{arg}"
     else:
         raise DetectorError(f"Ill-formmatted argument {arg} for str conversion")
+    
+

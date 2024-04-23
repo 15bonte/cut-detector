@@ -58,3 +58,5 @@ def make_vertical_tab_bar() -> dmc.Paper:
             color="blue"
         ),
     ], align="center", gap="xl", justify="center", style={"height": "100vh"}), withBorder=True)
+
+
