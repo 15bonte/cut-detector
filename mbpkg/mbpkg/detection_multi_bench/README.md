@@ -18,7 +18,7 @@ MultiBenchStat is stored in JSON with the following entries:
     - str
     - The path to the mitosis source file in the current working directory
 - distances:
-    - dict[str, list[int]]
+    - dict[str, list[float]]
     - the distances associated with their detector.
 - fn_counts:
     - dict[str, int]
