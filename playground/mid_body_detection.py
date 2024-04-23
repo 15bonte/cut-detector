@@ -15,7 +15,7 @@ from cut_detector.utils.gen_track import generate_tracks_from_spots
 MM_DIR   = "./src/cut_detector/data/mitosis_movies/"
 MBMT_DIR = "./src/cut_detector/data/mid_bodies_movies_test/"
 
-SOURCE_CHOICE = 12
+SOURCE_CHOICE = 0
 SOURCES = {
     0:  MM_DIR   + "example_video_mitosis_0_0_to_4.tiff",
     1:  MBMT_DIR + "a_siLuci-1_mitosis_33_7_to_63.tiff",
