@@ -29,8 +29,8 @@ def run_binaries(name: str):
         run_pipeline_bench()
 
     elif name == "p-run":
-        from bin.pipeline_run import run_pipeline_run
-        run_pipeline_run()
+        from bin.pipeline_run import simple_pipeline_run
+        simple_pipeline_run()
 
     elif name == "vis":
         from bin.visualizer import drive_app

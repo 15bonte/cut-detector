@@ -154,7 +154,7 @@ class MidBodyDetectionFactory:
         if mask_movie is None:
             mask_movie = np.ones(mitosis_movie.shape[:-1])
 
-
+        assert isinstance(parallelization, bool), "non-bool parallelization has been deprecated"
         if parallelization:
             return self.thread_pool_detect_mid_body_spots(
                 mitosis_movie,
