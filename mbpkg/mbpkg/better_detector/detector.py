@@ -17,6 +17,11 @@ ALLOWED_KW_STR: Tuple[str, ...] = get_args(
     get_args(MidBodyDetectionFactory.SPOT_DETECTION_METHOD)[1]
 )
 
+# Converting KWStr into there function counterpart.
+# these functions can be regular functions or partial.
+#
+# Note that detectors not associated with functions (like bigfish or h_maxima)
+# are not in this list, but can be found in ALLOWED_KW_STR.
 KW_STR_TO_CALLABLE = {
     "cur_log":    detection.cur_log,
     "lapgau":     detection.lapgau,
@@ -112,6 +117,12 @@ class Detector:
                 return None
         else:
             raise RuntimeError("Unexpected self.v representation")
+        
+    def __repr__(self) -> str:
+        return self.to_str()
+    
+    def __str__(self) -> str:
+        return self.try_to_kwstr() or self.to_str()
 
 
 def convert_to_callable(s: str) -> Callable[[np.ndarray], np.ndarray]:
