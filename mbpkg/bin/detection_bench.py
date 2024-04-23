@@ -8,14 +8,14 @@ from env import get_associated_gt_path, make_log_file, make_data_path
 
 SOURCE = SourceFiles.siCep
 GT = get_associated_gt_path(SOURCE)
-LOG_FP = make_log_file("mutibench.txt")
-DATA_FP = make_data_path("multibench.json")
+LOG_FP = make_log_file("mutibench_1.txt")
+DATA_FP = make_data_path("multibench_1.json")
 
 DETECTORS = [
-    StrDetectors.cur_log,
-    # StrDetectors.cur_dog,
-    # StrDetectors.log2_wider,
-    # StrDetectors.rshift_log,
+    Detectors.cur_log,
+    Detectors.cur_dog,
+    Detectors.log2_wider,
+    Detectors.rshift_log,
 ]
 
 PARALLELIZATION = True
