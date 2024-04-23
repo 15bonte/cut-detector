@@ -7,10 +7,10 @@ ID_PANNEL_MAPPING = {
     "sb_imp_btn": "imp",
     "sb_det_btn": "det",
     "sb_trk_btn": "trk",
-    "sb_viz_btn": "viz"
+    "sb_viz_btn": "viz",
+    "sb_all_btn": "all",
 }
 DEFAULT_PANNEL = ID_PANNEL_MAPPING["sb_imp_btn"]
-
 
 
 ######## Callbacks ########
@@ -20,8 +20,9 @@ DEFAULT_PANNEL = ID_PANNEL_MAPPING["sb_imp_btn"]
     Input("sb_det_btn", "n_clicks"),
     Input("sb_trk_btn", "n_clicks"),
     Input("sb_viz_btn", "n_clicks"),
+    Input("sb_all_btn", "n_clicks"),
 )
-def update_pannel(imp: int, det: int, trk: int, viz: int) -> str:
+def update_pannel(imp: int, det: int, trk: int, viz: int, all: int) -> str:
     if (s := ID_PANNEL_MAPPING.get(ctx.triggered_id)) is not None:
         return s
     else:
@@ -49,6 +50,11 @@ def make_vertical_tab_bar() -> dmc.Paper:
         dmc.ActionIcon(
             id="sb_viz_btn",
             children=DashIconify(icon="healthicons:blood-cells"),
+            color="blue"
+        ),
+        dmc.ActionIcon(
+            id="sb_all_btn",
+            children=DashIconify(icon="noto-v1:star"),
             color="blue"
         ),
     ], align="center", gap="xl", justify="center", style={"height": "100vh"}), withBorder=True)

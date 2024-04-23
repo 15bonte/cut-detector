@@ -19,8 +19,9 @@ Detector does the following:
     - a known `Callable`
     - a deserializable `str` (starts with '@' character)
 - convert it to a factory-compatible representation: `Detector.to_factory()`
-- convert it to a textual representation: `Detector.to_str()`
 - try to convert it to a `functools.partial`: `Detector.try_to_partial()`
+- convert it to a textual representation: `Detector.to_str()`
+- try to convert it to a kw `str`: `Detector.try_to_kwstr()`
 
 
 (a `Detector.try_to_callable()` might be implemented later, but for now all

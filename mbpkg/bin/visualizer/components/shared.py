@@ -5,7 +5,7 @@ import os.path
 import json
 
 from mbpkg.movie_loading import Movie, Source, MovieFmt
-from mbpkg.detector import Detector
+from mbpkg.better_detector import Detector
 
 ### Set at start ###
 _mitosis_src_dirpaths: list[str] = []

@@ -7,14 +7,8 @@ import os
 import dash_mantine_components as dmc
 from dash import Dash, html, dcc
 
-from mbpkg.detector import Detector
+from mbpkg.better_detector import Detector
 
-style = {
-    "border": f"1px solid {dmc.DEFAULT_THEME['colors']['indigo'][4]}",
-    "textAlign": "center",
-}
-style_graph = style.copy()
-style_graph["height"] = "100vh"
 
 @contextlib.contextmanager
 def react_env_wrapper():
@@ -31,6 +25,7 @@ def make_main_layout() -> list:
     from .components.v_tab_bar import make_vertical_tab_bar, DEFAULT_PANNEL
     from .components.pannel import make_pannel
     from .components.viewer import make_viewer
+    from .components.viz_pannel import DEFAULT_SIG_VIZ_PARAM
 
     return dmc.Grid(
         columns=16,
@@ -40,6 +35,8 @@ def make_main_layout() -> list:
             dcc.Store(id="sig_cur_frame", data=0),
             dcc.Store(id="sig_imp_file", data=None),
             dcc.Store(id="sig_det_param", data={}),
+            dcc.Store(id="sig_cur_det", data=None),
+            dcc.Store(id="sig_viz_param", data=DEFAULT_SIG_VIZ_PARAM),
 
             # The 3 pannels
             dmc.GridCol(make_vertical_tab_bar(), span=1),
@@ -61,6 +58,8 @@ def start_app(mitosis_src_dirpaths: list[str], detectors: list[Detector]):
 
     with react_env_wrapper():
         app = Dash(__name__, suppress_callback_exceptions=True)
+
+        app.title = "Midbody Detection and Tracking Visualizer"
 
         app.layout = dmc.MantineProvider(
             forceColorScheme="dark",

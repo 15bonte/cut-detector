@@ -1,7 +1,7 @@
 """ Main module is where one can set the constants use for app invocation
 """
 
-from env.detectors import Detectors
+from env.better_detectors import Detectors
 
 SRC_DIRPATHS = [
     "src/cut_detector/data/mid_bodies_movies_test",

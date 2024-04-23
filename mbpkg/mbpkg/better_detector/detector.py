@@ -27,6 +27,7 @@ KW_STR_TO_CALLABLE = {
     "cur_doh":    detection.cur_doh,
     "hessian":    detection.hessian
 }
+CALLABLE_TO_KWSTR = {v: k for k, v in KW_STR_TO_CALLABLE.items()}
 
 # used to know if the callable is valid and to represent it as a str.
 # callable str representation is automatically added a prefix:
@@ -61,7 +62,7 @@ class Detector:
                 
             elif v in ALLOWED_KW_STR:
                 # KW
-                self.v == v
+                self.v = v
 
             else:
                 raise DetectorError(f"Invalid str init format: {v}")
@@ -94,10 +95,23 @@ class Detector:
             return self.v
         elif callable(self.v):
             return partial(self.v)
-        elif (p := STR_TO_CALLABLE.get(self.v)) is not None:
+        elif (p := KW_STR_TO_CALLABLE.get(self.v)) is not None:
             return p
         else:
+            print("self.v:", self.v)
+            print("STR_TO_CALLABLE:", STR_TO_CALLABLE)
             return None
+        
+    def try_to_kwstr(self) -> Optional[str]:
+        if isinstance(self.v, str):
+            return self.v
+        elif callable(self.v):
+            if (kwstr := CALLABLE_TO_KWSTR.get(self.v)) is not None:
+                return kwstr
+            else:
+                return None
+        else:
+            raise RuntimeError("Unexpected self.v representation")
 
 
 def convert_to_callable(s: str) -> Callable[[np.ndarray], np.ndarray]:
@@ -146,7 +160,7 @@ def convert_to_str(f: Callable[[np.ndarray], np.ndarray]) -> str:
         raise DetectorError(f"Invalid non-callable f: {f}")
     
     func = f.func if isinstance(f, partial) else f
-    if (func_name := ALLOWED_CALLABLES_TO_STR.get(f)) is None:
+    if (func_name := ALLOWED_CALLABLES_TO_STR.get(func)) is None:
         raise DetectorError(f"Unknown callable f: {f}")
     
     # f is a Callable[[np.ndarray], np.ndarray]

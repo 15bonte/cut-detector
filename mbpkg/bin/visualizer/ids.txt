@@ -1,15 +1,22 @@
 ### Globals (defined in app) ###
-sig_open_pannel: dmc.Store <- ["imp", "det", "trk", "viz"]
+sig_open_pannel: dcc.Store <- ["imp", "det", "trk", "viz"]
     The pannel to open
 
-sig_cur_frame: dmc.Store <- int
+sig_cur_frame: dcc.Store <- int
     The current frame number
 
-sig_imp_file: dmc.Store <- {path: str, fmt: str}
+sig_imp_file: dcc.Store <- {path: str, fmt: str}
     The file to import globally, written to once the file has been imported
 
-sig_det_param: dmc.Store <- dict of parameters
+sig_det_param: dcc.Store <- dict of parameters
     The parameters set for the detector
+
+sig_cur_det: dcc.Store <- str
+    The str of the Detector. either a kwstr or a fmtstr.
+
+sig_viz_param: dcc.Store <- {layer: str, args...}
+    The visualization settings for the debugging (!= rendering parameters)
+
 
 ### SideBar ###
 sb_imp_btn: dmc.ActionIcon
@@ -23,6 +30,9 @@ sb_trk_btn: dmc.ActionIcon
 
 sb_viz_btn: dmc.ActionIcon
     Vizualization pannel
+
+sb_all_btn: dmc.ActionIcon
+    Merge all pannels into 1 big scollable pannel
 
 
 ### Main pannel ###
@@ -43,7 +53,7 @@ imp_btn: dmc.Button
     Import button
 
 @@ Det pannel @@
-det_sel: dmc.Select (label:str value:Detector)
+det_sel: dmc.Select [Detector.try_to_kwstr() or Detector.to_str()]
     The base detector selector
 
 det_param_area: html.Div
@@ -51,6 +61,17 @@ det_param_area: html.Div
 
 det_param: dmc.NumberInput (maybe use dash matching feature...)
     The detector parameters
+
+
+@@ Viz pannel @@
+viz_layer: dmc.Select
+    Select the layer
+
+viz_parameters: html.Div
+    Where the paramters are shown
+
+viz_param: dmc.NumberInput
+    The visualization parameters that are generated at runtime.
 
 
 ### Viewer ###

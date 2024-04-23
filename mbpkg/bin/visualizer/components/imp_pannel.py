@@ -89,32 +89,35 @@ def make_imp_pannel() -> list:
     default_filenames = list_movie_filenames(default_dir)
     default_filename = default_filenames[0]
 
-    return dmc.Stack([
-        dmc.Select(
-            id="imp_dir_sel",
-            label="Choose a source directory", 
-            data=_mitosis_src_dirpaths,
-            value=default_dir,
-            searchable=True,
-            nothingFoundMessage="No directory match",
-        ),
-        dmc.Select(
-            id="imp_file_sel",
-            label="Choose a file", 
-            data=default_filenames,
-            value=default_filename,
-            searchable=True,
-            nothingFoundMessage="No file match",
-        ),
-        dmc.Select(
-            id="imp_fmt_sel",
-            label="Pick the right format", 
-            data=MovieFmt.available_fmt_strs(),
-            value=MovieFmt.available_fmt_strs()[0],
-        ),
-        dmc.Button(
-            id="imp_btn",
-            children="Load chosen file",
-            leftSection=DashIconify(icon="uiw:upload"),
-        ),
-    ], align="stretch", gap="md")
+    return dmc.Card([
+        dmc.CardSection("Mitosie Movie Import Settings"),
+        dmc.Stack([
+            dmc.Select(
+                id="imp_dir_sel",
+                label="Choose a source directory", 
+                data=_mitosis_src_dirpaths,
+                value=default_dir,
+                searchable=True,
+                nothingFoundMessage="No directory match",
+            ),
+            dmc.Select(
+                id="imp_file_sel",
+                label="Choose a file", 
+                data=default_filenames,
+                value=default_filename,
+                searchable=True,
+                nothingFoundMessage="No file match",
+            ),
+            dmc.Select(
+                id="imp_fmt_sel",
+                label="Pick the right format", 
+                data=MovieFmt.available_fmt_strs(),
+                value=MovieFmt.available_fmt_strs()[0],
+            ),
+            dmc.Button(
+                id="imp_btn",
+                children="Load chosen file",
+                leftSection=DashIconify(icon="uiw:upload"),
+            ),
+        ],
+    align="stretch", gap="md")])
