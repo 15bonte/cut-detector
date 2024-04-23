@@ -5,9 +5,9 @@ import numpy as np
 from aicsimageio.writers import OmeTiffWriter
 from laptrack import LapTrack
 
-from ..factories.mb_support import detection, tracking
 from ..factories.mid_body_detection_factory import MidBodyDetectionFactory
 
+from ..utils.mb_support import detection, tracking
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.trackmate_track import TrackMateTrack
 

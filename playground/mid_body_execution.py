@@ -9,7 +9,7 @@ from cut_detector.widget_functions.mid_body_detection import (
     perform_mid_body_detection,
 )
 from cut_detector.data.tools import get_data_path
-from cut_detector.factories.mb_support import detection, tracking
+from cut_detector.utils.mb_support import detection, tracking
 
 SOURCE_CHOICE = 2
 SOURCES = {

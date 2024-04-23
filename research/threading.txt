@@ -1,0 +1,28 @@
+VS siCep55     (20231019-t1_siCep55-50-4_mitosis_21_25_to_117.tiff)
+92 frames
+
+pool: 1.736s
+thread: 2.309s
+np_thread: 1.706s
+
+They all spawn 25 threads
+
+thread >> np_thread; because custom splitting algorithm is worse than numpy's:
+basically with custom algo they all get 3 frames except last thread that gets 17.
+(longest processing time should be around 17 frames)
+While numpy's algorithm gives 3/4th 4 frames and 3 frames to the last 1/4th;
+(longest processing time should be around 4 frames).
+
+
+
+
+VS example
+
+np_thread: 
+(49 frames)
+
+pool: 1.758s
+thread: 3.607s
+np_thread: 1.781s
+
+

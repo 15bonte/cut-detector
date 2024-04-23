@@ -1,0 +1,4 @@
+
+class DetectionGtFmtError(Exception):
+    pass
+
