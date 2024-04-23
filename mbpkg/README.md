@@ -17,11 +17,9 @@ MBPKG defines the following modules:
     - loading GT from JSON
     - object representation of ground truth
     - writing GT to JSON
-- detectors:
-    - loading detectors from JSON
-    - representing detectors as objects with settings (instead of just functions)
-    - generating detector functions at runtime from objects
-    - writing detectors to JSON
+- better_detector:
+    - loading/writing detectors from str
+    - wrapping the underlying factory detector
 - detection_stat: representation detection bench stat against ground truth:
     - object representation
     - benching a detector against GT
@@ -33,7 +31,7 @@ MBPKG defines the following modules:
 
 the bin package contains the following modules:
 - gt_editor: detection annotation software
-- detection_debugger: seeing the detection sigma map / normalization
+- vis: seeing the detection sigma map
 - detection_bench: bench several pipelines, obtain statistics, generate graphs
 - pipeline_run: runs a pipeline with debugging / logging (->pg/mid_body_detection)
 - pipeline_bench: runs pipelines against the real ground truth (->pg/mid_body_{exec/eval})
