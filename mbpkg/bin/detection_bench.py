@@ -39,3 +39,4 @@ def run_detection_bench():
     )
     r.report(LOG_FP, True)
     r.write_result(DATA_FP)
+

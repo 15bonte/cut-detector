@@ -34,3 +34,4 @@ def run_binaries(name: str):
         
     else:
         print(f"Unknown binary {name}, see list 'python mbpkg l'")
+
