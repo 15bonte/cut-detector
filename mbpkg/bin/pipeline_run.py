@@ -11,7 +11,7 @@ from env.sources import SourceFiles
 from env.better_detectors import Detectors
 from env.out import OUT_DIR
 
-SOURCE   = SourceFiles.example
+SOURCE   = SourceFiles.siCep
 PLOT_DIR  = OUT_DIR
 D_METHOD = Detectors.cur_dog
 T_METHOD = tracking.cur_spatial_laptrack
@@ -19,7 +19,7 @@ T_METHOD = tracking.cur_spatial_laptrack
 MEASURE_DETECTION_TIME = True
 SHOW_POINTS = False
 SHOW_TRACKS = False
-SHOULD_SAVE = False
+SHOULD_SAVE = True
 PARALLELIZE = "pool"
 
 def simple_pipeline_run():

@@ -14,4 +14,18 @@ Main elements are:
 
 ## File format
 MultiBenchStat is stored in JSON with the following entries:
-- 
+- source_path:
+    - str
+    - The path to the mitosis source file in the current working directory
+- distances:
+    - dict[str, list[int]]
+    - the distances associated with their detector.
+- fn_counts:
+    - dict[str, int]
+    - the number of false negatives (misses points) associated with their detector (fmtstr)
+- fp_counts:
+    - dict[str, int]
+    - the number of false positives (extra points) associated with their detector (fmtstr)
+- times:
+    - dict[str, float]
+    - the execution time (in seconds) associated with their detector.

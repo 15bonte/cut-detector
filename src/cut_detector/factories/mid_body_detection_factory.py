@@ -1,8 +1,6 @@
 import os
-import threading
 import concurrent.futures
 from typing import Literal, Optional, Callable, Union
-import math
 
 import numpy as np
 from bigfish import stack, detection
@@ -17,7 +15,6 @@ from ..utils.image_tools import smart_cropping
 from ..utils.mid_body_spot import MidBodySpot
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.trackmate_track import TrackMateTrack
-# from ..utils.tools import plot_detection
 from ..utils.factory_plot_detection import plot_detection
 from ..utils.gen_track import generate_tracks_from_spots, TRACKING_METHOD
 from ..utils.mid_body_track_color_manager import MbTrackColorManager

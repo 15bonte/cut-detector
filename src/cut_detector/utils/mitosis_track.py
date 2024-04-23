@@ -27,7 +27,6 @@ from .box_dimensions_dln import BoxDimensionsDln
 from .box_dimensions import BoxDimensions
 from .bridges_classification.impossible_detection import ImpossibleDetection
 from .image_tools import resize_image, smart_cropping
-# from .tools import cell_counter_frame_to_video_frame
 
 def cell_counter_frame_to_video_frame(
     cell_counter_frame: int, nb_channels=4
