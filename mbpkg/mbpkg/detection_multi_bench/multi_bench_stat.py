@@ -3,7 +3,7 @@ import json
 import numpy as np
 
 from mbpkg.helpers.logging import manage_logger
-from mbpkg.detector import Detector
+from mbpkg.better_detector import Detector
 from mbpkg.detection_stat import DetectionStat
 
 class MultiBenchStat:

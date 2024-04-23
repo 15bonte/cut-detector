@@ -2,7 +2,7 @@ from typing import Union
 
 from mbpkg.movie_loading import Movie
 from mbpkg.detection_truth import DetectionGT, load_gt
-from mbpkg.detector import Detector
+from mbpkg.better_detector import Detector
 from mbpkg.detection_stat import generate_detection_stats
 
 from .multi_bench_stat import MultiBenchStat

@@ -7,7 +7,7 @@ from scipy.spatial.distance import cdist
 from cut_detector.factories.mid_body_detection_factory import MidBodyDetectionFactory
 
 from mbpkg.movie_loading import Movie
-from mbpkg.detector import Detector
+from mbpkg.better_detector import Detector
 from mbpkg.detection_truth import load_gt, DetectionGT
 
 from .detection_stat import DetectionStat

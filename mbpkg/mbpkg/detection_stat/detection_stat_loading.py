@@ -3,7 +3,7 @@ import json
 import numpy as np
 
 from mbpkg.helpers.json_processing import extract, assert_extraction
-from mbpkg.detector import Detector
+from mbpkg.better_detector import Detector
 
 from .detection_stat import DetectionStat
 from .detection_loading_error import DetectionLoadingError
@@ -27,7 +27,7 @@ def load_detection_stat(filepath: str) -> DetectionStat:
         raise DetectionLoadingError(e.args) from e
 
     return DetectionStat(
-        Detector.from_str(detector_str),
+        Detector(detector_str),
         source_path,
         np.array(distances),
         time,

@@ -5,7 +5,7 @@ from typing import Optional
 import numpy as np
 
 from mbpkg.helpers.logging import manage_logger, Logger
-from mbpkg.detector import Detector
+from mbpkg.better_detector import Detector
 
 
 @dataclass
@@ -45,7 +45,7 @@ class DetectionStat:
 
     def report_with_logger(self, l: Logger):
         l.log("=====")
-        l.log("detector:", self.detector.repr)
+        l.log("detector:", self.detector.to_str())
         l.log("source:", self.source_path)
         l.log("--")
         l.log("time:", "NA" if self.time is None else self.time)
@@ -57,7 +57,7 @@ class DetectionStat:
 
     def write_stat(self, path: str):
         d = {
-            "detector": self.detector.repr,
+            "detector": self.detector.to_str(),
             "source_path": self.source_path,
             "fn_count": self.fn_count,
             "fp_count": self.fp_count,
