@@ -26,7 +26,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from laptrack import LapTrack
 
-from ..factories.mb_support import tracking
+from .mb_support import tracking
 from .spot import Spot
 from .cell_spot import CellSpot
 from .mid_body_spot import MidBodySpot

@@ -21,8 +21,8 @@ from ..utils.tools import plot_detection
 from ..utils.gen_track import generate_tracks_from_spots, TRACKING_METHOD
 from ..utils.mid_body_track_color_manager import MbTrackColorManager
 
-from .mb_support import detection as mbd
-from .mb_support import tracking  as mbt
+from ..utils.mb_support import detection as mbd
+from ..utils.mb_support import tracking  as mbt
 
 class MidBodyDetectionFactory:
     """
