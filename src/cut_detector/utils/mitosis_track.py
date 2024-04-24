@@ -508,8 +508,8 @@ class MitosisTrack:
                 )
 
     def evaluate_mid_body_detection(
-        self, tolerance=10, percent_seen=0.9
-    ) -> bool:
+        self, tolerance=10, percent_seen=0.9, avg_as_int: bool = True
+    ) -> Tuple[bool, float, Union[int, float]]:
         """
         Mid_body is considered as detected if during at least percent_seen % of frames
         between cytokinesis and second MT cut it is at most tolerance pixels away
@@ -522,6 +522,7 @@ class MitosisTrack:
         """
 
         position_difference = []
+
 
         # Check frames until second MT cut or end of annotations
         max_frame = (
@@ -541,8 +542,13 @@ class MitosisTrack:
                     self.mid_body_spots[frame]
                 )
             )
+        #     print(self.gt_mid_body_spots[frame],self.mid_body_spots[frame] )
+        # print(position_difference)
 
         # Get percent_seen th percentile of position difference
+
+        assert len(position_difference) != 0, "no GT points found"
+
         position_difference = np.array(position_difference)
         max_position_difference = np.quantile(
             position_difference, percent_seen
@@ -559,13 +565,21 @@ class MitosisTrack:
                 * 100
             )
         )
-        average_position_difference = int(
-            (
+
+        if avg_as_int:
+            average_position_difference = int(
+                (
+                    position_difference_wo_outliers.mean()
+                    if len(position_difference_wo_outliers) > 0
+                    else 1e3
+                )
+            )
+        else:
+            average_position_difference = (
                 position_difference_wo_outliers.mean()
                 if len(position_difference_wo_outliers) > 0
                 else 1e3
             )
-        )
 
         return (
             is_correctly_detected,

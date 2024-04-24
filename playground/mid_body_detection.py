@@ -14,8 +14,11 @@ from cut_detector.utils.gen_track import generate_tracks_from_spots
 
 MM_DIR   = "./src/cut_detector/data/mitosis_movies/"
 MBMT_DIR = "./src/cut_detector/data/mid_bodies_movies_test/"
+STD      = "./eval_data/Data Standard/movies/"
+SPAS     = "./eval_data/Data spastin/movies/"
+CEP      = "./eval_data/Data cep55/movies/"
 
-SOURCE_CHOICE = 0
+SOURCE_CHOICE = 22
 SOURCES = {
     0:  MM_DIR   + "example_video_mitosis_0_0_to_4.tiff",
     1:  MBMT_DIR + "a_siLuci-1_mitosis_33_7_to_63.tiff",
@@ -31,14 +34,33 @@ SOURCES = {
     13: MBMT_DIR + "cep2_20231019-t1_siCep55-50-4_mitosis_24_17_to_104.tiff",
     14: MBMT_DIR + "cep_1.tiff",
     15: MBMT_DIR + "example_video_mitosis_0_0_to_4.tiff",
+
+    16: STD + "converted t2_t3_F-1E5-35-12_mitosis_29_10_to_37.tiff",
+    17: STD + "converted t2_t3_F-1E5-35-12_mitosis_4_13_to_189.tiff",
+    18: STD + "converted t2_t3_F-1E5-35-8_mitosis_35_17_to_21.tiff",
+    19: STD + "converted t2_t3_F-1E5-35-7_mitosis_12_14_to_36.tiff",
+    20: STD + "converted t2_t3_F-1E5-35-11_mitosis_25_6_to_49.tiff",
+    21: STD + "converted t2_t3_F-1E5-35-8_mitosis_9_95_to_196.tiff",
+    22: STD + "converted t2_t3_F-1E5-35-7_mitosis_10_15_to_51.tiff",
+    23: STD + "converted t2_t3_F-1E5-35-13_mitosis_17_0_to_34.tiff",
+    24: STD + "converted t2_t3_F-1E5-35-11_mitosis_15_71_to_125.tiff",
+    25: STD + "converted t2_t3_F-1E5-35-11_mitosis_27_2_to_42.tiff",
+
+    26: SPAS + "20231019-t1_siSpastin-50-2_mitosis_5_136_to_176.tiff",
+    27: SPAS + "20231019-t1_siSpastin-50-1_mitosis_16_5_to_25.tiff",
+    28: SPAS + "20231019-t1_siSpastin-50-2_mitosis_29_17_to_47.tiff",
+
+    29: CEP + "20231019-t1_siCep55-50-4_mitosis_5_8_to_228.tiff",
+    30: CEP + "20231019-t1_siCep55-50-4_mitosis_24_17_to_104.tiff",
+    31: CEP + "20231019-t1_siCep55-50-1_mitosis_5_41_to_155.tiff",
 }
 
 D_METHOD = detection.cur_dog
 T_METHOD = tracking.cur_spatial_laptrack
 
 MEASURE_DETECTION_TIME = True
-SHOW_POINTS            = True
-SHOW_TRACKS            = True
+SHOW_POINTS            = False
+SHOW_TRACKS            = False
 SHOULD_SAVE            = True
 PARALLELIZE            = True
 

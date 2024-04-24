@@ -48,7 +48,7 @@ class MidBodyDetectionFactory:
         sigma=2.0,
         threshold=1.0,
         cytokinesis_duration=CYTOKINESIS_DURATION,
-        minimum_mid_body_track_length=10,
+        minimum_mid_body_track_length=5,
     ) -> None:
         self.track_linking_max_distance = track_linking_max_distance
         self.h_maxima_threshold = h_maxima_threshold
@@ -86,6 +86,7 @@ class MidBodyDetectionFactory:
         mb_tracking_method: TRACKING_METHOD       = mbt.cur_spatial_laptrack,
         log_blob_spot:      bool = False,
         parallel_detection: bool = False,
+        log_select_best_track_status: bool = False
     ) -> None:
         """
         Get spots of best mitosis track.
@@ -110,13 +111,23 @@ class MidBodyDetectionFactory:
             mb_tracking_method
         )
 
+        if log_select_best_track_status:
+            print("laptrack produced", len(mid_body_tracks), "tracks")
+
         kept_track = self._select_best_track(
             mitosis_track,
             mid_body_tracks,
             tracks,
             mitosis_movie,
             self.track_linking_max_distance,
+            log_choice=log_select_best_track_status,
         )
+
+        if log_select_best_track_status:
+            if kept_track is None:
+                print("no track kept")
+            else:
+                print("track kept")
 
         if kept_track is None:
             return
@@ -415,6 +426,7 @@ class MidBodyDetectionFactory:
         mitosis_movie: np.ndarray,
         mid_body_linking_max_distance: float,
         sir_channel=0,
+        log_choice: bool = False
     ) -> MidBodyTrack:
         """
         Select best track from mid-body tracks.
@@ -475,13 +487,18 @@ class MidBodyDetectionFactory:
             )
 
         # Remove wrong tracks by keeping only tracks with at least minimum_track_length points
+        old_len = len(mid_body_tracks)
         mid_body_tracks = [
             track
             for track in mid_body_tracks
             if track.length > self.minimum_mid_body_track_length
         ]
+        if log_choice:
+            print(f"kept {len(mid_body_tracks)}/{old_len} tracks based on len")
 
         # Compute mean intensity on sir-tubulin channel for each track
+        if log_choice:
+            print("sir-candidates")
         image_sir = mitosis_movie[..., sir_channel]  # TYX
         sir_intensity_track = [0 for _ in mid_body_tracks]
         for idx, track in enumerate(mid_body_tracks):
@@ -498,6 +515,7 @@ class MidBodyDetectionFactory:
                 or abs_max_frame < abs_track_frames[0]
             ):
                 sir_intensity_track[idx] = -np.inf
+                if log_choice: print(f"track {idx+1}/{len(mid_body_tracks)}: sir-dropped abs frame")
             frame_count = 0
             for frame in range(abs_min_frame, abs_max_frame + 1):
                 if frame not in abs_track_frames:
@@ -512,14 +530,25 @@ class MidBodyDetectionFactory:
 
             if frame_count < (abs_max_frame - abs_min_frame + 1) / 2:
                 sir_intensity_track[idx] = -np.inf
+                if log_choice: print(f"track {idx+1}/{len(mid_body_tracks)}: sir-dropped framecount")
             else:
                 sir_intensity_track[idx] /= frame_count
 
+            if log_choice and sir_intensity_track[idx] != -np.inf:
+                print(f"track {idx+1}/{len(mid_body_tracks)}: sir-avg", sir_intensity_track[idx])
+
+        # if log_choice:
+        #     print("sir-candidates")
+        #     for idx, sir_avg in enumerate(sir_intensity_track):
+        #         print(f"{idx+1}/{len(sir_intensity_track)}: {sir_avg}")
+
         # Get list of expected distances
+        if log_choice: print("dist-candidates")
         expected_distances = []
-        for track in mid_body_tracks:
+        for track_idx, track in enumerate(mid_body_tracks):
+            if log_choice: print("track", track_idx+1, end=": ")
             val = track.get_expected_distance(
-                expected_positions, mid_body_linking_max_distance
+                expected_positions, mid_body_linking_max_distance, log_choice
             )
             expected_distances.append(val)
 
@@ -528,18 +557,26 @@ class MidBodyDetectionFactory:
         assert len(sir_intensity_track) == len(mid_body_tracks)
 
         # function to sort tracks by expected distance and intensity
-        def func_sir_intensity(track):
+        def func_sir_intensity(track, log_choice: bool = False):
             a = expected_distances[mid_body_tracks.index(track)]
             b = sir_intensity_track[mid_body_tracks.index(track)]
+            if log_choice:
+                print(f"a:{a} b:{b}", end=" ")
             return a - 0.5 * b
 
         # Remove tracks with infinite func value
         fun_values = []
         final_tracks = []
-        for track in mid_body_tracks:
+        if log_choice: print("func_sir candidates len:", len(mid_body_tracks))
+        for track_idx, track in enumerate(mid_body_tracks):
+            if log_choice:
+                print(f"track {track_idx+1}/{len(mid_body_tracks)}:", end=" ")
             fun_values.append(func_sir_intensity(track))
-            if func_sir_intensity(track) != np.inf:
+            if func_sir_intensity(track, log_choice) != np.inf:
                 final_tracks.append(track)
+                if log_choice: print("kept with func_sir", fun_values[-1])
+            else:
+                if log_choice: print("dropped")
 
         # Sort tracks by func value
         sorted_tracks = sorted(final_tracks, key=func_sir_intensity)

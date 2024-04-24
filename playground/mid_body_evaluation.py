@@ -74,6 +74,5 @@ def start_evaluation(mitoses_folder: Optional[str] = get_data_path("mitoses")) -
         "mb_not_detected": mb_not_detected
     }
 
-
 if __name__ == "__main__":
     start_evaluation(SOURCES[SOURCE_CHOICE])
