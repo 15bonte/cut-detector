@@ -117,6 +117,9 @@ class MidBodyDetectionFactory:
             self.track_linking_max_distance,
         )
 
+        # Interpolate mid-body spots if gaps in track
+        kept_track.fill_gaps()
+
         if kept_track is None:
             return
 
