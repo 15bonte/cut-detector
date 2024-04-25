@@ -21,6 +21,7 @@ def plot_detection(
     path_output=None,
     ext="png",
     show=True,
+    add_coord: bool = True,
 ):
     """NB: most of this function is copied from the bigfish package.
 
@@ -178,6 +179,12 @@ def plot_detection(
             fill[i],
         )
         ax[1].add_patch(patch)
+
+        # for x, y in zip(coordinates_2d[1], coordinates_2d[0]):
+        #     ax[1].text(x, y, f"({x} {y})", fontsize=8, color="red")
+        x = int(coordinates_2d[1])
+        y = int(coordinates_2d[0])
+        ax[1].text(x, y, f"({x} {y})", fontsize=12, color="black")
 
     # titles and frames
     if title is not None:

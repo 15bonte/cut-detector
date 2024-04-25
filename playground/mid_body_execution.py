@@ -22,10 +22,9 @@ DETECTION_METHOD = detection.cur_dog
 TRACKING_METHOD  = tracking.cur_spatial_laptrack
 PARALLELIZATION = True
 
-
-TARGET_VIDEO_NAME = "converted t2_t3_F-1E5-35-7.tif"
+TARGET_VIDEO_NAME = "converted t2_t3_F-1E5-35-12.tif"
 # TARGET_VIDEO_NAME = None
-TARGET_MITOSIS_ID = 10
+TARGET_MITOSIS_ID = 4
 # TARGET_MITOSIS_ID = None
 
 def start_execution(

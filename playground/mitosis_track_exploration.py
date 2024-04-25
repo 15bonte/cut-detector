@@ -18,7 +18,7 @@ DIRECTORY_MAPPING = {
     "cep":  "Data cep55",
 }
 
-TARGET_NAME = "converted t2_t3_F-1E5-35-7_mitosis_10_15_to_51.bin"
+TARGET_NAME = "converted t2_t3_F-1E5-35-12_mitosis_4_13_to_189.bin"
 # TARGET_NAME = None
 
 def main():
@@ -79,6 +79,9 @@ def plot_track(path: str, dirname: str, filename: str):
     ordered_test_spots = [track.mid_body_spots.get(f) or None for f in gt_full_frames]
 
     assert len(ordered_gt_spots) == len(ordered_test_spots)
+
+    for s, frame in zip(ordered_gt_spots, gt_full_frames):
+        print(f"f:{frame - track.min_frame} x:{s.x} y:{s.y}")
 
     gt_max_frame = (
         track.gt_key_events_frame["second_mt_cut"]

@@ -1,6 +1,8 @@
 import os
 from time import time
 from typing import Optional
+import pickle
+from pathlib import Path
 
 import numpy as np 
 from aicsimageio import AICSImage
@@ -9,6 +11,8 @@ from cut_detector.data.tools import get_data_path
 from cut_detector.factories.mid_body_detection_factory import (
     MidBodyDetectionFactory,
 )
+from cut_detector.utils.mitosis_track import MitosisTrack
+from cut_detector.utils.box_dimensions import BoxDimensions
 from cut_detector.utils.mb_support import detection, tracking
 from cut_detector.utils.gen_track import generate_tracks_from_spots
 
@@ -18,7 +22,15 @@ STD      = "./eval_data/Data Standard/movies/"
 SPAS     = "./eval_data/Data spastin/movies/"
 CEP      = "./eval_data/Data cep55/movies/"
 
-SOURCE_CHOICE = 22
+MITOSIS_CHOICE = "std"
+# MITOSIS_CHOICE = None
+MITOSISES = {
+    "std": "eval_data/Data Standard/mitoses",
+    "spas": "eval_data/Data spastin/mitoses",
+    "cep": "eval_data/Data cep55/mitoses",
+}
+
+SOURCE_CHOICE = 17
 SOURCES = {
     0:  MM_DIR   + "example_video_mitosis_0_0_to_4.tiff",
     1:  MBMT_DIR + "a_siLuci-1_mitosis_33_7_to_63.tiff",
@@ -46,13 +58,13 @@ SOURCES = {
     24: STD + "converted t2_t3_F-1E5-35-11_mitosis_15_71_to_125.tiff",
     25: STD + "converted t2_t3_F-1E5-35-11_mitosis_27_2_to_42.tiff",
 
-    26: SPAS + "20231019-t1_siSpastin-50-2_mitosis_5_136_to_176.tiff",
-    27: SPAS + "20231019-t1_siSpastin-50-1_mitosis_16_5_to_25.tiff",
-    28: SPAS + "20231019-t1_siSpastin-50-2_mitosis_29_17_to_47.tiff",
+    40: SPAS + "20231019-t1_siSpastin-50-2_mitosis_5_136_to_176.tiff",
+    41: SPAS + "20231019-t1_siSpastin-50-1_mitosis_16_5_to_25.tiff",
+    42: SPAS + "20231019-t1_siSpastin-50-2_mitosis_29_17_to_47.tiff",
 
-    29: CEP + "20231019-t1_siCep55-50-4_mitosis_5_8_to_228.tiff",
-    30: CEP + "20231019-t1_siCep55-50-4_mitosis_24_17_to_104.tiff",
-    31: CEP + "20231019-t1_siCep55-50-1_mitosis_5_41_to_155.tiff",
+    60: CEP + "20231019-t1_siCep55-50-4_mitosis_5_8_to_228.tiff",
+    61: CEP + "20231019-t1_siCep55-50-4_mitosis_24_17_to_104.tiff",
+    62: CEP + "20231019-t1_siCep55-50-1_mitosis_5_41_to_155.tiff",
 }
 
 D_METHOD = detection.cur_dog
@@ -64,7 +76,8 @@ SHOW_TRACKS            = False
 SHOULD_SAVE            = True
 PARALLELIZE            = True
 
-DETECTION_STEP_COUNT = 1 
+DETECTION_STEP_COUNT = 1
+
 
 def main(
     image_path: Optional[str] = get_data_path("mitosis_movies"),
@@ -76,6 +89,11 @@ def main(
 
     print("src:", image_path)
     print("//:", PARALLELIZE)
+
+    if isinstance(MITOSIS_CHOICE, str):
+        mitosis_path = Path(MITOSISES[MITOSIS_CHOICE]) / f"{Path(SOURCES[SOURCE_CHOICE]).stem}.bin"
+        with open(mitosis_path, "rb") as f:
+            track: MitosisTrack = pickle.load(f)
 
     # Read image 
     image = read_tiff(image_path) # TCZYX
@@ -89,6 +107,18 @@ def main(
     # Search for mid-body in mitosis movie
     factory = MidBodyDetectionFactory()
 
+    if MITOSIS_CHOICE is None:
+        offset_x = 0
+        offset_y = 0
+
+        track = MitosisTrack(0, 0, 0)
+        track.min_frame = 0
+        track.position = BoxDimensions(0, mitosis_movie.shape[2], 0, mitosis_movie.shape[1])
+        track.dln_positions = {
+            f: BoxDimensions(offset_x, mitosis_movie.shape[2], offset_y, mitosis_movie.shape[1]) 
+            for f in range(mitosis_movie.shape[0])
+        }
+
     for c in range(DETECTION_STEP_COUNT):
         if MEASURE_DETECTION_TIME: 
             start = time()
@@ -98,6 +128,7 @@ def main(
             mask_movie=mask_movie,
             mode=D_METHOD,
             parallelization=PARALLELIZE,
+            mitosis_track=track
         )
         if MEASURE_DETECTION_TIME:
             end = time()

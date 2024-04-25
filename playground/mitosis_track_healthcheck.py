@@ -16,6 +16,9 @@ DIRS = {
     2: "eval_data/Data cep55/mitoses",
 }
 
+NAME_FILTER = "converted t2_t3_F-1E5-35-8"
+NAME_FILTER = None
+
 @dataclass
 class TrackDirStateStat:
     correct: int
@@ -69,13 +72,18 @@ def main(dirpath: str):
 
     print("dir:", dirpath)
     print("-----")
-    for n, s in states.items():
-        print(f"{n}: {s}")
+    if isinstance(NAME_FILTER, str):
+        for n, s in states.items():
+            if NAME_FILTER in n:
+                print(f"{n}: {s:>30}")
+    else:
+        for n, s in states.items():
+            print(f"{n}: {s:>20}")
 
     stats = make_stats(states)
     print("")
     print("")
-    print(f"summmary {dirpath}:")
+    print(f"summmary {dirpath} with name filter: {NAME_FILTER}")
     print("------")
     print("correct:", stats.correct, f"({stats.correct_pct()*100:.2f}%)")
     print("no_gt:", stats.no_gt, f"({stats.no_gt_pct()*100:.2f}%)")
@@ -103,7 +111,13 @@ def make_stats(states: dict[str, TrackState]) -> TrackDirStateStat:
     no_gt = 0
     invalid_div = 0
     wrong = 0
-    for state in states.values():
+
+    if isinstance(NAME_FILTER, str):
+        filtered_states = {k: v for k, v in states.items() if NAME_FILTER in k}
+    else:
+        filtered_states = states
+
+    for state in filtered_states.values():
         if state == TrackState.Correct:
             correct += 1
         elif state == TrackState.NoGT:
