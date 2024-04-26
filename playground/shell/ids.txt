@@ -1,0 +1,43 @@
+--------- IDs ---------
+
+movie_loaded: dcc.Store
+
+param_dict_updated: dcc.Store
+
+
+filename_sel: dmc.Select
+
+dirname_sel: dmc.Select
+
+
+detector_sel: dmc.Select
+
+detector_param_area: html.Div
+
+detector_widget: ??? 
+
+
+layer_sel: dmc.Select
+
+spots_switch: dmc.Switch
+
+mask_switch: dmc.Switch
+
+detection_switch: dmc.Switch
+
+
+frame_input: dmc.NumberInput
+
+frame_input_max_text: dmc.Text
+
+previous_btn: dmc.Button
+
+next_btn: dmc.Button
+
+
+gt_spot_list: html.Div
+
+test_spot_list: html.Div
+
+
+graph: dcc.Graph
