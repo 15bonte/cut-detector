@@ -58,6 +58,13 @@ def make_header_children() -> list:
             style={"width": "10vw"}
         ),
         dmc.Select(
+            id="binfilter_sel",
+            label="Filter",
+            data=["All", "Valid GT/Div", "Wrong Detections"],
+            value="All",
+            style={"width": "20vw"},
+        ),
+        dmc.Select(
             id="filename_sel",
             label="File",
             data=[],
@@ -69,10 +76,41 @@ def make_header_children() -> list:
 @callback(
     Output("filename_sel", "data"),
     Input("dirname_sel", "value"),
+    Input("binfilter_sel", "value")
 )
-def update_filename_sel(dirname):
+def update_filename_sel(dirname: str, filter: str):
+    dirname = check_ready_str(dirname)
+    filter = check_ready_str(filter)
     with os.scandir(os.path.join(EVAL_DATA_DIRS[dirname], "mitoses")) as it:
         filenames = [e.name for e in it if e.is_file(follow_symlinks=False) and e.name.endswith(".bin")]
+        filtered_filenames = []
+        if filter == "Valid GT/Div":
+            for binname in filenames:
+                bin_path = binpath_from_binname_dirname(binname, dirname)
+                with open(bin_path, "rb") as b:
+                    track: MitosisTrack = pickle.load(b)
+                    track.adapt_deprecated_attributes()
+                    if track.gt_mid_body_spots is None or len(track.daughter_track_ids) != 1:
+                        continue
+                    else:
+                        filtered_filenames.append(binname)
+            filenames = filtered_filenames
+        elif filter == "Wrong Detections":
+            for binname in filenames:
+                bin_path = binpath_from_binname_dirname(binname, dirname)
+                with open(bin_path, "rb") as b:
+                    track: MitosisTrack = pickle.load(b)
+                    track.adapt_deprecated_attributes()
+                    if track.gt_mid_body_spots is None or len(track.daughter_track_ids) != 1:
+                        continue
+                    else:
+                        is_correct, _, _ = track.evaluate_mid_body_detection()
+                        if not is_correct:
+                            filtered_filenames.append(binname)
+            filenames = filtered_filenames
+        elif filter != "All":
+            raise RuntimeError(f"Unsupported filter value {filter}")
+
     filenames.sort()
     return filenames
 
@@ -269,10 +307,10 @@ def update_graph(
         if (_mitosis_track.gt_mid_body_spots is not None 
             and ((spot := _mitosis_track.gt_mid_body_spots.get(_mitosis_track.min_frame + frame)) is not None)
             ):
-            x0 = spot.x - 10
-            x1 = spot.x + 10
-            y0 = spot.y - 10
-            y1 = spot.y + 10
+            x0 = spot.x - 8
+            x1 = spot.x + 8
+            y0 = spot.y - 8
+            y1 = spot.y + 8
             fig.add_shape(
                 type="circle",
                 xref="x", yref="y",
@@ -311,10 +349,10 @@ def update_graph(
             mitosis_track=_mitosis_track
         )
         for spot in spots:
-            x0 = spot.x - 10
-            x1 = spot.x + 10
-            y0 = spot.y - 10
-            y1 = spot.y + 10
+            x0 = spot.x - 12
+            x1 = spot.x + 12
+            y0 = spot.y - 12
+            y1 = spot.y + 12
             fig.add_shape(
                 type="circle",
                 xref="x", yref="y",
@@ -363,6 +401,11 @@ def tiffpath_from_binname_dirname(binname: str, dirname: str) -> Path:
     tiff_dir = Path(EVAL_DATA_DIRS[dirname]) / Path("movies")
     tiffname = Path(f"{Path(binname).stem}.tiff")
     return tiff_dir / tiffname
+
+def binpath_from_binname_dirname(bin_filename: str, dirname: str) -> Path:
+    bin_filename = check_ready_str(bin_filename)
+    bin_path = Path(EVAL_DATA_DIRS[dirname]) / Path("mitoses") / Path(bin_filename)
+    return bin_path
 
 def read_tiff(path: Path) -> np.ndarray:
     # TCZYX -> TCYX -> TYXC
