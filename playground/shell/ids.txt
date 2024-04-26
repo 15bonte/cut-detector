@@ -4,6 +4,8 @@ movie_loaded: dcc.Store
 
 param_dict_updated: dcc.Store
 
+layer_param_dict_updated: dcc.Store
+
 
 filename_sel: dmc.Select
 
@@ -20,6 +22,10 @@ detector_widget: ???
 
 
 layer_sel: dmc.Select
+
+layer_param_area: html.Div
+
+layer_widget: ???
 
 spots_switch: dmc.Switch
 

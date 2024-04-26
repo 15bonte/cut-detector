@@ -22,24 +22,28 @@ from app_config import (
 )
 from app_ext import AVAILABLE_DETECTORS
 
-# LAYERS = [
-#     "cells",
-#     "sir",
-#     "midbody",
-# ]
-LAYERS = {
+# Layers
+# positive or null is a true layer
+# -1 is a special rendering layer associated to the detector
+BASE_LAYERS = {
     "cells": 2,
     "sir": 0,
     "midbody": 1,
     "mask": 3,
-    "sigma_layer": -1
 }
+LAYERS = BASE_LAYERS.copy()
 MB_FACTORY = MidBodyDetectionFactory()
+
 
 _movie_data:    np.ndarray   = None # TYXC | C={sir:0 mb:1 cell:2 mask:3}
 _mitosis_track: MitosisTrack = None
+
 _id_dict: dict[int, str] = {}
 _param_dict: dict[str, Any] = {}
+
+_layer_id_dict: dict[int, str] = {}
+_layer_param_dict: dict[str, Any] = {}
+
 
 @contextlib.contextmanager
 def react_env_wrapper():
@@ -150,6 +154,7 @@ def make_navbar_children() -> list:
                 data=list(LAYERS.keys()),
                 value=list(LAYERS.keys())[0],
             ),
+            html.Div(id="layer_param_area"),
             dmc.Switch(
                 id="spots_switch",
                 label="Show GT and test spots",
@@ -201,6 +206,30 @@ def make_navbar_children() -> list:
     ]))
 
 @callback(
+    Output("layer_param_area", "children"),
+    Input("layer_sel", "value"),
+    Input("detector_sel", "value")
+)
+def update_layer_param_area(layer_name: str, detector_name: str) -> list:
+    global _layer_id_dict, _layer_param_dict
+    _layer_id_dict    = {}
+    _layer_param_dict = {}
+
+    layer_name    = check_ready_str(layer_name)
+    detector_name = check_ready_str(detector_name)
+
+    layer_index = LAYERS[layer_name]
+    if layer_index == -1:
+        print("widget generated")
+        ext = AVAILABLE_DETECTORS[detector_name]
+        l = ext.generate_and_bind_layer_widgets(layer_name, _layer_id_dict)
+        ext.initialize_layer_param_dict(layer_name, _layer_param_dict)
+        return l
+    else:
+        print("no widget")
+        return []
+
+@callback(
     Output("detector_param_area", "children"),
     Input("detector_sel", "value")
 )
@@ -218,6 +247,19 @@ def update_detector_param_area(detector_name: str) -> list:
     return l
 
 @callback(
+    Output("layer_param_dict_updated", "data"),
+    Input({"type": "layer_widget", "id": ALL}, "value"),
+    State("layer_param_dict_updated", "data")
+)
+def update_layer_param_dict(values: list[float], n_update: int):
+    global _layer_param_dict
+
+    for id, v in enumerate(values):
+        _layer_param_dict[_id_dict[id]] = v
+
+    return n_update+1 if isinstance(n_update, int) else 0
+
+@callback(
     Output("param_dict_updated", "data"),
     Input({"type": "detector_widget", "id": ALL}, "value"),
     State("param_dict_updated", "data")
@@ -229,6 +271,24 @@ def update_param_dict(values: list[float], n_update: int):
         _param_dict[_id_dict[id]] = v
 
     return n_update+1 if isinstance(n_update, int) else 0
+
+@callback(
+    Output("layer_sel", "data"),
+    Input("detector_sel", "value")
+)
+def update_available_layers(detector_name: str):
+    global LAYERS
+
+    detector_name = check_ready_str(detector_name)
+    ext = AVAILABLE_DETECTORS[detector_name]
+
+    new_layers = BASE_LAYERS.copy()
+    for l in ext.layer_list:
+        new_layers[l] = -1
+
+    LAYERS = new_layers
+
+    return list(new_layers.keys())
 
 @callback(
     Output("frame_input", "value"),
@@ -306,6 +366,7 @@ def update_graph(
             template="plotly_dark"
         )
     else:
+        return no_update
         raise RuntimeError("For now, special negative layers are not supported")
 
     if show_spots:
@@ -431,6 +492,7 @@ def start_app():
                     dmc.AppShellMain(children=[
                         dcc.Store("movie_loaded", data=None),
                         dcc.Store("param_dict_updated", data=None),
+                        dcc.Store("layer_param_dict_updated", data=None),
 
                         dcc.Graph(
                             id="graph",
