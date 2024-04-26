@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from typing import Callable, Any, Union
 
+import numpy as np
 from dash import html
+from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
 
 from cut_detector.factories.mid_body_detection_factory import MidBodyDetectionFactory
@@ -39,9 +41,10 @@ class DetectorExtension:
     detector_maker: Callable[[dict[str, Any]], SPOT_DETECTION_METHOD]
 
     layer_list: list[str]
+    layer_param_list: dict[str, list[str]]
     layer_param_extractor: Callable[[SPOT_DETECTION_METHOD, str], dict[str, Any]]
     layer_widget_maker: Callable[[str], list[Widget]]
-    
+    layer_detector_debug: Callable[[str, np.ndarray, dict[str, Any]], np.ndarray]
     
     
     def generate_and_bind_widgets(self, id_dict: dict[int, str]) -> list:
@@ -56,6 +59,7 @@ class DetectorExtension:
         params = self.layer_param_extractor(self.detector, layer)
         l = []
         for w in self.layer_widget_maker(layer):
+            print("building layer widget", w)
             w.register_to_id_dict(layer_id_dict)
             l.append(w.generate_from_params(params, kind="layer_widget"))
         return l
@@ -74,3 +78,13 @@ class DetectorExtension:
     
     def make_detector(self, params: dict[str, Any]) -> SPOT_DETECTION_METHOD:
         return self.detector_maker(params)
+    
+    def render_debug_layer(self, arg, layer: str, image: np.ndarray, args: dict[str, Any]) -> np.ndarray:
+        return self.layer_detector_debug(layer, image, args)
+    
+    def check_layer_param(self, layer: str, layer_param: dict[str, Any]):
+        print("required param:", self.layer_param_list[layer])
+        for required_param in self.layer_param_list[layer]:
+            if layer_param.get(required_param) is None:
+                print(f"missing param {required_param}")
+                raise PreventUpdate

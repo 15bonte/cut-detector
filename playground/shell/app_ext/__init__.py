@@ -8,6 +8,7 @@ from .mm_dog_support import (
     mm_dog_param_extractor, 
     mm_dog_layer_param_extractor,
     mm_dog_maker,
+    mm_dog_layer_detector_debug
 )
 
 
@@ -22,9 +23,12 @@ AVAILABLE_DETECTORS: dict[str, DetectorExtension] = {
         detector_maker=mm_dog_maker,
 
         layer_list=["Sigma Layer"],
+        layer_param_list={
+            "Sigma Layer": ["sigma", "ratio"]
+        },
         layer_param_extractor=mm_dog_layer_param_extractor,
         layer_widget_maker=mm_dog_layer_widget_maker,
-        
+        layer_detector_debug=mm_dog_layer_detector_debug,
     ),
 
     "dog005": DetectorExtension(
@@ -35,8 +39,12 @@ AVAILABLE_DETECTORS: dict[str, DetectorExtension] = {
         detector_maker=mm_dog_maker,
 
         layer_list=["Sigma Layer"],
+        layer_param_list={
+            "Sigma Layer": ["sigma", "ratio"]
+        },
         layer_param_extractor=mm_dog_layer_param_extractor,
         layer_widget_maker=mm_dog_layer_widget_maker,
+        layer_detector_debug=mm_dog_layer_detector_debug,
     ),
 }
 

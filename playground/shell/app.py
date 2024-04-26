@@ -21,6 +21,7 @@ from app_config import (
     MAX_DYN_SPOT_DISPLAYED
 )
 from app_ext import AVAILABLE_DETECTORS
+from mb_execution import start_execution
 
 # Layers
 # positive or null is a true layer
@@ -197,6 +198,17 @@ def make_navbar_children() -> list:
             ], grow=True),
         ]),
         dmc.Card([
+            dmc.CardSection("Performance"),
+            dmc.Divider(label="Correct ?", labelPosition="center"),
+            dmc.Text(id="perf_correct"),
+            dmc.Divider(label="%Detection", labelPosition="center"),
+            dmc.Text(id="perf_pct_detec"),
+            dmc.Divider(label="Avg Diff", labelPosition="center"),
+            dmc.Text(id="perf_avg_diff"),
+            dmc.Divider(label="Computer with live detector", labelPosition="center"),
+            dmc.Button(id="perf_live_compute_btn", children="Press to compute")
+        ]),
+        dmc.Card([
             dmc.CardSection("Spots"),
             dmc.Divider(label="Ground Truth Spots:", labelPosition="center"),
             dmc.ScrollArea(html.Div(id="gt_spot_list"), h="30vh"),
@@ -224,6 +236,7 @@ def update_layer_param_area(layer_name: str, detector_name: str) -> list:
         ext = AVAILABLE_DETECTORS[detector_name]
         l = ext.generate_and_bind_layer_widgets(layer_name, _layer_id_dict)
         ext.initialize_layer_param_dict(layer_name, _layer_param_dict)
+        print("update layer:", _layer_param_dict, _layer_id_dict)
         return l
     else:
         print("no widget")
@@ -255,7 +268,7 @@ def update_layer_param_dict(values: list[float], n_update: int):
     global _layer_param_dict
 
     for id, v in enumerate(values):
-        _layer_param_dict[_id_dict[id]] = v
+        _layer_param_dict[_layer_id_dict[id]] = v
 
     return n_update+1 if isinstance(n_update, int) else 0
 
@@ -302,15 +315,15 @@ def update_frame_input(p_btn: int, n_btn: int, movie_loaded: str, cur_value: int
     if id == "previous_btn":
         check_ready_int(p_btn)
         return max(0, cur_value-1)
-    
+
     elif id == "next_btn":
         check_ready_int(n_btn)
         return min(cur_value+1, _movie_data.shape[0]-1)
-    
+
     elif id == "movie_loaded":
         check_ready_str(movie_loaded)
         return 0
-    
+
     else:
         return no_update
 
@@ -334,17 +347,19 @@ def update_max_frame(movie_loaded: str) -> Tuple[int, str]:
     Input("mask_switch", "checked"),
     Input("detection_switch", "checked"),
     State("detector_sel", "value"),
-    Input("param_dict_updated", "data")
+    Input("param_dict_updated", "data"),
+    Input("layer_param_dict_updated", "data")
 )
 def update_graph(
-        movie_loaded: str, 
-        frame: int, 
+        movie_loaded: str,
+        frame: int,
         layer: str,
         show_spots: bool,
         show_mask: bool,
         run_detection: bool,
         detector_name: str,
-        param_dict_updated: int
+        param_dict_updated: int,
+        layer_param_dict_updated: int,
         ) -> dict:
     check_ready_str(movie_loaded)
     check_ready_int(param_dict_updated)
@@ -355,22 +370,70 @@ def update_graph(
     run_detection = check_ready_bool(run_detection)
     detector_name = check_ready_str(detector_name)
 
-    if show_mask and (layer_index := LAYERS[layer]) >= 0:
-        fig = px.imshow(
-            _movie_data[frame, :, :, layer_index] * _movie_data[frame, :, :, 3],
-            template="plotly_dark"
-        )
-    elif (layer_index := LAYERS[layer]) >= 0:
-        fig = px.imshow(
-            _movie_data[frame, :, :, layer_index],
-            template="plotly_dark"
-        )
+    layer_index = LAYERS[layer]
+
+    if show_mask and layer_index >= 0:
+        img = _movie_data[frame, :, :, layer_index] * _movie_data[frame, :, :, 3]
+    elif layer_index >= 0:
+        img = _movie_data[frame, :, :, layer_index]
     else:
-        return no_update
-        raise RuntimeError("For now, special negative layers are not supported")
+        img = None
+
+    if layer_index >= 0:
+        fig = px.imshow(
+            img,
+            template="plotly_dark"
+        )
+    elif layer_index == -1:
+        check_ready_int(layer_param_dict_updated)
+        ext = AVAILABLE_DETECTORS[detector_name]
+        ext.check_layer_param(layer, _layer_param_dict)
+
+        if show_mask:
+            nan_image = np.where(
+                _movie_data[frame, :, :, 3],
+                _movie_data[frame, :, :, 1],
+                np.NaN
+            )
+            nan_image_min = np.nanmin(nan_image)
+            renderer_img = np.where(
+                _movie_data[frame, :, :, 3],
+                _movie_data[frame, :, :, 1],
+                nan_image_min
+            )
+            fig = px.imshow(
+                ext.layer_detector_debug(layer, renderer_img, _layer_param_dict),
+                template="plotly_dark"
+            )
+        else:
+            img = _movie_data[frame, :, :, 1]
+            fig = px.imshow(
+                ext.layer_detector_debug(layer, img, _layer_param_dict),
+                template="plotly_dark"
+            )
+    else:
+        raise RuntimeError(f"Unsupported layer index {layer_index}")
+
+    # if show_mask and (layer_index := LAYERS[layer]) >= 0:
+    #     fig = px.imshow(
+    #         _movie_data[frame, :, :, layer_index] * _movie_data[frame, :, :, 3],
+    #         template="plotly_dark"
+    #     )
+    # elif (layer_index := LAYERS[layer]) >= 0:
+    #     fig = px.imshow(
+    #         _movie_data[frame, :, :, layer_index],
+    #         template="plotly_dark"
+    #     )
+    # else:
+    #     ext = AVAILABLE_DETECTORS[detector_name]
+    #     fig = px.imshow(
+    #         ext.render_debug_layer(layer, )
+    #     )
+    #     return no_update
+    #     raise RuntimeError("For now, special negative layers are not supported")
 
     if show_spots:
-        if (_mitosis_track.gt_mid_body_spots is not None 
+        if (_mitosis_track.gt_mid_body_spots is not None
             and ((spot := _mitosis_track.gt_mid_body_spots.get(_mitosis_track.min_frame + frame)) is not None)
             ):
             x0 = spot.x - GT_SPOT_SIZE
@@ -401,7 +464,7 @@ def update_graph(
                     width=4,
                 )
             )
-    
+
     if run_detection:
         ext = AVAILABLE_DETECTORS[detector_name]
         spots = MB_FACTORY._spot_detection(
@@ -433,6 +496,40 @@ def update_graph(
     return fig
 
 @callback(
+    Output("perf_correct", "children"),
+    Output("perf_pct_detec", "children"),
+    Output("perf_avg_diff", "children"),
+    Input("movie_loaded", "data"),
+    Input("perf_live_compute_btn", "n_clicks"),
+    State("filename_sel", "value"),
+    State("dirname_sel", "value"),
+    State("detector_sel", "value"),
+)
+def update_perf_texts(
+        movie_loaded: str, 
+        btn: int, 
+        bin_filename: str, 
+        dirname: str,
+        detector_name: str
+        ) -> Tuple[str, str, str]:
+    check_ready_str(movie_loaded)
+    if ctx.triggered_id == "movie_loaded":
+        if _mitosis_track.gt_mid_body_spots is None:
+            return "(missing GT)", "(missing GT)", "(missing GT)"
+        elif len(_mitosis_track.daughter_track_ids) != 1:
+            return "(invalid div)", "(invalid div", "(invalid div)"
+        else:
+            (correct, pct, diff) = _mitosis_track.evaluate_mid_body_detection(avg_as_int=False)
+            return f"{correct}", f"{pct:.2f}%", f"{diff:.2f}"
+    
+    elif ctx.triggered_id == "perf_live_compute_btn":
+        check_ready_int(btn)
+        raise RuntimeError("Live performance computation not implemented yet")
+    
+    else:
+        return no_update, no_update, no_update
+
+@callback(
     Output("gt_spot_list", "children"),
     Output("test_spot_list", "children"),
     Input("movie_loaded", "data")
@@ -451,19 +548,19 @@ def check_ready_str(s: str) -> str:
         return s
     else:
         raise PreventUpdate
-    
+
 def check_ready_int(i: int) -> int:
     if isinstance(i, int):
         return i
     else:
         raise PreventUpdate
-    
+
 def check_ready_bool(b: bool) -> bool:
     if isinstance(b, bool):
         return b
     else:
         raise PreventUpdate
-    
+
 def tiffpath_from_binname_dirname(binname: str, dirname: str) -> Path:
     tiff_dir = Path(EVAL_DATA_DIRS[dirname]) / Path("movies")
     tiffname = Path(f"{Path(binname).stem}.tiff")

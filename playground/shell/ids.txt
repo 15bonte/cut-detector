@@ -1,6 +1,6 @@
 --------- IDs ---------
 
-movie_loaded: dcc.Store
+movie_loaded: dcc.Store (signal when movie AND mitosis track are loaded)
 
 param_dict_updated: dcc.Store
 
@@ -41,6 +41,15 @@ frame_input_max_text: dmc.Text
 previous_btn: dmc.Button
 
 next_btn: dmc.Button
+
+
+perf_correct: dmc.Text
+
+perf_pct_detec: dmc.Text
+
+perf_avg_diff: dmc.text
+
+perf_live_compute_btn: dmc.Button
 
 
 gt_spot_list: html.Div
