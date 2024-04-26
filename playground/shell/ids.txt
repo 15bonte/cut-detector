@@ -9,6 +9,8 @@ filename_sel: dmc.Select
 
 dirname_sel: dmc.Select
 
+binfilter_sel: dmc.Select
+
 
 detector_sel: dmc.Select
 

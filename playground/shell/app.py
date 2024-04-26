@@ -15,7 +15,11 @@ import plotly.express as px
 from cut_detector.factories.mid_body_detection_factory import MidBodyDetectionFactory
 from cut_detector.utils.mitosis_track import MitosisTrack
 
-from app_config import EVAL_DATA_DIRS
+from app_config import (
+    EVAL_DATA_DIRS,
+    GT_SPOT_SIZE, TEST_SPOT_SIZE, DYN_SPOT_SIZE,
+    MAX_DYN_SPOT_DISPLAYED
+)
 from app_ext import AVAILABLE_DETECTORS
 
 # LAYERS = [
@@ -153,7 +157,8 @@ def make_navbar_children() -> list:
             ),
             dmc.Switch(
                 id="mask_switch",
-                label="Show approximated mask",
+                label="Show approximated mask (real is rect AABB)",
+                description="(real is rectangular AABB)",
                 checked=False,
             ),
             dmc.Switch(
@@ -307,10 +312,10 @@ def update_graph(
         if (_mitosis_track.gt_mid_body_spots is not None 
             and ((spot := _mitosis_track.gt_mid_body_spots.get(_mitosis_track.min_frame + frame)) is not None)
             ):
-            x0 = spot.x - 8
-            x1 = spot.x + 8
-            y0 = spot.y - 8
-            y1 = spot.y + 8
+            x0 = spot.x - GT_SPOT_SIZE
+            x1 = spot.x + GT_SPOT_SIZE
+            y0 = spot.y - GT_SPOT_SIZE
+            y1 = spot.y + GT_SPOT_SIZE
             fig.add_shape(
                 type="circle",
                 xref="x", yref="y",
@@ -322,10 +327,10 @@ def update_graph(
             )
 
         if (spot := _mitosis_track.mid_body_spots.get(_mitosis_track.min_frame + frame)) is not None:
-            x0 = spot.x - 10
-            x1 = spot.x + 10
-            y0 = spot.y - 10
-            y1 = spot.y + 10
+            x0 = spot.x - TEST_SPOT_SIZE
+            x1 = spot.x + TEST_SPOT_SIZE
+            y0 = spot.y - TEST_SPOT_SIZE
+            y1 = spot.y + TEST_SPOT_SIZE
             fig.add_shape(
                 type="circle",
                 xref="x", yref="y",
@@ -348,11 +353,12 @@ def update_graph(
             log_blob_spot=False,
             mitosis_track=_mitosis_track
         )
-        for spot in spots:
-            x0 = spot.x - 12
-            x1 = spot.x + 12
-            y0 = spot.y - 12
-            y1 = spot.y + 12
+        max_index = min(len(spots), MAX_DYN_SPOT_DISPLAYED)
+        for spot in spots[:max_index]:
+            x0 = spot.x - DYN_SPOT_SIZE
+            x1 = spot.x + DYN_SPOT_SIZE
+            y0 = spot.y - DYN_SPOT_SIZE
+            y1 = spot.y + DYN_SPOT_SIZE
             fig.add_shape(
                 type="circle",
                 xref="x", yref="y",
