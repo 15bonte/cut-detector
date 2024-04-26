@@ -488,7 +488,7 @@ def update_graph(
                 xref="x", yref="y",
                 x0=x0, y0=y0, x1=x1, y1=y1,
                 line=dict(
-                    color="FireBrick",
+                    color="LightCyan",
                     width=4,
                 )
             )
