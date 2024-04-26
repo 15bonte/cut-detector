@@ -5,6 +5,7 @@ from bigfish import stack
 from bigfish.plot.utils import save_plot, get_minmax_values
 from bigfish.plot.plot_images import _define_patch
 
+
 def plot_detection(
     image,
     spots,
@@ -180,8 +181,6 @@ def plot_detection(
         )
         ax[1].add_patch(patch)
 
-        # for x, y in zip(coordinates_2d[1], coordinates_2d[0]):
-        #     ax[1].text(x, y, f"({x} {y})", fontsize=8, color="red")
         x = int(coordinates_2d[1])
         y = int(coordinates_2d[0])
         ax[1].text(x, y, f"({x} {y})", fontsize=12, color="black")
@@ -202,4 +201,3 @@ def plot_detection(
         plt.show()
     else:
         plt.close()
-
