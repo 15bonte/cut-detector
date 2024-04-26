@@ -83,7 +83,6 @@ class DetectorExtension:
         return self.layer_detector_debug(layer, image, args)
     
     def check_layer_param(self, layer: str, layer_param: dict[str, Any]):
-        print("required param:", self.layer_param_list[layer])
         for required_param in self.layer_param_list[layer]:
             if layer_param.get(required_param) is None:
                 print(f"missing param {required_param}")
