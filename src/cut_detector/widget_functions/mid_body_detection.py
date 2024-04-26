@@ -84,9 +84,7 @@ def perform_mid_body_detection(
             mb_detect_method=mid_body_detection_method,
             mb_tracking_method=mid_body_tracking_method,
             parallel_detection=parallel_detection,
-            log_select_best_track_status=(
-                True if isinstance(target_mitosis_id, int) else False
-            ),
+            log_select_best_track_status=isinstance(target_mitosis_id, int),
         )
 
         # Save updated mitosis track
