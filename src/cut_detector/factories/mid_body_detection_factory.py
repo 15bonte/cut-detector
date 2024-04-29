@@ -128,6 +128,8 @@ class MidBodyDetectionFactory:
                 print("track kept")
 
         if kept_track is None:
+            # If necessary, remove mid_body_spots from mitosis_track
+            mitosis_track.mid_body_spots = {}
             return
 
         # Keep only spots of best mitosis track
