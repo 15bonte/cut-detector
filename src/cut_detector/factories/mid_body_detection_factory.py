@@ -20,7 +20,8 @@ from ..utils.gen_track import generate_tracks_from_spots, TRACKING_METHOD
 from ..utils.mid_body_track_color_manager import MbTrackColorManager
 
 from ..utils.mb_support import detection as mbd
-from ..utils.mb_support import tracking  as mbt
+from ..utils.mb_support import tracking as mbt
+
 
 class MidBodyDetectionFactory:
     """
@@ -62,31 +63,28 @@ class MidBodyDetectionFactory:
         Literal[
             "bigfish",
             "h_maxima",
-
             "cur_log",
             "lapgau",
             "log2_wider",
             "rshift_log",
-
             "cur_dog",
             "diffgau",
-
             "cur_doh",
             "hessian",
-        ]
+        ],
     ]
 
     def update_mid_body_spots(
         self,
         mitosis_track: MitosisTrack,
         mitosis_movie: np.ndarray,
-        mask_movie:    np.ndarray,
-        tracks:        list[TrackMateTrack],
-        mb_detect_method:   SPOT_DETECTION_METHOD = mbd.cur_dog,
-        mb_tracking_method: TRACKING_METHOD       = mbt.cur_spatial_laptrack,
-        log_blob_spot:      bool = False,
+        mask_movie: np.ndarray,
+        tracks: list[TrackMateTrack],
+        mb_detect_method: SPOT_DETECTION_METHOD = mbd.cur_dog,
+        mb_tracking_method: TRACKING_METHOD = mbt.cur_spatial_laptrack,
+        log_blob_spot: bool = False,
         parallel_detection: bool = False,
-        log_select_best_track_status: bool = False
+        log_select_best_track_status: bool = False,
     ) -> None:
         """
         Get spots of best mitosis track.
@@ -104,12 +102,11 @@ class MidBodyDetectionFactory:
             mode=mb_detect_method,
             log_blob_spot=log_blob_spot,
             parallelization=parallel_detection,
-            mitosis_track=mitosis_track
+            mitosis_track=mitosis_track,
         )
 
         mid_body_tracks: list[MidBodyTrack] = generate_tracks_from_spots(
-            spots_candidates,
-            mb_tracking_method
+            spots_candidates, mb_tracking_method
         )
 
         if log_select_best_track_status:
@@ -139,16 +136,16 @@ class MidBodyDetectionFactory:
             mitosis_track.mid_body_spots[frame] = spot
 
     def detect_mid_body_spots(
-            self,
-            mitosis_movie: np.ndarray,
-            mask_movie: Optional[np.ndarray] = None,
-            mid_body_channel=1,
-            sir_channel=0,
-            mode: SPOT_DETECTION_METHOD = mbd.cur_dog,
-            log_blob_spot: bool = False,
-            parallelization: bool = False,
-            mitosis_track: Optional[MitosisTrack] = None,
-            ) -> dict[int, list[MidBodySpot]]:
+        self,
+        mitosis_movie: np.ndarray,
+        mask_movie: Optional[np.ndarray] = None,
+        mid_body_channel=1,
+        sir_channel=0,
+        mode: SPOT_DETECTION_METHOD = mbd.cur_dog,
+        log_blob_spot: bool = False,
+        parallelization: bool = False,
+        mitosis_track: Optional[MitosisTrack] = None,
+    ) -> dict[int, list[MidBodySpot]]:
         """
         Parameters
         ----------
@@ -164,7 +161,9 @@ class MidBodyDetectionFactory:
         if mask_movie is None:
             mask_movie = np.ones(mitosis_movie.shape[:-1])
 
-        assert isinstance(parallelization, bool), "non-bool parallelization has been deprecated"
+        assert isinstance(
+            parallelization, bool
+        ), "non-bool parallelization has been deprecated"
         if parallelization:
             return self.thread_pool_detect_mid_body_spots(
                 mitosis_movie,
@@ -172,7 +171,7 @@ class MidBodyDetectionFactory:
                 mid_body_channel,
                 sir_channel,
                 mode,
-                mitosis_track
+                mitosis_track,
             )
         else:
             return self.serial_detect_mid_body_spots(
@@ -182,20 +181,19 @@ class MidBodyDetectionFactory:
                 sir_channel,
                 mode,
                 log_blob_spot,
-                mitosis_track
+                mitosis_track,
             )
 
-
     def serial_detect_mid_body_spots(
-            self,
-            mitosis_movie: np.ndarray,
-            mask_movie:    np.ndarray,
-            mid_body_channel = 1,
-            sir_channel      = 0,
-            mode: SPOT_DETECTION_METHOD = mbd.cur_dog,
-            log_blob_spot: bool = False,
-            mitosis_track: Optional[MitosisTrack] = None
-            ) -> dict[int, list[MidBodySpot]]:
+        self,
+        mitosis_movie: np.ndarray,
+        mask_movie: np.ndarray,
+        mid_body_channel=1,
+        sir_channel=0,
+        mode: SPOT_DETECTION_METHOD = mbd.cur_dog,
+        log_blob_spot: bool = False,
+        mitosis_track: Optional[MitosisTrack] = None,
+    ) -> dict[int, list[MidBodySpot]]:
 
         spots_dictionary = {}
         nb_frames = mitosis_movie.shape[0]
@@ -218,7 +216,7 @@ class MidBodyDetectionFactory:
                 mode,
                 frame,
                 log_blob_spot,
-                mitosis_track
+                mitosis_track,
             )
 
             # Update dictionary
@@ -227,31 +225,36 @@ class MidBodyDetectionFactory:
         return spots_dictionary
 
     def thread_pool_detect_mid_body_spots(
-            self,
-            mitosis_movie: np.array,
-            mask_movie:    np.array,
-            mid_body_channel = 1,
-            sir_channel      = 0,
-            method: SPOT_DETECTION_METHOD = mbd.cur_log,
-            mitosis_track: Optional[MitosisTrack] = None
-            ) -> dict[int, list[MidBodySpot]]:
+        self,
+        mitosis_movie: np.array,
+        mask_movie: np.array,
+        mid_body_channel=1,
+        sir_channel=0,
+        method: SPOT_DETECTION_METHOD = mbd.cur_log,
+        mitosis_track: Optional[MitosisTrack] = None,
+    ) -> dict[int, list[MidBodySpot]]:
 
         nb_frames = mitosis_movie.shape[0]
 
-        framed_sd = lambda i, m, mbc, sc, d, f: (f, self._spot_detection(i, m, mbc, sc, d, f, False, mitosis_track))
+        framed_sd = lambda i, m, mbc, sc, d, f: (
+            f,
+            self._spot_detection(i, m, mbc, sc, d, f, False, mitosis_track),
+        )
 
         future_list = []
         with concurrent.futures.ThreadPoolExecutor() as e:
             for f in range(nb_frames):
-                future_list.append(e.submit(
-                    framed_sd,
-                    mitosis_movie[f],
-                    mask_movie[f],
-                    mid_body_channel,
-                    sir_channel,
-                    method,
-                    f,
-                ))
+                future_list.append(
+                    e.submit(
+                        framed_sd,
+                        mitosis_movie[f],
+                        mask_movie[f],
+                        mid_body_channel,
+                        sir_channel,
+                        method,
+                        f,
+                    )
+                )
 
         return {
             res.result()[0]: res.result()[1]
@@ -261,9 +264,9 @@ class MidBodyDetectionFactory:
     def _spot_detection(
         self,
         image: np.array,
-        mask:  np.array,
+        mask: np.array,
         mid_body_channel: int,
-        sir_channel:      int,
+        sir_channel: int,
         mode: SPOT_DETECTION_METHOD,
         frame: int,
         log_blob_spot: bool = False,
@@ -282,30 +285,30 @@ class MidBodyDetectionFactory:
         if mitosis_track is None:
             image_sir = image[:, :, sir_channel]
             image_mklp = image[:, :, mid_body_channel]
+            shift_x, shift_y = 0, 0
         elif isinstance(mitosis_track, MitosisTrack):
-            # print("")
-            # print("image shape:", image.shape)
-            video_crop_position = mitosis_track.position
+            mitosis_position = (
+                mitosis_track.position
+            )  # mitosis position in movie
             frame_position = mitosis_track.dln_positions[
                 frame + mitosis_track.min_frame
-            ]
+            ]  # frame position in mitosis
+            shift_x = frame_position.min_x - mitosis_position.min_x
+            shift_y = frame_position.min_y - mitosis_position.min_y
             image_sir = image[
-                frame_position.min_y - video_crop_position.min_y : frame_position.max_y - video_crop_position.min_y,
-                frame_position.min_x - video_crop_position.min_x : frame_position.max_x - video_crop_position.min_x,
+                shift_y : frame_position.max_y - mitosis_position.min_y,
+                shift_x : frame_position.max_x - mitosis_position.min_x,
                 sir_channel,
             ]
             image_mklp = image[
-                frame_position.min_y - video_crop_position.min_y : frame_position.max_y - video_crop_position.min_y,
-                frame_position.min_x - video_crop_position.min_x : frame_position.max_x - video_crop_position.min_x,
+                shift_y : frame_position.max_y - mitosis_position.min_y,
+                shift_x : frame_position.max_x - mitosis_position.min_x,
                 mid_body_channel,
             ]
-            # import matplotlib.pyplot as plt
-            # # print("shape:", image_mklp)
-            # # print(f"xm{frame_position.min_x} xM{frame_position.max_x} ym{frame_position.min_y} yM{frame_position.max_y}")
-            # plt.imshow(image_mklp)
-            # plt.show()
         else:
-            raise RuntimeError(f"invalid type for arg mitosis_track: {mitosis_track}")
+            raise RuntimeError(
+                f"Invalid type for arg mitosis_track: {mitosis_track}"
+            )
 
         if callable(mode):
             # directly passsing a blob-like function
@@ -330,14 +333,14 @@ class MidBodyDetectionFactory:
             # blob-like function called referenced by name
 
             mapping = {
-                "cur_log":    mbd.cur_log,
-                "cur_dog":    mbd.cur_dog,
-                "cur_doh":    mbd.cur_doh,
-                "lapgau":     mbd.lapgau,
+                "cur_log": mbd.cur_log,
+                "cur_dog": mbd.cur_dog,
+                "cur_doh": mbd.cur_doh,
+                "lapgau": mbd.lapgau,
                 "log2_wider": mbd.log2_wider,
-                "rshift_log":  mbd.rshift_log,
-                "diffgau":    mbd.diffgau,
-                "hessian":    mbd.hessian,
+                "rshift_log": mbd.rshift_log,
+                "diffgau": mbd.diffgau,
+                "hessian": mbd.hessian,
             }
 
             spots = [
@@ -405,7 +408,7 @@ class MidBodyDetectionFactory:
 
         else:
             raise ValueError(f"Unknown mode: [{mode}]")
-        
+
         # WARNING:
         # spots can be a list of Tuple with 2 or 3 values:
         # 2 values: (y, x) if h_maxima or fish_eye used
@@ -414,41 +417,14 @@ class MidBodyDetectionFactory:
             MidBodySpot(
                 frame,
                 # Convert spots to MidBodySpot objects (switch (y, x) to (x, y))
-                x=position[1] + (frame_position.min_x - video_crop_position.min_x if isinstance(mitosis_track, MitosisTrack) else 0),
-                y=position[0] + (frame_position.min_y - video_crop_position.min_y if isinstance(mitosis_track, MitosisTrack) else 0),
+                x=position[1] + shift_x,
+                y=position[0] + shift_y,
                 intensity=self._get_average_intensity(position, image_mklp),
                 sir_intensity=self._get_average_intensity(position, image_sir),
             )
             for position in spots
         ]
         return mid_body_spots
-    
-    @staticmethod
-    def apply_mask(mklp: np.ndarray, mask: np.ndarray) -> np.ndarray:
-        # new resulting image will have the same shape as the current one
-        # new_mklp = np.zeros(mklp.shape)
-
-        # # extract the rectangle made of 1s
-        # coords = np.argwhere(mask == 1)
-        # xs = np.zeros(coords.shape[0])
-        # ys = np.zeros(coords.shape[0])
-        # for idx, c in enumerate(coords):
-        #     xs[idx] = c[0]
-        #     ys[idx] = c[1]
-        # rect_min = np.array([int(np.min(xs)), int(np.min(ys))])
-        # rect_max = np.array([int(np.max(xs)), int(np.max(ys))])
-
-        # # subset the mklp image between the rect
-        # # min-max normalizing it
-        # mklp_crop = mklp[rect_min[0]:rect_max[0], rect_min[1]:rect_max[1]]
-
-        med = np.median(mklp)
-
-        r = np.where(mask, mklp, med)
-
-        return r
-
-
 
     @staticmethod
     def _get_average_intensity(
@@ -486,7 +462,7 @@ class MidBodyDetectionFactory:
         mitosis_movie: np.ndarray,
         mid_body_linking_max_distance: float,
         sir_channel=0,
-        log_choice: bool = False
+        log_choice: bool = False,
     ) -> MidBodyTrack:
         """
         Select best track from mid-body tracks.
@@ -580,7 +556,10 @@ class MidBodyDetectionFactory:
                 or abs_max_frame < abs_track_frames[0]
             ):
                 sir_intensity_track[idx] = -np.inf
-                if log_choice: print(f"track {idx+1}/{len(mid_body_tracks)}: sir-dropped abs frame")
+                if log_choice:
+                    print(
+                        f"track {idx+1}/{len(mid_body_tracks)}: sir-dropped abs frame"
+                    )
             frame_count = 0
             for frame in range(abs_min_frame, abs_max_frame + 1):
                 if frame not in abs_track_frames:
@@ -595,12 +574,18 @@ class MidBodyDetectionFactory:
 
             if frame_count < (abs_max_frame - abs_min_frame + 1) / 2:
                 sir_intensity_track[idx] = -np.inf
-                if log_choice: print(f"track {idx+1}/{len(mid_body_tracks)}: sir-dropped framecount: {frame_count}")
+                if log_choice:
+                    print(
+                        f"track {idx+1}/{len(mid_body_tracks)}: sir-dropped framecount: {frame_count}"
+                    )
             else:
                 sir_intensity_track[idx] /= frame_count
 
             if log_choice and sir_intensity_track[idx] != -np.inf:
-                print(f"track {idx+1}/{len(mid_body_tracks)}: sir-avg", sir_intensity_track[idx])
+                print(
+                    f"track {idx+1}/{len(mid_body_tracks)}: sir-avg",
+                    sir_intensity_track[idx],
+                )
 
         # if log_choice:
         #     print("sir-candidates")
@@ -608,10 +593,12 @@ class MidBodyDetectionFactory:
         #         print(f"{idx+1}/{len(sir_intensity_track)}: {sir_avg}")
 
         # Get list of expected distances
-        if log_choice: print("dist-candidates")
+        if log_choice:
+            print("dist-candidates")
         expected_distances = []
         for track_idx, track in enumerate(mid_body_tracks):
-            if log_choice: print("track", track_idx+1, end=": ")
+            if log_choice:
+                print("track", track_idx + 1, end=": ")
             val = track.get_expected_distance(
                 expected_positions, mid_body_linking_max_distance, log_choice
             )
@@ -632,16 +619,19 @@ class MidBodyDetectionFactory:
         # Remove tracks with infinite func value
         fun_values = []
         final_tracks = []
-        if log_choice: print("func_sir candidates len:", len(mid_body_tracks))
+        if log_choice:
+            print("func_sir candidates len:", len(mid_body_tracks))
         for track_idx, track in enumerate(mid_body_tracks):
             if log_choice:
                 print(f"track {track_idx+1}/{len(mid_body_tracks)}:", end=" ")
             fun_values.append(func_sir_intensity(track))
             if func_sir_intensity(track, log_choice) != np.inf:
                 final_tracks.append(track)
-                if log_choice: print("kept with func_sir", fun_values[-1])
+                if log_choice:
+                    print("kept with func_sir", fun_values[-1])
             else:
-                if log_choice: print("dropped")
+                if log_choice:
+                    print("dropped")
 
         # Sort tracks by func value
         sorted_tracks = sorted(final_tracks, key=func_sir_intensity)
