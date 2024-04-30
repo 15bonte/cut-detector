@@ -562,7 +562,7 @@ def check_ready_bool(b: bool) -> bool:
         raise PreventUpdate
 
 def tiffpath_from_binname_dirname(binname: str, dirname: str) -> Path:
-    tiff_dir = Path(EVAL_DATA_DIRS[dirname]) / Path("movies")
+    tiff_dir = Path(EVAL_DATA_DIRS[dirname]) / Path("mitosis_movies")
     tiffname = Path(f"{Path(binname).stem}.tiff")
     return tiff_dir / tiffname
 

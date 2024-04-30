@@ -27,7 +27,7 @@ def perform_mid_body_detection(
     ] = tracking.cur_spatial_laptrack,
     parallel_detection: bool = False,
     target_mitosis_id: Optional[int] = None,
-):
+) -> list[MitosisTrack]:
     mitosis_tracks: list[MitosisTrack] = []
     # Iterate over "bin" files in exported_mitoses_dir
     for state_path in os.listdir(exported_mitoses_dir):
@@ -116,3 +116,5 @@ def perform_mid_body_detection(
             OmeTiffWriter.save(
                 final_mitosis_movie, image_save_path, dim_order="TCYX"
             )
+
+    return mitosis_tracks

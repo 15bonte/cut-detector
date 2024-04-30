@@ -28,6 +28,7 @@ from .box_dimensions import BoxDimensions
 from .bridges_classification.impossible_detection import ImpossibleDetection
 from .image_tools import resize_image, smart_cropping
 
+
 def cell_counter_frame_to_video_frame(
     cell_counter_frame: int, nb_channels=4
 ) -> int:
@@ -39,6 +40,7 @@ def cell_counter_frame_to_video_frame(
     frames 5, 6, 7 and 8 will be frame 2, etc.
     """
     return (cell_counter_frame - 1) // nb_channels
+
 
 class MitosisTrack:
     """
@@ -523,7 +525,6 @@ class MitosisTrack:
 
         position_difference = []
 
-
         # Check frames until second MT cut or end of annotations
         max_frame = (
             self.gt_key_events_frame["second_mt_cut"]
@@ -542,13 +543,10 @@ class MitosisTrack:
                     self.mid_body_spots[frame]
                 )
             )
-        #     print(self.gt_mid_body_spots[frame],self.mid_body_spots[frame] )
-        # print(position_difference)
+
+        assert len(position_difference) != 0, "No GT points found"
 
         # Get percent_seen th percentile of position difference
-
-        assert len(position_difference) != 0, "no GT points found"
-
         position_difference = np.array(position_difference)
         max_position_difference = np.quantile(
             position_difference, percent_seen
