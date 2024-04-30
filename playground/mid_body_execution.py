@@ -12,20 +12,20 @@ from cut_detector.widget_functions.mid_body_detection import (
 from cut_detector.data.tools import get_data_path
 from cut_detector.utils.mb_support import detection, tracking
 
-SOURCE_CHOICE = 0
+SOURCE_CHOICE = 2
 SOURCES = {
     0: "eval_data/Data Standard",
     1: "eval_data/Data spastin",
     2: "eval_data/Data cep55",
 }
-DETECTION_METHOD = detection.cur_dog
+DETECTION_METHOD = detection.hessian
 TRACKING_METHOD  = tracking.cur_spatial_laptrack
 PARALLELIZATION = True
 
 TARGET_VIDEO_NAME = "converted t2_t3_F-1E5-35-12.tif"
-# TARGET_VIDEO_NAME = None
+TARGET_VIDEO_NAME = None
 TARGET_MITOSIS_ID = 4
-# TARGET_MITOSIS_ID = None
+TARGET_MITOSIS_ID = None
 
 def start_execution(
     data_set_path: Optional[str] = None,

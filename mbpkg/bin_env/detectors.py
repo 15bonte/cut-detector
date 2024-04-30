@@ -9,6 +9,8 @@ class Detectors:
     rshift_log = Detector(detection.rshift_log)
     cur_dog = Detector(detection.cur_dog)
     diffgau = Detector(detection.diffgau)
+    very_fast_dog = Detector(detection.very_fast_dog)
+    dog_005 = Detector(detection.dog_005)
     cur_doh = Detector(detection.cur_doh)
     hessian = Detector(detection.hessian)
 

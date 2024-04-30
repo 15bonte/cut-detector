@@ -300,7 +300,7 @@ def save_ground_truth(n_clicks: int) -> str:
             for p in GroundTruth.get(f, []):
                 DetectionSpot(p[0], p[1])
 
-        points = [[DetectionSpot(p[0], p[1]) for p in GroundTruth.get(f, [])] for f in range(max_gt_frame_idx+1)]
+        points = {f: [DetectionSpot(p[0], p[1]) for p in GroundTruth.get(f, [])] for f in range(max_gt_frame_idx+1)}
 
         gt = DetectionGT(
             Src.path,
@@ -370,7 +370,7 @@ def start_app(src: Source, annotation_fp: str):
     Src = src
     OutFp = annotation_fp
 
-    Data = src.load()
+    Data = src.load_data()
     MovieData = Movie(Data, Src.path)
     
     app.run(debug=True)

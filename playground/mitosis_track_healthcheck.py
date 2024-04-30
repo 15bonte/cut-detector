@@ -9,7 +9,7 @@ from cut_detector.utils.mitosis_track import MitosisTrack
 
 from enum import Enum, auto
 
-DIR_CHOICE = 0
+DIR_CHOICE = 2
 DIRS = {
     0: "eval_data/Data Standard/mitoses",
     1: "eval_data/Data spastin/mitoses",

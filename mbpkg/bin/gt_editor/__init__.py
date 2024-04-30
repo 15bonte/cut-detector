@@ -2,7 +2,7 @@ from mbpkg.movie_loading import Source
 
 from bin_env import SourceFiles, get_associated_gt_path
 
-SOURCE = SourceFiles.example
+SOURCE = SourceFiles.a_siLuci
 GT_FP = get_associated_gt_path(SOURCE)
 
 def run_app():

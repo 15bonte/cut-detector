@@ -6,16 +6,21 @@ from mbpkg.detection_multi_bench import generate_multi_bench_stat
 from bin_env import SourceFiles, Detectors, StrDetectors
 from bin_env import get_associated_gt_path, make_log_file, make_data_path
 
-SOURCE = SourceFiles.siCep
+SOURCE = SourceFiles.a_siLuci
 GT = get_associated_gt_path(SOURCE)
-LOG_FP = make_log_file("mutibench_1.txt")
-DATA_FP = make_data_path("multibench_1.json")
+LOG_FP = make_log_file("mutibench_finale_a_siLuci.txt")
+DATA_FP = make_data_path("multibench_finale_a_siLuci.json")
 
 DETECTORS = [
     Detectors.cur_log,
     Detectors.cur_dog,
+    Detectors.cur_doh,
+
     Detectors.log2_wider,
     Detectors.rshift_log,
+
+    Detectors.very_fast_dog,
+    Detectors.dog_005,
 ]
 
 PARALLELIZATION = True
