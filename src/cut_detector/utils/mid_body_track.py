@@ -34,12 +34,10 @@ class MidBodyTrack(Track[MidBodySpot]):
 
         return list(id_to_track.values())
 
-
     def get_expected_distance(
-        self, 
-        expected_positions: dict[int, list[int]], 
+        self,
+        expected_positions: dict[int, list[int]],
         max_distance: float,
-        log_distance: bool = False
     ) -> float:
         """
         Compute the average distance between mid-body expected positions and current
@@ -55,11 +53,57 @@ class MidBodyTrack(Track[MidBodySpot]):
             )
         # If there are no frames in common, for sure track is not the right one
         if len(distances) == 0:
-            if log_distance: print("dropping candidate because: no frame in common")
             return np.inf
         mean_distance = np.mean(distances)
+        # If the mean distance is too high, discard the track
         if mean_distance > max_distance:
-            if log_distance: print("candidate distance > max distance")
             return np.inf
-        if log_distance: print("candidate with mean_distance:", mean_distance)
         return mean_distance
+
+    def fill_gaps(self):
+        """
+        Fill gaps in the track.
+        """
+        frames = list(self.spots.keys())
+        min_frame, max_frame = min(frames), max(frames)
+        for frame in range(min_frame, max_frame):
+            next_frame = frame + 1
+            # Look for the next frame with a spot
+            while next_frame not in self.spots:
+                next_frame += 1
+            # If it was not the next frame, fill the gap
+            if next_frame != frame + 1:
+                gap_size = next_frame - (frame + 1)  # number of missing spots
+                current_spot = self.spots[frame]
+                next_spot = self.spots[next_frame]
+                # Define interpolated values
+                ranges = {}
+                for attribute in [
+                    "x",
+                    "y",
+                    "intensity",
+                    "sir_intensity",
+                    "area",
+                    "circularity",
+                ]:
+                    if getattr(current_spot, attribute) is None:
+                        ranges[attribute] = [None] * (gap_size + 2)
+                    else:
+                        ranges[attribute] = np.linspace(
+                            getattr(current_spot, attribute),
+                            getattr(next_spot, attribute),
+                            gap_size + 2,
+                        )
+                for i in range(1, gap_size + 1):
+                    new_spot = MidBodySpot(
+                        frame=frame + i,
+                        x=int(ranges["x"][i]),
+                        y=int(ranges["y"][i]),
+                        intensity=ranges["intensity"][i],
+                        sir_intensity=ranges["sir_intensity"][i],
+                        area=ranges["area"][i],
+                        circularity=ranges["circularity"][i],
+                    )
+                    self.add_spot(new_spot)
+        # All gaps should have been filled
+        assert self.length == max_frame - min_frame + 1

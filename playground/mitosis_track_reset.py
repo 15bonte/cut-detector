@@ -40,10 +40,13 @@ def main(mitoses_path: str):
 
 if __name__ == "__main__":
     # Only custom paths
-    SOURCE_CHOICE = 2
+    SOURCE_CHOICE = 5
     SOURCES = {
         0: "eval_data/Data Standard/mitoses",
         1: "eval_data/Data spastin/mitoses",
         2: "eval_data/Data cep55/mitoses",
+        3: r"C:\Users\thoma\data\Test Data Nathalie\mitoses",
+        4: r"C:\Users\thoma\data\Test Data Pasteur spastin\mitoses",
+        5: r"C:\Users\thoma\data\Test Data Pasteur cep55\mitoses",
     }
     main(SOURCES[SOURCE_CHOICE])
