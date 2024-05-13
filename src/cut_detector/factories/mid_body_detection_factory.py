@@ -554,7 +554,7 @@ class MidBodyDetectionFactory:
             ].flatten(),
             1000,
         )
-        threshold = np.percentile(intensities, 90)
+        threshold = np.percentile(intensities, 75)
         # Iterate over all tracks and keep only those with high sir-tubulin signal
         kept_tracks: list[MidBodyTrack] = []
         for track in mid_body_tracks:
