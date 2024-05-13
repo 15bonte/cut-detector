@@ -569,7 +569,7 @@ class MidBodyDetectionFactory:
             ):
                 continue
             frame_count, total_sir_intensity = 0, 0
-            for abs_frame in range(abs_min_frame, abs_max_frame + 1):
+            for abs_frame in range(abs_min_frame, abs_max_frame):
                 if abs_frame not in abs_track_frames:
                     continue
                 frame_count += 1
