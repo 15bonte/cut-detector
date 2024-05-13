@@ -41,7 +41,7 @@ def main(
     factory = MidBodyDetectionFactory()
     for mitosis_track in mitosis_tracks:
         positions, mother_points, daughter_points = (
-            factory.get_expected_positions(mitosis_track, cell_tracks)
+            factory.get_mid_body_expected_positions(mitosis_track, cell_tracks)
         )
         for frame, position in positions.items():
             absolute_frame = frame + mitosis_track.min_frame

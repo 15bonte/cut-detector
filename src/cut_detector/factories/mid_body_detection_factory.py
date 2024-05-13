@@ -167,7 +167,11 @@ class MidBodyDetectionFactory:
         ), "non-bool parallelization has been deprecated"
         if parallelization:
             return self.thread_pool_detect_mid_body_spots(
-                mitosis_movie, mask_movie, mid_body_channel, sir_channel, mode
+                mitosis_movie,
+                mask_movie,
+                mid_body_channel,
+                sir_channel,
+                mode,
                 mitosis_track,
             )
         else:
@@ -451,7 +455,7 @@ class MidBodyDetectionFactory:
         # Return average intensity
         return int(np.mean(crop))
 
-    def get_expected_positions(
+    def get_mid_body_expected_positions(
         self,
         mitosis_track: MitosisTrack,
         cell_tracks: list[CellTrack],
@@ -538,56 +542,10 @@ class MidBodyDetectionFactory:
         ----------
         mitosis_movie: TYXC
         """
-        (
-            mother_track,
-            daughter_tracks,
-        ) = mitosis_track.get_mother_daughters_tracks(trackmate_tracks)
-        # NB: only first daughter is considered
-        daughter_track = daughter_tracks[0]
 
-        expected_positions = {}
-        for frame in range(
-            daughter_track.start,
-            daughter_track.start + self.cytokinesis_duration,
-        ):
-            # If one cell does not exist anymore, stop
-            if (
-                frame not in daughter_track.spots
-                or frame not in mother_track.spots
-            ):
-                continue
-            # Compute mid-body expected relative position at current frame
-            closest_points = []
-            min_distance = np.inf
-            for mother_point in mother_track.spots[frame].spot_points:
-                position_mother = [
-                    int(mother_point[0]) - mitosis_track.position.min_x,
-                    int(mother_point[1]) - mitosis_track.position.min_y,
-                ]
-                for daughter_point in daughter_track.spots[frame].spot_points:
-                    position_daughter = [
-                        int(daughter_point[0]) - mitosis_track.position.min_x,
-                        int(daughter_point[1]) - mitosis_track.position.min_y,
-                    ]
-                    distance = np.linalg.norm(
-                        [
-                            a - b
-                            for a, b in zip(position_mother, position_daughter)
-                        ]
-                    )
-                    if distance < min_distance:
-                        min_distance = distance
-                        closest_points = [(position_mother, position_daughter)]
-                    if distance == min_distance:
-                        closest_points.append(
-                            (position_mother, position_daughter)
-                        )
-
-            mid_body_position = np.mean(closest_points, axis=0)
-            mid_body_position = np.mean(mid_body_position, axis=0)
-            expected_positions[frame - mitosis_track.min_frame] = (
-                mid_body_position
-            )
+        expected_positions, _, _ = self.get_mid_body_expected_positions(
+            mitosis_track, trackmate_tracks
+        )
 
         # Remove wrong tracks by keeping only tracks with at least minimum_track_length points
         old_len = len(mid_body_tracks)
@@ -653,11 +611,6 @@ class MidBodyDetectionFactory:
                     f"track {idx+1}/{len(mid_body_tracks)}: sir-avg",
                     sir_intensity_track[idx],
                 )
-
-        # if log_choice:
-        #     print("sir-candidates")
-        #     for idx, sir_avg in enumerate(sir_intensity_track):
-        #         print(f"{idx+1}/{len(sir_intensity_track)}: {sir_avg}")
 
         # Get list of expected distances
         if log_choice:
