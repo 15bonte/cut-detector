@@ -41,7 +41,6 @@ class MidBodyDetectionFactory:
         threshold (float): Threshold for bigfish detection (unused).
 
         cytokinesis_duration (int): Number of frames to look for mid-body in between cells.
-        minimum_mid_body_track_length (int): Minimum spots in mid-body track to consider it.
     """
 
     def __init__(
@@ -51,14 +50,12 @@ class MidBodyDetectionFactory:
         sigma=2.0,
         threshold=1.0,
         cytokinesis_duration=CYTOKINESIS_DURATION,
-        minimum_mid_body_track_length=5,
     ) -> None:
         self.track_linking_max_distance = track_linking_max_distance
         self.h_maxima_threshold = h_maxima_threshold
         self.sigma = sigma
         self.threshold = threshold
         self.cytokinesis_duration = cytokinesis_duration
-        self.minimum_mid_body_track_length = minimum_mid_body_track_length
 
     SPOT_DETECTION_METHOD = Union[
         Callable[[np.ndarray], np.ndarray],
@@ -546,21 +543,6 @@ class MidBodyDetectionFactory:
         expected_positions, _, _ = self.get_mid_body_expected_positions(
             mitosis_track, trackmate_tracks
         )
-
-        # Remove wrong tracks by keeping only tracks with at least minimum_track_length points
-        old_len = len(mid_body_tracks)
-        mid_body_tracks = [
-            track
-            for track in mid_body_tracks
-            if track.length > self.minimum_mid_body_track_length
-        ]
-        if log_choice:
-            print(f"kept {len(mid_body_tracks)}/{old_len} tracks based on len")
-            for idx, track in enumerate(mid_body_tracks):
-                print(f"\n--track {idx} --")
-                for s in track.spots.values():
-                    print(s, end="|")
-            print("")
 
         # Compute mean intensity on sir-tubulin channel for each track
         if log_choice:
