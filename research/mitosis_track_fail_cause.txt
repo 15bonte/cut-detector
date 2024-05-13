@@ -1,0 +1,33 @@
+##### Types of pipeline errors ######
+ND: no detection. No blue points on exploration
+MD: missing detections. Started or ended well, but pb somewhere
+WS: Wrong Spot: followed a spot, but not the right one. May also have jumped
+J: Most is fine except there is a jump that push the average distance above threshold
+?: Hard to interpret
+
+---- STD dataset ----
+ND: 2
+MD: 1
+WS: 2
+?: 1
+
+
+---- Spastin dataset ----
+ND: 1
+WS: 1
+
+
+---- Cep dataset ----
+ND: 1
+WS: 3
+J: 1
+?= 1
+
+
+
+---- Result ----
+ND: 3
+MD: 1
+WS: 6
+J: 1
+?: 2

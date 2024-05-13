@@ -1,0 +1,30 @@
+summmary eval_data/Data Standard/mitoses:
+------
+correct: 57 (40.43%)
+no_gt: 64 (45.39%)
+invalid_div: 14 (9.93%)
+wrong: 6 (4.26%)
+------
+available correct: (90.48%)
+
+
+
+summmary eval_data/Data Standard/mitoses:
+------
+correct: 57 (40.43%)
+no_gt: 64 (45.39%)
+invalid_div: 14 (9.93%)
+wrong: 6 (4.26%)
+------
+available correct: (90.48%)
+
+
+
+summmary eval_data/Data Standard/mitoses:
+------
+correct: 57 (40.43%)
+no_gt: 64 (45.39%)
+invalid_div: 14 (9.93%)
+wrong: 6 (4.26%)
+------
+available correct: (90.48%)

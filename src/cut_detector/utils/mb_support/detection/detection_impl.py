@@ -37,6 +37,22 @@ diffgau = partial(
     threshold=0.1,
 )
 
+very_fast_dog = partial(
+    detect_minmax_dog,
+    min_sigma=5,
+    max_sigma=5,
+    sigma_ratio=1.2,
+    threshold=0.1,
+)
+
+dog_005 = partial(
+    detect_minmax_dog,
+    min_sigma=2,
+    max_sigma=5,
+    sigma_ratio=1.2,
+    threshold=0.05,
+)
+
 ############ Determinant of Hessian ############
 
 hessian = partial(

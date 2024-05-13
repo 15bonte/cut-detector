@@ -20,11 +20,14 @@ def perform_mid_body_detection(
     save_dir: Optional[str] = None,
     update_mitoses: bool = True,
     mid_body_detection_method: Union[
-    	str, Callable[[np.ndarray], np.ndarray]
+        str, Callable[[np.ndarray], np.ndarray]
     ] = detection.cur_log,
-    mid_body_tracking_method: Union[str, LapTrack] = tracking.cur_spatial_laptrack,
+    mid_body_tracking_method: Union[
+        str, LapTrack
+    ] = tracking.cur_spatial_laptrack,
     parallel_detection: bool = False,
-):
+    target_mitosis_id: Optional[int] = None,
+) -> list[MitosisTrack]:
     mitosis_tracks: list[MitosisTrack] = []
     # Iterate over "bin" files in exported_mitoses_dir
     for state_path in os.listdir(exported_mitoses_dir):
@@ -56,7 +59,16 @@ def perform_mid_body_detection(
     mid_body_detector = MidBodyDetectionFactory()
     for i, mitosis_track in enumerate(mitosis_tracks):
 
-        print(f"track {i+1}/{len(mitosis_tracks)}...")
+        if (
+            isinstance(target_mitosis_id, int)
+            and mitosis_track.id != target_mitosis_id
+        ):
+            print(
+                f"track {i+1}/{len(mitosis_tracks)}, ID:{mitosis_track.id} - Skipped"
+            )
+            continue
+
+        print(f"track {i+1}/{len(mitosis_tracks)}, ID:{mitosis_track.id}...")
 
         # Generate mitosis movie
         mitosis_movie, mask_movie = mitosis_track.generate_video_movie(
@@ -71,7 +83,8 @@ def perform_mid_body_detection(
             trackmate_tracks,
             mb_detect_method=mid_body_detection_method,
             mb_tracking_method=mid_body_tracking_method,
-            parallel_detection=parallel_detection
+            parallel_detection=parallel_detection,
+            log_select_best_track_status=isinstance(target_mitosis_id, int),
         )
 
         # Save updated mitosis track
@@ -103,3 +116,5 @@ def perform_mid_body_detection(
             OmeTiffWriter.save(
                 final_mitosis_movie, image_save_path, dim_order="TCYX"
             )
+
+    return mitosis_tracks

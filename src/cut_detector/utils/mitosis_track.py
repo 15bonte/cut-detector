@@ -28,6 +28,7 @@ from .box_dimensions import BoxDimensions
 from .bridges_classification.impossible_detection import ImpossibleDetection
 from .image_tools import resize_image, smart_cropping
 
+
 def cell_counter_frame_to_video_frame(
     cell_counter_frame: int, nb_channels=4
 ) -> int:
@@ -39,6 +40,7 @@ def cell_counter_frame_to_video_frame(
     frames 5, 6, 7 and 8 will be frame 2, etc.
     """
     return (cell_counter_frame - 1) // nb_channels
+
 
 class MitosisTrack:
     """
@@ -508,8 +510,8 @@ class MitosisTrack:
                 )
 
     def evaluate_mid_body_detection(
-        self, tolerance=10, percent_seen=0.9
-    ) -> bool:
+        self, tolerance=10, percent_seen=0.9, avg_as_int: bool = True
+    ) -> Tuple[bool, float, Union[int, float]]:
         """
         Mid_body is considered as detected if during at least percent_seen % of frames
         between cytokinesis and second MT cut it is at most tolerance pixels away
@@ -542,6 +544,8 @@ class MitosisTrack:
                 )
             )
 
+        assert len(position_difference) != 0, "No GT points found"
+
         # Get percent_seen th percentile of position difference
         position_difference = np.array(position_difference)
         max_position_difference = np.quantile(
@@ -559,13 +563,21 @@ class MitosisTrack:
                 * 100
             )
         )
-        average_position_difference = int(
-            (
+
+        if avg_as_int:
+            average_position_difference = int(
+                (
+                    position_difference_wo_outliers.mean()
+                    if len(position_difference_wo_outliers) > 0
+                    else 1e3
+                )
+            )
+        else:
+            average_position_difference = (
                 position_difference_wo_outliers.mean()
                 if len(position_difference_wo_outliers) > 0
                 else 1e3
             )
-        )
 
         return (
             is_correctly_detected,
