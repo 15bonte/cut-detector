@@ -35,10 +35,9 @@ class MidBodyTrack(Track[MidBodySpot]):
         return list(id_to_track.values())
 
     def get_expected_distance(
-        self, 
-        expected_positions: dict[int, list[int]], 
+        self,
+        expected_positions: dict[int, list[int]],
         max_distance: float,
-        log_distance: bool = False
     ) -> float:
         """
         Compute the average distance between mid-body expected positions and current
@@ -54,13 +53,11 @@ class MidBodyTrack(Track[MidBodySpot]):
             )
         # If there are no frames in common, for sure track is not the right one
         if len(distances) == 0:
-            if log_distance: print("dropping candidate because: no frame in common")
             return np.inf
         mean_distance = np.mean(distances)
+        # If the mean distance is too high, discard the track
         if mean_distance > max_distance:
-            if log_distance: print("candidate distance > max distance")
             return np.inf
-        if log_distance: print("candidate with mean_distance:", mean_distance)
         return mean_distance
 
     def fill_gaps(self):
