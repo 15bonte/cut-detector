@@ -58,8 +58,9 @@ def main(
             print(
                 f"\nVideo {video_progress}, {Path(video_file).name} - Skipped"
             )
-        else:
-            print(f"\nVideo {video_progress}...")
+            continue
+
+        print(f"\nVideo {video_progress}...")
 
         # Read video
         raw_video = stack.read_image(
@@ -97,15 +98,18 @@ if __name__ == "__main__":
         SAVE = False
     else:
         # Custom paths for testing
-        SOURCE_CHOICE = 0
+        SOURCE_CHOICE = 5
         SOURCES = {
             0: "eval_data/Data Standard",
             1: "eval_data/Data spastin",
             2: "eval_data/Data cep55",
+            3: r"C:\Users\thoma\data\Test Data Nathalie",
+            4: r"C:\Users\thoma\data\Test Data Pasteur spastin",
+            5: r"C:\Users\thoma\data\Test Data Pasteur cep55",
         }
         DATA_SET_PATH = SOURCES[SOURCE_CHOICE]
-        TARGET_VIDEO_NAME = "converted t2_t3_F-1E5-35-12.tif"
-        TARGET_MITOSIS_ID = 4
+        TARGET_VIDEO_NAME = None  # "20231019-t1_siCep55-50-4.tif"
+        TARGET_MITOSIS_ID = None  # 5
         SAVE = True
 
     print("========")
