@@ -14,7 +14,6 @@ SOURCES = {
     4: r"C:\Users\thoma\data\Test Data Pasteur spastin\mitoses",
     5: r"C:\Users\thoma\data\Test Data Pasteur cep55\mitoses",
 }
-fertsf
 
 
 def start_evaluation(
