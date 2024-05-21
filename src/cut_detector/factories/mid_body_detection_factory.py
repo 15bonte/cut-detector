@@ -478,9 +478,6 @@ class MidBodyDetectionFactory:
                 or frame not in mother_track.spots
             ):
                 continue
-            # Compute mid-body expected relative position at current frame
-            closest_points = []
-            min_distance = np.inf
 
             # Get relative positions
             rel_positions_mother = [
