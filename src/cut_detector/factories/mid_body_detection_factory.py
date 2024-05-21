@@ -6,7 +6,8 @@ import numpy as np
 from bigfish import stack, detection
 from skimage.morphology import extrema, opening
 from scipy import ndimage
-
+from shapely.ops import nearest_points
+from shapely import Polygon, Point
 from cnn_framework.utils.display_tools import display_progress
 
 from ..utils.cell_track import CellTrack
@@ -480,36 +481,45 @@ class MidBodyDetectionFactory:
             # Compute mid-body expected relative position at current frame
             closest_points = []
             min_distance = np.inf
-            for mother_point in mother_track.spots[frame].spot_points:
-                rel_position_mother = [
+
+            # Get relative positions
+            rel_positions_mother = [
+                [
                     int(mother_point[0]) - mitosis_track.position.min_x,
                     int(mother_point[1]) - mitosis_track.position.min_y,
                 ]
-                for daughter_point in daughter_track.spots[frame].spot_points:
-                    rel_position_daughter = [
-                        int(daughter_point[0]) - mitosis_track.position.min_x,
-                        int(daughter_point[1]) - mitosis_track.position.min_y,
-                    ]
-                    distance = np.linalg.norm(
-                        [
-                            a - b
-                            for a, b in zip(
-                                rel_position_mother, rel_position_daughter
-                            )
-                        ]
-                    )
-                    if distance < min_distance:
-                        min_distance = distance
-                        closest_points = [
-                            (rel_position_mother, rel_position_daughter)
-                        ]
-                    if distance == min_distance:
-                        closest_points.append(
-                            (rel_position_mother, rel_position_daughter)
-                        )
+                for mother_point in mother_track.spots[frame].spot_points
+            ]
+            rel_positions_daughter = [
+                [
+                    int(daughter_point[0]) - mitosis_track.position.min_x,
+                    int(daughter_point[1]) - mitosis_track.position.min_y,
+                ]
+                for daughter_point in daughter_track.spots[frame].spot_points
+            ]
 
-            mid_body_position = np.mean(closest_points, axis=0)
-            mid_body_position = np.mean(mid_body_position, axis=0)
+            # Try to get points in both cells
+            mid_body_candidates = [
+                position
+                for position in rel_positions_mother
+                if position in rel_positions_daughter
+            ]
+            if (
+                len(mid_body_candidates) > 0
+            ):  # get mean of mid_body_candidates (as before)
+                mid_body_position = np.mean(mid_body_candidates, axis=0)
+            else:  # else, get mean of closest_points
+                mother_polygon = Polygon(rel_positions_mother)
+                daughter_polygon = Polygon(rel_positions_daughter)
+                nearest = nearest_points(mother_polygon, daughter_polygon)
+                mid_body_point = Point(
+                    (nearest[0].x + nearest[1].x) / 2,
+                    (nearest[0].y + nearest[1].y) / 2,
+                )
+                mid_body_position = np.array(
+                    [mid_body_point.x, mid_body_point.y]
+                )
+
             rel_expected_positions[frame - mitosis_track.min_frame] = (
                 mid_body_position
             )
