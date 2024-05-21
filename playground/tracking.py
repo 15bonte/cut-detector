@@ -1,17 +1,201 @@
 import os
 import pickle
 from typing import Optional
-from collections import namedtuple
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.spatial import ConvexHull
 
 from cut_detector.data.tools import get_data_path
 from cut_detector.utils.trackmate_track import TrackMateTrack
 from cut_detector.utils.trackmate_spot import TrackMateSpot
 
 
-Outline = namedtuple("Outline", ["points"])
+class Polygon:
+    def __init__(self, x, y, count):
+        self.x = x
+        self.y = y
+        self.count = count
+
+    def get_length(self, is_line):
+        length = 0.0
+        for i in range(self.count - 1):
+            dx = self.x[i + 1] - self.x[i]
+            dy = self.y[i + 1] - self.y[i]
+            length += np.sqrt(dx * dx + dy * dy)
+        if not is_line:
+            dx = self.x[0] - self.x[self.count - 1]
+            dy = self.y[0] - self.y[self.count - 1]
+            length += np.sqrt(dx * dx + dy * dy)
+        return length
+
+
+class Outline:
+    def __init__(self):
+        self.GROW = 10
+        self.reserved = self.GROW
+        self.first = int(self.GROW / 2)
+        self.last = int(self.GROW / 2)
+
+        self.x = [0] * self.reserved
+        self.y = [0] * self.reserved
+
+    def needs(self, needed_at_begin, needed_at_end):
+        if (
+            needed_at_begin > self.first
+            or needed_at_end > self.reserved - self.last
+        ):
+            extra_space = max(
+                self.GROW, abs(self.x[self.last - 1] - self.x[self.first])
+            )
+            new_size = (
+                self.reserved + needed_at_begin + needed_at_end + extra_space
+            )
+            new_first = needed_at_begin + extra_space // 2
+            new_x = [0] * new_size
+            new_y = [0] * new_size
+            new_x[new_first : new_first + (self.last - self.first)] = self.x[
+                self.first : self.last
+            ]
+            new_y[new_first : new_first + (self.last - self.first)] = self.y[
+                self.first : self.last
+            ]
+            self.x = new_x
+            self.y = new_y
+            self.last += new_first - self.first
+            self.first = new_first
+            self.reserved = new_size
+
+    def append_outline(self, o):
+        size = self.last - self.first
+        o_size = o.last - o.first
+        if size <= o.first and o_size > self.reserved - self.last:
+            # We don't have enough space in our own array but in that of 'o'
+            o.x[o.first - size : o.first] = self.x[self.first : self.last]
+            o.y[o.first - size : o.first] = self.y[self.first : self.last]
+            self.x = o.x
+            self.y = o.y
+            self.first = o.first - size
+            self.last = o.last
+            self.reserved = o.reserved
+        else:
+            # Append to our own array
+            self.needs(0, o_size)
+            self.x[self.last : self.last + o_size] = o.x[o.first : o.last]
+            self.y[self.last : self.last + o_size] = o.y[o.first : o.last]
+            self.last += o_size
+
+    def append_point(self, x, y):
+        if self.last - self.first >= 2 and collinear(
+            self.x[self.last - 2],
+            self.y[self.last - 2],
+            self.x[self.last - 1],
+            self.y[self.last - 1],
+            x,
+            y,
+        ):
+            # Replace previous point
+            self.x[self.last - 1] = x
+            self.y[self.last - 1] = y
+        else:
+            self.needs(0, 1)  # Ensure space for new point
+            self.x[self.last] = x
+            self.y[self.last] = y
+            self.last += 1
+
+    def prepend_point(self, x, y):
+        if self.last - self.first >= 2 and collinear(
+            self.x[self.first + 1],
+            self.y[self.first + 1],
+            self.x[self.first],
+            self.y[self.first],
+            x,
+            y,
+        ):
+            # Replace previous point
+            self.x[self.first] = x
+            self.y[self.first] = y
+        else:
+            self.needs(1, 0)  # Ensure space for new point at the beginning
+            self.first -= 1
+            self.x[self.first] = x
+            self.y[self.first] = y
+
+    def prepend_outline(self, o):
+        size = self.last - self.first
+        o_size = o.last - o.first
+        if size <= o.reserved - o.last and o_size > self.first:
+            # We don't have enough space in our own array but in that of 'o'
+            # Append our own data to that of 'o'
+            o.x[o.last : o.last + size] = self.x[self.first : self.last]
+            o.y[o.last : o.last + size] = self.y[self.first : self.last]
+            self.x = o.x
+            self.y = o.y
+            self.first = o.first
+            self.last = o.last + size
+            self.reserved = o.reserved
+        else:
+            # Prepend to our own array
+            self.needs(o_size, 0)
+            self.first -= o_size
+            self.x[self.first : self.first + o_size] = o.x[o.first : o.last]
+            self.y[self.first : self.first + o_size] = o.y[o.first : o.last]
+
+    def get_polygon(self):
+        # Optimize out intermediate points of straight lines (created, e.g., by merging outlines)
+        i = self.first + 1
+        j = self.first + 1
+
+        while i + 1 < self.last:
+            if collinear(
+                self.x[j - 1],
+                self.y[j - 1],
+                self.x[j],
+                self.y[j],
+                self.x[j + 1],
+                self.y[j + 1],
+            ):
+                # Merge i + 1 into i
+                self.last -= 1
+            else:
+                if i != j:
+                    self.x[i] = self.x[j]
+                    self.y[i] = self.y[j]
+                i += 1
+            j += 1
+
+        # Wraparound
+        if collinear(
+            self.x[j - 1],
+            self.y[j - 1],
+            self.x[j],
+            self.y[j],
+            self.x[self.first],
+            self.y[self.first],
+        ):
+            self.last -= 1
+        else:
+            self.x[i] = self.x[j]
+            self.y[i] = self.y[j]
+
+        if self.last - self.first > 2 and collinear(
+            self.x[self.last - 1],
+            self.y[self.last - 1],
+            self.x[self.first],
+            self.y[self.first],
+            self.x[self.first + 1],
+            self.y[self.first + 1],
+        ):
+            self.first += 1
+
+        count = self.last - self.first
+        x_new = self.x[self.first : self.first + count]
+        y_new = self.y[self.first : self.first + count]
+
+        return Polygon(x_new, y_new, count)
+
+
+def collinear(x1, y1, x2, y2, x3, y3):
+    # Implement the logic to check if three points are collinear
+    return (x2 - x1) * (y3 - y2) == (y2 - y1) * (x3 - x2)
 
 
 def mask_to_polygons(mask):
@@ -56,22 +240,23 @@ def mask_to_polygons(mask):
                     # continue at the right
                     if outline[x] is None:
                         if outline[x + 1] is None:
-                            outline[x] = Outline([(x + 1, y), (x, y)])
-                            outline[x + 1] = outline[x]
+                            outline[x + 1] = outline[x] = Outline()
+                            outline[x].append_point(x + 1, y)
+                            outline[x].append_point(x, y)
                         else:
                             outline[x] = outline[x + 1]
                             outline[x + 1] = None
-                            outline[x].points.append((x, y))
+                            outline[x].append_point(x, y)
                     elif outline[x + 1] is None:
                         if x == x_after_lower_right_corner:
                             outline[x + 1] = outline[x]
                             outline[x] = o_after_lower_right_corner
-                            outline[x].points.append((x, y))
-                            outline[x + 1].points.insert(0, (x + 1, y))
+                            outline[x].append_point(x, y)
+                            outline[x + 1].prepend_point(x + 1, y)
                         else:
                             outline[x + 1] = outline[x]
                             outline[x] = None
-                            outline[x + 1].points.insert(0, (x + 1, y))
+                            outline[x + 1].prepend_point(x + 1, y)
                     elif outline[x + 1] == outline[x]:
                         if (
                             x < w - 1
@@ -81,7 +266,7 @@ def mask_to_polygons(mask):
                             and prev_row[x + 2]
                         ):  # at lower right corner & next pxl deselected
                             outline[x] = None
-                            outline[x + 1].points.insert(0, (x + 1, y))
+                            outline[x + 1].prepend_point(x + 1, y)
                             x_after_lower_right_corner = x + 1
                             o_after_lower_right_corner = outline[x + 1]
                         else:  # we cannot handle holes
@@ -92,7 +277,7 @@ def mask_to_polygons(mask):
                                 else None
                             )
                     else:
-                        outline[x].points.extend(outline[x + 1].points)
+                        outline[x].prepend_outline(outline[x + 1])
                         for x1 in range(w + 1):
                             if x1 != x + 1 and outline[x1] == outline[x + 1]:
                                 outline[x1] = outline[x]
@@ -108,7 +293,7 @@ def mask_to_polygons(mask):
                 if not this_row[x]:
                     if outline[x] is None:
                         raise RuntimeError("Assertion failed")
-                    outline[x].points.append((x, y + 1))
+                    outline[x].append_point(x, y + 1)
             else:  # !thisRow[x + 1], i.e., pixel (x,y) is deselected
                 if prev_row[x + 1]:
                     # Lower edge of selected area:
@@ -122,23 +307,23 @@ def mask_to_polygons(mask):
                     # continue at the right
                     if outline[x] is None:
                         if outline[x + 1] is None:
-                            outline[x] = outline[x + 1] = Outline(
-                                [(x, y), (x + 1, y)]
-                            )
+                            outline[x] = outline[x + 1] = Outline()
+                            outline[x].append_point(x, y)
+                            outline[x].append_point(x + 1, y)
                         else:
                             outline[x] = outline[x + 1]
                             outline[x + 1] = None
-                            outline[x].points.insert(0, (x, y))
+                            outline[x].prepend_point(x, y)
                     elif outline[x + 1] is None:
                         if x == x_after_lower_right_corner:
                             outline[x + 1] = outline[x]
                             outline[x] = o_after_lower_right_corner
-                            outline[x].points.insert(0, (x, y))
-                            outline[x + 1].points.append((x + 1, y))
+                            outline[x].prepend_point(x, y)
+                            outline[x + 1].prepend_point(x + 1, y)
                         else:
                             outline[x + 1] = outline[x]
                             outline[x] = None
-                            outline[x + 1].points.append((x + 1, y))
+                            outline[x + 1].append_point(x + 1, y)
                     elif outline[x + 1] == outline[x]:
                         if (
                             x < w - 1
@@ -148,13 +333,11 @@ def mask_to_polygons(mask):
                             and not prev_row[x + 2]
                         ):
                             outline[x] = None
-                            outline[x + 1].points.insert(
-                                0, (x + 1, y)
-                            )  # polygons.add( outline[ x ].getPolygon() );
+                            outline[x + 1].append_point(x + 1, y)
                             x_after_lower_right_corner = x + 1
                             o_after_lower_right_corner = outline[x + 1]
                         else:
-                            polygons.append(outline[x].points)
+                            polygons.append(outline[x].get_polygon())
                             outline[x + 1] = None
                             outline[x] = (
                                 o_after_lower_right_corner
@@ -169,13 +352,13 @@ def mask_to_polygons(mask):
                             and this_row[x + 2]
                             and not prev_row[x + 2]
                         ):
-                            outline[x].points.append((x + 1, y))
-                            outline[x + 1].points.insert(0, (x + 1, y))
+                            outline[x].append_point(x + 1, y)
+                            outline[x + 1].prepend_point(x + 1, y)
                             x_after_lower_right_corner = x + 1
                             o_after_lower_right_corner = outline[x]
                             outline[x] = None
                         else:
-                            outline[x].points.extend(outline[x + 1].points)
+                            outline[x].append_outline(outline[x + 1])  # merge
                             for x1 in range(w + 1):
                                 if (
                                     x1 != x + 1
@@ -194,34 +377,27 @@ def mask_to_polygons(mask):
                     if this_row[x]:
                         if outline[x] is None:
                             raise RuntimeError("Assertion failed")
-                        outline[x].points.insert(0, (x, y + 1))
+                        outline[x].prepend_point(x, y + 1)
 
     return polygons
 
 
-def get_length(x, y):
-    dx = x[0] - x[-1]
-    dy = y[0] - y[-1]
-    return np.sqrt(dx * dx + dy * dy)
-
-
 def get_interpolated_polygon(p, interval):
+    # p = get_float_polygon(p)
+
     allow_to_adjust = interval < 0
     interval = abs(interval)
 
-    x_points = [x for x, _ in p]
-    y_points = [y for _, y in p]
+    length = p.get_length(is_line=False)
 
-    length = get_length(x_points, y_points)
-
-    n_points = len(p)
+    n_points = len(p.x)
     if n_points < 2:
         return p
     if abs(interval) < 0.01:
         raise ValueError("Interval must be >= 0.01")
 
-    x_points.append(x_points[0])
-    y_points.append(y_points[0])
+    p.x.append(p.x[0])
+    p.y.append(p.y[0])
 
     n_points2 = int(10 + (length * 1.5) / interval)  # allow some headroom
     try_interval = interval
@@ -235,18 +411,18 @@ def get_interpolated_polygon(p, interval):
     trial = 0
 
     while trial <= n_trials:
-        dest_x_arr[0] = x_points[0]
-        dest_y_arr[0] = y_points[0]
+        dest_x_arr[0] = p.x[0]
+        dest_y_arr[0] = p.y[0]
         src_ptr = 0
         dest_ptr = 0
-        x_a = x_points[0]  # start of current segment
-        y_a = y_points[0]
+        x_a = p.x[0]  # start of current segment
+        y_a = p.y[0]
 
         while src_ptr < n_points - 1:  # collect vertices
             x_c = dest_x_arr[dest_ptr]  # center circle
             y_c = dest_y_arr[dest_ptr]
-            x_b = x_points[src_ptr + 1]  # end of current segment
-            y_b = y_points[src_ptr + 1]
+            x_b = p.x[src_ptr + 1]  # end of current segment
+            y_b = p.y[src_ptr + 1]
             intersections = line_circle_intersection(
                 x_a, y_a, x_b, y_b, x_c, y_c, try_interval, True
             )
@@ -259,12 +435,12 @@ def get_interpolated_polygon(p, interval):
                 dest_y_arr[dest_ptr] = y_a
             else:
                 src_ptr += 1  # no intersection found, pick next segment
-                x_a = x_points[src_ptr]
-                y_a = y_points[src_ptr]
+                x_a = p.x[src_ptr]
+                y_a = p.y[src_ptr]
 
         dest_ptr += 1
-        dest_x_arr[dest_ptr] = x_points[n_points - 1]
-        dest_y_arr[dest_ptr] = y_points[n_points - 1]
+        dest_x_arr[dest_ptr] = p.x[n_points - 1]
+        dest_y_arr[dest_ptr] = p.y[n_points - 1]
         dest_ptr += 1
         if not allow_to_adjust:
             break
@@ -303,7 +479,7 @@ def get_interpolated_polygon(p, interval):
         x_points_new[jj] = dest_x_arr[jj]
         y_points_new[jj] = dest_y_arr[jj]
 
-    f_poly = [(x_points_new[i], y_points_new[i]) for i in range(dest_ptr)]
+    f_poly = Polygon(x_points_new, y_points_new, len(x_points_new))
     return f_poly
 
 
@@ -369,6 +545,72 @@ def line_circle_intersection(ax, ay, bx, by, cx, cy, rad, ignore_outside):
     return xy_coords
 
 
+def perpendicular_distance(px, py, vx, vy, wx, wy):
+    # Calculate the perpendicular distance from point (px, py) to line segment (vx, vy) - (wx, wy)
+    l2 = (vx - wx) ** 2 + (vy - wy) ** 2  # length squared
+    if l2 == 0:
+        return np.sqrt((px - vx) ** 2 + (py - vy) ** 2)
+    t = ((px - vx) * (wx - vx) + (py - vy) * (wy - vy)) / l2
+    t = max(0, min(1, t))
+    projection_x = vx + t * (wx - vx)
+    projection_y = vy + t * (wy - vy)
+    return np.sqrt((px - projection_x) ** 2 + (py - projection_y) ** 2)
+
+
+def douglas_peucker_core(list, s, e, epsilon, result_list):
+    # Find the point with the maximum distance
+    dmax = 0
+    index = 0
+
+    start = s
+    end = e - 1
+    for i in range(start + 1, end):
+        # Point
+        px, py = list[i]
+        # Start
+        vx, vy = list[start]
+        # End
+        wx, wy = list[end]
+        d = perpendicular_distance(px, py, vx, vy, wx, wy)
+        if d > dmax:
+            index = i
+            dmax = d
+
+    # If max distance is greater than epsilon, recursively simplify
+    if dmax > epsilon:
+        # Recursive call
+        douglas_peucker_core(list, s, index, epsilon, result_list)
+        douglas_peucker_core(list, index, e, epsilon, result_list)
+    else:
+        if end - start > 0:
+            result_list.append(list[start])
+            result_list.append(list[end])
+        else:
+            result_list.append(list[start])
+
+
+def douglas_peucker(list, epsilon):
+    # Douglas-Peucker simplification
+    result_list = []
+    douglas_peucker_core(list, 0, len(list), epsilon, result_list)
+    return result_list
+
+
+def simplify_interpolate(p, interval):
+    p = get_interpolated_polygon(p, interval)
+    return p
+
+
+def simplify(p, interval, epsilon):
+    p = get_interpolated_polygon(p, interval)
+    points = []
+    for i in range(p.count):
+        points.append([p.x[i], p.y[i]])
+    simplified_points = douglas_peucker(points, epsilon)
+    x_simplified, y_simplified = zip(*simplified_points)
+    return Polygon(list(x_simplified), list(y_simplified), len(x_simplified))
+
+
 def load_tracks_and_spots(
     trackmate_tracks_path: str, spots_path: str
 ) -> tuple[list[TrackMateTrack], list[TrackMateSpot]]:
@@ -410,23 +652,56 @@ def main(
 
     polygons = mask_to_polygons(cellpose_results[0])  # frame 0
 
-    # for polygon in polygons:
-    #     f_polygon = get_interpolated_polygon(polygon, interval=2)
+    interpolated_polygons = []
+    for polygon in polygons:
+        interpolated_polygon = simplify_interpolate(polygon, interval=2)
+        interpolated_polygons.append(interpolated_polygon)
+
+    simplified_polygons = []
+    for polygon in polygons:
+        simplified_polygon = simplify(polygon, interval=2, epsilon=0.5)
+        simplified_polygons.append(simplified_polygon)
 
     # Plot polygons
+    plt.subplot(221)
     for polygon in polygons:
-        polygon = np.array(polygon)
-        hull = ConvexHull(polygon)
-        convex_hull_indices = polygon[hull.vertices][:, ::-1]  # (x, y)
-        x, y = zip(*convex_hull_indices)
-        plt.plot(x, y)
+        x, y = polygon.x, polygon.y
+        plt.plot(y, x)
     plt.imshow(cellpose_results[0], cmap="gray")
-    plt.show()
+
+    plt.subplot(222)
+    for polygon in interpolated_polygons:
+        x, y = polygon.x, polygon.y
+        plt.plot(y, x)
+    plt.imshow(cellpose_results[0], cmap="gray")
+
+    plt.subplot(223)
+    for polygon in simplified_polygons:
+        x, y = polygon.x, polygon.y
+        plt.plot(y, x)
+    plt.imshow(cellpose_results[0], cmap="gray")
 
     # Load TrackMate results to compare... make sure they match!
     trackmate_tracks, trackmate_spots = load_tracks_and_spots(
         trackmate_tracks_path, spots_path
     )
+
+    def plot_spots(frame):
+        for s in trackmate_spots:
+            y = []
+            x = []
+            if s.frame == frame:
+                point_list = s.spot_points
+                for i in range(len(point_list)):
+                    x.append(point_list[i][0])
+                    y.append(point_list[i][1])
+            plt.plot(x, y)
+
+    plt.subplot(224)
+    plot_spots(0)
+    plt.imshow(cellpose_results[0], cmap="gray")
+
+    plt.show()
 
 
 if __name__ == "__main__":
