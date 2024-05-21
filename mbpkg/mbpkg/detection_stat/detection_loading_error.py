@@ -1,4 +1,0 @@
-
-class DetectionLoadingError(Exception):
-    pass
-
