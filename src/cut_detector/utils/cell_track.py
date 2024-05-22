@@ -346,12 +346,13 @@ class CellTrack(Track[CellSpot]):
     def track_df_to_track_list(
         track_df: pd.DataFrame,
         spots: dict[int, list[CellSpot]],
-            ) -> list[CellTrack]:
-        
-        track_df = track_df.dropna(inplace=True)
-        track_df.resetindex(drop=True, inplace=True)
+    ) -> list[CellTrack]:
+
+        track_df.dropna(inplace=True)
+        track_df.reset_index(drop=True, inplace=True)
+
         id_to_track = {}
-        for _, row in track_df.interrows():
+        for _, row in track_df.iterrows():
             track_id = row["track_id"]
             track: list = id_to_track.get(track_id)
             if track is None:
