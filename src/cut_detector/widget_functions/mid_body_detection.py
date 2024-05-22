@@ -64,11 +64,13 @@ def perform_mid_body_detection(
             and mitosis_track.id != target_mitosis_id
         ):
             print(
-                f"Track {i+1}/{len(mitosis_tracks)}, id:{mitosis_track.id} - Skipped"
+                f"\nTrack {i+1}/{len(mitosis_tracks)}, mitosis id {mitosis_track.id} - Skipped"
             )
             continue
 
-        print(f"Track {i+1}/{len(mitosis_tracks)}, id:{mitosis_track.id}...")
+        print(
+            f"\nTrack {i+1}/{len(mitosis_tracks)}, mitosis id {mitosis_track.id}"
+        )
 
         # Generate mitosis movie
         mitosis_movie, mask_movie = mitosis_track.generate_video_movie(
