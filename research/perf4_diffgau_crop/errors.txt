@@ -1,0 +1,45 @@
+diffgau + crop
+
+---- STD ----
+converted t2_t3_F-1E5-35-12_mitosis_29_10_to_37.bin: detected 58% with avg distance 43
+    f22-33
+    jumped frame 26 -> 27
+    [mask error]
+
+converted t2_t3_F-1E5-35-12_mitosis_4_13_to_189.bin: detected 0% with avg distance 1000
+    f12-19
+    Missed enough because of normalization
+    Missed all
+
+converted t2_t3_F-1E5-35-11_mitosis_25_6_to_49.bin: detected 0% with avg distance 1000
+    [???]
+
+converted t2_t3_F-1E5-35-8_mitosis_9_95_to_196.bin: detected 75% with avg distance 127
+    Followed wrong spot
+    
+
+converted t2_t3_F-1E5-35-11_mitosis_27_2_to_42.bin: detected 91% with avg distance 4
+    Missed one spot + [1 wrong annotation]
+
+
+
+---- SPAS ----
+20231019-t1_siSpastin-50-2_mitosis_5_136_to_176.bin
+    Followed wrong spot
+
+20231019-t1_siSpastin-50-1_mitosis_16_5_to_25.bin
+    Missed spot
+    [Cut too soon]
+
+
+
+---- CEP ----
+20231019-t1_siCep55-50-4_mitosis_24_17_to_104.bin
+    Missed all spots
+
+20231019-t1_siCep55-50-4_mitosis_4_90_to_226.bin
+    Jumped to another spot
+
+20231019-t1_siCep55-50-1_mitosis_5_41_to_155.bin
+    Wrong spot
+    [mask error]
