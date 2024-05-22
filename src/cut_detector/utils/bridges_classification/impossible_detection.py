@@ -14,3 +14,4 @@ class ImpossibleDetection(IntEnum):
     MT_CUT_AT_CYTOKINESIS = -5
     NO_CUT_DETECTED = -6
     LIGHT_SPOT = -7
+    TOO_SHORT_CUT = -8

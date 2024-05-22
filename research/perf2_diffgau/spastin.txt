@@ -1,0 +1,12 @@
+cur_dog
+
+Time:
+- video 1/2: 77.8927960395813
+- video 2/2: 186.24310612678528
+
+Wrong detections:
+20231019-t1_siSpastin-50-2_mitosis_5_136_to_176.bin: detected 100% with avg distance 103
+20231019-t1_siSpastin-50-1_mitosis_16_5_to_25.bin: detected 0% with avg distance 1000
+20231019-t1_siSpastin-50-2_mitosis_29_17_to_47.bin: detected 0% with avg distance 1000
+
+Mid-body detection evaluation: 82.35% | 14/17
