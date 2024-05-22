@@ -1,6 +1,7 @@
 import os
 import numpy as np
 
+from ..constants.tracking import TIME_RESOLUTION
 from ..utils.bridges_classification.bridges_mt_model_manager import (
     BridgesMtModelManager,
 )
@@ -149,16 +150,9 @@ class MtCutDetectionFactory:
         Expect TYXC video.
         """
         # Run CNN classification
-        list_class_bridges = self.classify_bridges(
+        classified_bridges = self.classify_bridges(
             mitosis_tracks, video, bridges_mt_cnn_model_path
         )
-
-        # Debug use
-        results = {
-            "list_class_bridges": list_class_bridges,
-            "list_class_bridges_after_hmm": {},
-            "crops": {},
-        }
 
         # Read HMM parameters
         if not os.path.exists(hmm_bridges_parameters_file):
@@ -176,26 +170,14 @@ class MtCutDetectionFactory:
             if classification_impossible:
                 continue
 
-            # Perform classification...
-            ordered_mb_frames = sorted(mitosis_track.mid_body_spots.keys())
-            first_mb_frame = ordered_mb_frames[0]
-            first_frame = max(
-                first_mb_frame,
-                mitosis_track.key_events_frame["cytokinesis"] - 2,
-            )  # -2 because cytokinesis frame may be a bit too late
-
-            if debug_mode:  # save crops only in debug
-                results["crops"][mitosis_track.id] = (
-                    mitosis_track.get_bridge_images(video, self.margin)
-                )
-
             # Make sure cytokinesis bridge is detected as class 0: "no MT cut"
+            first_frame = min(classified_bridges["frames"][mitosis_track.id])
             relative_cytokinesis_frame = (
                 mitosis_track.key_events_frame["cytokinesis"] - first_frame
             )
             if (
                 relative_cytokinesis_frame < 0
-                or results["list_class_bridges"][mitosis_track.id][
+                or classified_bridges["predictions"][mitosis_track.id][
                     relative_cytokinesis_frame
                 ]
                 != 0
@@ -209,10 +191,10 @@ class MtCutDetectionFactory:
                 continue
 
             # Correct the sequence with HMM
-            results["list_class_bridges_after_hmm"][mitosis_track.id] = (
+            classified_bridges["predictions_after_hmm"][mitosis_track.id] = (
                 apply_hmm(
                     hmm_parameters,
-                    results["list_class_bridges"][mitosis_track.id],
+                    classified_bridges["predictions"][mitosis_track.id],
                 )
             )
 
@@ -221,7 +203,7 @@ class MtCutDetectionFactory:
                 (
                     i
                     for i, x in enumerate(
-                        results["list_class_bridges_after_hmm"][
+                        classified_bridges["predictions_after_hmm"][
                             mitosis_track.id
                         ]
                     )
@@ -240,7 +222,20 @@ class MtCutDetectionFactory:
                 )
                 continue
 
+            # Ignore if cut is too short, i.e. less than 50 minutes
             first_mt_cut_frame_abs = first_frame + first_mt_cut_frame_rel
+            if (
+                first_mt_cut_frame_abs
+                - mitosis_track.key_events_frame["cytokinesis"]
+            ) < 50 / TIME_RESOLUTION:
+                mitosis_track.key_events_frame["first_mt_cut"] = (
+                    ImpossibleDetection.TOO_SHORT_CUT
+                )
+                mitosis_track.key_events_frame["second_mt_cut"] = (
+                    ImpossibleDetection.TOO_SHORT_CUT
+                )
+                continue
+
             if mitosis_track.light_spot_detected(
                 video,
                 first_mt_cut_frame_abs,
@@ -269,7 +264,7 @@ class MtCutDetectionFactory:
                 (
                     i
                     for i, x in enumerate(
-                        results["list_class_bridges_after_hmm"][
+                        classified_bridges["predictions_after_hmm"][
                             mitosis_track.id
                         ]
                     )
@@ -294,9 +289,9 @@ class MtCutDetectionFactory:
 
             if debug_mode:
                 # In debug, expect only one mitosis track
-                return results
+                return classified_bridges
 
-        return results
+        return classified_bridges
 
     def classify_bridges(
         self,
@@ -308,31 +303,38 @@ class MtCutDetectionFactory:
         Classify bridges using a CNN model.
         """
         # Get bridge crops
-        crops = {}
+        bridges = {
+            "images": {},
+            "frames": {},
+            "predictions": {},
+            "predictions_after_hmm": {},
+        }
         for mitosis_track in mitosis_tracks:
-            raw_crops = mitosis_track.get_bridge_images(video, self.margin)
-            first_channel_crops = [
-                np.expand_dims(raw_crop[0], axis=0) for raw_crop in raw_crops
+            images, frames = mitosis_track.get_bridge_images(
+                video, self.margin
+            )
+            sir_tubulin_images = [
+                np.expand_dims(image[0], axis=0) for image in images
             ]
-            crops[mitosis_track.id] = first_channel_crops
+            bridges["images"][mitosis_track.id] = sir_tubulin_images
+            bridges["frames"][mitosis_track.id] = frames
 
         # Perform classification
-        crops_list = [
-            crop for crop_list in crops.values() for crop in crop_list
+        flatten_images = [
+            image for images in bridges["images"].values() for image in images
         ]
         predictions = perform_cnn_inference(
             model_path=bridges_mt_cnn_model_path,
-            images=crops_list,
+            images=flatten_images,
             cnn_model_params=BridgesMtCnnModelParams,
             model_manager=BridgesMtModelManager,
         )
 
-        # Create prediction dictionary
-        mitosis_predictions = {}
-        for mitosis_track_id, crop_list in crops.items():
-            mitosis_predictions[mitosis_track_id] = predictions[
-                : len(crop_list)
+        # Fill predictions
+        for mitosis_track_id, images in bridges["images"].items():
+            bridges["predictions"][mitosis_track_id] = predictions[
+                : len(images)
             ]
-            predictions = predictions[len(crop_list) :]
+            predictions = predictions[len(images) :]
 
-        return mitosis_predictions
+        return bridges

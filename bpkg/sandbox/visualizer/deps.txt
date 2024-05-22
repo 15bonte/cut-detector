@@ -1,6 +1,0 @@
-To use this package, you will need to additionnaly install the following
-dependencies:
-- dash
-- plotly
-- dash-bootstrap-components (conda-forge)
-- dash-extensions
