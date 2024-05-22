@@ -4,6 +4,7 @@ from scipy.stats import ttest_1samp
 import numpy as np
 import matplotlib.pyplot as plt
 
+from ..constants.tracking import TIME_RESOLUTION
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.bridges_classification.impossible_detection import (
     ImpossibleDetection,
@@ -15,7 +16,7 @@ class ResultsSavingFactory:
 
     def __init__(
         self,
-        time_resolution: Optional[int] = 10,
+        time_resolution: Optional[int] = TIME_RESOLUTION,
         max_frame: Optional[int] = np.inf,
     ):
         self.time_resolution = time_resolution

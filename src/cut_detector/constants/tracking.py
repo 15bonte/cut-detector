@@ -13,3 +13,6 @@ CYTOKINESIS_DURATION = (
 
 # Minimum distance to border to consider is_near_border = true
 MINIMUM_DISTANCE_TO_BORDER = 20
+
+# Time resolution
+TIME_RESOLUTION = 10  # 1 frame = 10 minutes

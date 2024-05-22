@@ -721,20 +721,22 @@ class MitosisTrack:
         ----------
         bridge_images: list[np.array]
             list of crops around the mid-body, TCYX
+        frames: list[int]
+            list of frames corresponding to each crop
         """
 
         # Case with no mid_body detected
         if not self.mid_body_spots:
-            return []
+            return [], []
 
         ordered_mb_frames = sorted(self.mid_body_spots.keys())
         first_mb_frame = ordered_mb_frames[0]
         last_mb_frame = ordered_mb_frames[-1]
         first_frame = max(
             first_mb_frame, self.key_events_frame["cytokinesis"] - 2
-        )  # -2?
+        )  # -2 because cytokinesis frame may be a bit too late
 
-        bridge_images = []
+        bridge_images, frames = [], []
         for frame in range(first_frame, last_mb_frame + 1):
             min_x = self.position.min_x
             min_y = self.position.min_y
@@ -751,8 +753,9 @@ class MitosisTrack:
                 frame_image, margin, x_pos, y_pos, pad=True
             )  # CYX
             bridge_images.append(crop)
+            frames.append(frame)
 
-        return bridge_images
+        return bridge_images, frames
 
     def adapt_deprecated_attributes(self) -> None:
         """
