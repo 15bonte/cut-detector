@@ -82,10 +82,10 @@ class MidBodyDetectionFactory:
         mitosis_movie: np.ndarray,
         mask_movie: np.ndarray,
         tracks: list[TrackMateTrack],
+        parallel_detection: bool,
         mb_detect_method: SPOT_DETECTION_METHOD = mbd.cur_dog,
         mb_tracking_method: TRACKING_METHOD = mbt.cur_spatial_laptrack,
         log_blob_spot: bool = False,
-        parallel_detection: bool = False,
     ) -> None:
         """
         Get spots of best mitosis track.
@@ -100,9 +100,9 @@ class MidBodyDetectionFactory:
         spots_candidates = self.detect_mid_body_spots(
             mitosis_movie,
             mask_movie=mask_movie,
+            parallelization=parallel_detection,
             mode=mb_detect_method,
             log_blob_spot=log_blob_spot,
-            parallelization=parallel_detection,
             mitosis_track=mitosis_track,
         )
 
@@ -135,11 +135,11 @@ class MidBodyDetectionFactory:
         self,
         mitosis_movie: np.ndarray,
         mask_movie: Optional[np.ndarray] = None,
+        parallelization: bool = False,
         mid_body_channel=1,
         sir_channel=0,
         mode: SPOT_DETECTION_METHOD = mbd.cur_dog,
         log_blob_spot: bool = False,
-        parallelization: bool = False,
         mitosis_track: Optional[MitosisTrack] = None,
     ) -> dict[int, list[MidBodySpot]]:
         """
