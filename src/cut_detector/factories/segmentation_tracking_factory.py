@@ -264,6 +264,7 @@ class SegmentationTrackingFactory:
             flow_threshold=self.flow_threshold,
             cellprob_threshold=self.cellprob_threshold,
             augment=self.augment,
+            resample=False,
         )
 
         cell_spots_dictionary = self.get_spots_from_cellpose(cellpose_results)
