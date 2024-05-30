@@ -28,6 +28,7 @@ class TrackMateTrack(CellTrack):
 
         super().__init__(track_id, track_spots_ids, start, stop)
 
+
     def adapt_deprecated_attributes(self) -> None:
         """
         Adapt deprecated attributes.

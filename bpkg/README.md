@@ -1,3 +1,0 @@
-# Blob Package (BPKG)
-
-...

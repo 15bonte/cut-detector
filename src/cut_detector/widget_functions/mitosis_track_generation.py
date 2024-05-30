@@ -167,8 +167,6 @@ def perform_mitosis_track_generation(
     if only_predictions_update:
         return None
 
-    print("\nGet tracks to merge...")
-
     # Plug tracks occurring at frame>0 to closest metaphase
     mitosis_tracks = tracks_merging_factory.get_tracks_to_merge(cell_tracks)
 

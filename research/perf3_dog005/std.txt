@@ -1,0 +1,10 @@
+Wrong detections:
+converted t2_t3_F-1E5-35-12_mitosis_29_10_to_37.bin: detected 0% with avg distance 1000
+converted t2_t3_F-1E5-35-12_mitosis_4_13_to_189.bin: detected 75% with avg distance 16
+converted t2_t3_F-1E5-35-11_mitosis_25_6_to_49.bin: detected 0% with avg distance 1000
+converted t2_t3_F-1E5-35-11_mitosis_16_3_to_124.bin: detected 100% with avg distance 29
+converted t2_t3_F-1E5-35-8_mitosis_9_95_to_196.bin: detected 100% with avg distance 134
+converted t2_t3_F-1E5-35-7_mitosis_16_6_to_14.bin: detected 33% with avg distance 85
+converted t2_t3_F-1E5-35-11_mitosis_15_71_to_125.bin: detected 88% with avg distance 57
+
+Mid-body detection evaluation: 88.89% | 56/63
