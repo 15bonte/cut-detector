@@ -47,6 +47,7 @@ def main(
         flow_threshold=factory.flow_threshold,
         cellprob_threshold=factory.cellprob_threshold,
         augment=factory.augment,
+        resample=False,
     )
 
     for frame in range(image.shape[0]):
