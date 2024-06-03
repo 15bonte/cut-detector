@@ -142,11 +142,12 @@ def perform_mitosis_track_generation(
             cell_spots.append(cell_spot)
 
     # Load cell tracks
-    cell_tracks: list[CellTrack] = []
+    cell_tracks: list[TrackMateTrack] = []
     video_tracks_save_dir = os.path.join(tracks_dir, video_name)
     for state_path in os.listdir(video_tracks_save_dir):
         with open(os.path.join(video_tracks_save_dir, state_path), "rb") as f:
-            cell_track: CellTrack = pickle.load(f)
+            cell_track: TrackMateTrack = pickle.load(f)
+            cell_track.adapt_deprecated_attributes()
             cell_tracks.append(cell_track)
 
     # Detect metaphase spots
@@ -164,8 +165,6 @@ def perform_mitosis_track_generation(
     # If the goal is only to update predictions file, stop here
     if only_predictions_update:
         return None
-
-    print("\nGet tracks to merge...")
 
     # Plug tracks occurring at frame>0 to closest metaphase
     mitosis_tracks = tracks_merging_factory.get_tracks_to_merge(cell_tracks)

@@ -27,3 +27,4 @@ class TrackMateTrack(CellTrack):
         stop = int(float(trackmate_track["@TRACK_STOP"]))
 
         super().__init__(track_id, track_spots_ids, start, stop)
+

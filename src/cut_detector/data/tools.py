@@ -23,7 +23,7 @@ def get_data_path(data_name: str) -> None:
     elif data_name == "videos":
         files = ["example_video.tif"]
     elif data_name == "mitosis_movies":
-        files = ["example_video_mitosis_0_0_to_4.tiff"]
+        files = ["example_video_mitosis_0_4_to_0.tiff"]
     elif data_name == "mid_bodies":
         files = []  # no files to download here
     elif data_name == "mid_bodies_tests":
@@ -36,7 +36,7 @@ def get_data_path(data_name: str) -> None:
     elif data_name == "annotations":
         sub_folder_to_create = f"{data_name}/example_video"
         files = [
-            "example_video/CellCounter_example_video_mitosis_0_0_to_4.xml"
+            "example_video/CellCounter_example_video_mitosis_0_4_to_0.xml"
         ]
     else:
         raise ValueError(f"Unknown data name: {data_name}")

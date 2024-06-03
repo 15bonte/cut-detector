@@ -1,0 +1,91 @@
+cur_dog
+
+---- STD ----
+converted t2_t3_F-1E5-35-12_mitosis_29_10_to_37.bin: detected 0% with avg distance 1000
+    f22-33
+    Missed all.
+    No track kept.
+    detection found all.
+    Mask error.
+
+converted t2_t3_F-1E5-35-12_mitosis_4_13_to_189.bin: detected 0% with avg distance 1000
+    f12-19
+    Missed all.
+    normalization
+    Detection finds a few points, but it's a faded MB that is normalized by a
+        brigther one.
+
+converted t2_t3_F-1E5-35-8_mitosis_35_17_to_21.bin: detected 57% with avg distance 1
+    f11-17
+    Some spots have been missed (14-17)
+    it's a faded MB that is normalized by a brigther one.
+
+converted t2_t3_F-1E5-35-7_mitosis_12_14_to_36.bin: detected 87% with avg distance 1
+    f18-25
+    One significant spot missed (f25)
+    it's a faded MB that is normalized by a brigther one, just under threshold.
+
+converted t2_t3_F-1E5-35-11_mitosis_25_6_to_49.bin: detected 0% with avg distance 1000
+    ??? Neither GT points nor test points visible...
+
+
+converted t2_t3_F-1E5-35-8_mitosis_9_95_to_196.bin: detected 100% with avg distance 172
+    f12-19
+    Not the right spot (f12-14) + jumped to another wrong spot later (f15-19)
+    Likely a wrong track selection. Jump is because first MB faded too much.
+    *
+    normalization
+
+converted t2_t3_F-1E5-35-7_mitosis_10_15_to_51.bin: detected 0% with avg distance 1000
+    f18-24
+    Missed all.
+    Faded MB, only 4 spots (not enough). Could not gap close far enough (4+)
+    normalization
+
+
+converted t2_t3_F-1E5-35-13_mitosis_17_0_to_34.bin: detected 84% with avg distance 2
+    f12-24
+    Missed 3 significant points (f16-17-18)
+    Spots got normalized by another point. now sits a little under threshold.
+    *
+
+converted t2_t3_F-1E5-35-11_mitosis_15_71_to_125.bin: detected 100% with avg distance 71
+    f14/15-f24
+    Jumped at frame 19 to another spot, stayed there.
+
+converted t2_t3_F-1E5-35-11_mitosis_27_2_to_42.bin: detected 91% with avg distance 4
+    f11-22
+    Missed spot on frame 15, jumped on f19 then back to normal
+
+
+---- Spastin ----
+20231019-t1_siSpastin-50-2_mitosis_5_136_to_176.bin: detected 100% with avg distance 103
+    f13-20
+    Wrong mid body followed.
+    normalized
+
+20231019-t1_siSpastin-50-1_mitosis_16_5_to_25.bin: detected 0% with avg distance 1000
+    f11-13
+    Missed all
+    End of movie, cut too soon.
+
+20231019-t1_siSpastin-50-2_mitosis_29_17_to_47.bin: detected 0% with avg distance 1000
+    f12-28
+    Missed all.
+    Bad normalization.
+
+
+---- Cep55 ----
+20231019-t1_siCep55-50-4_mitosis_5_8_to_228.bin: detected 100% with avg distance 70
+    ? Neither GT nor test significant points visible
+    GT too small, with only 2 points
+
+20231019-t1_siCep55-50-4_mitosis_24_17_to_104.bin: detected 0% with avg distance 1000
+    f12-16
+    Missed all
+    normalization / GT too small
+
+20231019-t1_siCep55-50-1_mitosis_5_41_to_155.bin: detected 0% with avg distance 1000
+    f23-32
+    Missed all
+    Mask missed

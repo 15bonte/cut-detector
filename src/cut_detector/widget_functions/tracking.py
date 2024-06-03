@@ -1,7 +1,6 @@
 import os
 import pickle
 from typing import Optional
-
 import numpy as np
 from ..utils.cell_spot import CellSpot
 from ..utils.cell_track import CellTrack

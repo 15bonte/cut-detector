@@ -4,6 +4,7 @@ from scipy.stats import ttest_1samp
 import numpy as np
 import matplotlib.pyplot as plt
 
+from ..constants.tracking import TIME_RESOLUTION
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.bridges_classification.impossible_detection import (
     ImpossibleDetection,
@@ -15,7 +16,7 @@ class ResultsSavingFactory:
 
     def __init__(
         self,
-        time_resolution: Optional[int] = 10,
+        time_resolution: Optional[int] = TIME_RESOLUTION,
         max_frame: Optional[int] = np.inf,
     ):
         self.time_resolution = time_resolution
@@ -303,6 +304,13 @@ class ResultsSavingFactory:
                 )
             f.close()
 
+        def handle_impossible_detection(cut_frame: int) -> str:
+            return (
+                ImpossibleDetection(cut_frame).name
+                if cut_frame < 0
+                else str(cut_frame)
+            )
+
         # Store useful results in global results file
         with open(csv_path, "a") as f:
             for mitosis_track in mitosis_tracks:
@@ -320,11 +328,11 @@ class ResultsSavingFactory:
                 first_cut_frame = mitosis_track.key_events_frame[
                     "first_mt_cut"
                 ]
-                f.write(f"{first_cut_frame};")
+                f.write(f"{handle_impossible_detection(first_cut_frame)};")
                 second_cut_frame = mitosis_track.key_events_frame[
                     "second_mt_cut"
                 ]
-                f.write(f"{second_cut_frame};")
+                f.write(f"{handle_impossible_detection(second_cut_frame)};")
                 first_cut_time = (
                     (first_cut_frame - cytokinesis_frame)
                     * self.time_resolution

@@ -68,17 +68,17 @@ def main(
     )
 
     if display_predictions_analysis:
-        plt.plot(results["list_class_bridges"][mitosis_track.id])
+        plt.plot(results["predictions"][mitosis_track.id])
         if (
-            mitosis_track.id in results["list_class_bridges_after_hmm"]
+            mitosis_track.id in results["predictions_after_hmm"]
         ):  # if classification possible
-            plt.plot(results["list_class_bridges_after_hmm"][mitosis_track.id])
+            plt.plot(results["predictions_after_hmm"][mitosis_track.id])
         plt.title("Class bridges")
         plt.show()
 
     if display_crops:
         # Display series of crops
-        for crop in results["crops"][mitosis_track.id]:
+        for crop in results["images"][mitosis_track.id]:
             plt.figure()
             plt.imshow(crop[0], cmap="gray")
             plt.show()

@@ -127,7 +127,7 @@ def whole_process(
     raw_data_dir=dict(
         widget_type="FileEdit",
         label="Data folder: ",
-        mode="d",
+        parallel_detection=True,
     ),
     default_model_check_box=dict(
         widget_type="CheckBox",
@@ -311,6 +311,7 @@ def mid_body_detection(
         exported_mitoses_dir,
         exported_tracks_dir,
         movies_save_dir if save_check_box else None,
+        parallel_detection=True,
     )
     print("\nMid-body detection finished with success!")
 
