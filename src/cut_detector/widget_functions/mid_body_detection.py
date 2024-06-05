@@ -4,6 +4,7 @@ from typing import Optional, Callable, Union
 import numpy as np
 from aicsimageio.writers import OmeTiffWriter
 from laptrack import LapTrack
+from tqdm import tqdm
 
 from ..factories.mid_body_detection_factory import MidBodyDetectionFactory
 
@@ -55,22 +56,20 @@ def perform_mid_body_detection(
             cell_track.adapt_deprecated_attributes()
             cell_tracks.append(cell_track)
 
+    print("### MID-BODY DETECTION ###")
+
     # Generate movie for each mitosis and save
     mid_body_detector = MidBodyDetectionFactory()
-    for i, mitosis_track in enumerate(mitosis_tracks):
+    for i, mitosis_track in enumerate(tqdm(mitosis_tracks)):
 
         if (
             isinstance(target_mitosis_id, int)
             and mitosis_track.id != target_mitosis_id
         ):
             print(
-                f"\nTrack {i+1}/{len(mitosis_tracks)}, mitosis id {mitosis_track.id} - Skipped"
+                f"\nTrack {i+1}/{len(mitosis_tracks)}, Mitosis id {mitosis_track.id} - Skipped"
             )
             continue
-
-        print(
-            f"\nTrack {i+1}/{len(mitosis_tracks)}, mitosis id {mitosis_track.id}"
-        )
 
         # Generate mitosis movie
         mitosis_movie, mask_movie = mitosis_track.generate_video_movie(
