@@ -3,8 +3,7 @@ from typing import Optional, Union
 import pickle
 import numpy as np
 from matplotlib import pyplot as plt
-
-from cnn_framework.utils.display_tools import display_progress
+from tqdm import tqdm
 
 from ..utils.cell_track import CellTrack
 from ..utils.cell_spot import CellSpot
@@ -126,6 +125,9 @@ def perform_mitosis_track_generation(
     """
     Perform mitosis track generation.
     """
+
+    print("### CELL DIVISION DETECTION ###")
+
     # Create save_dir if not exists
     if mitoses_dir is not None and not os.path.exists(mitoses_dir):
         os.makedirs(mitoses_dir)
@@ -173,8 +175,12 @@ def perform_mitosis_track_generation(
     if plot_evolution:
         plot_predictions_evolution(cell_spots, cell_tracks, mitosis_tracks)
 
+    print(
+        f"\nPredictions performed successfully. {len(mitosis_tracks)} divisions detected."
+    )
+
     # Update useful attributes for each track
-    for i, mitosis_track in enumerate(mitosis_tracks):
+    for i, mitosis_track in enumerate(tqdm(mitosis_tracks)):
         mitosis_track.id = i
         mitosis_track.update_mitosis_start_end(cell_tracks, mitosis_tracks)
         mitosis_track.update_key_events_frame(cell_tracks)
@@ -193,13 +199,6 @@ def perform_mitosis_track_generation(
             )
             with open(save_path, "wb") as f:
                 pickle.dump(mitosis_track, f)
-
-        display_progress(
-            "Mitosis tracks generation:",
-            i + 1,
-            len(mitosis_tracks),
-            additional_message=f"Mitosis {i + 1}/{len(mitosis_tracks)}",
-        )
 
     # Save updated cell tracks
     if save:

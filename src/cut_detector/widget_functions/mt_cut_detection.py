@@ -28,6 +28,8 @@ def perform_mt_cut_detection(
         TYXC
 
     """
+    print("### MICRO-TUBULES CUT DETECTION ###")
+
     mitosis_tracks: list[MitosisTrack] = []
     # Iterate over "bin" files in exported_mitoses_dir
     for state_path in os.listdir(exported_mitoses_dir):

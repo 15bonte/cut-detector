@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from tqdm import tqdm
 
 from ..constants.tracking import TIME_RESOLUTION
 from ..utils.bridges_classification.bridges_mt_model_manager import (
@@ -122,6 +123,8 @@ class MtCutDetectionFactory:
             mitosis_tracks, video, bridges_mt_cnn_model_path
         )
 
+        print("\nPredictions performed successfully.")
+
         # Read HMM parameters
         if not os.path.exists(hmm_bridges_parameters_file):
             raise FileNotFoundError(
@@ -130,7 +133,7 @@ class MtCutDetectionFactory:
         hmm_parameters = np.load(hmm_bridges_parameters_file)
 
         # Check if classification is impossible and smooth
-        for mitosis_track in mitosis_tracks:
+        for mitosis_track in tqdm(mitosis_tracks):
             classification_impossible = (
                 self._is_bridges_classification_impossible(mitosis_track)
             )
