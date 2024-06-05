@@ -65,8 +65,8 @@ def main(
         spots_candidates = factory.detect_mid_body_spots(
             mitosis_movie=mitosis_movie,
             mask_movie=mask_movie,
-            mode=D_METHOD,
             parallelization=PARALLELIZE,
+            mode=D_METHOD,
             mitosis_track=track,
         )
         if MEASURE_DETECTION_TIME:
