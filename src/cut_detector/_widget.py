@@ -52,6 +52,7 @@ def video_whole_process(
         mitoses_dir_name,
         tracks_dir_name,
         movies_save_dir if save_check_box else None,
+        parallel_detection=True,
     )
     perform_mt_cut_detection(video, video_name, mitoses_dir_name)
 
@@ -127,7 +128,6 @@ def whole_process(
     raw_data_dir=dict(
         widget_type="FileEdit",
         label="Data folder: ",
-        parallel_detection=True,
     ),
     default_model_check_box=dict(
         widget_type="CheckBox",
