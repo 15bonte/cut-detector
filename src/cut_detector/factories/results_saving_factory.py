@@ -12,12 +12,20 @@ from ..utils.bridges_classification.impossible_detection import (
 
 
 class ResultsSavingFactory:
-    """Factory to save results."""
+    """Factory to save results.
+
+    Parameters
+    ----------
+    time_resolution: int
+        Time resolution in minutes. The default is TIME_RESOLUTION.
+    max_frame: float
+        Maximum frame to consider. The default is np.inf.
+    """
 
     def __init__(
         self,
-        time_resolution: Optional[int] = TIME_RESOLUTION,
-        max_frame: Optional[int] = np.inf,
+        time_resolution=TIME_RESOLUTION,
+        max_frame=np.inf,
     ):
         self.time_resolution = time_resolution
         self.max_frame = max_frame  # for debug, 48*6 <-> 48h * 6 frames/hour
@@ -34,8 +42,14 @@ class ResultsSavingFactory:
     def _print_weird_mitoses(
         self, selected_tracks: list[MitosisTrack], min_acceptable_frame: int
     ) -> None:
-        """
-        Print useful information about weird mitoses.
+        """Print useful information about weird mitoses.
+
+        Parameters
+        ----------
+        selected_tracks: list[MitosisTrack]
+            List of selected mitosis tracks.
+        min_acceptable_frame: int
+            Minimum acceptable frame for a cut to be considered as early.
         """
         ordered_tracks = [
             track
@@ -79,7 +93,17 @@ class ResultsSavingFactory:
         verbose: bool,
         min_acceptable_frame=13,
     ) -> None:
-        """Update cut times and summary."""
+        """Update cut times and summary.
+
+        Parameters
+        ----------
+        mitosis_tracks: list[MitosisTrack]
+            List of mitosis tracks.
+        verbose: bool
+            Whether to print details about weird mitoses.
+        min_acceptable_frame: int
+            Minimum acceptable frame for a cut to be considered as early.
+        """
 
         selected_tracks: list[MitosisTrack] = []  # kept tracks
 
@@ -139,8 +163,12 @@ class ResultsSavingFactory:
             self._print_weird_mitoses(selected_tracks, min_acceptable_frame)
 
     def perform_t_test(self, alpha=0.05) -> None:
-        """
-        Compute t-test of the differences, which is supposed to be 0.
+        """Compute t-test of the differences, which is supposed to be 0.
+
+        Parameters
+        ----------
+        alpha: float
+            Significance level. The default is 0.05.
         """
         if len(self.cut_differences) == 0:
             return None
@@ -162,7 +190,13 @@ class ResultsSavingFactory:
             )
 
     def print_analysis_summary(self, mitosis_tracks) -> None:
-        """Print analysis summary."""
+        """Print analysis summary.
+
+        Parameters
+        ----------
+        mitosis_tracks: list[MitosisTrack]
+            List of mitosis tracks.
+        """
         print(
             f"\n Among the {len(mitosis_tracks)} mitoses detected, there are:"
         )
@@ -184,8 +218,14 @@ class ResultsSavingFactory:
     def box_plot_cut_differences(
         self, show: bool, save_dir: Optional[str]
     ) -> None:
-        """
-        Plot box plot of cut differences
+        """Plot box plot of cut differences.
+
+        Parameters
+        ----------
+        show: bool
+            Whether to show the plot.
+        save_dir: Optional[str]
+            Directory to save the plot.
         """
         if len(self.cut_differences) == 0:
             return
@@ -206,8 +246,14 @@ class ResultsSavingFactory:
         show: bool,
         save_dir: Optional[str],
     ) -> None:
-        """
-        Plot distribution of cut differences
+        """Plot distribution of cut differences.
+
+        Parameters
+        ----------
+        show: bool
+            Whether to show the plot.
+        save_dir: Optional[str]
+            Directory to save the plot.
         """
 
         plt.figure()
@@ -291,7 +337,15 @@ class ResultsSavingFactory:
         mitosis_tracks: list[MitosisTrack],
         save_dir: Optional[str] = None,
     ) -> None:
-        """Save results in CSV file."""
+        """Save results in CSV file.
+
+        Parameters
+        ----------
+        mitosis_tracks: list[MitosisTrack]
+            List of mitosis tracks.
+        save_dir: Optional[str]
+            Directory to save the results.
+        """
         if save_dir is None:
             return
 

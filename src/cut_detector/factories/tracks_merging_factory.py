@@ -2,7 +2,6 @@ import json
 import os
 import numpy as np
 
-
 from ..utils.cell_track import CellTrack
 from ..utils.tools import perform_cnn_inference
 from ..utils.mitosis_track import MitosisTrack
@@ -17,11 +16,23 @@ from ..utils.cell_division_detection.metaphase_cnn_data_set import (
 from ..utils.cell_division_detection.metaphase_cnn_model import (
     MetaphaseCnnModel,
 )
+from ..constants.tracking import TIME_RESOLUTION
 
 
 def get_track_from_id(tracks: list[CellTrack], track_id: int) -> CellTrack:
-    """
-    Used to get track from its id.
+    """Used to get track from its id.
+
+    Parameters
+    ----------
+    tracks : list[CellTrack]
+        List of all tracks.
+    track_id : int
+        Track id.
+
+    Returns
+    -------
+    track : CellTrack
+        Track corresponding to track_id.
     """
     for track in tracks:
         if track.track_id == track_id:
@@ -30,19 +41,22 @@ def get_track_from_id(tracks: list[CellTrack], track_id: int) -> CellTrack:
 
 
 class TracksMergingFactory:
-    """
-    Class to merge cell tracks into mitosis tracks.
+    """Class to merge cell tracks into mitosis tracks.
 
-    Args:
-        min_track_spots (int): Minimum spots in track to consider it.
-        minimum_metaphase_interval (int): Minimum distance between two metaphases.
-        max_spot_distance_for_split (int): Maximum distance between two spots to consider them.
+    Parameters
+    ----------
+    min_track_spots : int
+        Minimum spots in track to consider it.
+    minimum_metaphase_interval : int
+        Minimum frames distance between two metaphases.
+    max_spot_distance_for_split : int
+        Maximum distance between two spots to consider them.
     """
 
     def __init__(
         self,
         min_track_spots=10,
-        minimum_metaphase_interval=10,
+        minimum_metaphase_interval=100 / TIME_RESOLUTION,
         max_spot_distance_for_split=20,
     ) -> None:
         self.min_track_spots = min_track_spots
@@ -52,8 +66,12 @@ class TracksMergingFactory:
     def get_tracks_to_merge(
         self, raw_tracks: list[CellTrack]
     ) -> list[MitosisTrack]:
-        """
-        Plug tracks occurring at frame>0 to closest metaphase.
+        """Plug tracks occurring at frame>0 to closest metaphase.
+
+        Parameters
+        ----------
+        raw_tracks : list[CellTrack]
+            List of all tracks.
         """
         ordered_tracks = sorted(raw_tracks, key=lambda x: x.start)
         mitosis_tracks: list[MitosisTrack] = []
@@ -132,19 +150,19 @@ class TracksMergingFactory:
         # Return dictionaries of tracks to merge
         return mitosis_tracks
 
-    def correct_sequence(self, orig_sequence: list[int]) -> list[int]:
-        """
-        Correct sequence of states to fill the gap between two metaphase (1) subsequences
+    def _correct_sequence(self, orig_sequence: list[int]) -> list[int]:
+        """Correct sequence of states to fill the gap between two metaphase (1) subsequences
         separated by less than minimum_interval frames.
 
         Parameters
         ----------
-        orig_seq: [class predicted]
+        orig_seq : list[int]
+            Predicted classes.
 
         Returns
         -------
-        seq: [class corrected]
-
+        seq : list[int]
+            Corrected classes.
         """
         corrected_sequence = np.copy(orig_sequence)
         # Get indexes of 1
@@ -173,8 +191,26 @@ class TracksMergingFactory:
         video_name: str,
         only_predictions_update: bool,
     ) -> None:
-        """
-        Sort spots in track and predict metaphase.
+        """Sort spots in track and predict metaphase.
+
+        Parameters
+        ----------
+        cell_tracks : list[CellTrack]
+            List of cell tracks.
+        raw_spots : list[CellSpot]
+            List of all spots.
+        raw_video : np.array
+            Video.
+        metaphase_model_path : str
+            CNN model path.
+        hmm_metaphase_parameters_file : str
+            HMM parameters file.
+        predictions_file : str
+            Predictions file to update if provided.
+        video_name : str
+            Video name.
+        only_predictions_update : bool
+            If True, only update predictions, do not apply HMM.
         """
 
         nuclei_crops = []
@@ -212,24 +248,25 @@ class TracksMergingFactory:
                 track_predictions, _ = hmm_model.viterbi_inference(
                     track_predictions
                 )
-                track_predictions = self.correct_sequence(track_predictions)
+                track_predictions = self._correct_sequence(track_predictions)
 
             # Save prediction for each spot
             track.update_metaphase_spots(track_predictions)
 
-        self.update_predictions_file(cell_tracks, predictions_file, video_name)
+        self._update_predictions_file(
+            cell_tracks, predictions_file, video_name
+        )
 
     @staticmethod
     def _predict_metaphase_spots(
         metaphase_model_path: str, nuclei_crops: list[np.array]
     ) -> list[int]:
-        """
-        Run CNN model to predict metaphase spots.
+        """Run CNN model to predict metaphase spots.
 
         Parameters
         ----------
         metaphase_model : str
-            CNN model path
+            CNN model path.
         nuclei_crops :  list[np.array]
             list[CYX]
 
@@ -249,15 +286,20 @@ class TracksMergingFactory:
         return predictions
 
     @staticmethod
-    def update_predictions_file(
+    def _update_predictions_file(
         tracks: list[CellTrack], predictions_file: str, video_name: str
     ) -> None:
-        """
+        """Update predictions file with new predictions.
+        Used only to train HMM model.
+
         Parameters
         ----------
         tracks: [CellTrack]
+            List of cell tracks.
         predictions_file: str
+            Predictions file to update.
         video_name: str
+            Video name.
         """
         if predictions_file is None:
             return
