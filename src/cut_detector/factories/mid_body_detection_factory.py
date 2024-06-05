@@ -1,4 +1,3 @@
-import os
 import concurrent.futures
 from typing import Literal, Optional, Callable, Union
 
@@ -17,9 +16,7 @@ from ..utils.image_tools import smart_cropping
 from ..utils.mid_body_spot import MidBodySpot
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.trackmate_track import TrackMateTrack
-from ..utils.factory_plot_detection import plot_detection
 from ..utils.gen_track import generate_tracks_from_spots, TRACKING_METHOD
-from ..utils.mid_body_track_color_manager import MbTrackColorManager
 from ..utils.cell_spot import CellSpot
 
 from ..utils.mb_support import detection as mbd
@@ -619,52 +616,3 @@ class MidBodyDetectionFactory:
             key=lambda track: expected_distances[kept_tracks.index(track)],
         )
         return sorted_tracks[0]
-
-    def save_mid_body_tracking(
-        self,
-        spots_candidates,
-        mitosis_movie: np.ndarray,
-        path_output: str,
-        mid_body_channel=1,
-    ):
-        """
-        Plot spots detection & tracking.
-        """
-        # Check if directory exists
-        if not os.path.exists(path_output):
-            os.makedirs(path_output)
-
-        color_lib = MbTrackColorManager()
-
-        # Detect spots in each frame
-        nb_frames = mitosis_movie.shape[0]
-        for frame in range(nb_frames):
-            print(f"generating and saving frame ({frame+1}/{nb_frames})")
-            image = mitosis_movie[frame, :, :, mid_body_channel].squeeze()
-
-            # Bigfish spots
-            frame_spots = [
-                [spot.y, spot.x] for spot in spots_candidates[frame]
-            ]
-            colors = [
-                (
-                    # matplotlib_colors[spot.track_id % len(matplotlib_colors)]
-                    color_lib.get_color_for_track(spot.track_id)
-                    if spot.track_id is not None
-                    else (0, 0, 0)
-                )
-                for spot in spots_candidates[frame]
-            ]
-
-            plot_detection(
-                image,
-                frame_spots,
-                color=colors,
-                contrast=True,
-                path_output=os.path.join(
-                    path_output, f"spot_detection_{frame}.png"
-                ),
-                show=False,
-                title=f"Python frame {frame} - Fiji frame {frame + 1}",
-                fill=True,
-            )

@@ -7,15 +7,20 @@ from cnn_framework.utils.tools import handle_image_type
 
 
 class CnnDataSet(AbstractDataSet):
-    """
-    Custom class to avoid loading images from folder.
+    """Custom class to avoid loading images from folder.
+
+    Parameters
+    ----------
+    data : list[np.array]
+        List of images to load.
     """
 
-    def __init__(self, data, *args, **kwargs):
+    def __init__(self, data: list[np.array], *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.data = data
 
-    def set_transforms(self):
+    def set_transforms(self) -> None:
+        """Set the transforms to apply to the images."""
         height, width = self.params.input_dimensions.to_tuple(False)
         self.transforms = A.Compose(
             [
@@ -35,7 +40,8 @@ class CnnDataSet(AbstractDataSet):
             ]
         )
 
-    def generate_images(self, filename):
+    def generate_images(self, filename: str) -> DatasetOutput:
+        """Generate the images for the dataset."""
         idx = int(filename.split(".")[0])
         # Get image and adapt it to torch
         nucleus_image = np.moveaxis(self.data[idx], 0, -1)  # YXC

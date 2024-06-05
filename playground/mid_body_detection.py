@@ -105,7 +105,7 @@ def main(
                     }
                 )
 
-    if save:
+    if save:  # To be removed -> everything has to be moved to the code
         factory.save_mid_body_tracking(
             spots_candidates, mitosis_movie, path_output
         )

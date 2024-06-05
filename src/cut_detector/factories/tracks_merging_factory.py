@@ -31,7 +31,7 @@ def get_track_from_id(tracks: list[CellTrack], track_id: int) -> CellTrack:
 
     Returns
     -------
-    track : CellTrack
+    CellTrack
         Track corresponding to track_id.
     """
     for track in tracks:
@@ -72,6 +72,11 @@ class TracksMergingFactory:
         ----------
         raw_tracks : list[CellTrack]
             List of all tracks.
+
+        Returns
+        -------
+        list[MitosisTrack]
+            List of mitosis tracks.
         """
         ordered_tracks = sorted(raw_tracks, key=lambda x: x.start)
         mitosis_tracks: list[MitosisTrack] = []
@@ -161,7 +166,7 @@ class TracksMergingFactory:
 
         Returns
         -------
-        seq : list[int]
+        list[int]
             Corrected classes.
         """
         corrected_sequence = np.copy(orig_sequence)
@@ -272,8 +277,8 @@ class TracksMergingFactory:
 
         Returns
         -------
-        predictions : list[int]
-            predicted classes
+        list[int]
+            Predicted classes.
         """
 
         predictions = perform_cnn_inference(

@@ -1,5 +1,4 @@
 import numpy as np
-import albumentations as A
 
 from cnn_framework.utils.data_sets.dataset_output import DatasetOutput
 from cnn_framework.utils.preprocessing import normalize_array

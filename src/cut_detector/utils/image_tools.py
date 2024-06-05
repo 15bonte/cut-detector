@@ -1,10 +1,25 @@
-# NB: most of the code here is duplicated from original repo
+"""Image tools."""
 
-import numpy as np
 import operator
+from typing import Optional
+import numpy as np
 
 
-def crop_center(img, bounding):
+def crop_center(img: np.ndarray, bounding: tuple[int]) -> np.ndarray:
+    """Crop image to bounding box.
+
+    Parameters
+    ----------
+    img : np.ndarray
+        Image to crop.
+    bounding : tuple
+        Bounding box to crop to.
+
+    Returns
+    -------
+    np.ndarray
+        Cropped image.
+    """
     start = tuple(
         map(lambda a, da: (a - da + 1) // 2, img.shape, bounding)
     )  # 1 is used to match torch method
@@ -13,7 +28,23 @@ def crop_center(img, bounding):
     return img[slices]
 
 
-def get_padding(input_shape, output_shape):
+def get_padding(
+    input_shape: tuple[int], output_shape: tuple[int]
+) -> tuple[int]:
+    """Get padding to apply to input_shape to get output_shape.
+
+    Parameters
+    ----------
+    input_shape : tuple
+        Shape of the input image.
+    output_shape : tuple
+        Shape of the output image.
+
+    Returns
+    -------
+    tuple[int]
+        Padding to apply to input_shape to get output_shape.
+    """
     (_, height, width) = input_shape
     (_, desired_height, desired_width) = output_shape
 
@@ -32,9 +63,32 @@ def get_padding(input_shape, output_shape):
     )
 
 
-def resize_padding(image, output_shape, mode, pad_margin_w, pad_margin_h):
-    """
-    mode: "min" or "zero"
+def resize_padding(
+    image: np.ndarray,
+    output_shape: tuple[int],
+    mode: str,
+    pad_margin_w: Optional[int],
+    pad_margin_h: Optional[int],
+) -> np.ndarray:
+    """Resize image to output_shape with padding.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        Image to resize.
+    output_shape : tuple
+        Shape of the output image.
+    mode : str
+        Mode to use for padding. "zero" or "min".
+    pad_margin_w : Optional[int]
+        Padding margin for width.
+    pad_margin_h : Optional[int]
+        Padding margin for height.
+
+    Returns
+    -------
+    np.ndarray
+        Resized image with padding.
     """
     channels_to_stack = []
     (depth, height, width) = image.shape
@@ -93,29 +147,45 @@ def resize_padding(image, output_shape, mode, pad_margin_w, pad_margin_h):
 
 def resize_image(
     image,
-    output_shape=None,
+    output_shape: Optional[tuple[int]] = None,
     method="zero",
-    pad_margin_w=None,
-    pad_margin_h=None,
+    pad_margin_w: Optional[int] = None,
+    pad_margin_h: Optional[int] = None,
 ):
-    """
-    Expect image to be a 3D numpy array CYX.
+    """Resize image to output_shape with padding. Expect image to be a 3D numpy array CYX.
     Output_shape is a tuple CYX.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        Image to resize.
+    output_shape : Optional[tuple]
+        Shape of the output image.
+    method : str
+        Method to use for padding. "zero" or "min".
+    pad_margin_w : Optional[int]
+        Padding margin for width.
+    pad_margin_h : Optional[int]
+        Padding margin for height.
+
+    Returns
+    -------
+    np.ndarray
+        Resized image with padding.
     """
 
-    if method == "min" or method == "zero":
+    if method in ["min", "zero"]:
         # Compute output_shape
         if output_shape is None:
             if pad_margin_h is None or pad_margin_w is None:
                 raise ValueError(
                     "If output_shape is None, pad_margin_h and pad_margin_w must be specified"
                 )
-            else:
-                output_shape = (
-                    None,
-                    sum(pad_margin_h) + image.shape[1],
-                    sum(pad_margin_w) + image.shape[2],
-                )
+            output_shape = (
+                None,
+                sum(pad_margin_h) + image.shape[1],
+                sum(pad_margin_w) + image.shape[2],
+            )
         # Protect against output_shape and margins inconsistency
         if output_shape is not None and pad_margin_h is not None:
             assert sum(pad_margin_h) == output_shape[1] - image.shape[1]
@@ -130,22 +200,45 @@ def resize_image(
 
 
 def smart_cropping(
-    microscopy_image,
-    margin,
-    min_x,
-    min_y,
-    max_x=None,
-    max_y=None,
+    image: np.ndarray,
+    margin: int,
+    min_x: int,
+    min_y: int,
+    max_x: Optional[int] = None,
+    max_y: Optional[int] = None,
     fade_margin=False,
     pad=False,
-):
+) -> np.ndarray:
     """
     Crop microscopy image with smart margin.
-    microscopy_image: ..., YX
+
+    Parameters
+    ----------
+    image : np.ndarray
+        Image to crop. Shape must be (..., H, W).
+    margin : int
+        Margin to apply.
+    min_x : int
+        Minimum x coordinate.
+    min_y : int
+        Minimum y coordinate.
+    max_x : Optional[int]
+        Maximum x coordinate.
+    max_y : Optional[int]
+        Maximum y coordinate.
+    fade_margin : bool
+        If True, fade margin.
+    pad : bool
+        If True, pad image.
+
+    Returns
+    -------
+    np.ndarray
+        Cropped image.
     """
 
     # Get image shape
-    height, width = microscopy_image.shape[-2:]
+    height, width = image.shape[-2:]
 
     # Define empty rectangle if single point is given
     if max_x is None:
@@ -161,9 +254,7 @@ def smart_cropping(
 
     # Crop image
     clipped_image = np.copy(
-        microscopy_image[
-            ..., clipped_min_y:clipped_max_y, clipped_min_x:clipped_max_x
-        ]
+        image[..., clipped_min_y:clipped_max_y, clipped_min_x:clipped_max_x]
     )
 
     # Fade margin
