@@ -28,6 +28,7 @@ def test_mid_body_detection_widget():
         get_data_path("tracks"),
         save_dir=None,
         update_mitoses=False,
+        parallel_detection=True,
     )
     is_correctly_detected, _, _ = mitosis_tracks[
         0

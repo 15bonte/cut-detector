@@ -116,6 +116,7 @@ def whole_process(
         exported_mitoses_dir,
         exported_tracks_dir,
         movies_save_dir if save_check_box else None,
+        parallel_detection=True,
     )
 
     # MT cut detection
@@ -262,6 +263,7 @@ def mid_body_detection(
         exported_mitoses_dir,
         exported_tracks_dir,
         save_dir if save_check_box else None,
+        parallel_detection=True,
     )
     print("\nMid-body detection finished with success!")
 
