@@ -1,7 +1,9 @@
+"""Playground to run micro-tubules cut detection on a single mitosis.
+Predicted classes and bridge crops are displayed."""
+
 import os
 from typing import Optional
 import pickle
-import numpy as np
 from matplotlib import pyplot as plt
 
 from cnn_framework.utils.readers.tiff_reader import TiffReader
@@ -12,24 +14,6 @@ from cut_detector.factories.mt_cut_detection_factory import (
     MtCutDetectionFactory,
 )
 from cut_detector.utils.mitosis_track import MitosisTrack
-
-
-def re_organize_channels(image):
-    """
-    From any order to TYXC.
-    """
-    image = image.squeeze()
-    assert image.ndim == 4, "Image must be 4D: time, channels, height, width"
-
-    # Get dimension with minimum size and put last
-    min_dim = np.argmin(image.shape)
-    image = np.moveaxis(image, min_dim, -1)
-
-    # Get dimension with minimum size in first 3 dimensions and put first
-    min_dim = np.argmin(image.shape[:3])
-    image = np.moveaxis(image, min_dim, 0)
-
-    return image
 
 
 def main(
@@ -44,6 +28,22 @@ def main(
     display_predictions_analysis=True,
     display_crops=True,
 ):
+    """
+    Parameters
+    ----------
+    image_path : str
+        Path to the image to process.
+    mitosis_path : str
+        Path to the mitoses data.
+    hmm_bridges_parameters_file : str
+        Path to the HMM parameters file.
+    bridges_mt_cnn_model_path : str
+        Path to the bridges MT CNN model.
+    display_predictions_analysis : bool
+        If True, display the predicted classes before and after the HMM.
+    display_crops : bool
+        If True, display the crops of the bridges.
+    """
     # If paths are directories, take their first file
     if os.path.isdir(image_path):
         image_path = os.path.join(image_path, os.listdir(image_path)[0])
@@ -51,17 +51,18 @@ def main(
         mitosis_path = os.path.join(mitosis_path, os.listdir(mitosis_path)[0])
 
     # Read data: image, mitosis_track
-    image = TiffReader(image_path, respect_initial_type=True).image
-    video = re_organize_channels(image)  # TYXC
+    image = TiffReader(image_path, respect_initial_type=True).image  # TCZYX
     with open(mitosis_path, "rb") as f:
         mitosis_track: MitosisTrack = pickle.load(f)
         mitosis_track.adapt_deprecated_attributes()
+
+    image = image.squeeze().transpose(0, 2, 3, 1)  # TYXC
 
     factory = MtCutDetectionFactory()
 
     results = factory.update_mt_cut_detection(
         [mitosis_track],
-        video,
+        image,
         hmm_bridges_parameters_file,
         bridges_mt_cnn_model_path,
         debug_mode=True,
@@ -85,12 +86,4 @@ def main(
 
 
 if __name__ == "__main__":
-    FOLDER_MITOSIS = r"C:\Users\thoma\data\Data Nathalie\mitoses"
-    FOLDER_VIDEO = r"C:\Users\thoma\data\Data Nathalie\videos"
-    for mitosis_file in os.listdir(FOLDER_MITOSIS):
-        local_mitosis_path = os.path.join(FOLDER_MITOSIS, mitosis_file)
-        image_name = mitosis_file.split("_mitosis")[0]
-        local_image_path = os.path.join(FOLDER_VIDEO, image_name + ".tif")
-        main(local_image_path, local_mitosis_path)
-
-    # main()
+    main()

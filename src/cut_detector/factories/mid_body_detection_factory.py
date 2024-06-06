@@ -1,13 +1,12 @@
 import concurrent.futures
 from typing import Literal, Optional, Callable, Union
-
 import numpy as np
 from bigfish import stack, detection
 from skimage.morphology import extrema, opening
 from scipy import ndimage
 from shapely.ops import nearest_points
 from shapely import Polygon, Point
-from cnn_framework.utils.display_tools import display_progress
+from tqdm import tqdm
 
 from ..utils.cell_track import CellTrack
 from ..constants.tracking import CYTOKINESIS_DURATION
@@ -192,13 +191,8 @@ class MidBodyDetectionFactory:
         spots_dictionary = {}
         nb_frames = mitosis_movie.shape[0]
 
-        for frame in range(nb_frames):
-            display_progress(
-                "Detect mid-body spots...",
-                frame + 1,
-                nb_frames,
-                additional_message=f"Frame {frame + 1}/{nb_frames}",
-            )
+        print("Detecting mid-body spots...")
+        for frame in tqdm(range(nb_frames)):
 
             mitosis_frame = mitosis_movie[frame]  # YXC
             mask_frame = mask_movie[frame]  # YX
