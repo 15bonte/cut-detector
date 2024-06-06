@@ -116,7 +116,7 @@ class MidBodyDetectionFactory:
         spots_candidates = self.detect_mid_body_spots(
             mitosis_movie,
             parallelization=parallel_detection,
-            mode=mb_detect_method,
+            method=mb_detect_method,
             log_blob_spot=log_blob_spot,
             mitosis_track=mitosis_track,
         )
@@ -150,7 +150,7 @@ class MidBodyDetectionFactory:
         self,
         mitosis_movie: np.ndarray,
         parallelization: bool = False,
-        mode: SPOT_DETECTION_METHOD = mbd.cur_dog,
+        method: SPOT_DETECTION_METHOD = mbd.cur_dog,
         log_blob_spot: bool = False,
         mitosis_track: Optional[MitosisTrack] = None,
     ) -> dict[int, list[MidBodySpot]]:
@@ -163,7 +163,7 @@ class MidBodyDetectionFactory:
             Mitosis movie. TYXC.
         parallelization: bool
             If True, use parallelization for mid-body spots detection.
-        mode: SPOT_DETECTION_METHOD
+        method: SPOT_DETECTION_METHOD
             Method to detect mid-body spots.
         log_blob_spot: bool
             If True, display log of spots detected.
@@ -180,13 +180,13 @@ class MidBodyDetectionFactory:
         if parallelization:
             return self.thread_pool_detect_mid_body_spots(
                 mitosis_movie,
-                mode,
+                method,
                 mitosis_track,
             )
 
         return self.serial_detect_mid_body_spots(
             mitosis_movie,
-            mode,
+            method,
             log_blob_spot,
             mitosis_track,
         )
@@ -194,10 +194,23 @@ class MidBodyDetectionFactory:
     def serial_detect_mid_body_spots(
         self,
         mitosis_movie: np.ndarray,
-        mode: SPOT_DETECTION_METHOD = mbd.cur_dog,
+        method: SPOT_DETECTION_METHOD,
         log_blob_spot: bool = False,
         mitosis_track: Optional[MitosisTrack] = None,
     ) -> dict[int, list[MidBodySpot]]:
+        """Detect mid-body spots in mitosis movie.
+
+        Parameters
+        ----------
+        mitosis_movie: np.ndarray
+            Mitosis movie. TYXC.
+        mode: SPOT_DETECTION_METHOD
+            Method to detect mid-body spots.
+        log_blob_spot: bool
+            If True, display log of spots detected.
+        mitosis_track: MitosisTrack
+            Mitosis track to get mask positions.
+        """
 
         spots_dictionary = {}
         nb_frames = mitosis_movie.shape[0]
@@ -208,7 +221,7 @@ class MidBodyDetectionFactory:
             mitosis_frame = mitosis_movie[frame]  # YXC
             spots = self._spot_detection(
                 mitosis_frame,
-                mode,
+                method,
                 frame,
                 log_blob_spot,
                 mitosis_track,
@@ -222,26 +235,39 @@ class MidBodyDetectionFactory:
     def thread_pool_detect_mid_body_spots(
         self,
         mitosis_movie: np.array,
-        method: SPOT_DETECTION_METHOD = mbd.cur_log,
+        method: SPOT_DETECTION_METHOD,
         mitosis_track: Optional[MitosisTrack] = None,
     ) -> dict[int, list[MidBodySpot]]:
+        """Detect mid-body spots in mitosis movie.
+        Parallelized version.
 
-        nb_frames = mitosis_movie.shape[0]
+        Parameters
+        ----------
+        mitosis_movie: np.ndarray
+            Mitosis movie. TYXC.
+        mode: SPOT_DETECTION_METHOD
+            Method to detect mid-body spots.
+        log_blob_spot: bool
+            If True, display log of spots detected.
+        mitosis_track: MitosisTrack
+            Mitosis track to get mask positions.
+        """
 
-        framed_sd = lambda i, d, f: (
-            f,
-            self._spot_detection(i, d, f, False, mitosis_track),
-        )
+        def frame_spot_detection(frame: int) -> tuple[int, list[MidBodySpot]]:
+            return frame, self._spot_detection(
+                mitosis_movie[frame],
+                method,
+                frame,
+                mitosis_track=mitosis_track,
+            )
 
         future_list = []
         with concurrent.futures.ThreadPoolExecutor() as e:
-            for f in range(nb_frames):
+            for frame in range(mitosis_movie.shape[0]):
                 future_list.append(
                     e.submit(
-                        framed_sd,
-                        mitosis_movie[f],
-                        method,
-                        f,
+                        frame_spot_detection,
+                        frame,
                     )
                 )
 
