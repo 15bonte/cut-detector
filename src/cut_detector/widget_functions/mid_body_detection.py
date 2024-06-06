@@ -80,7 +80,6 @@ def perform_mid_body_detection(
         mid_body_detector.update_mid_body_spots(
             mitosis_track,
             mitosis_movie,
-            mask_movie,
             cell_tracks,
             parallel_detection=parallel_detection,
             mb_detect_method=mid_body_detection_method,
