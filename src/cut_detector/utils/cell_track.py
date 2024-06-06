@@ -67,21 +67,19 @@ class CellTrack(Track[CellSpot]):
 
         self.metaphase_spots: list[CellSpot] = []
 
-
     @classmethod
     def from_spots(cls, track_id: int, spots: list[CellSpot]) -> CellTrack:
 
         track_spot_ids = set([spot.id for spot in spots])
         start = min([s.frame for s in spots])
         stop = max([s.frame for s in spots])
-        
+
         track = cls(track_id, track_spot_ids, start, stop)
-        
+
         for s in spots:
             track.add_spot(s)
 
         return track
-
 
     def update_metaphase_spots(self, predictions: list[int]) -> None:
         """
@@ -285,7 +283,7 @@ class CellTrack(Track[CellSpot]):
         return box_dimensions_dln
 
     def get_spots_data(
-        self, raw_spots: list[CellSpot], raw_video: np.array
+        self, raw_spots: list[CellSpot], raw_video: np.ndarray
     ) -> list[np.array]:
         """
         Generate crops around cells for metaphase CNN inference.
@@ -294,7 +292,7 @@ class CellTrack(Track[CellSpot]):
         ----------
         raw_spots : list[CellSpot]
             All video spots.
-        raw_video : np.array
+        raw_video : np.ndarray
             TYXC
 
         Returns
@@ -356,8 +354,8 @@ class CellTrack(Track[CellSpot]):
     def track_df_to_track_list(
         track_df: pd.DataFrame,
         spots: dict[int, list[CellSpot]],
-            ) -> list[CellTrack]:
-        
+    ) -> list[CellTrack]:
+
         track_df.reset_index(inplace=True)
         track_df.dropna(inplace=True)
         id_to_track = {}

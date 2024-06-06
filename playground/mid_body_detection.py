@@ -51,16 +51,13 @@ def main(
     mitosis_movie = image[:, :3, ...].squeeze()  # T C=3 YX
     mitosis_movie = mitosis_movie.transpose(0, 2, 3, 1)  # TYXC
 
-    mask_movie = image[:, 3, ...].squeeze()  # TYX
-    mask_movie = mask_movie.transpose(0, 1, 2)  # TYX
-
     # Search for mid-body in mitosis movie
     factory = MidBodyDetectionFactory()
 
     spots_candidates = factory.detect_mid_body_spots(
         mitosis_movie=mitosis_movie,
-        mask_movie=mask_movie,
         mitosis_track=mitosis_track,
+        parallelization=False,
     )
 
     if show_points:

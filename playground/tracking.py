@@ -8,20 +8,20 @@ from cut_detector.utils.segmentation_tracking.mask_utils import (
     mask_to_polygons,
     simplify,
 )
-from cut_detector.utils.trackmate_track import TrackMateTrack
+from cut_detector.utils.trackmate_track import CellTrack
 from cut_detector.utils.cell_spot import CellSpot
 
 
 def load_tracks_and_spots(
     trackmate_tracks_path: str, spots_path: str
-) -> tuple[list[TrackMateTrack], list[CellSpot]]:
+) -> tuple[list[CellTrack], list[CellSpot]]:
     """
     Load saved spots and tracks generated from Trackmate xml file.
     """
-    trackmate_tracks: list[TrackMateTrack] = []
+    trackmate_tracks: list[CellTrack] = []
     for track_file in os.listdir(trackmate_tracks_path):
         with open(os.path.join(trackmate_tracks_path, track_file), "rb") as f:
-            trackmate_track: TrackMateTrack = pickle.load(f)
+            trackmate_track: CellTrack = pickle.load(f)
             trackmate_track.adapt_deprecated_attributes()
             trackmate_tracks.append(trackmate_track)
 

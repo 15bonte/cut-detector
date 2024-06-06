@@ -189,7 +189,7 @@ class TracksMergingFactory:
         self,
         cell_tracks: list[CellTrack],
         raw_spots: list[CellSpot],
-        raw_video: np.array,
+        raw_video: np.ndarray,
         metaphase_model_path: str,
         hmm_metaphase_parameters_file: str,
         predictions_file: str,
@@ -204,7 +204,7 @@ class TracksMergingFactory:
             List of cell tracks.
         raw_spots : list[CellSpot]
             List of all spots.
-        raw_video : np.array
+        raw_video : np.ndarray
             Video.
         metaphase_model_path : str
             CNN model path.

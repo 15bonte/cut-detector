@@ -153,11 +153,11 @@ class MitosisTrack:
         self.min_frame = min_frame
         self.max_frame = max_frame
 
-    def update_is_near_border(self, raw_video: np.array) -> None:
+    def update_is_near_border(self, raw_video: np.ndarray) -> None:
         """
         Parameters
         ----------
-        raw_video: np.array
+        raw_video: np.ndarray
             TYXC
 
         """
@@ -244,19 +244,19 @@ class MitosisTrack:
             self._add_dln_position(frame, box_dimensions_dln)
 
     def generate_video_movie(
-        self, raw_video: np.array
+        self, raw_video: np.ndarray
     ) -> Tuple[np.array, np.array]:
         """
         Parameters
         ----------
-        raw_video : np.array
+        raw_video : np.ndarray
             initial video, TYXC
 
         Returns
         ----------
-        mitosis_movie : np.array
+        mitosis_movie : np.ndarray
             mitosis movie, TYXC
-        mask_movie : np.array
+        mask_movie : np.ndarray
             mask movie, TYX
 
         """
@@ -368,7 +368,7 @@ class MitosisTrack:
         return self.position.overlaps(other_track.position)
 
     def add_mid_body_movie(
-        self, mitosis_movie: np.array, mask_movie: np.array
+        self, mitosis_movie: np.ndarray, mask_movie: np.ndarray
     ) -> np.array:
         """
         Parameters
@@ -704,7 +704,7 @@ class MitosisTrack:
         return spot_detected
 
     def get_bridge_images(
-        self, video: np.array, margin: int
+        self, video: np.ndarray, margin: int
     ) -> list[np.array]:
         """
         Generate list of crops around the mid-body.
@@ -713,7 +713,7 @@ class MitosisTrack:
 
         Parameters
         ----------
-        video: np.array
+        video: np.ndarray
             TYXC
         margin: int
             number of pixels to keep around the mid-body, in all directions
