@@ -10,7 +10,7 @@ from ..constants.tracking import (
     INTERPHASE_INDEX,
     METAPHASE_INDEX,
 )
-from .track import Track 
+from .track import Track
 from .box_dimensions_dln import BoxDimensionsDln
 from .box_dimensions import BoxDimensions
 from .cell_spot import CellSpot
@@ -348,10 +348,10 @@ class CellTrack(Track[CellSpot]):
         spots: dict[int, list[CellSpot]],
     ) -> list[CellTrack]:
 
+        track_df.reset_index(inplace=True)
         track_df.dropna(inplace=True)
-        track_df.reset_index(drop=True, inplace=True)
-
         id_to_track = {}
+
         for _, row in track_df.iterrows():
             track_id = row["track_id"]
             track: list = id_to_track.get(track_id)

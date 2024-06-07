@@ -1,5 +1,6 @@
 import os
 import sys
+import pickle
 import numpy as np
 import torch
 import imagej
@@ -8,15 +9,10 @@ from cellpose import models
 from ..utils.cell_spot import CellSpot
 from ..utils.cell_track import CellTrack
 from scipy.spatial import ConvexHull
-from cut_detector.data.tools import get_data_path
-import matplotlib.pyplot as plt
-import pickle
-from typing import Optional
-from cut_detector.utils.mb_support.tracking.spatial_laptrack import (
+
+from ..utils.mb_support.tracking.spatial_laptrack import (
     SpatialLapTrack,
 )
-
-# from cut_detector.utils.cell_track import CellTrack
 from ..utils.trackmate_track import TrackMateTrack
 from ..utils.trackmate_spot import TrackMateSpot
 from ..utils.gen_track import generate_tracks_from_spots
@@ -357,7 +353,6 @@ class SegmentationTrackingFactory:
 
         cell_spots_dictionary = self.get_spots_from_cellpose(cellpose_results)
 
-        # TODO: perform tracking
         tracking_method = SpatialLapTrack(
             spatial_coord_slice=slice(0, 2),
             spatial_metric="euclidean",
@@ -370,7 +365,6 @@ class SegmentationTrackingFactory:
             merging_cost_cutoff=False,
             alternative_cost_percentile=100,
         )
-        # TODO Compare cell_tracks with trackmate_tracks
         cell_tracks = generate_tracks_from_spots(
             cell_spots_dictionary, tracking_method
         )

@@ -2,6 +2,8 @@ import os
 import pickle
 from typing import Optional
 import matplotlib.pyplot as plt
+import numpy as np
+
 from cut_detector.data.tools import get_data_path
 from cut_detector.utils.segmentation_tracking.mask_utils import (
     mask_to_polygons,
@@ -13,16 +15,9 @@ from cut_detector.factories.segmentation_tracking_factory import (
 from cut_detector.utils.mb_support.tracking.spatial_laptrack import (
     SpatialLapTrack,
 )
-from cut_detector.utils.cell_spot import CellSpot
-
-# from cut_detector.utils.cell_track import CellTrack
 from cut_detector.utils.trackmate_track import TrackMateTrack
 from cut_detector.utils.trackmate_spot import TrackMateSpot
 from cut_detector.utils.gen_track import generate_tracks_from_spots
-
-import matplotlib.pyplot as plt
-import numpy as np
-from scipy.spatial import ConvexHull
 
 
 def load_tracks_and_spots(
@@ -81,25 +76,25 @@ def main(
     # TODO: create spots from Cellpose results
     # TODO: perform tracking using laptrack
 
-    polygons = mask_to_polygons(cellpose_results[0])  # frame 0
+    # polygons = mask_to_polygons(cellpose_results[0])  # frame 0
 
-    simplified_polygons = []
-    for polygon in polygons:
-        simplified_polygon = simplify(polygon, interval=2, epsilon=0.5)
-        simplified_polygons.append(simplified_polygon)
+    # simplified_polygons = []
+    # for polygon in polygons:
+    #     simplified_polygon = simplify(polygon, interval=2, epsilon=0.5)
+    #     simplified_polygons.append(simplified_polygon)
 
-    # Plot polygons
-    plt.subplot(221)
-    for polygon in polygons:
-        x, y = polygon.x, polygon.y
-        plt.plot(y, x)
-    plt.imshow(cellpose_results[0], cmap="gray")
+    # # Plot polygons
+    # plt.subplot(221)
+    # for polygon in polygons:
+    #     x, y = polygon.x, polygon.y
+    #     plt.plot(y, x)
+    # plt.imshow(cellpose_results[0], cmap="gray")
 
-    plt.subplot(222)
-    for polygon in simplified_polygons:
-        x, y = polygon.x, polygon.y
-        plt.plot(y, x)
-    plt.imshow(cellpose_results[0], cmap="gray")
+    # plt.subplot(222)
+    # for polygon in simplified_polygons:
+    #     x, y = polygon.x, polygon.y
+    #     plt.plot(y, x)
+    # plt.imshow(cellpose_results[0], cmap="gray")
 
     # Load TrackMate results to compare... make sure they match!
 
@@ -131,42 +126,44 @@ def main(
     # Spot points can be created from the cell indices
 
     # The indices of points forming the convex hull
-    for frame in range(len(cellpose_results)):
-        fig, axarr = plt.subplots(1, 2)
-        axarr[0].imshow(cellpose_results[frame])
-        for i in range(len(cell_dictionary[frame])):
+    plot = False
+    if plot:
+        for frame in range(len(cellpose_results)):
+            fig, axarr = plt.subplots(1, 2)
+            axarr[0].imshow(cellpose_results[frame])
+            for i in range(len(cell_dictionary[frame])):
+                axarr[0].plot(
+                    cell_dictionary[frame][i].spot_points[:, 1],
+                    cell_dictionary[frame][i].spot_points[:, 0],
+                    "o",
+                )
+                axarr[0].plot(
+                    cell_dictionary[frame][i].abs_max_x,
+                    cell_dictionary[frame][i].abs_max_y,
+                    "x",
+                )
+                axarr[0].plot(
+                    cell_dictionary[frame][i].abs_min_x,
+                    cell_dictionary[frame][i].abs_max_y,
+                    "x",
+                )
+                axarr[0].plot(
+                    cell_dictionary[frame][i].abs_min_x,
+                    cell_dictionary[frame][i].abs_min_y,
+                    "x",
+                )
+                axarr[0].plot(
+                    cell_dictionary[frame][i].abs_max_x,
+                    cell_dictionary[frame][i].abs_min_y,
+                    "x",
+                )
             axarr[0].plot(
-                cell_dictionary[frame][i].spot_points[:, 1],
-                cell_dictionary[frame][i].spot_points[:, 0],
-                "o",
-            )
-            axarr[0].plot(
-                cell_dictionary[frame][i].abs_max_x,
-                cell_dictionary[frame][i].abs_max_y,
+                barycenter(cellpose_results, frame)[0],
+                barycenter(cellpose_results, frame)[1],
                 "x",
             )
-            axarr[0].plot(
-                cell_dictionary[frame][i].abs_min_x,
-                cell_dictionary[frame][i].abs_max_y,
-                "x",
-            )
-            axarr[0].plot(
-                cell_dictionary[frame][i].abs_min_x,
-                cell_dictionary[frame][i].abs_min_y,
-                "x",
-            )
-            axarr[0].plot(
-                cell_dictionary[frame][i].abs_max_x,
-                cell_dictionary[frame][i].abs_min_y,
-                "x",
-            )
-        axarr[0].plot(
-            barycenter(cellpose_results, frame)[0],
-            barycenter(cellpose_results, frame)[1],
-            "x",
-        )
-        axarr[1].scatter(plot_spots(frame)[0], plot_spots(frame)[1], s=1)
-        plt.show()
+            axarr[1].scatter(plot_spots(frame)[0], plot_spots(frame)[1], s=1)
+            plt.show()
 
     tracking_method = SpatialLapTrack(
         spatial_coord_slice=slice(0, 2),
