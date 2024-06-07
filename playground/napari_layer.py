@@ -32,38 +32,17 @@ def main(
         mitosis_tracks.append(mitosis_track)
   
     # TODO: move everything to this function:
-    mask= ResultsSavingFactory().generate_napari_tracking_mask(mitosis_tracks, video)
-
-    
-    viewer.add_image(mask, name="masks", rgb=True, opacity=0.4)
-
-    # def label(points):
-    #     for p in points:
-    #         return 'Texte test'
-
-    # label_mid_body = label(spots_video)
-
-    # viewer.add_labels(label_mid_body, name='label du mid body')
-    mid_body_legend = mitosis_track.get_mid_body_legend()
-    points = []
-    features = {'category':[]}
-    text = {'string':'{category}',
-            'size':5,
-            'color':'red',
-            'translation':np.array([-30,0])}
-    for frame, frame_dict in mid_body_legend.items():
-        points += [np.array([frame,frame_dict['y'],frame_dict['x']])]
-        features['category'] += [frame_dict['category']]
-    features['category'] = np.array(features['category'])
-    points_layer = viewer.add_points(points,features=features,text=text,size=10,face_color='red') 
-
-     # Display the Napari viewer
+    ResultsSavingFactory().generate_napari_tracking_mask(mitosis_tracks, video,viewer)
+     
     napari.run()
 
 
 
 if __name__ == "__main__":
     main(
-    #     image_path = r"C:\Users\camca\Documents\video_exemple",
-    #     mitoses_path = r"C:\Users\camca\Documents\video_exemple\mitoses"
+         #image_path = chemin vidéo,
+         #mitoses_path = chemin vidéo \mitoses"
+         
+         image_path = r"C:\Users\camca\Documents\video_exemple",
+         mitoses_path = r"C:\Users\camca\Documents\video_exemple\mitoses"
     )

@@ -352,7 +352,7 @@ class ResultsSavingFactory:
 
     def generate_napari_tracking_mask(
         self,
-        mitosis_tracks: list[MitosisTrack], video
+        mitosis_tracks: list[MitosisTrack], video, viewer
     ) -> np.ndarray:
         """
         To be written.
@@ -379,13 +379,30 @@ class ResultsSavingFactory:
             mask_movie[cell_indexes] = colors[i]
             # mask_movie[mid_body] = [255, 0,0]
 
-            #TODO Use point + text instead of red point for mid_body
-            mid_body_legend = mitosis_track.get_mid_body_legend()
-            
+        
             # Add mask_movie to viewer
 
             initial_mask= mask[mitosis_track.min_frame:mitosis_track.max_frame+1, mitosis_track.position.min_y:mitosis_track.position.max_y, mitosis_track.position.min_x:mitosis_track.position.max_x,:]
         
             mask[mitosis_track.min_frame:mitosis_track.max_frame+1, mitosis_track.position.min_y:mitosis_track.position.max_y, mitosis_track.position.min_x:mitosis_track.position.max_x,:] = np.maximum(mask_movie, initial_mask)
-        
+            
+            viewer.add_image(mask, name="masks", rgb=True, opacity=0.4)
+
+            #TODO Use point + text instead of red point for mid_body
+            for mitosis_track in mitosis_tracks:
+                mid_body_legend = mitosis_track.get_mid_body_legend()
+                points = []
+                features = {'category':[]}
+                text = {'string':'{category}',
+                        'size':5,
+                        'color':'red',
+                        'translation':np.array([-30,0])}
+                for frame, frame_dict in mid_body_legend.items():
+                    points += [np.array([frame,frame_dict['y'],frame_dict['x']])]
+                    features['category'] += [frame_dict['category']]
+                features['category'] = np.array(features['category'])
+                viewer.add_points(points,features=features,text=text,size=10,face_color='red') 
+            
+            
+            
         return mask
