@@ -5,9 +5,60 @@ import torch
 import imagej
 import scyjava as sj
 from cellpose import models
-
 from ..utils.cell_spot import CellSpot
 from ..utils.cell_track import CellTrack
+from scipy.spatial import ConvexHull
+from cut_detector.data.tools import get_data_path
+import matplotlib.pyplot as plt
+import pickle
+from typing import Optional
+from cut_detector.utils.mb_support.tracking.spatial_laptrack import (
+    SpatialLapTrack,
+)
+
+# from cut_detector.utils.cell_track import CellTrack
+from ..utils.trackmate_track import TrackMateTrack
+from ..utils.trackmate_spot import TrackMateSpot
+from ..utils.gen_track import generate_tracks_from_spots
+
+
+# Finding barycenters of each cell
+def barycenter(cellpose_results, frame):
+    max = np.max(cellpose_results[frame])
+    mean_x = []
+    mean_y = []
+    cells_per_frame = []
+    for i in range(1, max + 1):
+        cell_indices = np.where(cellpose_results[frame] == i)
+        if len(cell_indices[0]) == 0 or len(cell_indices[1]) == 0:
+            break
+        Sx = np.sum(cell_indices[1])
+        Sy = np.sum(cell_indices[0])
+        mean_x.append(Sx / len(cell_indices[1]))
+        mean_y.append(Sy / len(cell_indices[0]))
+        cells_per_frame.append(cell_indices)
+    return (mean_x, mean_y, cells_per_frame)
+
+
+def load_tracks_and_spots(
+    trackmate_tracks_path: str, spots_path: str
+) -> tuple[list[TrackMateTrack], list[TrackMateSpot]]:
+    """
+    Load saved spots and tracks generated from Trackmate xml file.
+    """
+    trackmate_tracks: list[TrackMateTrack] = []
+    for track_file in os.listdir(trackmate_tracks_path):
+        with open(os.path.join(trackmate_tracks_path, track_file), "rb") as f:
+            trackmate_track: TrackMateTrack = pickle.load(f)
+            trackmate_track.adapt_deprecated_attributes()
+            trackmate_tracks.append(trackmate_track)
+
+    spots: list[TrackMateSpot] = []
+    for spot_file in os.listdir(spots_path):
+        with open(os.path.join(spots_path, spot_file), "rb") as f:
+            spots.append(pickle.load(f))
+
+    return trackmate_tracks, spots
 
 
 class SegmentationTrackingFactory:
@@ -235,7 +286,44 @@ class SegmentationTrackingFactory:
         Parameters:
             cellpose_results (np.ndarray): TYX
         """
-        raise RuntimeError("Work in Progress")
+
+        cell_dictionary: dict[int, list[CellSpot]] = {}
+        for frame in range(len(cellpose_results)):
+            L = []
+            X, Y, cellsframe = barycenter(cellpose_results, frame)
+            for id_number in range(1, len(cellsframe) + 1):
+                cell_id = cellsframe[id_number - 1]
+                cell_coords = []
+                x, y = X[id_number - 1], Y[id_number - 1]
+                for i in range(len(cell_id[0])):
+                    cell_coords.append([cell_id[1][i], cell_id[0][i]])
+                cell_coords = np.array(cell_coords)
+                hull = ConvexHull(cell_coords)
+                convex_hull_indices = cell_coords[hull.vertices][
+                    :, ::-1
+                ]  # (x, y)
+                spot_points = convex_hull_indices
+                abs_min_x, abs_max_x, abs_min_y, abs_max_y = (
+                    np.abs(np.min(cell_id[1])),
+                    np.abs(np.max(cell_id[1])),
+                    np.abs(np.min(cell_id[0])),
+                    np.abs(np.max(cell_id[0])),
+                )
+                cell_spot = CellSpot(
+                    frame,
+                    x,
+                    y,
+                    id_number,
+                    abs_min_x,
+                    abs_max_x,
+                    abs_min_y,
+                    abs_max_y,
+                    spot_points,
+                )
+                L.append(cell_spot)
+            cell_dictionary[frame] = L
+
+        return cell_dictionary
 
     def perform_segmentation_tracking(
         self,
@@ -269,9 +357,26 @@ class SegmentationTrackingFactory:
 
         cell_spots_dictionary = self.get_spots_from_cellpose(cellpose_results)
 
-        # Extract values from dictionary
-        cell_spots = []
-        for _, spots in cell_spots_dictionary.items():
-            cell_spots.extend(spots)
+        # TODO: perform tracking
+        tracking_method = SpatialLapTrack(
+            spatial_coord_slice=slice(0, 2),
+            spatial_metric="euclidean",
+            track_dist_metric="euclidean",
+            track_cost_cutoff=85.5,
+            gap_closing_dist_metric="euclidean",
+            gap_closing_cost_cutoff=85.5,
+            gap_closing_max_frame_count=3,
+            splitting_cost_cutoff=False,
+            merging_cost_cutoff=False,
+            alternative_cost_percentile=100,
+        )
+        # TODO Compare cell_tracks with trackmate_tracks
+        cell_tracks = generate_tracks_from_spots(
+            cell_spots_dictionary, tracking_method
+        )
 
-        return cell_spots, []
+        cell_spots = []
+        for frame_spots in cell_spots_dictionary.values():
+            cell_spots.extend(frame_spots)
+
+        return cell_spots, cell_tracks
