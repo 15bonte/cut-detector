@@ -21,11 +21,16 @@ def test_mid_body_detection_widget():
     )  # TYXC
 
     # Run process
-    perform_mid_body_detection(
+    mitosis_tracks = perform_mid_body_detection(
         video,
         "example_video",
         get_data_path("mitoses"),
         get_data_path("tracks"),
         save_dir=None,
         update_mitoses=False,
+        parallel_detection=True,
     )
+    is_correctly_detected, _, _ = mitosis_tracks[
+        0
+    ].evaluate_mid_body_detection()
+    assert is_correctly_detected

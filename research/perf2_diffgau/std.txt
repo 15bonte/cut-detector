@@ -1,0 +1,21 @@
+cur_dog
+
+Time:
+- video 1/5: 336.64670491218567
+- video 2/5: 321.94793009757996
+- video 3/5: 724.0157361030579
+- video 4/5: 183.4233169555664
+- video 5/5: 107.83455419540405
+
+converted t2_t3_F-1E5-35-12_mitosis_29_10_to_37.bin: detected 0% with avg distance 1000
+converted t2_t3_F-1E5-35-12_mitosis_4_13_to_189.bin: detected 0% with avg distance 1000
+converted t2_t3_F-1E5-35-8_mitosis_35_17_to_21.bin: detected 57% with avg distance 1
+converted t2_t3_F-1E5-35-7_mitosis_12_14_to_36.bin: detected 87% with avg distance 1
+converted t2_t3_F-1E5-35-11_mitosis_25_6_to_49.bin: detected 0% with avg distance 1000
+converted t2_t3_F-1E5-35-8_mitosis_9_95_to_196.bin: detected 100% with avg distance 172
+converted t2_t3_F-1E5-35-7_mitosis_10_15_to_51.bin: detected 0% with avg distance 1000
+converted t2_t3_F-1E5-35-13_mitosis_17_0_to_34.bin: detected 84% with avg distance 2
+converted t2_t3_F-1E5-35-11_mitosis_15_71_to_125.bin: detected 100% with avg distance 71
+converted t2_t3_F-1E5-35-11_mitosis_27_2_to_42.bin: detected 91% with avg distance 4
+
+Mid-body detection evaluation: 84.13% | 53/63

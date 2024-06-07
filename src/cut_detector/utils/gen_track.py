@@ -10,7 +10,7 @@ from typing import Union, Literal, Tuple, TypeVar
 import pandas as pd
 from laptrack import LapTrack
 
-from ..factories.mb_support import tracking
+from .mb_support import tracking
 from .track import Track
 from .spot import Spot
 from .mid_body_track import MidBodyTrack

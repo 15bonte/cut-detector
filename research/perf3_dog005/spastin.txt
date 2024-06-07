@@ -1,0 +1,5 @@
+Wrong detections:
+20231019-t1_siSpastin-50-2_mitosis_5_136_to_176.bin: detected 100% with avg distance 103
+20231019-t1_siSpastin-50-1_mitosis_16_5_to_25.bin: detected 0% with avg distance 1000
+
+Mid-body detection evaluation: 88.24% | 15/17

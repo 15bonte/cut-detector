@@ -1,0 +1,7 @@
+Wrong detections:
+20231019-t1_siCep55-50-4_mitosis_5_8_to_228.bin: detected 100% with avg distance 70
+20231019-t1_siCep55-50-1_mitosis_17_0_to_41.bin: detected 100% with avg distance 156
+20231019-t1_siCep55-50-4_mitosis_24_17_to_104.bin: detected 0% with avg distance 1000
+20231019-t1_siCep55-50-1_mitosis_5_41_to_155.bin: detected 0% with avg distance 1000
+
+Mid-body detection evaluation: 90.48% | 38/42
