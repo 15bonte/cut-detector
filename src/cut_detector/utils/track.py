@@ -55,7 +55,7 @@ class Track(ABC, Generic[T]):
         spot.track_id = self.track_id
         self.length += 1
         # Add children recursively
-        if spot.child_spot is not None:
+        if hasattr(spot,"child_spot") and spot.child_spot is not None:
             self.add_spot(spot.child_spot)
 
 
