@@ -80,6 +80,7 @@ class SegmentationTrackingFactory:
         gap_closing_max_distance_ratio=0.5,
         linking_max_distance_ratio=1,
         max_frame_gap=CellTrack.max_frame_gap,
+        minimum_cell_track_length=10,
     ) -> None:
         self.model_path = model_path
         self.augment = augment
@@ -88,6 +89,7 @@ class SegmentationTrackingFactory:
         self.gap_closing_max_distance_ratio = gap_closing_max_distance_ratio
         self.linking_max_distance_ratio = linking_max_distance_ratio
         self.max_frame_gap = max_frame_gap
+        self.minimum_cell_track_length = minimum_cell_track_length
 
     def perform_trackmate_tracking(
         self,
@@ -368,6 +370,13 @@ class SegmentationTrackingFactory:
         cell_tracks = generate_tracks_from_spots(
             cell_spots_dictionary, tracking_method
         )
+
+        # Keep only tracks with a minimum length
+        cell_tracks = [
+            track
+            for track in cell_tracks
+            if len(track.spots) >= self.minimum_cell_track_length
+        ]
 
         cell_spots = []
         for frame_spots in cell_spots_dictionary.values():
