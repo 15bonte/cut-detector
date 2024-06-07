@@ -354,10 +354,7 @@ class ResultsSavingFactory:
         self,
         mitosis_tracks: list[MitosisTrack], video, viewer
     ) -> np.ndarray:
-        """
-        To be written.
-        """
-
+    
         # Video parameters:
         nbframes, height, width, _ = video.shape
         
@@ -377,8 +374,6 @@ class ResultsSavingFactory:
             mask_movie = np.stack([mask_movie,mask_movie,mask_movie],axis=-1)
             
             mask_movie[cell_indexes] = colors[i]
-            # mask_movie[mid_body] = [255, 0,0]
-
         
             # Add mask_movie to viewer
 
@@ -388,7 +383,8 @@ class ResultsSavingFactory:
             
             viewer.add_image(mask, name="masks", rgb=True, opacity=0.4)
 
-            #TODO Use point + text instead of red point for mid_body
+            #Use point + text instead of red point for mid_body
+
             for mitosis_track in mitosis_tracks:
                 mid_body_legend = mitosis_track.get_mid_body_legend()
                 points = []
@@ -403,6 +399,5 @@ class ResultsSavingFactory:
                 features['category'] = np.array(features['category'])
                 viewer.add_points(points,features=features,text=text,size=10,face_color='red') 
             
-            
-            
+
         return mask

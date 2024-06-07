@@ -39,10 +39,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main(
-         #image_path = chemin vidéo,
-         #mitoses_path = chemin vidéo \mitoses"
-         
-         image_path = r"C:\Users\camca\Documents\video_exemple",
-         mitoses_path = r"C:\Users\camca\Documents\video_exemple\mitoses"
-    )
+    main()
