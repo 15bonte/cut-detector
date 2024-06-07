@@ -10,7 +10,7 @@ from ..constants.tracking import (
     INTERPHASE_INDEX,
     METAPHASE_INDEX,
 )
-from .track import Track, TRACKING_METHOD
+from .track import Track 
 from .box_dimensions_dln import BoxDimensionsDln
 from .box_dimensions import BoxDimensions
 from .cell_spot import CellSpot
@@ -360,7 +360,7 @@ class CellTrack(Track[CellSpot]):
                 track = id_to_track[track_id]
             frame = row["frame"]
             idx_in_frame = row["idx_in_frame"]
-            track.append(spots[frame][idx_in_frame])
+            track.append(spots[int(frame)][int(idx_in_frame)])
         return [
             CellTrack.from_spots(track_id, spots)
             for track_id, spots in enumerate(id_to_track.values())
