@@ -53,9 +53,7 @@ class CellSpot(Spot):
 
     @staticmethod
     def get_extra_features_name() -> list[str]:
-        # See Spot documentation and/or MidBodySpot for an implementation example
-        raise RuntimeError("Work in Progress")
+        return []
 
     def get_extra_coordinates(self) -> list[Any]:
-        # See Spot documentation and/or MidBodySpot for an implementation example
-        raise RuntimeError("Work in Progress")
+        return []

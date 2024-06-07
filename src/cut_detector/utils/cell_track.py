@@ -10,7 +10,7 @@ from ..constants.tracking import (
     INTERPHASE_INDEX,
     METAPHASE_INDEX,
 )
-from .track import Track
+from .track import Track 
 from .box_dimensions_dln import BoxDimensionsDln
 from .box_dimensions import BoxDimensions
 from .cell_spot import CellSpot
@@ -67,21 +67,23 @@ class CellTrack(Track[CellSpot]):
 
         self.metaphase_spots: list[CellSpot] = []
 
-
     @classmethod
     def from_spots(cls, track_id: int, spots: list[CellSpot]) -> CellTrack:
+        """
+        Create a CellTrack from a list of CellSpot.
 
-        track_spot_ids = set([spot.id for spot in spots])
-        start = min([s.frame for s in spots])
-        stop = max([s.frame for s in spots])
-        
-        track = cls(track_id, track_spot_ids, start, stop)
-        
-        for s in spots:
-            track.add_spot(s)
-
+        Parameters
+        ----------
+        track_id : int
+            Track identifier.
+        """
+        track_spots_ids = set([spot.id for spot in spots])
+        start = min([spot.frame for spot in spots])
+        stop = max([spot.frame for spot in spots])
+        track = cls(track_id, track_spots_ids, start, stop)
+        for spot in spots:
+            track.add_spot(spot)
         return track
-
 
     def update_metaphase_spots(self, predictions: list[int]) -> None:
         """
@@ -341,27 +343,15 @@ class CellTrack(Track[CellSpot]):
         return cell_crops
 
     @staticmethod
-    def generate_tracks_from_spots(
-        spots: dict[int, list[CellSpot]],
-        linking_max_distance: int,
-        gap_closing_max_distance: int,
-    ) -> list[CellTrack]:
-        """
-        Generate tracks from spots.
-        """
-        max_frame_gap = CellTrack.max_frame_gap
-        raise NotImplementedError
-    
-    @staticmethod
     def track_df_to_track_list(
-            track_df: pd.DataFrame,
-            spots: dict[int, list[CellSpot]],
-            ) -> list[CellTrack]:
-        
-        track_df.reset_index(inplace=True)
-        track_df.dropna(inplace=True)
-        id_to_track = {}
+        track_df: pd.DataFrame,
+        spots: dict[int, list[CellSpot]],
+    ) -> list[CellTrack]:
 
+        track_df.dropna(inplace=True)
+        track_df.reset_index(drop=True, inplace=True)
+
+        id_to_track = {}
         for _, row in track_df.iterrows():
             track_id = row["track_id"]
             track: list = id_to_track.get(track_id)
@@ -371,7 +361,6 @@ class CellTrack(Track[CellSpot]):
             frame = row["frame"]
             idx_in_frame = row["idx_in_frame"]
             track.append(spots[int(frame)][int(idx_in_frame)])
-
         return [
             CellTrack.from_spots(track_id, spots)
             for track_id, spots in enumerate(id_to_track.values())
