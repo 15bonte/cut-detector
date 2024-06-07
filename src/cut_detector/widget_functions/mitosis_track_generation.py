@@ -17,6 +17,18 @@ def plot_predictions_evolution(
     raw_tracks: list[CellTrack],
     mitosis_tracks: list[MitosisTrack],
 ) -> None:
+    """
+    Plot predictions evolution. Used in playground.
+
+    Parameters
+    ----------
+    raw_spots : list[CellSpot]
+        Raw spots.
+    raw_tracks : list[CellTrack]
+        Raw tracks.
+    mitosis_tracks : list[MitosisTrack]
+        Mitosis tracks.
+    """
     # Spots detected by Cellpose
     detected_spots = {}
     for raw_spot in raw_spots:
@@ -122,8 +134,37 @@ def perform_mitosis_track_generation(
     plot_evolution: bool = False,
     save: bool = True,
 ) -> Union[list[MitosisTrack], None]:
-    """
-    Perform mitosis track generation.
+    """Perform mitosis track generation.
+
+    Parameters
+    ----------
+    video : np.ndarray
+        Video.
+    video_name : str
+        Video name.
+    spots_dir : str
+        Directory where spots are saved.
+    tracks_dir : str
+        Directory where tracks are saved.
+    mitoses_dir : Optional[str], optional
+        Directory where mitoses are saved, by default None.
+    metaphase_model_path : Optional[str], optional
+        Metaphase model path, by default get_model_path("metaphase_cnn").
+    hmm_metaphase_parameters_file : Optional[str], optional
+        HMM metaphase parameters file, by default os.path.join(get_model_path("hmm"), "hmm_metaphase_parameters.npz").
+    predictions_file : Optional[str], optional
+        Predictions file, by default None.
+    only_predictions_update : bool, optional
+        Only update predictions, by default False.
+    plot_evolution : bool, optional
+        Plot evolution, by default False.
+    save : bool, optional
+        Save, by default True.
+
+    Returns
+    -------
+    Union[list[MitosisTrack], None]
+        List of mitosis tracks if only_predictions_update is False, None otherwise.
     """
 
     print("### CELL DIVISION DETECTION ###")

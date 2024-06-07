@@ -17,9 +17,24 @@ from .micro_tubules_augmentation import (
 )
 
 
-def transform_image_orientation(image, margin=10, percentile=75):
-    """
-    Compute image orientation and rotate it to have the bridges horizontal.
+def transform_image_orientation(
+    image, margin=10, percentile=75
+) -> tuple[np.ndarray]:
+    """Compute image orientation and rotate it to have the bridges horizontal.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        Image to rotate.
+    margin : int, optional
+        Margin to consider for orientation computation, by default 10.
+    percentile : int, optional
+        Percentile to consider for orientation computation, by default 75.
+
+    Returns
+    -------
+    tuple[np.ndarray]
+        Rotated image and binary image.
     """
     keep_3_channels = False
     if len(image.shape) == 3:
@@ -66,13 +81,20 @@ def transform_image_orientation(image, margin=10, percentile=75):
 
 
 class BridgesMtModelManager(CnnModelManager):
-    """
-    Model manager for Binary Bridges CNN classification models.
-    """
+    """Model manager for Binary Bridges CNN classification models."""
 
     def augment_image(self, input_tensor: torch.Tensor) -> torch.Tensor:
-        """
-        Function to augment image following binary bridges principle.
+        """Function to augment image following binary bridges principle.
+
+        Parameters
+        ----------
+        input_tensor : torch.Tensor
+            Input tensor to augment.
+
+        Returns
+        -------
+        torch.Tensor
+            Augmented tensor.
         """
         input_arrays = input_tensor.detach().cpu().numpy()  # BCYX
 
@@ -103,8 +125,16 @@ class BridgesMtModelManager(CnnModelManager):
         dl_metric: AbstractMetric,
         data_loader: DataLoader,
     ) -> None:
-        """
-        Function to generate outputs from inputs for given model.
+        """Function to generate outputs from inputs for given model.
+
+        Parameters
+        ----------
+        dl_element : DatasetOutput
+            Element from the data loader.
+        dl_metric : AbstractMetric
+            Metric to update.
+        data_loader : DataLoader
+            Data loader.
         """
         augmented_input = self.augment_image(dl_element.input)
         augmentation_nb = augmented_input.shape[0] // dl_element.input.shape[0]
@@ -138,44 +168,6 @@ class BridgesMtModelManager(CnnModelManager):
                 final_predictions[idx][1] += cut_prediction
                 final_predictions[idx][2] += two_cuts_prediction
         dl_element.prediction = final_predictions
-
-        # # Debug display
-        # target_argmax = torch.argmax(dl_element.target, dim=1)
-        # predictions_argmax = torch.argmax(final_predictions, dim=1)
-        # predictions_to_print = predictions.view(-1, augmentation_nb, 2)
-        # for img_idx, original_image in enumerate(dl_element.input):
-        #     if predictions_argmax[img_idx] == target_argmax[img_idx]:
-        #         continue
-        #     plt.subplot(1, 1 + augmentation_nb, 1)
-        #     mat_original = original_image[0].squeeze().detach().cpu().numpy()
-        #     mat_original, _ = transform_image_orientation(mat_original)
-        #     plt.title(
-        #         f"{self.file_name_encoder.decode(dl_element.encoded_file_name[img_idx])} \n Pred {2 - predictions_argmax[img_idx].detach().cpu().numpy()} MT vs Target {2 - target_argmax[img_idx].detach().cpu().numpy()} MT"
-        #     )
-        #     plt.imshow(mat_original, cmap="gray")
-        #     for plt_idx, idx in enumerate(
-        #         range(
-        #             augmentation_nb * img_idx, augmentation_nb * (img_idx + 1)
-        #         )
-        #     ):
-        #         plt.subplot(1, 1 + augmentation_nb, 2 + plt_idx)
-        #         mat_sub_image = (
-        #             augmented_input[idx][0].squeeze().detach().cpu().numpy()
-        #         )
-        #         augment_pred = (
-        #             predictions_to_print[img_idx][plt_idx]
-        #             .detach()
-        #             .cpu()
-        #             .numpy()
-        #         )
-        #         predicted_category = ["No MT", "MT"][np.argmax(augment_pred)]
-        #         plt.title(f"{predicted_category} {str(max(augment_pred))[:4]}")
-        #         plt.imshow(mat_sub_image, cmap="gray")
-
-        #     # Display on whole screen
-        #     figManager = plt.get_current_fig_manager()
-        #     figManager.window.showMaximized()
-        #     plt.show()
 
         # Update metric
         dl_metric.update(

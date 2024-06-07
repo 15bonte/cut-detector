@@ -3,9 +3,7 @@ from cnn_framework.utils.dimensions import Dimensions
 
 
 class MetaphaseCnnModelParams(BaseModelParams):
-    """
-    Metaphase CNN model params.
-    """
+    """Metaphase CNN model params."""
 
     def __init__(self):
         super().__init__("metaphase_cnn")

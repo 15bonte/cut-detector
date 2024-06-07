@@ -41,7 +41,18 @@ class CnnDataSet(AbstractDataSet):
         )
 
     def generate_images(self, filename: str) -> DatasetOutput:
-        """Generate the images for the dataset."""
+        """Generate the images for the dataset.
+
+        Parameters
+        ----------
+        filename : str
+            Name of the file to load.
+
+        Returns
+        -------
+        DatasetOutput
+            Output of the dataset.
+        """
         idx = int(filename.split(".")[0])
         # Get image and adapt it to torch
         nucleus_image = np.moveaxis(self.data[idx], 0, -1)  # YXC

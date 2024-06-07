@@ -1,5 +1,4 @@
-"""
-Track is the common ancestor for all specialized tracks of Specialized Points.
+"""Track is the common ancestor for all specialized tracks of Specialized Points.
 
 To create a new specialized track, you must do the following:
 - Create your specialized XYZSpot class:
@@ -19,19 +18,16 @@ To create a new specialized track, you must do the following:
 """
 
 from __future__ import annotations
-from typing import TypeVar, Generic, Tuple, Literal, Union
+from typing import TypeVar, Generic
 from abc import abstractmethod, ABC
 
 import pandas as pd
-import matplotlib.pyplot as plt
-from laptrack import LapTrack
-
-from .mb_support import tracking
 from .spot import Spot
 from .cell_spot import CellSpot
 from .mid_body_spot import MidBodySpot
 
 T = TypeVar("T", MidBodySpot, CellSpot)
+
 
 class Track(ABC, Generic[T]):
     """
@@ -57,7 +53,6 @@ class Track(ABC, Generic[T]):
         # Add children recursively
         if spot.child_spot is not None:
             self.add_spot(spot.child_spot)
-
 
     @staticmethod
     @abstractmethod

@@ -1,13 +1,29 @@
 from __future__ import annotations
 
-from typing import Optional, Any
+from typing import Optional
 
 from .spot import Spot
 
 
 class MidBodySpot(Spot):
-    """
-    Mid-body candidate spot
+    """Mid-body spot.
+
+    Parameters
+    ----------
+    frame : int
+        Frame of the spot.
+    x : int
+        X coordinate of the spot.
+    y : int
+        Y coordinate of the spot.
+    intensity : Optional[float], optional
+        Intensity of the spot, by default None.
+    sir_intensity : Optional[float], optional
+        Sir intensity of the spot, by default None.
+    area : Optional[float], optional
+        Area of the spot, by default None.
+    circularity : Optional[float], optional
+        Circularity of the spot, by default None.
     """
 
     def __init__(
@@ -33,7 +49,21 @@ class MidBodySpot(Spot):
 
     @staticmethod
     def get_extra_features_name() -> list[str]:
+        """Get the extra features name for tracking.
+
+        Returns
+        -------
+        list[str]
+            List of extra features name.
+        """
         return ["mklp_intensity", "sir_intensity"]
-    
-    def get_extra_coordinates(self) -> list[Any]:
+
+    def get_extra_coordinates(self) -> list[float | None]:
+        """Get the extra coordinates for tracking.
+
+        Returns
+        -------
+        list[float | None]
+            List of extra coordinates.
+        """
         return [self.intensity, self.sir_intensity]

@@ -1,5 +1,4 @@
-"""Taken from https://github.com/TreB1eN/HiddenMarkovModel_Pytorch
-"""
+"""Taken from https://github.com/TreB1eN/HiddenMarkovModel_Pytorch"""
 
 import torch
 

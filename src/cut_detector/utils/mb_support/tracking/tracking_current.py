@@ -1,5 +1,4 @@
-from .tracking_impl import slt, lt
+from .tracking_impl import spatial_tracking_distance, basic_tracking_method
 
-cur_laptrack         = lt
-cur_spatial_laptrack = slt
-
+cur_laptrack = basic_tracking_method
+cur_spatial_laptrack = spatial_tracking_distance

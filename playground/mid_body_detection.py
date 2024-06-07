@@ -56,8 +56,9 @@ def main(
 
     spots_candidates = factory.detect_mid_body_spots(
         mitosis_movie=mitosis_movie,
-        mitosis_track=mitosis_track,
+        method="difference_gaussian",
         parallelization=False,
+        mitosis_track=mitosis_track,
     )
 
     if show_points:

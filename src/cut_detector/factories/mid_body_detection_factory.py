@@ -1,5 +1,5 @@
 import concurrent.futures
-from typing import Literal, Optional, Callable, Union
+from typing import Optional, Callable, Union
 import numpy as np
 from skimage.morphology import extrema, opening
 from scipy import ndimage
@@ -7,6 +7,9 @@ from shapely.ops import nearest_points
 from shapely import Polygon, Point
 from tqdm import tqdm
 
+from ..utils.mb_support.detection.detection_current import (
+    DETECTION_FUNCTIONS,
+)
 from ..utils.cell_track import CellTrack
 from ..constants.tracking import (
     CYTOKINESIS_DURATION,
@@ -17,27 +20,9 @@ from ..utils.mid_body_track import MidBodyTrack
 from ..utils.image_tools import smart_cropping
 from ..utils.mid_body_spot import MidBodySpot
 from ..utils.mitosis_track import MitosisTrack
-from ..utils.cell_track import CellTrack
 from ..utils.gen_track import generate_tracks_from_spots, TrackingMethod
 from ..utils.cell_spot import CellSpot
-
-from ..utils.mb_support import detection as mbd
 from ..utils.mb_support import tracking as mbt
-
-_SpotDetectionMethod = Union[
-    Callable[[np.ndarray], np.ndarray],
-    Literal[
-        "h_maxima",
-        "cur_log",
-        "lapgau",
-        "log2_wider",
-        "rshift_log",
-        "cur_dog",
-        "diffgau",
-        "cur_doh",
-        "hessian",
-    ],
-]
 
 
 class MidBodyDetectionFactory:
@@ -74,7 +59,7 @@ class MidBodyDetectionFactory:
         mitosis_movie: np.ndarray,
         tracks: list[CellTrack],
         parallel_detection: bool,
-        mb_detect_method: _SpotDetectionMethod = mbd.cur_dog,
+        mb_detect_method: str = "difference_gaussian",
         mb_tracking_method: TrackingMethod = mbt.cur_spatial_laptrack,
         log_blob_spot: bool = False,
     ) -> None:
@@ -91,7 +76,7 @@ class MidBodyDetectionFactory:
             List of cell tracks.
         parallel_detection: bool
             If True, use parallelization for mid-body spots detection.
-        mb_detect_method: _SpotDetectionMethod
+        mb_detect_method: str
             Method to detect mid-body spots.
         mb_tracking_method: TrackingMethod
             Method to track mid-body spots.
@@ -101,8 +86,8 @@ class MidBodyDetectionFactory:
 
         spots_candidates = self.detect_mid_body_spots(
             mitosis_movie,
-            parallelization=parallel_detection,
             method=mb_detect_method,
+            parallelization=parallel_detection,
             log_blob_spot=log_blob_spot,
             mitosis_track=mitosis_track,
         )
@@ -134,8 +119,8 @@ class MidBodyDetectionFactory:
     def detect_mid_body_spots(
         self,
         mitosis_movie: np.ndarray,
+        method: str,
         parallelization: bool = False,
-        method: _SpotDetectionMethod = mbd.cur_dog,
         log_blob_spot: bool = False,
         mitosis_track: Optional[MitosisTrack] = None,
     ) -> dict[int, list[MidBodySpot]]:
@@ -146,10 +131,10 @@ class MidBodyDetectionFactory:
         ----------
         mitosis_movie: np.ndarray
             Mitosis movie. TYXC.
+        method: str
+            Method to detect mid-body spots.
         parallelization: bool
             If True, use parallelization for mid-body spots detection.
-        method: _SpotDetectionMethod
-            Method to detect mid-body spots.
         log_blob_spot: bool
             If True, display log of spots detected.
         mitosis_track: MitosisTrack
@@ -179,7 +164,7 @@ class MidBodyDetectionFactory:
     def serial_detect_mid_body_spots(
         self,
         mitosis_movie: np.ndarray,
-        method: _SpotDetectionMethod,
+        method: str,
         log_blob_spot: bool = False,
         mitosis_track: Optional[MitosisTrack] = None,
     ) -> dict[int, list[MidBodySpot]]:
@@ -189,7 +174,7 @@ class MidBodyDetectionFactory:
         ----------
         mitosis_movie: np.ndarray
             Mitosis movie. TYXC.
-        mode: _SpotDetectionMethod
+        mode: str
             Method to detect mid-body spots.
         log_blob_spot: bool
             If True, display log of spots detected.
@@ -220,7 +205,7 @@ class MidBodyDetectionFactory:
     def thread_pool_detect_mid_body_spots(
         self,
         mitosis_movie: np.ndarray,
-        method: _SpotDetectionMethod,
+        method: str,
         mitosis_track: Optional[MitosisTrack] = None,
     ) -> dict[int, list[MidBodySpot]]:
         """Detect mid-body spots in mitosis movie.
@@ -230,7 +215,7 @@ class MidBodyDetectionFactory:
         ----------
         mitosis_movie: np.ndarray
             Mitosis movie. TYXC.
-        mode: _SpotDetectionMethod
+        mode: str
             Method to detect mid-body spots.
         log_blob_spot: bool
             If True, display log of spots detected.
@@ -264,7 +249,7 @@ class MidBodyDetectionFactory:
     def _spot_detection(
         self,
         image: np.ndarray,
-        method: _SpotDetectionMethod,
+        method: str,
         frame: int,
         log_blob_spot: bool = False,
         mitosis_track: Optional[MitosisTrack] = None,
@@ -275,7 +260,7 @@ class MidBodyDetectionFactory:
         ----------
         image: np.ndarray
             Image to process. YXC.
-        method: _SpotDetectionMethod
+        method: str
             Method to detect mid-body spots.
         frame: int
             Frame number.
@@ -319,42 +304,11 @@ class MidBodyDetectionFactory:
                 f"Invalid type for argument mitosis_track: {mitosis_track}"
             )
 
-        # Perform detection
-        if callable(method):
-            # Call method directly
-            spots = [
-                (int(spot[0]), int(spot[1]), int(spot[2]))
-                for spot in method(image_mklp)
-            ]
-            if log_blob_spot:
-                for s in spots:
-                    print(f"found x:{s[1]}  y:{s[0]}  s:{s[2]}")
-
-        elif method in [
-            "cur_log",
-            "lapgau",
-            "log2_wider",
-            "rshift_log",
-            "cur_dog",
-            "diffgau",
-            "cur_doh",
-            "hessian",
-        ]:
+        if method in DETECTION_FUNCTIONS.keys():
             # Function called referenced by name
-            mapping = {
-                "cur_log": mbd.cur_log,
-                "cur_dog": mbd.cur_dog,
-                "cur_doh": mbd.cur_doh,
-                "lapgau": mbd.lapgau,
-                "log2_wider": mbd.log2_wider,
-                "rshift_log": mbd.rshift_log,
-                "diffgau": mbd.diffgau,
-                "hessian": mbd.hessian,
-            }
-
             spots = [
                 (int(spot[0]), int(spot[1]), int(spot[2]))
-                for spot in mapping[method](image_mklp)
+                for spot in DETECTION_FUNCTIONS[method](image_mklp)
             ]
 
             if log_blob_spot:

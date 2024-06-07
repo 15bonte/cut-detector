@@ -152,9 +152,9 @@ def apply_tracking(
     if isinstance(method, str):
         mapping: dict[str, LapTrack] = {
             "laptrack": tracking.cur_laptrack,
-            "lt": tracking.lt,
+            "lt": tracking.basic_tracking_method,
             "spatial_laptrack": tracking.cur_spatial_laptrack,
-            "slt": tracking.slt,
+            "slt": tracking.spatial_tracking_distance,
         }
         tracker = mapping.get(method, None)
         if tracker is None:

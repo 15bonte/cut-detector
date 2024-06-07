@@ -1,13 +1,20 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 import numpy as np
 
-from typing import Any
-from abc import ABC, abstractmethod
 
 class Spot(ABC):
-    """
-    Class used for both cell and mid-body spots.
+    """Class used for both cell and mid-body spots.
+
+    Parameters
+    ----------
+    frame : int
+        Frame of the spot.
+    x : int
+        X coordinate of the spot.
+    y : int
+        Y coordinate of the spot.
     """
 
     def __init__(self, frame: int, x: int, y: int):
@@ -16,24 +23,36 @@ class Spot(ABC):
         self.y = y
 
     def get_position(self) -> np.ndarray:
-        """
-        Return position as numpy array
+        """Return position as numpy array.
+
+        Returns
+        -------
+        np.ndarray
+            Position as numpy array.
         """
         return np.array([self.x, self.y])
 
-    def distance_to(self, other_spot: Spot):
-        """
-        Compute distance between two spots
+    def distance_to(self, other_spot: Spot) -> float:
+        """Compute distance between two spots.
+
+        Parameters
+        ----------
+        other_spot : Spot
+            Other spot to compute distance to.
+
+        Returns
+        -------
+        float
+            Distance between two spots.
         """
         return np.linalg.norm(
             np.array(self.get_position()) - np.array(other_spot.get_position())
         )
-    
+
     @staticmethod
     @abstractmethod
     def get_extra_features_name() -> list[str]:
-        """
-        To have better tracking for classes that inherit from this one.
+        """To have better tracking for classes that inherit from this one.
         These classes can declare here their extra coordinate fields.
 
         Example:
@@ -45,11 +64,10 @@ class Spot(ABC):
         ```
         """
         return []
-    
+
     @abstractmethod
-    def get_extra_coordinates(self) -> list[Any]:
-        """
-        To have better tracking for classes that inherit from this one.
+    def get_extra_coordinates(self) -> list:
+        """To have better tracking for classes that inherit from this one.
         These classes can return here their extra coordinate fields.
 
         Example:
@@ -61,6 +79,6 @@ class Spot(ABC):
         ```
         """
         return []
-    
+
     def __str__(self) -> str:
         return f"x:{self.x} y:{self.y}"

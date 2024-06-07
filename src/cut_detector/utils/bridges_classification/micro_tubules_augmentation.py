@@ -1,9 +1,18 @@
 import numpy as np
 
 
-def zero_to_bottom_right(image):
-    """
-    Set to zero the bottom right part of the image.
+def zero_to_bottom_right(image: np.ndarray) -> np.ndarray:
+    """Set to zero the bottom right part of the image.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        The image to augment.
+
+    Returns
+    -------
+    np.ndarray
+        The augmented image.
     """
     image = np.copy(image)
     square_shape = image.shape[0]
@@ -16,9 +25,18 @@ def zero_to_bottom_right(image):
     return image
 
 
-def zero_to_top_left(image):
-    """
-    Set to zero the top left part of the image.
+def zero_to_top_left(image: np.ndarray) -> np.ndarray:
+    """Set to zero the top left part of the image.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        The image to augment.
+
+    Returns
+    -------
+    np.ndarray
+        The augmented image.
     """
     image = np.copy(image)
     square_shape = image.shape[0]
@@ -31,9 +49,19 @@ def zero_to_top_left(image):
     return image
 
 
-def zero_to_bottom_left(image):
+def zero_to_bottom_left(image: np.ndarray) -> np.ndarray:
     """
     Set to zero the bottom left part of the image.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        The image to augment.
+
+    Returns
+    -------
+    np.ndarray
+        The augmented image.
     """
     image = np.copy(image)
     square_shape = image.shape[0]
@@ -46,9 +74,18 @@ def zero_to_bottom_left(image):
     return image
 
 
-def zero_to_top_right(image):
-    """
-    Set to zero the top right part of the image.
+def zero_to_top_right(image: np.ndarray) -> np.ndarray:
+    """Set to zero the top right part of the image.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        The image to augment.
+
+    Returns
+    -------
+    np.ndarray
+        The augmented image.
     """
     image = np.copy(image)
     square_shape = image.shape[0]
@@ -62,9 +99,7 @@ def zero_to_top_right(image):
 
 
 class MicroTubulesAugmentation:
-    """
-    Manage the augmentation of images for microtubules detection.
-    """
+    """Manage the augmentation of images for microtubules detection."""
 
     def __init__(self):
         self.augmentations = self.merge_augmentations()
@@ -73,6 +108,11 @@ class MicroTubulesAugmentation:
     def merge_augmentations(cls) -> dict[str, int]:
         """
         Merge values given to augmentation categories by different peaks.
+
+        Returns
+        -------
+        dict[str, int]
+            The merged augmentations.
         """
         augmentations = {}
         for category in [
@@ -99,8 +139,12 @@ class MicroTubulesAugmentation:
         Parameters
         ----------
         image: np.ndarray
-            The image to augment. CYX
+            The image to augment. CYX.
 
+        Returns
+        -------
+        dict[str, dict[int, np.ndarray]]
+            The augmented images and their category.
         """
         image = np.moveaxis(original_image, 0, -1)  # YXC
         assert image.shape[0] == image.shape[1]

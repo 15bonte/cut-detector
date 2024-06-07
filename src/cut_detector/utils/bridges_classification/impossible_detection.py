@@ -2,9 +2,7 @@ from enum import IntEnum
 
 
 class ImpossibleDetection(IntEnum):
-    """
-    Enum to represent the different types of impossible detections.
-    """
+    """Enum to represent the different types of impossible detections."""
 
     NORMAL = 0
     NO_MID_BODY_DETECTED = -1

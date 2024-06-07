@@ -3,12 +3,13 @@ from cut_detector.data.tools import get_data_path
 from cut_detector.utils.tools import upload_annotations
 
 
-def test_annotations_upload(
-    annotations_folder=get_data_path("annotations"),
-    video_folder=get_data_path("videos"),
-    mitoses_folder=get_data_path("mitoses"),
-):
+def test_annotations_upload():
     """Test manual CellCounter annotations upload."""
+
+    annotations_folder = (get_data_path("annotations"),)
+    video_folder = (get_data_path("videos"),)
+    mitoses_folder = (get_data_path("mitoses"),)
+
     all_detected, all_not_detected = 0, 0
 
     video_paths = os.listdir(video_folder)

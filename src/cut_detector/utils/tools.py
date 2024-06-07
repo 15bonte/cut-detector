@@ -5,13 +5,7 @@ import csv
 from typing import Optional
 import torch
 from torch.utils.data import DataLoader
-
-from matplotlib import pyplot as plt
 import numpy as np
-
-import bigfish.stack as stack
-from bigfish.plot.utils import save_plot, get_minmax_values
-from bigfish.plot.plot_images import _define_patch
 
 from cnn_framework.utils.tools import extract_patterns
 from cnn_framework.utils.display_tools import display_progress
@@ -36,9 +30,17 @@ from .hidden_markov_models import HiddenMarkovModel
 
 
 def re_organize_channels(image: np.ndarray) -> np.ndarray:
-    """
-    Expect a 4 dimensions image.
-    Re-organize channels to get TXYC order.
+    """Expect a 4 dimensions image. Re-organize channels to get TXYC order.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        Image to re-organize.
+
+    Returns
+    -------
+    np.ndarray
+        Re-organized image.
     """
     if image.ndim != 4:
         raise ValueError("Expect a 4 dimensions image.")
@@ -61,7 +63,25 @@ def re_organize_channels(image: np.ndarray) -> np.ndarray:
     return image
 
 
-def get_annotation_file(video_path, mitosis_track, annotations_files):
+def get_annotation_file(
+    video_path: str, mitosis_track, annotations_files: list[str]
+) -> Optional[str]:
+    """Get annotation file corresponding to a mitosis track. Return None if not found.
+
+    Parameters
+    ----------
+    video_path : str
+        Path to video file.
+    mitosis_track : MitosisTrack
+        Mitosis track to find annotation file for.
+    annotations_files : list[str]
+        List of annotation files.
+
+    Returns
+    -------
+    Optional[str]
+        Path to annotation file.
+    """
     video_file = os.path.basename(video_path).split(".")[0]
     mitosis_id = f"mitosis_{mitosis_track.id}_"
     # Assume that mitosis id is consistent across all segmentation/tracking runs
@@ -82,8 +102,23 @@ def upload_annotations(
     mitoses_folder: str,
     update_mitoses: Optional[bool] = True,
 ) -> tuple[int]:
-    """
-    Function used to upload annotations and perform mid-body detection evaluation.
+    """Function used to upload annotations and perform mid-body detection evaluation.
+
+    Parameters
+    ----------
+    annotations_folder : str
+        Folder containing annotations.
+    video_path : str
+        Path to video file.
+    mitoses_folder : str
+        Folder containing mitosis tracks.
+    update_mitoses : Optional[bool], optional
+        Whether to update mitoses with annotations, by default True.
+
+    Returns
+    -------
+    tuple[int]
+        Number of mid-bodies detected and not detected.
     """
 
     # Read video
@@ -184,10 +219,19 @@ def upload_annotations(
     return mb_detected, mb_not_detected
 
 
-def csv_parameters_to_dict(parameters_path: str):
-    """
-    Read parameters from a csv file and return them as a dictionary.
+def csv_parameters_to_dict(parameters_path: str) -> dict:
+    """Read parameters from a csv file and return them as a dictionary.
     Assume to skip some lines if they do not have the right format.
+
+    Parameters
+    ----------
+    parameters_path : str
+        Path to csv file.
+
+    Returns
+    -------
+    dict
+        Parameters as dictionary.
     """
     result_dict = {}
     with open(parameters_path, "r") as csv_file:
@@ -214,29 +258,28 @@ def perform_cnn_inference(
     cnn_data_set=CnnDataSet,
     cnn_classifier=ResnetClassifier,
     model_manager=CnnModelManager,
-):
-    """
-    Perform CNN inference on a list of images.
+) -> list[int]:
+    """Perform CNN inference on a list of images.
 
     Parameters
     ----------
     model_path : str
-        CNN model path
+        CNN model path.
     images :  list[np.array]
         list[CYX]
     cnn_model_params : BaseModelParams
-        model parameters
+        Model parameters.
     cnn_data_set : AbstractDataSet
-        dataset to read data
+        Dataset to read data.
     cnn_classifier : ResnetClassifier
-        CNN classifier
+        CNN classifier.
     model_manager : CnnModelManager
-        model manager
+        Model manager.
 
     Returns
     -------
     predictions : list[int]
-        predicted classes
+        Predicted classes.
 
     """
     # Metaphase model parameters
@@ -296,9 +339,20 @@ def perform_cnn_inference(
     return predictions
 
 
-def apply_hmm(hmm_parameters, sequence):
-    """
-    Correct the sequence of classes using HMM.
+def apply_hmm(hmm_parameters, sequence) -> list[int]:
+    """Correct the sequence of classes using HMM.
+
+    Parameters
+    ----------
+    hmm_parameters : dict
+        HMM parameters.
+    sequence : list[int]
+        Sequence of classes.
+
+    Returns
+    -------
+    list[int]
+        Corrected sequence of classes.
     """
     # Define observation sequence
     obs_seq = np.asarray(sequence, dtype=np.int32)

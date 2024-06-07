@@ -14,6 +14,17 @@ def perform_results_saving(
 ) -> None:
     """
     Perform a series of tests, prints and plots following process.
+
+    Parameters
+    ----------
+    exported_mitoses_dir : str
+        Directory where mitosis tracks are saved.
+    show : bool, optional
+        Show plots, by default False.
+    save_dir : Optional[str], optional
+        Directory where to save results, by default None.
+    verbose : bool, optional
+        Verbose, by default False.
     """
     # Create save_dir if specified and it does not exist
     if save_dir is not None and not os.path.exists(save_dir):

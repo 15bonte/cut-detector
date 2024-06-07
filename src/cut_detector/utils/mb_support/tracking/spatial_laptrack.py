@@ -2,19 +2,19 @@
 - Maximum distance is only applied to the euclidian distance
 """
 
-import networkx as nx
 import numpy as np
-
-from typing import Callable, Literal, List, cast, Union
+from functools import partial
+from typing import Callable, List, cast, Union
 from pydantic import Field
 from scipy.spatial.distance import cdist
 from laptrack import LapTrack, ParallelBackend
-from functools import partial
+import networkx as nx
 
-from laptrack._typing_utils import NumArray, Int, EdgeType
+from laptrack._typing_utils import EdgeType
 from laptrack._coo_matrix_builder import coo_matrix_builder
 from laptrack._optimization import lap_optimization
 from laptrack._cost_matrix import build_frame_cost_matrix
+
 
 class SpatialLapTrack(LapTrack):
     """
@@ -25,18 +25,17 @@ class SpatialLapTrack(LapTrack):
     (splitting and merging cost cutoff works as usual because
     they are not used in the project for now)
 
-    This is only for filtering out values: 
+    This is only for filtering out values:
     Optimisation is still run against the chosen metric.
     """
 
     spatial_coord_slice: slice = Field(
-        ...,
-        description="A slice that is used to subset coords"
+        ..., description="A slice that is used to subset coords"
     )
 
-    spatial_metric: Union[str, Callable]  = Field(
+    spatial_metric: Union[str, Callable] = Field(
         "euclidean",
-        description="The metric to use to compute spatial distances"
+        description="The metric to use to compute spatial distances",
     )
 
     class Config:
@@ -76,31 +75,31 @@ class SpatialLapTrack(LapTrack):
             coord1: np.ndarray,
             coord2: np.ndarray,
         ) -> List[EdgeType]:
-            force_end_indices = [e[0][1] for e in edges_list if e[0][0] == frame]
-            force_start_indices = [e[1][1] for e in edges_list if e[1][0] == frame + 1]
-            
+            force_end_indices = [
+                e[0][1] for e in edges_list if e[0][0] == frame
+            ]
+            force_start_indices = [
+                e[1][1] for e in edges_list if e[1][0] == frame + 1
+            ]
 
             dist_matrix = cdist(coord1, coord2, metric=self.track_dist_metric)
             dist_matrix[force_end_indices, :] = np.inf
             dist_matrix[:, force_start_indices] = np.inf
 
-
             # While this has not been checked, it is highly likely
             # that coord are ordered the way specified in predict_dataframe
-            spatial_coord1 = coord1[:,self.spatial_coord_slice]
-            spatial_coord2 = coord2[:,self.spatial_coord_slice]
+            spatial_coord1 = coord1[:, self.spatial_coord_slice]
+            spatial_coord2 = coord2[:, self.spatial_coord_slice]
 
             spatial_dist_matrix = cdist(
-                spatial_coord1, 
-                spatial_coord2, 
-            metric=self.spatial_metric)
+                spatial_coord1, spatial_coord2, metric=self.spatial_metric
+            )
             spatial_dist_matrix[force_end_indices, :] = np.inf
             spatial_dist_matrix[:, force_start_indices] = np.inf
 
-
             # ind = np.where(dist_matrix < self.track_cost_cutoff)
             ind = np.where(spatial_dist_matrix < self.track_cost_cutoff)
-            dist_matrix = coo_matrix_builder( # keeping the true score here
+            dist_matrix = coo_matrix_builder(  # keeping the true score here
                 dist_matrix.shape,
                 row=ind[0],
                 col=ind[1],
@@ -126,18 +125,24 @@ class SpatialLapTrack(LapTrack):
 
         if self.parallel_backend == ParallelBackend.serial:
             all_edges = []
-            for frame, (coord1, coord2) in enumerate(zip(coords[:-1], coords[1:])):
+            for frame, (coord1, coord2) in enumerate(
+                zip(coords[:-1], coords[1:])
+            ):
                 edges = _predict_link_single_frame(frame, coord1, coord2)
                 all_edges.extend(edges)
         elif self.parallel_backend == ParallelBackend.ray:
             try:
-                import ray # type: ignore (removes the import warning)
+                import ray  # type: ignore (removes the import warning)
             except ImportError:
-                raise ImportError("Please install `ray` to use `ParallelBackend.ray`.")
+                raise ImportError(
+                    "Please install `ray` to use `ParallelBackend.ray`."
+                )
             remote_func = ray.remote(_predict_link_single_frame)
             res = [
                 remote_func.remote(frame, coord1, coord2)
-                for frame, (coord1, coord2) in enumerate(zip(coords[:-1], coords[1:]))
+                for frame, (coord1, coord2) in enumerate(
+                    zip(coords[:-1], coords[1:])
+                )
             ]
             all_edges = sum(ray.get(res), [])
         else:
@@ -149,9 +154,6 @@ class SpatialLapTrack(LapTrack):
         track_tree.add_edges_from(all_edges)
         track_tree.add_edges_from(segment_connected_edges)
         return track_tree
-
-
-    
 
     def _get_gap_closing_matrix(
         self, segments_df, *, force_end_nodes=[], force_start_nodes=[]
@@ -217,14 +219,17 @@ class SpatialLapTrack(LapTrack):
                     spatial_target_dist_matrix = cdist(
                         [target_spatial_coord],
                         # np.stack([df["first_frame_coords"].values[0][self.spatial_coord_slice]]),
-                        np.stack(df["first_frame_coords"].values)[:,self.spatial_coord_slice],
+                        np.stack(df["first_frame_coords"].values)[
+                            :, self.spatial_coord_slice
+                        ],
                         metric=self.spatial_metric,
                     )
                     assert spatial_target_dist_matrix.shape[0] == 1
 
                     indices2 = np.where(
                         # target_dist_matrix[0] < self.gap_closing_cost_cutoff
-                        spatial_target_dist_matrix[0] < self.gap_closing_cost_cutoff
+                        spatial_target_dist_matrix[0]
+                        < self.gap_closing_cost_cutoff
                     )[0]
                     return (
                         df.index[indices2].values,
@@ -235,11 +240,14 @@ class SpatialLapTrack(LapTrack):
 
             if self.parallel_backend == ParallelBackend.serial:
                 segments_df["gap_closing_candidates"] = segments_df.apply(
-                    partial(to_gap_closing_candidates, segments_df=segments_df), axis=1
+                    partial(
+                        to_gap_closing_candidates, segments_df=segments_df
+                    ),
+                    axis=1,
                 )
             elif self.parallel_backend == ParallelBackend.ray:
                 try:
-                    import ray # type: ignore
+                    import ray  # type: ignore
                 except ImportError:
                     raise ImportError(
                         "Please install `ray` to use `ParallelBackend.ray`."
@@ -252,9 +260,13 @@ class SpatialLapTrack(LapTrack):
                 ]
                 segments_df["gap_closing_candidates"] = ray.get(res)
             else:
-                raise ValueError(f"Unknown parallel_backend {self.parallel_backend}. ")
+                raise ValueError(
+                    f"Unknown parallel_backend {self.parallel_backend}. "
+                )
         else:
-            segments_df["gap_closing_candidates"] = [([], [])] * len(segments_df)
+            segments_df["gap_closing_candidates"] = [([], [])] * len(
+                segments_df
+            )
 
         N_segments = len(segments_df)
         gap_closing_dist_matrix = coo_matrix_builder(
@@ -264,16 +276,8 @@ class SpatialLapTrack(LapTrack):
             candidate_inds = row["gap_closing_candidates"][0]
             candidate_costs = row["gap_closing_candidates"][1]
             # row ... track end, col ... track start
-            gap_closing_dist_matrix[
-                (int(cast(int, ind)), candidate_inds)
-            ] = candidate_costs
+            gap_closing_dist_matrix[(int(cast(int, ind)), candidate_inds)] = (
+                candidate_costs
+            )
 
         return segments_df, gap_closing_dist_matrix
-
-    
-
-
-
-
-
-    

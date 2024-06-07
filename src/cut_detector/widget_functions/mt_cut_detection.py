@@ -20,13 +20,22 @@ def perform_mt_cut_detection(
     ),
     save: bool = True,
 ) -> None:
-    """
+    """Perform micro-tubules cut detection.
 
     Parameters
     ----------
-    raw_video: np.ndarray
-        TYXC
-
+    raw_video : np.ndarray
+        Raw video. TYXC.
+    video_name : str
+        Video name.
+    exported_mitoses_dir : str
+        Directory where mitosis tracks are saved.
+    hmm_bridges_parameters_file : Optional[str], optional
+        HMM bridges parameters file.
+    bridges_mt_cnn_model_path : Optional[str], optional
+        Bridges micro-tubules CNN model path.
+    save : bool, optional
+        Save updated mitosis tracks, by default True.
     """
     print("### MICRO-TUBULES CUT DETECTION ###")
 

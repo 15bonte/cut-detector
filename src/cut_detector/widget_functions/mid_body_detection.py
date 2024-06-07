@@ -22,13 +22,43 @@ def perform_mid_body_detection(
     save: bool = True,
     mid_body_detection_method: Union[
         str, Callable[[np.ndarray], np.ndarray]
-    ] = detection.cur_log,
+    ] = detection.laplacian_gaussian,
     mid_body_tracking_method: Union[
         str, LapTrack
     ] = tracking.cur_spatial_laptrack,
     parallel_detection: bool = False,
     target_mitosis_id: Optional[int] = None,
 ) -> list[MitosisTrack]:
+    """Perform mid-body detection on mitosis tracks.
+
+    Parameters
+    ----------
+    raw_video : np.ndarray
+        Raw video to extract mitosis movies from.
+    video_name : str
+        Name of the video.
+    exported_mitoses_dir : str
+        Directory where mitosis tracks are saved.
+    exported_tracks_dir : str
+        Directory where cell tracks are saved.
+    movies_save_dir : Optional[str], optional
+        Directory where mitosis movies are saved, by default None.
+    save : bool, optional
+        Save updated mitosis tracks, by default True.
+    mid_body_detection_method : Union[str, Callable[[np.ndarray], np.ndarray]], optional
+        Method to detect mid-body, by default detection.cur_log.
+    mid_body_tracking_method : Union[str, LapTrack], optional
+        Method to track mid-body, by default tracking.cur_spatial_laptrack.
+    parallel_detection : bool, optional
+        Perform detection in parallel, by default False.
+    target_mitosis_id : Optional[int], optional
+        Target mitosis id to perform mid-body detection on, by default None.
+
+    Returns
+    -------
+    list[MitosisTrack]
+        List of updated mitosis tracks.
+    """
     mitosis_tracks: list[MitosisTrack] = []
     # Iterate over "bin" files in exported_mitoses_dir
     for state_path in os.listdir(exported_mitoses_dir):
