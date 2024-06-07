@@ -179,6 +179,9 @@ def main(
     )
     # TODO Compare cell_tracks with trackmate_tracks
     cell_tracks = generate_tracks_from_spots(cell_dictionary, tracking_method)
+    # Keep only tracks with a minimum length
+    cell_tracks = [track for track in cell_tracks if len(track.spots) >= 10]
+
     print(cell_tracks == trackmate_tracks)
 
 
