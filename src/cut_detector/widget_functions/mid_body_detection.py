@@ -83,9 +83,9 @@ def perform_mid_body_detection(
             mitosis_movie,
             mask_movie,
             trackmate_tracks,
+            parallel_detection=parallel_detection,
             mb_detect_method=mid_body_detection_method,
             mb_tracking_method=mid_body_tracking_method,
-            parallel_detection=parallel_detection,
         )
 
         # Save updated mitosis track
