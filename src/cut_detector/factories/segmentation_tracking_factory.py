@@ -8,6 +8,10 @@ from cellpose import models
 
 from ..utils.cell_spot import CellSpot
 from ..utils.cell_track import CellTrack
+from scipy.spatial import ConvexHull
+
+from cut_detector.data.tools import get_data_path
+
 
 
 class SegmentationTrackingFactory:
@@ -226,15 +230,107 @@ class SegmentationTrackingFactory:
         return [], []
 
     @staticmethod
+    # Load Cellpose results
+    with open(segmentation_results_path, "rb") as f:
+        cellpose_results = pickle.load(f)
+    
+    # Finding barycenters of each cell
+    def barycenter(frame):
+        max = np.max(cellpose_results[frame])
+        mean_x = []
+        mean_y = []
+        cells_per_frame = []
+        for i in range(1, max + 1):
+            cell_indices = np.where(cellpose_results[frame] == i)
+            if len(cell_indices[0]) == 0 or len(cell_indices[1]) == 0:
+                break
+            Sx = np.sum(cell_indices[1])
+            Sy = np.sum(cell_indices[0])
+            mean_x.append(Sx / len(cell_indices[1]))
+            mean_y.append(Sy / len(cell_indices[0]))
+            cells_per_frame.append(cell_indices)
+        return (mean_x, mean_y, cells_per_frame)
+    
     def get_spots_from_cellpose(
         cellpose_results: np.ndarray,
     ) -> dict[int, list[CellSpot]]:
+            cell_dictionary: dict[int, list[CellSpot]] = {}
+    for frame in range(len(cellpose_results)):
+        L = []
+        X, Y, cellsframe = barycenter(frame)
+        for id_number in range(1, len(cellsframe) + 1):
+            cell_id = cellsframe[id_number - 1]
+            cell_coords = []
+            x, y = X[id_number - 1], Y[id_number - 1]
+            for i in range(len(cell_id[0])):
+                cell_coords.append([cell_id[1][i], cell_id[0][i]])
+            cell_coords = np.array(cell_coords)
+            hull = ConvexHull(cell_coords)
+            convex_hull_indices = cell_coords[hull.vertices][:, ::-1]  # (x, y)
+            spot_points = convex_hull_indices
+            abs_min_x, abs_max_x, abs_min_y, abs_max_y = (
+                np.abs(np.min(cell_id[1])),
+                np.abs(np.max(cell_id[1])),
+                np.abs(np.min(cell_id[0])),
+                np.abs(np.max(cell_id[0])),
+            )
+            cell_spot = CellSpot(
+                frame,
+                x,
+                y,
+                id_number,
+                abs_min_x,
+                abs_max_x,
+                abs_min_y,
+                abs_max_y,
+                spot_points,
+            )
+            L.append(cell_spot)
+        cell_dictionary[frame] = L
+    a = cell_dictionary[21]
+
+    # Spot points can be created from the cell indices
+
+    # The indices of points forming the convex hull
+    for frame in range(len(cellpose_results)):
+        fig, axarr = plt.subplots(1, 2)
+        axarr[0].imshow(cellpose_results[frame])
+        for i in range(len(cell_dictionary[frame])):
+            axarr[0].plot(
+                cell_dictionary[frame][i].spot_points[:, 1],
+                cell_dictionary[frame][i].spot_points[:, 0],
+                "o",
+            )
+            axarr[0].plot(
+                cell_dictionary[frame][i].abs_max_x,
+                cell_dictionary[frame][i].abs_max_y,
+                "x",
+            )
+            axarr[0].plot(
+                cell_dictionary[frame][i].abs_min_x,
+                cell_dictionary[frame][i].abs_max_y,
+                "x",
+            )
+            axarr[0].plot(
+                cell_dictionary[frame][i].abs_min_x,
+                cell_dictionary[frame][i].abs_min_y,
+                "x",
+            )
+            axarr[0].plot(
+                cell_dictionary[frame][i].abs_max_x,
+                cell_dictionary[frame][i].abs_min_y,
+                "x",
+            )
+        axarr[0].plot(barycenter(frame)[0], barycenter(frame)[1], "x")
+        axarr[1].scatter(plot_spots(frame)[0], plot_spots(frame)[1], s=1)
+        #plt.show()
         """
         Extract spots from cellpose results.
 
         Parameters:
             cellpose_results (np.ndarray): TYX
         """
+        
         raise RuntimeError("Work in Progress")
 
     def perform_segmentation_tracking(

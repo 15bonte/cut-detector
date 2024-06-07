@@ -1,13 +1,11 @@
 import os
 import pickle
 from typing import Optional
-
 from cut_detector.data.tools import get_data_path
-from cut_detector.factories.mb_support.tracking.spatial_laptrack import (
-    SpatialLapTrack,
-)
+from cut_detector.utils.mb_support.tracking.spatial_laptrack import (
+    SpatialLapTrack)
 from cut_detector.utils.cell_spot import CellSpot
-from cut_detector.utils.cell_track import CellTrack
+#from cut_detector.utils.cell_track import CellTrack
 from cut_detector.utils.trackmate_track import TrackMateTrack
 from cut_detector.utils.trackmate_spot import TrackMateSpot
 from cut_detector.utils.gen_track import generate_tracks_from_spots
@@ -37,7 +35,6 @@ def load_tracks_and_spots(
 
     return trackmate_tracks, spots
 
-
 def main(
     segmentation_results_path: Optional[str] = os.path.join(
         get_data_path("segmentation_results"), "example_video.bin"
@@ -49,27 +46,18 @@ def main(
         get_data_path("spots"), "example_video"
     ),
 ):
-    # Load Cellpose results
-    with open(segmentation_results_path, "rb") as f:
-        cellpose_results = pickle.load(f)
+    
 
     # TODO: create spots from Cellpose results
     # TODO: perform tracking using laptrack
 
     # Load TrackMate results to compare... make sure they match!
-    trackmate_tracks, trackmate_spots = load_tracks_and_spots(
-        trackmate_tracks_path, spots_path
-    )
 
     # Frame of interest
     frame = 0
 
     # Plot cellpose_results
-
-    # plt.figure()
-    # plt.imshow(cellpose_results[frame])
-    # plt.show()
-    # plt.close()
+    trackmate_tracks, trackmate_spots = load_tracks_and_spots(trackmate_tracks_path, spots_path)
 
     # Plot trackmate_spots of frame number "frame"
     def plot_spots(frame):
@@ -85,22 +73,7 @@ def main(
         # plt.scatter(x,y)
         # plt.show()
 
-    # Finding barycenters of each cell
-    def barycenter(frame):
-        max = np.max(cellpose_results[frame])
-        mean_x = []
-        mean_y = []
-        cells_per_frame = []
-        for i in range(1, max + 1):
-            cell_indices = np.where(cellpose_results[frame] == i)
-            if len(cell_indices[0]) == 0 or len(cell_indices[1]) == 0:
-                break
-            Sx = np.sum(cell_indices[1])
-            Sy = np.sum(cell_indices[0])
-            mean_x.append(Sx / len(cell_indices[1]))
-            mean_y.append(Sy / len(cell_indices[0]))
-            cells_per_frame.append(cell_indices)
-        return (mean_x, mean_y, cells_per_frame)
+    
 
     # TODO: generate CellSpot instances
     cell_dictionary: dict[int, list[CellSpot]] = {}
@@ -172,7 +145,8 @@ def main(
             )
         axarr[0].plot(barycenter(frame)[0], barycenter(frame)[1], "x")
         axarr[1].scatter(plot_spots(frame)[0], plot_spots(frame)[1], s=1)
-        plt.show()
+        #plt.show()
+    
 
     tracking_method = SpatialLapTrack(
         spatial_coord_slice=slice(0, 2),
@@ -186,8 +160,9 @@ def main(
         merging_cost_cutoff=False,
         alternative_cost_percentile=100,
     )
-    cell_tracks = generate_tracks_from_spots(cell_dictionary, tracking_method)
     # TODO Compare cell_tracks with trackmate_tracks
+    cell_tracks = generate_tracks_from_spots(cell_dictionary, tracking_method)
+    print(cell_tracks==trackmate_tracks)
 
 
 if __name__ == "__main__":
