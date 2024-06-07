@@ -7,7 +7,7 @@ from shapely.ops import nearest_points
 from shapely import Polygon, Point
 from tqdm import tqdm
 
-from ..utils.mb_support.detection.detection_current import (
+from ..utils.mb_support.detection.detection import (
     DETECTION_FUNCTIONS,
 )
 from ..utils.cell_track import CellTrack
