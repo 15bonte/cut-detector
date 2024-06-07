@@ -3,9 +3,11 @@ import pickle
 from typing import Optional
 from cut_detector.data.tools import get_data_path
 from cut_detector.utils.mb_support.tracking.spatial_laptrack import (
-    SpatialLapTrack)
+    SpatialLapTrack,
+)
 from cut_detector.utils.cell_spot import CellSpot
-#from cut_detector.utils.cell_track import CellTrack
+
+# from cut_detector.utils.cell_track import CellTrack
 from cut_detector.utils.trackmate_track import TrackMateTrack
 from cut_detector.utils.trackmate_spot import TrackMateSpot
 from cut_detector.utils.gen_track import generate_tracks_from_spots
@@ -35,6 +37,7 @@ def load_tracks_and_spots(
 
     return trackmate_tracks, spots
 
+
 def main(
     segmentation_results_path: Optional[str] = os.path.join(
         get_data_path("segmentation_results"), "example_video.bin"
@@ -46,7 +49,9 @@ def main(
         get_data_path("spots"), "example_video"
     ),
 ):
-    
+    # Load Cellpose results
+    with open(segmentation_results_path, "rb") as f:
+        cellpose_results = pickle.load(f)
 
     # TODO: create spots from Cellpose results
     # TODO: perform tracking using laptrack
@@ -57,7 +62,9 @@ def main(
     frame = 0
 
     # Plot cellpose_results
-    trackmate_tracks, trackmate_spots = load_tracks_and_spots(trackmate_tracks_path, spots_path)
+    trackmate_tracks, trackmate_spots = load_tracks_and_spots(
+        trackmate_tracks_path, spots_path
+    )
 
     # Plot trackmate_spots of frame number "frame"
     def plot_spots(frame):
@@ -72,8 +79,6 @@ def main(
         return (x, y)
         # plt.scatter(x,y)
         # plt.show()
-
-    
 
     # TODO: generate CellSpot instances
     cell_dictionary: dict[int, list[CellSpot]] = {}
@@ -145,8 +150,7 @@ def main(
             )
         axarr[0].plot(barycenter(frame)[0], barycenter(frame)[1], "x")
         axarr[1].scatter(plot_spots(frame)[0], plot_spots(frame)[1], s=1)
-        #plt.show()
-    
+        # plt.show()
 
     tracking_method = SpatialLapTrack(
         spatial_coord_slice=slice(0, 2),
@@ -162,7 +166,7 @@ def main(
     )
     # TODO Compare cell_tracks with trackmate_tracks
     cell_tracks = generate_tracks_from_spots(cell_dictionary, tracking_method)
-    print(cell_tracks==trackmate_tracks)
+    print(cell_tracks == trackmate_tracks)
 
 
 if __name__ == "__main__":
