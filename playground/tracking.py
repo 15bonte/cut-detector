@@ -2,6 +2,9 @@ import os
 import pickle
 from typing import Optional
 from cut_detector.data.tools import get_data_path
+from cut_detector.factories.segmentation_tracking_factory import (
+    SegmentationTrackingFactory,
+)
 from cut_detector.utils.mb_support.tracking.spatial_laptrack import (
     SpatialLapTrack,
 )
@@ -36,6 +39,23 @@ def load_tracks_and_spots(
             spots.append(pickle.load(f))
 
     return trackmate_tracks, spots
+
+
+def barycenter(cellpose_results, frame):
+    max = np.max(cellpose_results[frame])
+    mean_x = []
+    mean_y = []
+    cells_per_frame = []
+    for i in range(1, max + 1):
+        cell_indices = np.where(cellpose_results[frame] == i)
+        if len(cell_indices[0]) == 0 or len(cell_indices[1]) == 0:
+            break
+        Sx = np.sum(cell_indices[1])
+        Sy = np.sum(cell_indices[0])
+        mean_x.append(Sx / len(cell_indices[1]))
+        mean_y.append(Sy / len(cell_indices[0]))
+        cells_per_frame.append(cell_indices)
+    return (mean_x, mean_y, cells_per_frame)
 
 
 def main(
@@ -80,41 +100,8 @@ def main(
         # plt.scatter(x,y)
         # plt.show()
 
-    # TODO: generate CellSpot instances
-    cell_dictionary: dict[int, list[CellSpot]] = {}
-    for frame in range(len(cellpose_results)):
-        L = []
-        X, Y, cellsframe = barycenter(frame)
-        for id_number in range(1, len(cellsframe) + 1):
-            cell_id = cellsframe[id_number - 1]
-            cell_coords = []
-            x, y = X[id_number - 1], Y[id_number - 1]
-            for i in range(len(cell_id[0])):
-                cell_coords.append([cell_id[1][i], cell_id[0][i]])
-            cell_coords = np.array(cell_coords)
-            hull = ConvexHull(cell_coords)
-            convex_hull_indices = cell_coords[hull.vertices][:, ::-1]  # (x, y)
-            spot_points = convex_hull_indices
-            abs_min_x, abs_max_x, abs_min_y, abs_max_y = (
-                np.abs(np.min(cell_id[1])),
-                np.abs(np.max(cell_id[1])),
-                np.abs(np.min(cell_id[0])),
-                np.abs(np.max(cell_id[0])),
-            )
-            cell_spot = CellSpot(
-                frame,
-                x,
-                y,
-                id_number,
-                abs_min_x,
-                abs_max_x,
-                abs_min_y,
-                abs_max_y,
-                spot_points,
-            )
-            L.append(cell_spot)
-        cell_dictionary[frame] = L
-    a = cell_dictionary[21]
+    factory = SegmentationTrackingFactory("")
+    cell_dictionary = factory.get_spots_from_cellpose(cellpose_results)
 
     # Spot points can be created from the cell indices
 
@@ -148,9 +135,13 @@ def main(
                 cell_dictionary[frame][i].abs_min_y,
                 "x",
             )
-        axarr[0].plot(barycenter(frame)[0], barycenter(frame)[1], "x")
+        axarr[0].plot(
+            barycenter(cellpose_results, frame)[0],
+            barycenter(cellpose_results, frame)[1],
+            "x",
+        )
         axarr[1].scatter(plot_spots(frame)[0], plot_spots(frame)[1], s=1)
-        # plt.show()
+        plt.show()
 
     tracking_method = SpatialLapTrack(
         spatial_coord_slice=slice(0, 2),

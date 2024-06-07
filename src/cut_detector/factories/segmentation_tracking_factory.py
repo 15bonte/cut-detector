@@ -15,13 +15,15 @@ from typing import Optional
 from cut_detector.utils.mb_support.tracking.spatial_laptrack import (
     SpatialLapTrack,
 )
+
 # from cut_detector.utils.cell_track import CellTrack
 from ..utils.trackmate_track import TrackMateTrack
 from ..utils.trackmate_spot import TrackMateSpot
 from ..utils.gen_track import generate_tracks_from_spots
 
+
 # Finding barycenters of each cell
-def barycenter(cellpose_results,frame):
+def barycenter(cellpose_results, frame):
     max = np.max(cellpose_results[frame])
     mean_x = []
     mean_y = []
@@ -37,17 +39,6 @@ def barycenter(cellpose_results,frame):
         cells_per_frame.append(cell_indices)
     return (mean_x, mean_y, cells_per_frame)
 
-# Plot trackmate_spots of frame number "frame"
-def plot_spots(trackmate_spots,frame):
-    y = []
-    x = []
-    for s in trackmate_spots:
-        if s.frame == frame:
-            point_list = s.spot_points
-            for i in range(len(point_list)):
-                x.append(point_list[i][0])
-                y.append(600 - point_list[i][1])
-    return (x, y)
 
 def load_tracks_and_spots(
     trackmate_tracks_path: str, spots_path: str
@@ -68,6 +59,7 @@ def load_tracks_and_spots(
             spots.append(pickle.load(f))
 
     return trackmate_tracks, spots
+
 
 class SegmentationTrackingFactory:
     """
@@ -298,7 +290,7 @@ class SegmentationTrackingFactory:
         cell_dictionary: dict[int, list[CellSpot]] = {}
         for frame in range(len(cellpose_results)):
             L = []
-            X, Y, cellsframe = barycenter(cellpose_results,frame)
+            X, Y, cellsframe = barycenter(cellpose_results, frame)
             for id_number in range(1, len(cellsframe) + 1):
                 cell_id = cellsframe[id_number - 1]
                 cell_coords = []
@@ -330,56 +322,8 @@ class SegmentationTrackingFactory:
                 )
                 L.append(cell_spot)
             cell_dictionary[frame] = L
-        a = cell_dictionary[21]
 
-        segmentation_results_path: Optional[str] = os.path.join(
-            get_data_path("segmentation_results"), "example_video.bin"
-        )
-        trackmate_tracks_path: Optional[str] = os.path.join(
-            get_data_path("tracks"), "example_video"
-        )
-        spots_path: Optional[str] = os.path.join(
-            get_data_path("spots"), "example_video"
-)
-        trackmate_tracks, trackmate_spots = load_tracks_and_spots(
-            trackmate_tracks_path, spots_path
-        )
-
-        # The indices of points forming the convex hull
-        for frame in range(len(cellpose_results)):
-            fig, axarr = plt.subplots(1, 2)
-            axarr[0].imshow(cellpose_results[frame])
-            for i in range(len(cell_dictionary[frame])):
-                axarr[0].plot(
-                    cell_dictionary[frame][i].spot_points[:, 1],
-                    cell_dictionary[frame][i].spot_points[:, 0],
-                    "o",
-                )
-                axarr[0].plot(
-                    cell_dictionary[frame][i].abs_max_x,
-                    cell_dictionary[frame][i].abs_max_y,
-                    "x",
-                )
-                axarr[0].plot(
-                    cell_dictionary[frame][i].abs_min_x,
-                    cell_dictionary[frame][i].abs_max_y,
-                    "x",
-                )
-                axarr[0].plot(
-                    cell_dictionary[frame][i].abs_min_x,
-                    cell_dictionary[frame][i].abs_min_y,
-                    "x",
-                )
-                axarr[0].plot(
-                    cell_dictionary[frame][i].abs_max_x,
-                    cell_dictionary[frame][i].abs_min_y,
-                    "x",
-                )
-            axarr[0].plot(barycenter(frame)[0], barycenter(frame)[1], "x")
-            axarr[1].scatter(plot_spots(trackmate_spots,frame)[0], plot_spots(trackmate_spots,frame)[1], s=1)
-            # plt.show()
-
-        raise RuntimeError("Work in Progress")
+        return cell_dictionary
 
     def perform_segmentation_tracking(
         self,
@@ -426,6 +370,12 @@ class SegmentationTrackingFactory:
             alternative_cost_percentile=100,
         )
         # TODO Compare cell_tracks with trackmate_tracks
-        cell_tracks = generate_tracks_from_spots(cell_dictionary, tracking_method)
+        cell_tracks = generate_tracks_from_spots(
+            cell_spots_dictionary, tracking_method
+        )
+
+        cell_spots = []
+        for frame_spots in cell_spots_dictionary.values():
+            cell_spots.extend(frame_spots)
 
         return cell_spots, cell_tracks
