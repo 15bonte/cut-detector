@@ -1,8 +1,8 @@
+"""Playground to run cell segmentation."""
+
 import os
 from typing import Optional
-import torch
 import matplotlib.pyplot as plt
-from cellpose import models
 
 from cnn_framework.utils.readers.tiff_reader import TiffReader
 
@@ -18,12 +18,14 @@ def main(
     model_path: Optional[str] = os.path.join(
         get_model_path("segmentation"), "segmentation_model"
     ),
-    diameter=0,  # 0 means using segmentation model saved value
-    channel_to_segment=3,  # index starts at 1
-    nucleus_channel=0,  # 0 means no nucleus channel
 ):
     """
-    Script to run simple cellpose segmentation.
+    Parameters
+    ----------
+    image_path : str
+        Path to the image to process.
+    model_path : str
+        Path to the segmentation model.
     """
     # If image_path or model_path are directories, take their first file
     if os.path.isdir(image_path):
@@ -33,30 +35,18 @@ def main(
 
     # Read image and preprocess if needed
     image = TiffReader(image_path).image  # TCZYX
+    image = image.squeeze()  # TCYX
 
     # Initialize factory to get constants
     factory = SegmentationTrackingFactory(model_path)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = models.CellposeModel(pretrained_model=[model_path], device=device)
-
-    results, flows, _ = model.eval(
-        image.squeeze(),  # TCYX
-        channels=[channel_to_segment, nucleus_channel],
-        diameter=diameter,
-        flow_threshold=factory.flow_threshold,
-        cellprob_threshold=factory.cellprob_threshold,
-        augment=factory.augment,
-        resample=False,
-    )
+    results, flows, _ = factory.perform_segmentation(image.squeeze())  # TYX
 
     for frame in range(image.shape[0]):
         # Plot image_to_segment and segmented_image
         _, ax = plt.subplots(2, 2)
         ax[0, 0].set_title("Raw image")
-        ax[0, 0].imshow(
-            image[frame, channel_to_segment - 1].squeeze(), cmap="gray"
-        )
+        ax[0, 0].imshow(image[frame, 2].squeeze(), cmap="gray")
         ax[0, 1].set_title("Cellpose")
         ax[0, 1].imshow(results[frame], cmap="viridis")
         ax[1, 0].set_title("Flow")

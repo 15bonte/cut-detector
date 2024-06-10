@@ -2,121 +2,15 @@ import os
 from typing import Optional, Union
 import pickle
 import numpy as np
-from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 from ..utils.cell_track import CellTrack
 from ..utils.cell_spot import CellSpot
-from ..factories.tracks_merging_factory import TracksMergingFactory
+from ..factories.mitosis_track_generation_factory import (
+    MitosisTrackGenerationFactory,
+)
 from ..models.tools import get_model_path
 from ..utils.mitosis_track import MitosisTrack
-
-
-def plot_predictions_evolution(
-    raw_spots: list[CellSpot],
-    raw_tracks: list[CellTrack],
-    mitosis_tracks: list[MitosisTrack],
-) -> None:
-    """
-    Plot predictions evolution. Used in playground.
-
-    Parameters
-    ----------
-    raw_spots : list[CellSpot]
-        Raw spots.
-    raw_tracks : list[CellTrack]
-        Raw tracks.
-    mitosis_tracks : list[MitosisTrack]
-        Mitosis tracks.
-    """
-    # Spots detected by Cellpose
-    detected_spots = {}
-    for raw_spot in raw_spots:
-        if raw_spot.frame not in detected_spots:
-            detected_spots[raw_spot.frame] = 0
-        detected_spots[raw_spot.frame] += 1
-
-    # Mitoses identified by current method, minus ending tracks
-    detected_mitoses = {frame: detected_spots[0] for frame in detected_spots}
-    max_frame = max(detected_spots.keys())
-    for mitosis_track in mitosis_tracks:
-        for frame in range(mitosis_track.metaphase_frame, max_frame + 1):
-            detected_mitoses[frame] += len(mitosis_track.daughter_track_ids)
-
-    min_frame, max_frame = 0, max(detected_spots.keys())
-
-    detected_tracks = {}
-    metaphase_spots = []
-    for track in raw_tracks:
-        metaphase_spots = metaphase_spots + [
-            metaphase_spot.frame for metaphase_spot in track.metaphase_spots
-        ]
-        for frame in range(track.start, track.stop + 1):
-            if frame not in detected_tracks:
-                detected_tracks[frame] = 0
-            detected_tracks[frame] += 1
-
-    data_spots = [detected_spots[0]] + [
-        detected_spots[i] if i in detected_spots else 0
-        for i in range(min_frame, max_frame)
-    ]
-    data_tracks = [detected_tracks[0]] + [
-        detected_tracks[i] if i in detected_tracks else 0
-        for i in range(min_frame, max_frame)
-    ]
-    data_mitoses = [detected_mitoses[0]] + [
-        detected_mitoses[i] if i in detected_mitoses else 0
-        for i in range(min_frame, max_frame)
-    ]
-
-    _, ax = plt.subplots(1, 1, figsize=(15, 5))
-    ax.step(
-        list(range(min_frame, max_frame + 1)), data_spots, "r", linewidth=8.0
-    )
-    ax.step(
-        list(range(min_frame, max_frame + 1)), data_tracks, "g", linewidth=8.0
-    )
-    ax.step(
-        list(range(min_frame, max_frame + 1)), data_mitoses, "b", linewidth=8.0
-    )
-
-    ending_tracks = [track.stop + 1 for track in raw_tracks]
-
-    # Plot first for legend
-    ax.axvline(-10, color="y", linewidth=2.0)
-    ax.axvline(-10, color="c", linewidth=2.0)
-    ax.axvline(-10, color="k", linewidth=2.0, linestyle="--")
-
-    # Potential mitoses
-    metaphase_spots = list(set(metaphase_spots))
-    for metaphase_spot_frame in metaphase_spots:
-        ax.axvline(metaphase_spot_frame, color="y", linewidth=2.0)
-
-    # Actual mitoses
-    actual_mitoses = [mitosis.metaphase_frame for mitosis in mitosis_tracks]
-    for actual_mitosis in actual_mitoses:
-        ax.axvline(actual_mitosis, color="c", linewidth=2.0)
-
-    # Ending tracks
-    for ending_track_frame in ending_tracks:
-        ax.axvline(
-            ending_track_frame, color="k", linewidth=2.0, linestyle="--"
-        )
-
-    ax.set_xlim(min_frame, max_frame)
-
-    ax.legend(
-        [
-            "Spots",
-            "Tracks",
-            "Mitoses evolution",
-            "Potential mitoses",
-            "Actual mitoses",
-            "Ending tracks",
-        ],
-        loc="best",
-    )
-    plt.show()
 
 
 def perform_mitosis_track_generation(
@@ -131,9 +25,8 @@ def perform_mitosis_track_generation(
     ),
     predictions_file: Optional[str] = None,
     only_predictions_update: bool = False,
-    plot_evolution: bool = False,
     save: bool = True,
-) -> Union[list[MitosisTrack], None]:
+) -> tuple[Union[list[MitosisTrack], None], list[CellSpot], list[CellTrack]]:
     """Perform mitosis track generation.
 
     Parameters
@@ -156,8 +49,6 @@ def perform_mitosis_track_generation(
         Predictions file, by default None.
     only_predictions_update : bool, optional
         Only update predictions, by default False.
-    plot_evolution : bool, optional
-        Plot evolution, by default False.
     save : bool, optional
         Save, by default True.
 
@@ -165,6 +56,10 @@ def perform_mitosis_track_generation(
     -------
     Union[list[MitosisTrack], None]
         List of mitosis tracks if only_predictions_update is False, None otherwise.
+    list[CellSpot]
+        Cell spots.
+    list[CellTrack]
+        Cell tracks.
     """
 
     print("### CELL DIVISION DETECTION ###")
@@ -174,7 +69,7 @@ def perform_mitosis_track_generation(
         os.makedirs(mitoses_dir)
 
     # Create factory instance, where useful functions are defined
-    tracks_merging_factory = TracksMergingFactory()
+    tracks_merging_factory = MitosisTrackGenerationFactory()
 
     # Load cell spots
     cell_spots: list[CellSpot] = []
@@ -185,12 +80,11 @@ def perform_mitosis_track_generation(
             cell_spots.append(cell_spot)
 
     # Load cell tracks
-    cell_tracks: list[TrackMateTrack] = []
+    cell_tracks: list[CellTrack] = []
     video_tracks_save_dir = os.path.join(tracks_dir, video_name)
     for state_path in os.listdir(video_tracks_save_dir):
         with open(os.path.join(video_tracks_save_dir, state_path), "rb") as f:
-            cell_track: TrackMateTrack = pickle.load(f)
-            cell_track.adapt_deprecated_attributes()
+            cell_track: CellTrack = pickle.load(f)
             cell_tracks.append(cell_track)
 
     # Detect metaphase spots
@@ -211,10 +105,6 @@ def perform_mitosis_track_generation(
 
     # Plug tracks occurring at frame>0 to closest metaphase
     mitosis_tracks = tracks_merging_factory.get_tracks_to_merge(cell_tracks)
-
-    # Plot predictions evolution
-    if plot_evolution:
-        plot_predictions_evolution(cell_spots, cell_tracks, mitosis_tracks)
 
     print(
         f"\nPredictions performed successfully. {len(mitosis_tracks)} divisions detected."
@@ -252,4 +142,4 @@ def perform_mitosis_track_generation(
             with open(save_path, "wb") as f:
                 pickle.dump(cell_track, f)
 
-    return mitosis_tracks
+    return mitosis_tracks, cell_spots, cell_tracks

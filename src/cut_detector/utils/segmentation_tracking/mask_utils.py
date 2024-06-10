@@ -203,12 +203,44 @@ class Outline:
         return MaskPolygon(x_new, y_new, count)
 
 
-def collinear(x1, y1, x2, y2, x3, y3):
-    """Implement the logic to check if three points are collinear"""
+def collinear(x1, y1, x2, y2, x3, y3) -> bool:
+    """Implement the logic to check if three points are collinear
+
+    Parameters
+    ----------
+    x1 : int
+        x-coordinate of the first point.
+    y1 : int
+        y-coordinate of the first point.
+    x2 : int
+        x-coordinate of the second point.
+    y2 : int
+        y-coordinate of the second point.
+    x3 : int
+        x-coordinate of the third point.
+    y3 : int
+        y-coordinate of the third point.
+
+    Returns
+    -------
+    bool
+        True if the three points are collinear, False otherwise."""
     return (x2 - x1) * (y3 - y2) == (y2 - y1) * (x3 - x2)
 
 
-def from_labeling_with_roi(segmentation_mask):
+def from_labeling_with_roi(segmentation_mask: np.ndarray) -> list[MaskPolygon]:
+    """Convert a segmentation mask to a list of polygons. Each ROI is converted to a polygon.
+
+    Parameters
+    ----------
+    segmentation_mask : np.ndarray
+        Segmentation mask. YX.
+
+    Returns
+    -------
+    list[MaskPolygon]
+        List of polygons. Each polygon is a MaskPolygon object.
+    """
     nb_roi = np.max(segmentation_mask)
     polygons = []
     for roi in range(1, nb_roi + 1):
@@ -234,7 +266,7 @@ def from_labeling_with_roi(segmentation_mask):
     return polygons
 
 
-def mask_to_polygons(mask):
+def mask_to_polygons(mask: np.ndarray):
     """Parse a 2D mask and return a list of polygons for the external contours of white objects.
     Warning: cannot deal with holes, they are simply ignored.
     Copied and adapted from ImageJ1 code by Wayne Rasband."""
@@ -529,12 +561,14 @@ def line_circle_intersection(ax, ay, bx, by, cx, cy, rad, ignore_outside):
     """
     Calculates intersections of a line segment with a circle.
 
-    Parameters:
+    Parameters
+    ----------
     ax, ay, bx, by: Points A and B of the line segment.
     cx, cy, rad: Circle center and radius.
     ignore_outside: If true, ignores intersections outside the line segment A-B.
 
-    Returns:
+    Returns
+    -------
     A list of 0, 2, or 4 coordinates (for 0, 1, or 2 intersection points).
     If two intersection points are returned, they are listed in travel direction A->B.
     """
@@ -587,8 +621,30 @@ def line_circle_intersection(ax, ay, bx, by, cx, cy, rad, ignore_outside):
     return xy_coords
 
 
-def perpendicular_distance(px, py, vx, vy, wx, wy):
-    """Calculate the perpendicular distance from point (px, py) to line segment (vx, vy) - (wx, wy)"""
+def perpendicular_distance(
+    px: float, py: float, vx: float, vy: float, wx: float, wy: float
+):
+    """Calculate the perpendicular distance from point (px, py) to line segment (vx, vy) - (wx, wy).
+
+    Parameters
+    ----------
+    px : float
+        x-coordinate of the point.
+    py : float
+        y-coordinate of the point.
+    vx : float
+        x-coordinate of the start of the line segment.
+    vy : float
+        y-coordinate of the start of the line segment.
+    wx : float
+        x-coordinate of the end of the line segment.
+    wy : float
+        y-coordinate of the end of the line segment.
+
+    Returns
+    -------
+    float
+        Perpendicular distance from the point to the line segment."""
     l2 = (vx - wx) ** 2 + (vy - wy) ** 2  # length squared
     if l2 == 0:
         return np.sqrt((px - vx) ** 2 + (py - vy) ** 2)
@@ -599,8 +655,28 @@ def perpendicular_distance(px, py, vx, vy, wx, wy):
     return np.sqrt((px - projection_x) ** 2 + (py - projection_y) ** 2)
 
 
-def douglas_peucker_core(points_list, s, e, epsilon, result_list):
-    """Recursive Douglas-Peucker line simplification."""
+def douglas_peucker_core(
+    points_list: list[list[float]],
+    s: int,
+    e: int,
+    epsilon: float,
+    result_list: list[list[float]],
+) -> None:
+    """Recursive Douglas-Peucker line simplification.
+
+    Parameters
+    ----------
+    points_list : list[list[float]]
+        List of points to simplify.
+    s : int
+        Start index.
+    e : int
+        End index.
+    epsilon : float
+        Epsilon value for the Douglas-Peucker algorithm.
+    result_list : list[list[float]]
+        List of simplified points.
+    """
     # Find the point with the maximum distance
     dmax = 0
     index = 0
@@ -632,12 +708,25 @@ def douglas_peucker_core(points_list, s, e, epsilon, result_list):
             result_list.append(points_list[start])
 
 
-def douglas_peucker(points_list, epsilon):
+def douglas_peucker(points_list: list[list[float]], epsilon: float):
     """Given a curve composed of line segments find a similar curve with fewer
     points.
     The Ramer–Douglas–Peucker algorithm (RDP) is an algorithm for reducing
     the number of points in a curve that is approximated by a series of
-    points."""
+    points.
+
+    Parameters
+    ----------
+    points_list : list[list[float]]
+        List of points to simplify.
+    epsilon : float
+        Epsilon value for the Douglas-Peucker algorithm.
+
+    Returns
+    -------
+    list[list[float]]
+        Simplified list of points.
+    """
     result_list = []
     douglas_peucker_core(
         points_list, 0, len(points_list), epsilon, result_list
@@ -645,12 +734,29 @@ def douglas_peucker(points_list, epsilon):
     return result_list
 
 
-def simplify(p, interval, epsilon):
-    """Simplify a polygon by reducing the number of points using the Douglas-Peucker algorithm."""
-    p = get_interpolated_polygon(p, interval)
+def simplify(
+    polygon: MaskPolygon, interval: int, epsilon: float
+) -> MaskPolygon:
+    """Simplify a polygon by reducing the number of points using the Douglas-Peucker algorithm.
+
+    Parameters
+    ----------
+    polygon : MaskPolygon
+        Polygon to simplify.
+    interval : int
+        Interval between points.
+    epsilon : float
+        Epsilon value for the Douglas-Peucker algorithm.
+
+    Returns
+    -------
+    MaskPolygon
+        Simplified polygon.
+    """
+    polygon = get_interpolated_polygon(polygon, interval)
     points = []
-    for i in range(p.count):
-        points.append([p.x[i], p.y[i]])
+    for i in range(polygon.count):
+        points.append([polygon.x[i], polygon.y[i]])
     simplified_points = douglas_peucker(points, epsilon)
     x_simplified, y_simplified = zip(*simplified_points)
     return MaskPolygon(
@@ -658,8 +764,21 @@ def simplify(p, interval, epsilon):
     )
 
 
-def signed_area(x, y):
-    """Compute the signed area of a polygon."""
+def signed_area(x: list[float], y: list[float]) -> float:
+    """Compute the signed area of a polygon.
+
+    Parameters
+    ----------
+    x : list[float]
+        List of x-coordinates of the polygon.
+    y : list[float]
+        List of y-coordinates of the polygon.
+
+    Returns
+    -------
+    float
+        Signed area of the polygon.
+    """
     n = len(x)
     a = 0.0
     for i in range(n - 1):
@@ -667,8 +786,21 @@ def signed_area(x, y):
     return (a + x[n - 1] * y[0] - x[0] * y[n - 1]) / 2.0
 
 
-def centroid(x, y):
-    """Calculate the centroid of a polygon."""
+def centroid(x: list[float], y: list[float]) -> list[float]:
+    """Calculate the centroid of a polygon.
+
+    Parameters
+    ----------
+    x : list[float]
+        List of x-coordinates of the polygon.
+    y : list[float]
+        List of y-coordinates of the polygon.
+
+    Returns
+    -------
+    list[float]
+        Coordinates of the centroid of the polygon.
+    """
     area = signed_area(x, y)
     ax = 0.0
     ay = 0.0

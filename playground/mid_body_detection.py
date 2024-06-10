@@ -24,7 +24,8 @@ def main(
     show_points: bool = True,
     show_tracks: bool = True,
 ) -> None:
-    """Parameters
+    """
+    Parameters
     ----------
     image_path : str
         Path to the image to process.

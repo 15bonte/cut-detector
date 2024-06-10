@@ -403,55 +403,81 @@ class ResultsSavingFactory:
                 f.write(f"{second_cut_time};\n")
         f.close()
 
-
     def generate_napari_tracking_mask(
-        self,
-        mitosis_tracks: list[MitosisTrack], video, viewer
-    ) -> np.ndarray:
-    
+        self, mitosis_tracks: list[MitosisTrack], video: np.ndarray, viewer
+    ) -> None:
+        """Generate napari tracking mask.
+
+        Parameters
+        ----------
+        mitosis_tracks: list[MitosisTrack]
+            List of mitosis tracks.
+        video: np.ndarray
+            Video to process.
+        viewer: napari.Viewer
+            Napari viewer.
+        """
+
         # Video parameters:
-        nbframes, height, width, _ = video.shape
-        
-        # Colors list
-        colors = np.array([[np.random.randint(0,255), np.random.randint(0,255), np.random.randint(0,255)] for i in range(len(mitosis_tracks))], dtype=np.uint8)
+        nb_frames, height, width, _ = video.shape
+
+        # Colors list (200 max to avoid too bright colors)
+        colors = np.array(
+            [
+                [
+                    np.random.randint(0, 200),
+                    np.random.randint(0, 200),
+                    np.random.randint(0, 200),
+                ]
+                for _ in range(len(mitosis_tracks))
+            ],
+            dtype=np.uint8,
+        )
 
         # Iterate over mitosis_tracks
-        mask = np.zeros((nbframes,height,width,3), dtype=np.uint8)
-        print("generate mask")
-        for i,mitosis_track in enumerate(mitosis_tracks):
+        mask = np.zeros((nb_frames, height, width, 3), dtype=np.uint8)
+        for i, mitosis_track in enumerate(mitosis_tracks):
             _, mask_movie = mitosis_track.generate_video_movie(video)
-            
             cell_indexes = np.where(mask_movie == 1)
-
-            mid_body = np.where(mask_movie == 2)
-            
-            mask_movie = np.stack([mask_movie,mask_movie,mask_movie],axis=-1)
-            
+            mask_movie = np.stack(
+                [mask_movie, mask_movie, mask_movie], axis=-1
+            )
             mask_movie[cell_indexes] = colors[i]
-        
-            # Add mask_movie to viewer
+            initial_mask = mask[
+                mitosis_track.min_frame : mitosis_track.max_frame + 1,
+                mitosis_track.position.min_y : mitosis_track.position.max_y,
+                mitosis_track.position.min_x : mitosis_track.position.max_x,
+                :,
+            ]
+            # Avoid colors overlap
+            mask[
+                mitosis_track.min_frame : mitosis_track.max_frame + 1,
+                mitosis_track.position.min_y : mitosis_track.position.max_y,
+                mitosis_track.position.min_x : mitosis_track.position.max_x,
+                :,
+            ] = np.maximum(mask_movie, initial_mask)
 
-            initial_mask= mask[mitosis_track.min_frame:mitosis_track.max_frame+1, mitosis_track.position.min_y:mitosis_track.position.max_y, mitosis_track.position.min_x:mitosis_track.position.max_x,:]
-        
-            mask[mitosis_track.min_frame:mitosis_track.max_frame+1, mitosis_track.position.min_y:mitosis_track.position.max_y, mitosis_track.position.min_x:mitosis_track.position.max_x,:] = np.maximum(mask_movie, initial_mask)
-            
             viewer.add_image(mask, name="masks", rgb=True, opacity=0.4)
 
-            #Use point + text instead of red point for mid_body
-
+            # Use point + text instead of red point for mid_body
             for mitosis_track in mitosis_tracks:
                 mid_body_legend = mitosis_track.get_mid_body_legend()
                 points = []
-                features = {'category':[]}
-                text = {'string':'{category}',
-                        'size':5,
-                        'color':'red',
-                        'translation':np.array([-30,0])}
+                features = {"category": []}
+                text = {
+                    "string": "{category}",
+                    "size": 10,
+                    "color": "white",
+                    "translation": np.array([-30, 0]),
+                }
                 for frame, frame_dict in mid_body_legend.items():
-                    points += [np.array([frame,frame_dict['y'],frame_dict['x']])]
-                    features['category'] += [frame_dict['category']]
-                features['category'] = np.array(features['category'])
-                viewer.add_points(points,features=features,text=text,size=10,face_color='red') 
-            
-
-        return mask
+                    points += [
+                        np.array([frame, frame_dict["y"], frame_dict["x"]])
+                    ]
+                    features["category"] += [frame_dict["category"]]
+                features["category"] = np.array(features["category"])
+                viewer.add_points(
+                    points,
+                    features=features,
+                    text=text,
+                )

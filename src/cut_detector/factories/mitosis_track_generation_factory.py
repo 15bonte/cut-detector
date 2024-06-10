@@ -40,7 +40,7 @@ def get_track_from_id(tracks: list[CellTrack], track_id: int) -> CellTrack:
     raise ValueError(f"Track {track_id} not found")
 
 
-class TracksMergingFactory:
+class MitosisTrackGenerationFactory:
     """Class to merge cell tracks into mitosis tracks.
 
     Parameters

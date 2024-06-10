@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from copy import deepcopy
-import json
 from typing import Optional, Tuple, Union
 import numpy as np
 from skimage.morphology import extrema, opening
@@ -42,9 +41,39 @@ def cell_counter_frame_to_video_frame(
     return (cell_counter_frame - 1) // nb_channels
 
 
+def snake_to_normal(snake_str: str) -> str:
+    """Convert a snake string to a normal string.
+
+    Parameters
+    ----------
+    snake_str : str
+
+    Returns
+    -------
+    normal_case_str : str
+    """
+
+    # Split the string by underscores
+    words = snake_str.split("_")
+
+    # Capitalize the first letter of the first word and make the rest lowercase
+    normal_case_str = " ".join(words).capitalize()
+
+    return normal_case_str
+
+
 class MitosisTrack:
     """
     A class to store the information of a mitosis track.
+
+    Parameters
+    ----------
+    mother_track_id : int
+        Mother track id
+    daughter_track_id : int
+        Daughter track id
+    metaphase_frame : int
+        Metaphase frame
     """
 
     def __init__(
@@ -88,18 +117,52 @@ class MitosisTrack:
     def is_same_mitosis(
         self, mother_track_id: int, metaphase_frame: int
     ) -> bool:
+        """Check if current mitosis is the same as the one given in parameters.
+
+        Parameters
+        ----------
+        mother_track_id : int
+            Mother track id
+        metaphase_frame : int
+            Metaphase frame
+
+        Returns
+        -------
+        bool
+            True if current mitosis is the same as the one given in parameters
+        """
         return (
             self.mother_track_id == mother_track_id
             and self.metaphase_frame == metaphase_frame
         )
 
     def add_daughter_track(self, daughter_track_id: int) -> None:
+        """Add daughter track id to current mitosis track.
+
+        Parameters
+        ----------
+        daughter_track_id : int
+            Daughter track id
+        """
         self.daughter_track_ids.append(daughter_track_id)
 
     def get_mother_daughters_tracks(
         self, tracks: list[CellTrack]
     ) -> Tuple[CellTrack, list[CellTrack]]:
-        """Get mother and daughter tracks of current mitosis ."""
+        """Get mother and daughter tracks of current mitosis.
+
+        Parameters
+        ----------
+        tracks : list[CellTrack]
+            List of all tracks in the video
+
+        Returns
+        -------
+        CellTrack
+            Mother track
+        list[CellTrack]
+            Daughter tracks
+        """
         mother_track = [
             track for track in tracks if track.track_id == self.mother_track_id
         ][0]
@@ -113,6 +176,15 @@ class MitosisTrack:
     def _add_dln_position(
         self, frame: int, frame_dimensions: BoxDimensionsDln
     ) -> None:
+        """Add Delaunay position.
+
+        Parameters
+        ----------
+        frame : int
+            Frame number
+        frame_dimensions : BoxDimensionsDln
+            Delaunay box dimensions
+        """
         self.dln_positions[frame] = deepcopy(frame_dimensions)
         # Update absolute min and max accordingly
         self.position.update_from_box_dimensions(frame_dimensions)
@@ -122,7 +194,15 @@ class MitosisTrack:
         cell_tracks: list[CellTrack],
         mitosis_tracks: list[MitosisTrack],
     ) -> None:
-        """Update min and max frame of current mitosis."""
+        """Update min and max frame of current mitosis.
+
+        Parameters
+        ----------
+        cell_tracks : list[CellTrack]
+            List of all tracks in the video
+        mitosis_tracks : list[MitosisTrack]
+            List of all mitosis tracks in the video
+        """
         # Get all tracks involved in current mitosis
         mother_track, daughter_tracks = self.get_mother_daughters_tracks(
             cell_tracks
@@ -154,12 +234,12 @@ class MitosisTrack:
         self.max_frame = max_frame
 
     def update_is_near_border(self, raw_video: np.ndarray) -> None:
-        """
+        """Update is_near_border attribute.
+
         Parameters
         ----------
         raw_video: np.ndarray
             TYXC
-
         """
 
         max_height, max_width = raw_video.shape[1], raw_video.shape[2]
@@ -167,13 +247,13 @@ class MitosisTrack:
         cyto_frame = self.key_events_frame["cytokinesis"]
         last_frame = cyto_frame + CYTOKINESIS_DURATION
 
-        # get mitosis coordinates between cyto_frame and last_frame
+        # Get mitosis coordinates between cyto_frame and last_frame
         min_dist_to_border = np.inf
         for frame in range(cyto_frame, last_frame + 1):
             if frame not in self.mid_body_spots:
                 continue
 
-            # get mid-body coordinates
+            # Get mid-body coordinates
             mid_body_frame = self.mid_body_spots[frame]
             x_rel = mid_body_frame.x
             y_rel = mid_body_frame.y
@@ -182,7 +262,7 @@ class MitosisTrack:
             y_abs = y_rel + self.position.min_y
             mid_body_coordinates = (x_abs, y_abs)
 
-            # get distance to border
+            # Get distance to border
             min_x = min(
                 mid_body_coordinates[0], max_width - mid_body_coordinates[0]
             )
@@ -195,7 +275,13 @@ class MitosisTrack:
         self.is_near_border = min_dist_to_border < MINIMUM_DISTANCE_TO_BORDER
 
     def update_key_events_frame(self, cell_tracks: list[CellTrack]) -> None:
-        """Update key events frame for current mitosis."""
+        """Update key events frame for current mitosis.
+
+        Parameters
+        ----------
+        cell_tracks : list[CellTrack]
+            List of all tracks in the video
+        """
         # Get all tracks involved in current mitosis
         mother_track, daughter_tracks = self.get_mother_daughters_tracks(
             cell_tracks
@@ -224,6 +310,11 @@ class MitosisTrack:
     ) -> None:
         """
         Update positions of mitosis for each frame and Delaunay triangulation.
+
+        Parameters
+        ----------
+        cell_tracks : list[CellTrack]
+            List of all tracks in the video
         """
 
         min_frame, max_frame = self.min_frame, self.max_frame
@@ -247,6 +338,8 @@ class MitosisTrack:
         self, raw_video: np.ndarray
     ) -> Tuple[np.array, np.array]:
         """
+        Generate mitosis movie and mask movie from raw video.
+
         Parameters
         ----------
         raw_video : np.ndarray
@@ -258,7 +351,6 @@ class MitosisTrack:
             mitosis movie, TYXC
         mask_movie : np.ndarray
             mask movie, TYX
-
         """
 
         mitosis_movie, mask_movie = [], []
@@ -320,44 +412,21 @@ class MitosisTrack:
 
         return mitosis_movie, mask_movie
 
-    def generate_mitosis_summary(
-        self, cell_tracks: list[CellTrack], save_path: str
-    ) -> None:
-        """
-        Unused so far.
-        Might be improved with all useful information, saved to csv...
-        """
-        mitosis_summary = {}
-
-        mother_track, daughter_tracks = self.get_mother_daughters_tracks(
-            cell_tracks
-        )
-        daughters_first_frame = min([track.start for track in daughter_tracks])
-
-        for idx, frame in enumerate(range(self.min_frame, self.max_frame + 1)):
-            # Extreme case where mother track is not present at beginning of mitosis movie
-            if frame not in mother_track.spots:
-                mitosis_summary[idx + 1] = "interphase"
-                continue
-            # Telophase defined as first frame after metaphase or daughters first frame
-            if frame >= self.metaphase_frame or frame >= daughters_first_frame:
-                mitosis_summary[idx + 1] = "telophase"
-            # Metaphase according to CNN + HMM prediction
-            elif mother_track.spots[frame].predicted_phase == METAPHASE_INDEX:
-                mitosis_summary[idx + 1] = "metaphase"
-            # In other cases, interphase
-            else:
-                mitosis_summary[idx + 1] = "interphase"
-
-        # Save mitosis summary
-        with open(save_path, "w") as f:
-            json.dump(mitosis_summary, f)
-
     def is_possible_match(self, other_track: MitosisTrack) -> bool:
         """
         Check if two tracks are a possible match. Other track is typically a ground truth track.
         Match is possible if there is an overlap between the two tracks,
         and other track starts no earlier/no later than FRAMES_AROUND_METAPHASE around self start.
+
+        Parameters
+        ----------
+        other_track : MitosisTrack
+            Other track to compare with.
+
+        Returns
+        -------
+        bool
+            True if match is possible.
         """
         if (
             abs(other_track.metaphase_frame - self.metaphase_frame)
@@ -369,16 +438,21 @@ class MitosisTrack:
 
     def add_mid_body_movie(
         self, mitosis_movie: np.ndarray, mask_movie: np.ndarray
-    ) -> np.array:
+    ) -> np.ndarray:
         """
+        Add mid-body to mitosis movie.
+
         Parameters
         ----------
-        mitosis_movie: TYXC
-        mask_movie: TYX
+        mitosis_movie : np.ndarray
+            TYXC
+        mask_movie : np.ndarray
+            TYX
 
         Returns
         ----------
-        spots_video: TYX C=1
+        spots_video : np.ndarray
+            TYX C=1
         """
 
         video_shape = mitosis_movie.shape[:3]
@@ -386,7 +460,7 @@ class MitosisTrack:
 
         for absolute_frame, spot in self.mid_body_spots.items():
             # Create 1 circle around spot position
-            square_size = 10
+            square_size = 2
             spots_video[
                 absolute_frame - self.min_frame,
                 spot.y - square_size : spot.y + square_size,
@@ -413,11 +487,14 @@ class MitosisTrack:
         self, annotation_file: str, nb_channels: int
     ) -> None:
         """
+        Update mid body ground truth from CellCounter annotations.
+
         Parameters
         ----------
-        annotation_file: .xml file with annotations from CellCounter
-        nb_channels: number of channels in mitosis movie (very likely to be 4)
-
+        annotation_file : str
+            .xml file with annotations from CellCounter
+        nb_channels : int
+            Number of channels in mitosis movie (very likely to be 4)
         """
 
         # Initialize gt_key_events_frame - first two events are shared
@@ -520,8 +597,21 @@ class MitosisTrack:
 
         Parameters
         ----------
-        tolerance: maximum distance between ground truth and prediction to consider a match
-        percent_seen: minimum percentage of frames where mid_body is seen to consider a match
+        tolerance : int
+            Maximum distance between ground truth and prediction to consider a match.
+        percent_seen : float
+            Minimum percentage of frames where mid_body is seen to consider a match.
+        avg_as_int : bool
+            If True, average position difference is returned as int.
+
+        Returns
+        -------
+        bool
+            True if mid_body is correctly detected
+        float
+            Percentage of frames where mid_body is detected
+        Union[int, float]
+            Average position difference between ground truth and prediction
         """
 
         position_difference = []
@@ -608,6 +698,32 @@ class MitosisTrack:
         center_tolerance_light_spot pixels.
 
         Light spot is considered as detected if at least in min_percentage_light_spot % of frames.
+
+        Parameters
+        ----------
+        video : np.ndarray
+            TYXC
+        first_cut_frame : int
+            frame of first micro-tubules cut
+        length_light_spot : int
+            number of frames around first_cut_frame to consider
+        crop_size_light_spot : int
+            size of crop around mid-body to consider
+        h_maxima_light_spot : int
+            h parameter of h-maxima method
+        intensity_threshold_light_spot : int
+            minimum intensity of spot to consider
+        center_tolerance_light_spot : int
+            tolerance around mid-body to ignore spots
+        min_percentage_light_spot : float
+            minimum percentage of frames where light spot is detected
+        print_enabled : bool
+            if True, print intermediate results
+
+        Returns
+        -------
+        spot_detected : bool
+            True if light spot is detected
         """
         # Get the mitosis video crop
         video = video[
@@ -706,8 +822,7 @@ class MitosisTrack:
     def get_bridge_images(
         self, video: np.ndarray, margin: int
     ) -> list[np.array]:
-        """
-        Generate list of crops around the mid-body.
+        """Generate list of crops around the mid-body.
         First frame is the maximum of cytokinesis frame and mid-body first frame.
         Last frame is the last mid-body frame.
 
@@ -785,8 +900,12 @@ class MitosisTrack:
     def get_mid_body_legend(
         self,
     ) -> dict[int, dict[str, Union[int, str]]]:
-        """
-        Get legend for mid-body spot.
+        """Get legend for mid-body spot.
+
+        Returns
+        -------
+        mid_body_legend : dict[int, dict[str, Union[int, str]]]
+            Dictionary with frame number as key and dictionary with x, y and category as value.
         """
         mid_body_legend = {}
         for frame, mid_body_spot in self.mid_body_spots.items():
@@ -806,8 +925,8 @@ class MitosisTrack:
                     continue
                 mid_body_category = category
             mid_body_legend[frame] = {
-                "x": mid_body_spot.x+self.position.min_x,
-                "y": mid_body_spot.y+self.position.min_y,
-                "category": mid_body_category,
+                "x": mid_body_spot.x + self.position.min_x,
+                "y": mid_body_spot.y + self.position.min_y,
+                "category": snake_to_normal(mid_body_category),
             }
         return mid_body_legend
