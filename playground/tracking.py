@@ -4,9 +4,8 @@ from typing import Optional
 import matplotlib.pyplot as plt
 
 from cut_detector.data.tools import get_data_path
-from cut_detector.utils.segmentation_tracking.mask_utils import (
-    mask_to_polygons,
-    simplify,
+from cut_detector.factories.segmentation_tracking_factory import (
+    SegmentationTrackingFactory,
 )
 from cut_detector.utils.trackmate_track import CellTrack
 from cut_detector.utils.cell_spot import CellSpot
@@ -35,7 +34,7 @@ def load_tracks_and_spots(
 
 def main(
     segmentation_results_path: Optional[str] = os.path.join(
-        get_data_path("segmentation_results"), "example_video.bin"
+        get_data_path("segmentation_results"), "example_video_old.bin"
     ),
     trackmate_tracks_path: Optional[str] = os.path.join(
         get_data_path("tracks"), "example_video"
@@ -48,50 +47,68 @@ def main(
     with open(segmentation_results_path, "rb") as f:
         cellpose_results = pickle.load(f)
 
-    # TODO: create spots from Cellpose results
-    # TODO: perform tracking using laptrack
+    # Frame of interest
+    frame = 0
 
-    polygons = mask_to_polygons(cellpose_results[0])  # frame 0
-
-    simplified_polygons = []
-    for polygon in polygons:
-        simplified_polygon = simplify(polygon, interval=2, epsilon=0.5)
-        simplified_polygons.append(simplified_polygon)
-
-    # Plot polygons
-    plt.subplot(221)
-    for polygon in polygons:
-        x, y = polygon.x, polygon.y
-        plt.plot(y, x)
-    plt.imshow(cellpose_results[0], cmap="gray")
-
-    plt.subplot(222)
-    for polygon in simplified_polygons:
-        x, y = polygon.x, polygon.y
-        plt.plot(y, x)
-    plt.imshow(cellpose_results[0], cmap="gray")
-
-    # Load TrackMate results to compare... make sure they match!
+    # Plot cellpose_results
     trackmate_tracks, trackmate_spots = load_tracks_and_spots(
         trackmate_tracks_path, spots_path
     )
 
+    # Plot trackmate_spots of frame number "frame"
     def plot_spots(frame):
+        y = []
+        x = []
         for s in trackmate_spots:
-            y = []
-            x = []
             if s.frame == frame:
                 point_list = s.spot_points
-                for i in range(len(point_list)):
-                    x.append(point_list[i][0])
-                    y.append(point_list[i][1])
-            plt.plot(x, y)
+                for point in point_list:
+                    x.append(point[0])
+                    y.append(point[1])
+        return (x, y)
 
-    plt.subplot(224)
-    plot_spots(0)
-    plt.imshow(cellpose_results[0], cmap="gray")
+    def plot_bary(frame):
+        y = []
+        x = []
+        for s in trackmate_spots:
+            if s.frame == frame:
+                x.append(s.x)
+                y.append(s.y)
+        return (x, y)
 
-    plt.show()
+    factory = SegmentationTrackingFactory("")
+    cell_spots, cell_tracks = factory.perform_tracking(cellpose_results, 171)
+
+    # Spot points can be created from the cell indices
+    plot = True
+    if plot:
+        # The indices of points forming the convex hull
+        for frame, cellpose_result in enumerate(cellpose_results):
+            frame_cells = [cell for cell in cell_spots if cell.frame == frame]
+            _, axarr = plt.subplots(1, 2)
+            axarr[0].imshow(cellpose_result)
+            for local_cell in frame_cells:
+                axarr[0].plot(
+                    local_cell.spot_points[:, 0],
+                    local_cell.spot_points[:, 1],
+                    "o",
+                )
+                axarr[0].plot(
+                    local_cell.x,
+                    local_cell.y,
+                    "x",
+                )
+            axarr[1].imshow(cellpose_result)
+            axarr[1].scatter(
+                plot_spots(frame)[0],
+                plot_spots(frame)[1],
+            )
+            axarr[1].plot(
+                plot_bary(frame)[0],
+                plot_bary(frame)[1],
+                "x",
+            )
+            plt.show()
 
 
 if __name__ == "__main__":

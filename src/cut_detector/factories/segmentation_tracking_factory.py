@@ -1,13 +1,47 @@
 import os
 import sys
+import pickle
 import numpy as np
 import torch
 import imagej
 import scyjava as sj
 from cellpose import models
+from tqdm import tqdm
 
+from ..utils.segmentation_tracking.mask_utils import (
+    centroid,
+    from_labeling_with_roi,
+    simplify,
+)
 from ..utils.cell_spot import CellSpot
 from ..utils.cell_track import CellTrack
+from ..utils.mb_support.tracking.spatial_laptrack import (
+    SpatialLapTrack,
+)
+from ..utils.trackmate_track import TrackMateTrack
+from ..utils.trackmate_spot import TrackMateSpot
+from ..utils.gen_track import generate_tracks_from_spots
+
+
+def load_tracks_and_spots(
+    trackmate_tracks_path: str, spots_path: str
+) -> tuple[list[TrackMateTrack], list[TrackMateSpot]]:
+    """
+    Load saved spots and tracks generated from Trackmate xml file.
+    """
+    trackmate_tracks: list[TrackMateTrack] = []
+    for track_file in os.listdir(trackmate_tracks_path):
+        with open(os.path.join(trackmate_tracks_path, track_file), "rb") as f:
+            trackmate_track: TrackMateTrack = pickle.load(f)
+            trackmate_track.adapt_deprecated_attributes()
+            trackmate_tracks.append(trackmate_track)
+
+    spots: list[TrackMateSpot] = []
+    for spot_file in os.listdir(spots_path):
+        with open(os.path.join(spots_path, spot_file), "rb") as f:
+            spots.append(pickle.load(f))
+
+    return trackmate_tracks, spots
 
 
 class SegmentationTrackingFactory:
@@ -33,6 +67,7 @@ class SegmentationTrackingFactory:
         gap_closing_max_distance_ratio=0.5,
         linking_max_distance_ratio=1,
         max_frame_gap=CellTrack.max_frame_gap,
+        minimum_cell_track_length=10,
     ) -> None:
         self.model_path = model_path
         self.augment = augment
@@ -41,6 +76,7 @@ class SegmentationTrackingFactory:
         self.gap_closing_max_distance_ratio = gap_closing_max_distance_ratio
         self.linking_max_distance_ratio = linking_max_distance_ratio
         self.max_frame_gap = max_frame_gap
+        self.minimum_cell_track_length = minimum_cell_track_length
 
     def perform_trackmate_tracking(
         self,
@@ -235,16 +271,67 @@ class SegmentationTrackingFactory:
         Parameters:
             cellpose_results (np.ndarray): TYX
         """
-        raise RuntimeError("Work in Progress")
 
-    def perform_segmentation_tracking(
+        cell_dictionary: dict[int, list[CellSpot]] = {}
+        id_number = 0
+        for frame, cellpose_result in enumerate(tqdm(cellpose_results)):
+            # Create and simplify polygons like Trackmate
+            # NB: be careful, Trackmate switches x and y
+            polygons = from_labeling_with_roi(cellpose_result)
+            # assert len(polygons) == cellpose_result.max()
+            simplified_polygons = []
+            for polygon in polygons:
+                simplified_polygon = simplify(polygon, interval=2, epsilon=0.5)
+                simplified_polygons.append(simplified_polygon)
+            # Get spots from polygons
+            cell_spots = []
+            for polygon in simplified_polygons:
+                id_number += 1
+                # Compute cell bounding box
+                abs_min_x, abs_max_x, abs_min_y, abs_max_y = (
+                    np.abs(np.min(polygon.y)),
+                    np.abs(np.max(polygon.y)),
+                    np.abs(np.min(polygon.x)),
+                    np.abs(np.max(polygon.x)),
+                )
+                # Compute cell centroid
+                cell_centroid = centroid(
+                    polygon.y,
+                    polygon.x,
+                )  # (x, y)
+                cell_spot = CellSpot(
+                    frame,
+                    cell_centroid[0],  # x
+                    cell_centroid[1],  # y
+                    id_number,
+                    abs_min_x,
+                    abs_max_x,
+                    abs_min_y,
+                    abs_max_y,
+                    np.array([[x, y] for x, y in zip(polygon.y, polygon.x)]),
+                )
+                cell_spots.append(cell_spot)
+            cell_dictionary[frame] = cell_spots
+
+        return cell_dictionary
+
+    def perform_segmentation(
         self,
         video: np.ndarray,
-    ) -> tuple[list[CellSpot], list[CellTrack]]:
-        """
+    ) -> tuple[np.ndarray, float]:
+        """Perform cell segmentation using cellpose.
 
-        Parameters:
-            video (np.ndarray): TXYC
+        Parameters
+        ----------
+        video : np.ndarray
+            TXYC
+
+        Returns
+        -------
+        np.ndarray
+            Cellpose results. TYX.
+        float
+            Expected diameter of the cells.
         """
 
         # Cellpose segmentation
@@ -267,11 +354,73 @@ class SegmentationTrackingFactory:
             resample=False,
         )
 
+        return cellpose_results, model.diam_labels
+
+    def perform_tracking(
+        self, cellpose_results: np.ndarray, diam_labels: float
+    ) -> tuple[list[CellSpot], list[CellTrack]]:
+        """Perform tracking using laptrack.
+
+        Parameters
+        ----------
+        cellpose_results : np.ndarray
+            TYX
+        diam_labels : float
+            Expected diameter of the cells.
+
+        Returns
+        -------
+        list[CellSpot]
+            List of cell spots.
+        list[CellTrack]
+            List of cell tracks.
+        """
         cell_spots_dictionary = self.get_spots_from_cellpose(cellpose_results)
 
-        # Extract values from dictionary
-        cell_spots = []
-        for _, spots in cell_spots_dictionary.items():
-            cell_spots.extend(spots)
+        tracking_method = SpatialLapTrack(
+            spatial_coord_slice=slice(0, 2),
+            spatial_metric="euclidean",
+            track_dist_metric="euclidean",
+            track_cost_cutoff=diam_labels * self.linking_max_distance_ratio,
+            gap_closing_dist_metric="euclidean",
+            gap_closing_cost_cutoff=diam_labels
+            * self.gap_closing_max_distance_ratio,
+            gap_closing_max_frame_count=3,
+            splitting_cost_cutoff=False,
+            merging_cost_cutoff=False,
+            alternative_cost_percentile=100,
+        )
+        cell_tracks = generate_tracks_from_spots(
+            cell_spots_dictionary, tracking_method
+        )
 
-        return cell_spots, []
+        # Keep only tracks with a minimum length
+        cell_tracks = [
+            track
+            for track in cell_tracks
+            if len(track.spots) >= self.minimum_cell_track_length
+        ]
+
+        cell_spots = []
+        for frame_spots in cell_spots_dictionary.values():
+            cell_spots.extend(frame_spots)
+
+        return cell_spots, cell_tracks
+
+    def perform_segmentation_tracking(
+        self,
+        video: np.ndarray,
+    ) -> tuple[list[CellSpot], list[CellTrack]]:
+        """
+        Perform cell segmentation and tracking.
+
+        Parameters:
+            video (np.ndarray): TXYC
+        """
+
+        cellpose_results, diam_labels = self.perform_segmentation(video)
+        cell_spots, cell_tracks = self.perform_tracking(
+            cellpose_results, diam_labels
+        )
+
+        return cell_spots, cell_tracks
