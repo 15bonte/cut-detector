@@ -759,6 +759,9 @@ def simplify(
         points.append([polygon.x[i], polygon.y[i]])
     simplified_points = douglas_peucker(points, epsilon)
     x_simplified, y_simplified = zip(*simplified_points)
+    # Cast to int
+    x_simplified = [int(x) for x in x_simplified]
+    y_simplified = [int(y) for y in y_simplified]
     return MaskPolygon(
         list(x_simplified), list(y_simplified), len(x_simplified)
     )
@@ -814,4 +817,4 @@ def centroid(x: list[float], y: list[float]) -> list[float]:
     ax += (x[n - 1] + x[0]) * w0
     ay += (y[n - 1] + y[0]) * w0
 
-    return [ax / 6.0 / area, ay / 6.0 / area]
+    return [int(ax / 6.0 / area), int(ay / 6.0 / area)]

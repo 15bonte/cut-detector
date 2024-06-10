@@ -8,7 +8,8 @@ from tqdm import tqdm
 
 from ..factories.mid_body_detection_factory import MidBodyDetectionFactory
 
-from ..utils.mb_support import detection, tracking
+from ..utils.mb_support import tracking
+from ..utils.mb_support.detection import DETECTION_FUNCTIONS
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.cell_track import CellTrack
 
@@ -22,7 +23,7 @@ def perform_mid_body_detection(
     save: bool = True,
     mid_body_detection_method: Union[
         str, Callable[[np.ndarray], np.ndarray]
-    ] = detection.laplacian_gaussian,
+    ] = DETECTION_FUNCTIONS["laplacian_gaussian"],
     mid_body_tracking_method: Union[
         str, LapTrack
     ] = tracking.cur_spatial_laptrack,
@@ -45,8 +46,8 @@ def perform_mid_body_detection(
         Directory where mitosis movies are saved, by default None.
     save : bool, optional
         Save updated mitosis tracks, by default True.
-    mid_body_detection_method : Union[str, Callable[[np.ndarray], np.ndarray]], optional
-        Method to detect mid-body, by default detection.cur_log.
+    mid_body_detection_method : str, optional
+        Method to detect mid-body, by default Laplacian of Gaussian.
     mid_body_tracking_method : Union[str, LapTrack], optional
         Method to track mid-body, by default tracking.cur_spatial_laptrack.
     parallel_detection : bool, optional

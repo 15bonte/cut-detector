@@ -76,7 +76,9 @@ class SegmentationTrackingFactory:
 
         cell_dictionary: dict[int, list[CellSpot]] = {}
         id_number = 0
-        for frame, cellpose_result in enumerate(tqdm(cellpose_results)):
+        for frame, cellpose_result in enumerate(
+            tqdm(cellpose_results, desc="Creating cell spots")
+        ):
             # Create and simplify polygons like Trackmate
             # NB: be careful, Trackmate switches x and y
             polygons = from_labeling_with_roi(cellpose_result)
@@ -110,7 +112,7 @@ class SegmentationTrackingFactory:
                     abs_max_x,
                     abs_min_y,
                     abs_max_y,
-                    np.array([[x, y] for x, y in zip(polygon.y, polygon.x)]),
+                    [[x, y] for x, y in zip(polygon.y, polygon.x)],
                 )
                 cell_spots.append(cell_spot)
             cell_dictionary[frame] = cell_spots
@@ -144,6 +146,7 @@ class SegmentationTrackingFactory:
             pretrained_model=[self.model_path], device=device
         )
 
+        print("Run cellpose...")
         cellpose_results, flows, _ = model.eval(  # TYX
             video,
             channels=[3, 0],
@@ -153,6 +156,7 @@ class SegmentationTrackingFactory:
             augment=self.augment,
             resample=False,
         )
+        print("Done.")
 
         return cellpose_results, flows, model.diam_labels
 

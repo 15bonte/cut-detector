@@ -3,7 +3,9 @@ from skimage import io
 
 from cut_detector._widget import segmentation_tracking
 from cut_detector.data.tools import get_data_path
-from cut_detector.widget_functions.tracking import perform_tracking
+from cut_detector.widget_functions.segmentation_tracking import (
+    perform_tracking,
+)
 
 
 def test_open_track_generation_widget():

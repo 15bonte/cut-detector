@@ -1,5 +1,5 @@
 import concurrent.futures
-from typing import Optional, Callable, Union
+from typing import Optional
 import numpy as np
 from skimage.morphology import extrema, opening
 from scipy import ndimage
@@ -7,7 +7,7 @@ from shapely.ops import nearest_points
 from shapely import Polygon, Point
 from tqdm import tqdm
 
-from ..utils.mb_support.detection.detection import (
+from ..utils.mb_support.detection import (
     DETECTION_FUNCTIONS,
 )
 from ..utils.cell_track import CellTrack

@@ -10,7 +10,7 @@ from skimage import io
 
 from .utils.tools import re_organize_channels
 
-from .widget_functions.tracking import perform_tracking
+from .widget_functions.segmentation_tracking import perform_tracking
 from .widget_functions.mid_body_detection import perform_mid_body_detection
 from .widget_functions.mitosis_track_generation import (
     perform_mitosis_track_generation,
@@ -234,8 +234,6 @@ def segmentation_tracking(
         spots_save_dir,
         tracks_save_dir,
     )
-
-    print("\nSegmentation and tracking finished with success!")
 
 
 @magic_factory(

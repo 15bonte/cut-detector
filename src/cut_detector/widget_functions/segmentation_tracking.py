@@ -25,7 +25,25 @@ def perform_tracking(
     ----------
     video : np.ndarray, TXYC
         The video to run the segmentation and tracking on.
+    model_path : str, optional
+        Path to the cellpose model, by default None.
+    video_name : str, optional
+        Name of the video, by default None.
+    spots_save_dir : str, optional
+        Directory to save cell spots, by default None.
+    tracks_save_dir : str, optional
+        Directory to save cell tracks, by default None.
+    save : bool, optional
+        Save the results, by default True.
+
+    Returns
+    -------
+    tuple[list[CellSpot], list[CellTrack]]
+        List of cell spots and list of cell tracks.
     """
+
+    print("### CELL DIVISION DETECTION ###")
+
     if model_path is None:
         model_path = os.path.join(
             get_model_path("segmentation"), "segmentation_model"
