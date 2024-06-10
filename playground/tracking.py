@@ -60,7 +60,7 @@ def barycenter(cellpose_results, frame):
 
 def main(
     segmentation_results_path: Optional[str] = os.path.join(
-        get_data_path("segmentation_results"), "example_video.bin"
+        get_data_path("segmentation_results"), "example_video_old.bin"
     ),
     trackmate_tracks_path: Optional[str] = os.path.join(
         get_data_path("tracks"), "example_video"
@@ -113,56 +113,51 @@ def main(
         for s in trackmate_spots:
             if s.frame == frame:
                 point_list = s.spot_points
-                for i in range(len(point_list)):
-                    x.append(point_list[i][0])
-                    y.append(600 - point_list[i][1])
+                for point in point_list:
+                    x.append(point[0])
+                    y.append(point[1])
         return (x, y)
-        # plt.scatter(x,y)
-        # plt.show()
+
+    def plot_bary(frame):
+        y = []
+        x = []
+        for s in trackmate_spots:
+            if s.frame == frame:
+                x.append(s.x)
+                y.append(s.y)
+        return (x, y)
 
     factory = SegmentationTrackingFactory("")
     cell_dictionary = factory.get_spots_from_cellpose(cellpose_results)
 
     # Spot points can be created from the cell indices
-
-    # The indices of points forming the convex hull
     plot = False
     if plot:
-        for frame in range(len(cellpose_results)):
-            fig, axarr = plt.subplots(1, 2)
+        # The indices of points forming the convex hull
+        for frame, frame_cells in cell_dictionary.items():
+            _, axarr = plt.subplots(1, 2)
             axarr[0].imshow(cellpose_results[frame])
-            for i in range(len(cell_dictionary[frame])):
+            for local_cell in frame_cells:
                 axarr[0].plot(
-                    cell_dictionary[frame][i].spot_points[:, 1],
-                    cell_dictionary[frame][i].spot_points[:, 0],
+                    local_cell.spot_points[:, 0],
+                    local_cell.spot_points[:, 1],
                     "o",
                 )
                 axarr[0].plot(
-                    cell_dictionary[frame][i].abs_max_x,
-                    cell_dictionary[frame][i].abs_max_y,
+                    local_cell.x,
+                    local_cell.y,
                     "x",
                 )
-                axarr[0].plot(
-                    cell_dictionary[frame][i].abs_min_x,
-                    cell_dictionary[frame][i].abs_max_y,
-                    "x",
-                )
-                axarr[0].plot(
-                    cell_dictionary[frame][i].abs_min_x,
-                    cell_dictionary[frame][i].abs_min_y,
-                    "x",
-                )
-                axarr[0].plot(
-                    cell_dictionary[frame][i].abs_max_x,
-                    cell_dictionary[frame][i].abs_min_y,
-                    "x",
-                )
-            axarr[0].plot(
-                barycenter(cellpose_results, frame)[0],
-                barycenter(cellpose_results, frame)[1],
+            axarr[1].imshow(cellpose_results[frame])
+            axarr[1].scatter(
+                plot_spots(frame)[0],
+                plot_spots(frame)[1],
+            )
+            axarr[1].plot(
+                plot_bary(frame)[0],
+                plot_bary(frame)[1],
                 "x",
             )
-            axarr[1].scatter(plot_spots(frame)[0], plot_spots(frame)[1], s=1)
             plt.show()
 
     tracking_method = SpatialLapTrack(

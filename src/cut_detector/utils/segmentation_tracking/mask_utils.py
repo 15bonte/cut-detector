@@ -208,6 +208,32 @@ def collinear(x1, y1, x2, y2, x3, y3):
     return (x2 - x1) * (y3 - y2) == (y2 - y1) * (x3 - x2)
 
 
+def from_labeling_with_roi(segmentation_mask):
+    nb_roi = np.max(segmentation_mask)
+    polygons = []
+    for roi in range(1, nb_roi + 1):
+        # Define ROI bounding box
+        roi_mask = segmentation_mask == roi
+        roi_pixels = np.where(roi_mask)
+        roi_min_y = int(np.min(roi_pixels[0]))
+        roi_max_y = int(np.max(roi_pixels[0]))
+        roi_min_x = int(np.min(roi_pixels[1]))
+        roi_max_x = int(np.max(roi_pixels[1]))
+        # Extract submask
+        sub_mask = roi_mask[roi_min_y:roi_max_y, roi_min_x:roi_max_x]
+        # Convert submask to polygon
+        local_polygons = mask_to_polygons(sub_mask)
+        # Sort them by count and keep the biggest one
+        local_polygons.sort(key=lambda x: x.count, reverse=True)
+        local_polygon = local_polygons[0]
+        # Move polygon to global coordinates
+        # NB: Trackmate switches x and y
+        local_polygon.x = [lx + roi_min_y for lx in local_polygon.x]
+        local_polygon.y = [ly + roi_min_x for ly in local_polygon.y]
+        polygons.append(local_polygon)
+    return polygons
+
+
 def mask_to_polygons(mask):
     """Parse a 2D mask and return a list of polygons for the external contours of white objects.
     Warning: cannot deal with holes, they are simply ignored.

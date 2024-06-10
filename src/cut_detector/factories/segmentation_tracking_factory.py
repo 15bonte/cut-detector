@@ -6,34 +6,21 @@ import torch
 import imagej
 import scyjava as sj
 from cellpose import models
+from tqdm import tqdm
+
+from ..utils.segmentation_tracking.mask_utils import (
+    centroid,
+    from_labeling_with_roi,
+    simplify,
+)
 from ..utils.cell_spot import CellSpot
 from ..utils.cell_track import CellTrack
-from scipy.spatial import ConvexHull
-
 from ..utils.mb_support.tracking.spatial_laptrack import (
     SpatialLapTrack,
 )
 from ..utils.trackmate_track import TrackMateTrack
 from ..utils.trackmate_spot import TrackMateSpot
 from ..utils.gen_track import generate_tracks_from_spots
-
-
-# Finding barycenters of each cell
-def barycenter(cellpose_results, frame):
-    max = np.max(cellpose_results[frame])
-    mean_x = []
-    mean_y = []
-    cells_per_frame = []
-    for i in range(1, max + 1):
-        cell_indices = np.where(cellpose_results[frame] == i)
-        if len(cell_indices[0]) == 0 or len(cell_indices[1]) == 0:
-            break
-        Sx = np.sum(cell_indices[1])
-        Sy = np.sum(cell_indices[0])
-        mean_x.append(Sx / len(cell_indices[1]))
-        mean_y.append(Sy / len(cell_indices[0]))
-        cells_per_frame.append(cell_indices)
-    return (mean_x, mean_y, cells_per_frame)
 
 
 def load_tracks_and_spots(
@@ -286,40 +273,45 @@ class SegmentationTrackingFactory:
         """
 
         cell_dictionary: dict[int, list[CellSpot]] = {}
-        for frame in range(len(cellpose_results)):
-            L = []
-            X, Y, cellsframe = barycenter(cellpose_results, frame)
-            for id_number in range(1, len(cellsframe) + 1):
-                cell_id = cellsframe[id_number - 1]
-                cell_coords = []
-                x, y = X[id_number - 1], Y[id_number - 1]
-                for i in range(len(cell_id[0])):
-                    cell_coords.append([cell_id[1][i], cell_id[0][i]])
-                cell_coords = np.array(cell_coords)
-                hull = ConvexHull(cell_coords)
-                convex_hull_indices = cell_coords[hull.vertices][
-                    :, ::-1
-                ]  # (x, y)
-                spot_points = convex_hull_indices
+        id_number = 0
+        for frame, cellpose_result in enumerate(tqdm(cellpose_results)):
+            # Create and simplify polygons like Trackmate
+            # NB: be careful, Trackmate switches x and y
+            polygons = from_labeling_with_roi(cellpose_result)
+            # assert len(polygons) == cellpose_result.max()
+            simplified_polygons = []
+            for polygon in polygons:
+                simplified_polygon = simplify(polygon, interval=2, epsilon=0.5)
+                simplified_polygons.append(simplified_polygon)
+            # Get spots from polygons
+            cell_spots = []
+            for polygon in simplified_polygons:
+                id_number += 1
+                # Compute cell bounding box
                 abs_min_x, abs_max_x, abs_min_y, abs_max_y = (
-                    np.abs(np.min(cell_id[1])),
-                    np.abs(np.max(cell_id[1])),
-                    np.abs(np.min(cell_id[0])),
-                    np.abs(np.max(cell_id[0])),
+                    np.abs(np.min(polygon.y)),
+                    np.abs(np.max(polygon.y)),
+                    np.abs(np.min(polygon.x)),
+                    np.abs(np.max(polygon.x)),
                 )
+                # Compute cell centroid
+                cell_centroid = centroid(
+                    polygon.y,
+                    polygon.x,
+                )  # (x, y)
                 cell_spot = CellSpot(
                     frame,
-                    x,
-                    y,
+                    cell_centroid[0],  # x
+                    cell_centroid[1],  # y
                     id_number,
                     abs_min_x,
                     abs_max_x,
                     abs_min_y,
                     abs_max_y,
-                    spot_points,
+                    np.array([[x, y] for x, y in zip(polygon.y, polygon.x)]),
                 )
-                L.append(cell_spot)
-            cell_dictionary[frame] = L
+                cell_spots.append(cell_spot)
+            cell_dictionary[frame] = cell_spots
 
         return cell_dictionary
 
