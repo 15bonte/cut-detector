@@ -2,22 +2,13 @@ import os
 import pickle
 from typing import Optional
 import matplotlib.pyplot as plt
-import numpy as np
 
 from cut_detector.data.tools import get_data_path
-from cut_detector.utils.segmentation_tracking.mask_utils import (
-    mask_to_polygons,
-    simplify,
-)
 from cut_detector.factories.segmentation_tracking_factory import (
     SegmentationTrackingFactory,
 )
-from cut_detector.utils.mb_support.tracking.spatial_laptrack import (
-    SpatialLapTrack,
-)
 from cut_detector.utils.trackmate_track import TrackMateTrack
 from cut_detector.utils.trackmate_spot import TrackMateSpot
-from cut_detector.utils.gen_track import generate_tracks_from_spots
 
 
 def load_tracks_and_spots(
@@ -41,23 +32,6 @@ def load_tracks_and_spots(
     return trackmate_tracks, spots
 
 
-def barycenter(cellpose_results, frame):
-    max = np.max(cellpose_results[frame])
-    mean_x = []
-    mean_y = []
-    cells_per_frame = []
-    for i in range(1, max + 1):
-        cell_indices = np.where(cellpose_results[frame] == i)
-        if len(cell_indices[0]) == 0 or len(cell_indices[1]) == 0:
-            break
-        Sx = np.sum(cell_indices[1])
-        Sy = np.sum(cell_indices[0])
-        mean_x.append(Sx / len(cell_indices[1]))
-        mean_y.append(Sy / len(cell_indices[0]))
-        cells_per_frame.append(cell_indices)
-    return (mean_x, mean_y, cells_per_frame)
-
-
 def main(
     segmentation_results_path: Optional[str] = os.path.join(
         get_data_path("segmentation_results"), "example_video_old.bin"
@@ -72,31 +46,6 @@ def main(
     # Load Cellpose results
     with open(segmentation_results_path, "rb") as f:
         cellpose_results = pickle.load(f)
-
-    # TODO: create spots from Cellpose results
-    # TODO: perform tracking using laptrack
-
-    # polygons = mask_to_polygons(cellpose_results[0])  # frame 0
-
-    # simplified_polygons = []
-    # for polygon in polygons:
-    #     simplified_polygon = simplify(polygon, interval=2, epsilon=0.5)
-    #     simplified_polygons.append(simplified_polygon)
-
-    # # Plot polygons
-    # plt.subplot(221)
-    # for polygon in polygons:
-    #     x, y = polygon.x, polygon.y
-    #     plt.plot(y, x)
-    # plt.imshow(cellpose_results[0], cmap="gray")
-
-    # plt.subplot(222)
-    # for polygon in simplified_polygons:
-    #     x, y = polygon.x, polygon.y
-    #     plt.plot(y, x)
-    # plt.imshow(cellpose_results[0], cmap="gray")
-
-    # Load TrackMate results to compare... make sure they match!
 
     # Frame of interest
     frame = 0
@@ -128,15 +77,16 @@ def main(
         return (x, y)
 
     factory = SegmentationTrackingFactory("")
-    cell_dictionary = factory.get_spots_from_cellpose(cellpose_results)
+    cell_spots, cell_tracks = factory.perform_tracking(cellpose_results, 171)
 
     # Spot points can be created from the cell indices
-    plot = False
+    plot = True
     if plot:
         # The indices of points forming the convex hull
-        for frame, frame_cells in cell_dictionary.items():
+        for frame, cellpose_result in enumerate(cellpose_results):
+            frame_cells = [cell for cell in cell_spots if cell.frame == frame]
             _, axarr = plt.subplots(1, 2)
-            axarr[0].imshow(cellpose_results[frame])
+            axarr[0].imshow(cellpose_result)
             for local_cell in frame_cells:
                 axarr[0].plot(
                     local_cell.spot_points[:, 0],
@@ -148,7 +98,7 @@ def main(
                     local_cell.y,
                     "x",
                 )
-            axarr[1].imshow(cellpose_results[frame])
+            axarr[1].imshow(cellpose_result)
             axarr[1].scatter(
                 plot_spots(frame)[0],
                 plot_spots(frame)[1],
@@ -159,25 +109,6 @@ def main(
                 "x",
             )
             plt.show()
-
-    tracking_method = SpatialLapTrack(
-        spatial_coord_slice=slice(0, 2),
-        spatial_metric="euclidean",
-        track_dist_metric="euclidean",
-        track_cost_cutoff=85.5,
-        gap_closing_dist_metric="euclidean",
-        gap_closing_cost_cutoff=85.5,
-        gap_closing_max_frame_count=3,
-        splitting_cost_cutoff=False,
-        merging_cost_cutoff=False,
-        alternative_cost_percentile=100,
-    )
-    # TODO Compare cell_tracks with trackmate_tracks
-    cell_tracks = generate_tracks_from_spots(cell_dictionary, tracking_method)
-    # Keep only tracks with a minimum length
-    cell_tracks = [track for track in cell_tracks if len(track.spots) >= 10]
-
-    print(cell_tracks == trackmate_tracks)
 
 
 if __name__ == "__main__":

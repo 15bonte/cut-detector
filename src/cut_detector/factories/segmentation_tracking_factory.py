@@ -315,14 +315,23 @@ class SegmentationTrackingFactory:
 
         return cell_dictionary
 
-    def perform_segmentation_tracking(
+    def perform_segmentation(
         self,
         video: np.ndarray,
-    ) -> tuple[list[CellSpot], list[CellTrack]]:
-        """
+    ) -> tuple[np.ndarray, float]:
+        """Perform cell segmentation using cellpose.
 
-        Parameters:
-            video (np.ndarray): TXYC
+        Parameters
+        ----------
+        video : np.ndarray
+            TXYC
+
+        Returns
+        -------
+        np.ndarray
+            Cellpose results. TYX.
+        float
+            Expected diameter of the cells.
         """
 
         # Cellpose segmentation
@@ -345,15 +354,37 @@ class SegmentationTrackingFactory:
             resample=False,
         )
 
+        return cellpose_results, model.diam_labels
+
+    def perform_tracking(
+        self, cellpose_results: np.ndarray, diam_labels: float
+    ) -> tuple[list[CellSpot], list[CellTrack]]:
+        """Perform tracking using laptrack.
+
+        Parameters
+        ----------
+        cellpose_results : np.ndarray
+            TYX
+        diam_labels : float
+            Expected diameter of the cells.
+
+        Returns
+        -------
+        list[CellSpot]
+            List of cell spots.
+        list[CellTrack]
+            List of cell tracks.
+        """
         cell_spots_dictionary = self.get_spots_from_cellpose(cellpose_results)
 
         tracking_method = SpatialLapTrack(
             spatial_coord_slice=slice(0, 2),
             spatial_metric="euclidean",
             track_dist_metric="euclidean",
-            track_cost_cutoff=85.5,
+            track_cost_cutoff=diam_labels * self.linking_max_distance_ratio,
             gap_closing_dist_metric="euclidean",
-            gap_closing_cost_cutoff=85.5,
+            gap_closing_cost_cutoff=diam_labels
+            * self.gap_closing_max_distance_ratio,
             gap_closing_max_frame_count=3,
             splitting_cost_cutoff=False,
             merging_cost_cutoff=False,
@@ -373,5 +404,23 @@ class SegmentationTrackingFactory:
         cell_spots = []
         for frame_spots in cell_spots_dictionary.values():
             cell_spots.extend(frame_spots)
+
+        return cell_spots, cell_tracks
+
+    def perform_segmentation_tracking(
+        self,
+        video: np.ndarray,
+    ) -> tuple[list[CellSpot], list[CellTrack]]:
+        """
+        Perform cell segmentation and tracking.
+
+        Parameters:
+            video (np.ndarray): TXYC
+        """
+
+        cellpose_results, diam_labels = self.perform_segmentation(video)
+        cell_spots, cell_tracks = self.perform_tracking(
+            cellpose_results, diam_labels
+        )
 
         return cell_spots, cell_tracks
