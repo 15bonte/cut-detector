@@ -1,15 +1,12 @@
 import os
 import pickle
-from typing import Optional, Callable, Union
+from typing import Optional
 import numpy as np
 from aicsimageio.writers import OmeTiffWriter
-from laptrack import LapTrack
 from tqdm import tqdm
 
 from ..factories.mid_body_detection_factory import MidBodyDetectionFactory
 
-from ..utils.mb_support import tracking
-from ..utils.mb_support.detection import DETECTION_FUNCTIONS
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.cell_track import CellTrack
 
@@ -21,12 +18,6 @@ def perform_mid_body_detection(
     exported_tracks_dir: str,
     movies_save_dir: Optional[str] = None,
     save: bool = True,
-    mid_body_detection_method: Union[
-        str, Callable[[np.ndarray], np.ndarray]
-    ] = DETECTION_FUNCTIONS["laplacian_gaussian"],
-    mid_body_tracking_method: Union[
-        str, LapTrack
-    ] = tracking.cur_spatial_laptrack,
     parallel_detection: bool = False,
     target_mitosis_id: Optional[int] = None,
 ) -> list[MitosisTrack]:
@@ -46,10 +37,6 @@ def perform_mid_body_detection(
         Directory where mitosis movies are saved, by default None.
     save : bool, optional
         Save updated mitosis tracks, by default True.
-    mid_body_detection_method : str, optional
-        Method to detect mid-body, by default Laplacian of Gaussian.
-    mid_body_tracking_method : Union[str, LapTrack], optional
-        Method to track mid-body, by default tracking.cur_spatial_laptrack.
     parallel_detection : bool, optional
         Perform detection in parallel, by default False.
     target_mitosis_id : Optional[int], optional
@@ -69,7 +56,6 @@ def perform_mid_body_detection(
         # Load mitosis track
         with open(os.path.join(exported_mitoses_dir, state_path), "rb") as f:
             mitosis_track: MitosisTrack = pickle.load(f)
-            mitosis_track.adapt_deprecated_attributes()
 
         # Add mitosis track to list
         mitosis_tracks.append(mitosis_track)
@@ -84,10 +70,9 @@ def perform_mid_body_detection(
             os.path.join(video_exported_tracks_dir, state_path), "rb"
         ) as f:
             cell_track: CellTrack = pickle.load(f)
-            cell_track.adapt_deprecated_attributes()
             cell_tracks.append(cell_track)
 
-    print("### MID-BODY DETECTION ###")
+    print("\n### MID-BODY DETECTION ###")
 
     # Generate movie for each mitosis and save
     mid_body_detector = MidBodyDetectionFactory()
@@ -113,8 +98,6 @@ def perform_mid_body_detection(
             mitosis_movie,
             cell_tracks,
             parallel_detection=parallel_detection,
-            mb_detect_method=mid_body_detection_method,
-            mb_tracking_method=mid_body_tracking_method,
         )
 
         # Save updated mitosis track

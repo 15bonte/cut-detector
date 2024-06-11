@@ -405,11 +405,6 @@ class MitosisTrack:
         mitosis_movie = np.array(mitosis_movie)  # TYXC
         mask_movie = np.array(mask_movie)  # TYX
 
-        # If mid-bodies are already computed, add them to the mitosis movie
-        if self.mid_body_spots:
-            mitosis_movie = self.add_mid_body_movie(mitosis_movie, mask_movie)
-            return mitosis_movie[..., :-1], mitosis_movie[..., -1].squeeze()
-
         return mitosis_movie, mask_movie
 
     def is_possible_match(self, other_track: MitosisTrack) -> bool:
@@ -872,30 +867,6 @@ class MitosisTrack:
             frames.append(frame)
 
         return bridge_images, frames
-
-    def adapt_deprecated_attributes(self) -> None:
-        """
-        Used to adapt deprecated attributes to new ones.
-        In particular, x and y instead of position for mid_body_spots.
-        """
-        # Predicted
-        for mid_body_spot in self.mid_body_spots.values():
-            if (
-                hasattr(mid_body_spot, "position")
-                and mid_body_spot.position is not None
-            ):
-                mid_body_spot.x = mid_body_spot.position[0]
-                mid_body_spot.y = mid_body_spot.position[1]
-        # Ground truth
-        if self.gt_mid_body_spots is None:
-            return
-        for mid_body_spot in self.gt_mid_body_spots.values():
-            if (
-                hasattr(mid_body_spot, "position")
-                and mid_body_spot.position is not None
-            ):
-                mid_body_spot.x = mid_body_spot.position[0]
-                mid_body_spot.y = mid_body_spot.position[1]
 
     def get_mid_body_legend(
         self,

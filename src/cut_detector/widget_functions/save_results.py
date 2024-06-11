@@ -2,6 +2,8 @@ import os
 import pickle
 from typing import Optional
 
+import numpy as np
+
 from ..factories.results_saving_factory import ResultsSavingFactory
 from ..utils.mitosis_track import MitosisTrack
 
@@ -11,12 +13,15 @@ def perform_results_saving(
     show: bool = False,
     save_dir: Optional[str] = None,
     verbose: bool = False,
+    video: Optional[np.ndarray] = None,
+    viewer: Optional["napari.Viewer"] = None,
 ) -> None:
-    """
-    Perform a series of tests, prints and plots following process.
+    """Perform a series of tests, prints and plots following process.
 
     Parameters
     ----------
+    video : np.ndarray
+        Video. TYXC.
     exported_mitoses_dir : str
         Directory where mitosis tracks are saved.
     show : bool, optional
@@ -26,6 +31,8 @@ def perform_results_saving(
     verbose : bool, optional
         Verbose, by default False.
     """
+    print("\n### RESULTS SAVING ###")
+
     # Create save_dir if specified and it does not exist
     if save_dir is not None and not os.path.exists(save_dir):
         os.makedirs(save_dir)
@@ -35,7 +42,6 @@ def perform_results_saving(
     for state_path in os.listdir(exported_mitoses_dir):
         with open(os.path.join(exported_mitoses_dir, state_path), "rb") as f:
             mitosis_track: MitosisTrack = pickle.load(f)
-            mitosis_track.adapt_deprecated_attributes()
             mitosis_tracks.append(mitosis_track)
 
     # Define lists and dictionaries to store results
@@ -53,3 +59,9 @@ def perform_results_saving(
     results_saving_factory.save_csv_results(mitosis_tracks, save_dir)
     results_saving_factory.box_plot_cut_differences(show, save_dir)
     results_saving_factory.plot_cut_distributions(show, save_dir)
+
+    # Display in napari
+    if viewer is not None:
+        results_saving_factory.generate_napari_tracking_mask(
+            mitosis_tracks, video, viewer
+        )

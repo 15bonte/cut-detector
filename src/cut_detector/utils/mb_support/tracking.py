@@ -58,26 +58,14 @@ def spatial_intensity_dist(
     return (spatial_e * penalty) ** 2
 
 
+# Distance functions
+
 custom_spatial_distance = partial(
     spatial_intensity_dist,
     max_distance=175,
     mklp_weight_factor=5.0,
     sir_weight_factor=1.50,
 )
-
-spatial_tracking_distance = SpatialLapTrack(
-    spatial_coord_slice=slice(0, 2),
-    spatial_metric="euclidean",
-    track_dist_metric=custom_spatial_distance,
-    track_cost_cutoff=175,
-    gap_closing_dist_metric=custom_spatial_distance,
-    gap_closing_cost_cutoff=175,
-    gap_closing_max_frame_count=3,
-    splitting_cost_cutoff=False,
-    merging_cost_cutoff=False,
-    alternative_cost_percentile=100,
-)
-
 
 custom_distance = partial(
     spatial_intensity_dist,
@@ -86,13 +74,29 @@ custom_distance = partial(
     sir_weight_factor=1.50,
 )
 
-basic_tracking_method = LapTrack(
-    track_dist_metric=custom_distance,
-    track_cost_cutoff=175**2,
-    gap_closing_dist_metric=custom_distance,
-    gap_closing_cost_cutoff=175**2,
-    gap_closing_max_frame_count=2,
-    splitting_cost_cutoff=False,
-    merging_cost_cutoff=False,
-    alternative_cost_percentile=90,
-)
+# Tracking methods
+
+TRACKING_FUNCTIONS = {
+    "spatial_laptrack": SpatialLapTrack(
+        spatial_coord_slice=slice(0, 2),
+        spatial_metric="euclidean",
+        track_dist_metric=custom_spatial_distance,
+        track_cost_cutoff=175,
+        gap_closing_dist_metric=custom_spatial_distance,
+        gap_closing_cost_cutoff=175,
+        gap_closing_max_frame_count=3,
+        splitting_cost_cutoff=False,
+        merging_cost_cutoff=False,
+        alternative_cost_percentile=100,
+    ),
+    "laptrack": LapTrack(
+        track_dist_metric=custom_distance,
+        track_cost_cutoff=175**2,
+        gap_closing_dist_metric=custom_distance,
+        gap_closing_cost_cutoff=175**2,
+        gap_closing_max_frame_count=2,
+        splitting_cost_cutoff=False,
+        merging_cost_cutoff=False,
+        alternative_cost_percentile=90,
+    ),
+}

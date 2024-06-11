@@ -4,20 +4,17 @@ generate specialized tracks from points.
 See Track documentation to learn how to create new specialized Tracks/Spots
 """
 
-from typing import Union, Literal, Tuple, TypeVar
+from typing import Tuple, TypeVar
 
 import pandas as pd
 from laptrack import LapTrack
 
-from .mb_support import tracking
 from .track import Track
 from .spot import Spot
 from .mid_body_track import MidBodyTrack
 from .cell_track import CellTrack
 from .mid_body_spot import MidBodySpot
 from .cell_spot import CellSpot
-
-TrackingMethod = Union[Literal["laptrack", "spatial_laptrack"], LapTrack]
 
 SPOT_AND_TRACK_MAPPING = {
     MidBodySpot: MidBodyTrack,
@@ -29,7 +26,7 @@ S = TypeVar("S", *SPOT_AND_TRACK_MAPPING.keys())
 
 
 def generate_tracks_from_spots(
-    spot_dict: dict[int, list[S]], method: TrackingMethod
+    spot_dict: dict[int, list[S]], method: LapTrack
 ) -> list[T]:
     """Generate a list of specialized tracks based on the underlying kind
     of spot.
@@ -143,31 +140,14 @@ def convert_spots_to_spotdf(
 def apply_tracking(
     spot_kind: type[Spot],
     spot_df: pd.DataFrame,
-    method: TrackingMethod,
+    method: LapTrack,
 ) -> Tuple[
     pd.DataFrame, pd.DataFrame, pd.DataFrame
 ]:  # >track< / split / merge
-
-    tracker: LapTrack = None
-    if isinstance(method, str):
-        mapping: dict[str, LapTrack] = {
-            "laptrack": tracking.cur_laptrack,
-            "lt": tracking.basic_tracking_method,
-            "spatial_laptrack": tracking.cur_spatial_laptrack,
-            "slt": tracking.spatial_tracking_distance,
-        }
-        tracker = mapping.get(method, None)
-        if tracker is None:
-            raise RuntimeError(f"Unknown tracking string: [{method}]")
-    elif isinstance(method, LapTrack):
-        tracker = method
-    else:
-        raise RuntimeError("mode must be either a str or a LapTrack object")
-
     coord_cols = ["x", "y"]
     coord_cols.extend(spot_kind.get_extra_features_name())
 
-    tuple_df = tracker.predict_dataframe(
+    tuple_df = method.predict_dataframe(
         spot_df,
         coord_cols,
         only_coordinate_cols=False,

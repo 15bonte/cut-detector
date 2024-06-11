@@ -37,7 +37,7 @@ def perform_mt_cut_detection(
     save : bool, optional
         Save updated mitosis tracks, by default True.
     """
-    print("### MICRO-TUBULES CUT DETECTION ###")
+    print("\n### MICRO-TUBULES CUT DETECTION ###")
 
     mitosis_tracks: list[MitosisTrack] = []
     # Iterate over "bin" files in exported_mitoses_dir
@@ -48,7 +48,6 @@ def perform_mt_cut_detection(
         # Load mitosis track
         with open(os.path.join(exported_mitoses_dir, state_path), "rb") as f:
             mitosis_track: MitosisTrack = pickle.load(f)
-            mitosis_track.adapt_deprecated_attributes()
 
         # Add mitosis track to list
         mitosis_tracks.append(mitosis_track)

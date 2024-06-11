@@ -20,9 +20,9 @@ from ..utils.mid_body_track import MidBodyTrack
 from ..utils.image_tools import smart_cropping
 from ..utils.mid_body_spot import MidBodySpot
 from ..utils.mitosis_track import MitosisTrack
-from ..utils.gen_track import generate_tracks_from_spots, TrackingMethod
+from ..utils.gen_track import generate_tracks_from_spots
 from ..utils.cell_spot import CellSpot
-from ..utils.mb_support import tracking as mbt
+from ..utils.mb_support.tracking import TRACKING_FUNCTIONS
 
 
 class MidBodyDetectionFactory:
@@ -59,8 +59,8 @@ class MidBodyDetectionFactory:
         mitosis_movie: np.ndarray,
         tracks: list[CellTrack],
         parallel_detection: bool,
-        mb_detect_method: str = "difference_gaussian",
-        mb_tracking_method: TrackingMethod = mbt.cur_spatial_laptrack,
+        detection_method: str = "difference_gaussian",
+        tracking_method: str = "spatial_laptrack",
         log_blob_spot: bool = False,
     ) -> None:
         """
@@ -76,9 +76,9 @@ class MidBodyDetectionFactory:
             List of cell tracks.
         parallel_detection: bool
             If True, use parallelization for mid-body spots detection.
-        mb_detect_method: str
+        detection_method: str
             Method to detect mid-body spots.
-        mb_tracking_method: TrackingMethod
+        tracking_method: str
             Method to track mid-body spots.
         log_blob_spot: bool
             If True, display log of spots detected.
@@ -86,14 +86,15 @@ class MidBodyDetectionFactory:
 
         spots_candidates = self.detect_mid_body_spots(
             mitosis_movie,
-            method=mb_detect_method,
+            method=detection_method,
             parallelization=parallel_detection,
             log_blob_spot=log_blob_spot,
             mitosis_track=mitosis_track,
         )
 
+        assert tracking_method in TRACKING_FUNCTIONS.keys()
         mid_body_tracks: list[MidBodyTrack] = generate_tracks_from_spots(
-            spots_candidates, mb_tracking_method
+            spots_candidates, TRACKING_FUNCTIONS[tracking_method]
         )
 
         kept_track = self._select_best_track(

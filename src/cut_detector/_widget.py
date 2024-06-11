@@ -239,14 +239,14 @@ def segmentation_tracking(
 @magic_factory(
     call_button="Run Mitosis Track Generation",
     layout="vertical",
-    spots_save_dir=dict(
+    spots_load_dir=dict(
         widget_type="FileEdit",
-        label="Directory to save .bin cell spots: ",
+        label="Directory to load .bin cell spots: ",
         mode="d",
     ),
-    tracks_save_dir=dict(
+    tracks_load_dir=dict(
         widget_type="FileEdit",
-        label="Directory to save .bin cell tracks: ",
+        label="Directory to load .bin cell tracks: ",
         mode="d",
     ),
     mitoses_save_dir=dict(
@@ -257,8 +257,8 @@ def segmentation_tracking(
 )
 def mitosis_track_generation(
     img_layer: "napari.layers.Image",
-    spots_save_dir: str,
-    tracks_save_dir: str,
+    spots_load_dir: str,
+    tracks_load_dir: str,
     mitoses_save_dir: Optional[str],
 ):
     raw_video = re_organize_channels(img_layer.data)  # TXYC
@@ -266,11 +266,10 @@ def mitosis_track_generation(
     perform_mitosis_track_generation(
         raw_video,
         img_layer.name,
-        spots_save_dir,
-        tracks_save_dir,
+        spots_load_dir,
+        tracks_load_dir,
         mitoses_save_dir,
     )
-    print("\nMitosis tracks generated with success!")
 
 
 @magic_factory(
@@ -278,12 +277,12 @@ def mitosis_track_generation(
     layout="vertical",
     exported_mitoses_dir=dict(
         widget_type="FileEdit",
-        label="Saved .bin mitoses directory: ",
+        label="Directory to load .bin mitoses:",
         mode="d",
     ),
     exported_tracks_dir=dict(
         widget_type="FileEdit",
-        label="Saved .bin tracks directory: ",
+        label="Directory to load .bin cell tracks: ",
         mode="d",
     ),
     save_check_box=dict(
@@ -311,7 +310,6 @@ def mid_body_detection(
         movies_save_dir if save_check_box else None,
         parallel_detection=True,
     )
-    print("\nMid-body detection finished with success!")
 
 
 @magic_factory(
@@ -319,7 +317,7 @@ def mid_body_detection(
     layout="vertical",
     exported_mitoses_dir=dict(
         widget_type="FileEdit",
-        label="Saved .bin mitoses directory: ",
+        label="Directory to load .bin mitoses: ",
         mode="d",
     ),
 )
@@ -332,7 +330,6 @@ def micro_tubules_cut_detection(
         img_layer.name,
         exported_mitoses_dir,
     )
-    print("\nMicro-tubules cut detection finished with success!")
 
 
 @magic_factory(
@@ -340,7 +337,7 @@ def micro_tubules_cut_detection(
     layout="vertical",
     exported_mitoses_dir=dict(
         widget_type="FileEdit",
-        label="Saved .bin mitoses directory: ",
+        label="Directory to load .bin mitoses: ",
         mode="d",
     ),
     results_save_dir=dict(
@@ -350,8 +347,15 @@ def micro_tubules_cut_detection(
     ),
 )
 def results_saving(
+    img_layer: "napari.layers.Image",
+    viewer: "napari.Viewer",
     exported_mitoses_dir: str,
     results_save_dir: str,
 ):
-    perform_results_saving(exported_mitoses_dir, save_dir=results_save_dir)
-    print("\nResults saved with success!")
+    raw_video = re_organize_channels(img_layer.data)  # TYXC
+    perform_results_saving(
+        exported_mitoses_dir,
+        save_dir=results_save_dir,
+        video=raw_video,
+        viewer=viewer,
+    )

@@ -54,7 +54,6 @@ def main(
     image = TiffReader(image_path, respect_initial_type=True).image  # TCZYX
     with open(mitosis_path, "rb") as f:
         mitosis_track: MitosisTrack = pickle.load(f)
-        mitosis_track.adapt_deprecated_attributes()
 
     image = image.squeeze().transpose(0, 2, 3, 1)  # TYXC
 

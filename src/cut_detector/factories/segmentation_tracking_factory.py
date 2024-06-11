@@ -10,7 +10,7 @@ from ..utils.segmentation_tracking.mask_utils import (
 )
 from ..utils.cell_spot import CellSpot
 from ..utils.cell_track import CellTrack
-from ..utils.mb_support.tracking.spatial_laptrack import (
+from ..utils.mb_support.spatial_laptrack import (
     SpatialLapTrack,
 )
 from ..utils.gen_track import generate_tracks_from_spots

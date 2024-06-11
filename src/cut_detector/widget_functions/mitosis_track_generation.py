@@ -62,7 +62,7 @@ def perform_mitosis_track_generation(
         Cell tracks.
     """
 
-    print("### SEGMENTATION & TRACKING ###")
+    print("\n### CELL DIVISION DETECTION ###")
 
     # Create save_dir if not exists
     if mitoses_dir is not None and not os.path.exists(mitoses_dir):

@@ -413,7 +413,7 @@ class ResultsSavingFactory:
         mitosis_tracks: list[MitosisTrack]
             List of mitosis tracks.
         video: np.ndarray
-            Video to process.
+            Video to process. TYXC
         viewer: napari.Viewer
             Napari viewer.
         """
@@ -435,7 +435,7 @@ class ResultsSavingFactory:
         )
 
         # Iterate over mitosis_tracks
-        mask = np.zeros((nb_frames, height, width, 3), dtype=np.uint8)
+        mask = np.zeros((nb_frames, height, width, 3), dtype=np.uint8)  # TYXC
         for i, mitosis_track in enumerate(mitosis_tracks):
             _, mask_movie = mitosis_track.generate_video_movie(video)
             cell_indexes = np.where(mask_movie == 1)
@@ -457,8 +457,6 @@ class ResultsSavingFactory:
                 :,
             ] = np.maximum(mask_movie, initial_mask)
 
-            viewer.add_image(mask, name="masks", rgb=True, opacity=0.4)
-
             # Use point + text instead of red point for mid_body
             for mitosis_track in mitosis_tracks:
                 mid_body_legend = mitosis_track.get_mid_body_legend()
@@ -471,13 +469,20 @@ class ResultsSavingFactory:
                     "translation": np.array([-30, 0]),
                 }
                 for frame, frame_dict in mid_body_legend.items():
-                    points += [
-                        np.array([frame, frame_dict["y"], frame_dict["x"]])
-                    ]
-                    features["category"] += [frame_dict["category"]]
+                    for i in range(3):  # 3 channels
+                        points += [
+                            np.array(
+                                [frame, i, frame_dict["y"], frame_dict["x"]]
+                            )
+                        ]
+                        features["category"] += [frame_dict["category"]]
                 features["category"] = np.array(features["category"])
                 viewer.add_points(
                     points,
                     features=features,
                     text=text,
                 )
+
+        # Add dimension at second place
+        mask = mask.transpose(0, 3, 1, 2)  # TCYX
+        viewer.add_image(mask, name="masks", opacity=0.4)

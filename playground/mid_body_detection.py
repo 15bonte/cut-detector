@@ -11,8 +11,8 @@ from cut_detector.data.tools import get_data_path
 from cut_detector.factories.mid_body_detection_factory import (
     MidBodyDetectionFactory,
 )
+from cut_detector.utils.mb_support.tracking import TRACKING_FUNCTIONS
 from cut_detector.utils.mitosis_track import MitosisTrack
-from cut_detector.utils.mb_support import tracking
 from cut_detector.utils.gen_track import generate_tracks_from_spots
 
 
@@ -47,7 +47,6 @@ def main(
     image = TiffReader(image_path, respect_initial_type=True).image  # TCZYX
     with open(mitosis_path, "rb") as f:
         mitosis_track: MitosisTrack = pickle.load(f)
-        mitosis_track.adapt_deprecated_attributes()
 
     mitosis_movie = image[:, :3, ...].squeeze()  # T C=3 YX
     mitosis_movie = mitosis_movie.transpose(0, 2, 3, 1)  # TYXC
@@ -76,7 +75,9 @@ def main(
                     }
                 )
 
-    generate_tracks_from_spots(spots_candidates, tracking.cur_spatial_laptrack)
+    generate_tracks_from_spots(
+        spots_candidates, TRACKING_FUNCTIONS["spatial_laptrack"]
+    )
 
     if show_tracks:
         print("\nSpots candidates with tracks:")

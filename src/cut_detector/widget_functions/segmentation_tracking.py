@@ -42,7 +42,7 @@ def perform_tracking(
         List of cell spots and list of cell tracks.
     """
 
-    print("### CELL DIVISION DETECTION ###")
+    print("### SEGMENTATION & TRACKING ###")
 
     if model_path is None:
         model_path = os.path.join(
