@@ -9,17 +9,18 @@ from cut_detector.factories.results_saving_factory import ResultsSavingFactory
 
 
 def main(
-    image_path: Optional[str] = get_data_path("videos"),
+    image_path: Optional[str] = os.path.join(
+        get_data_path("videos"), "example_video.tif"
+    ),
     mitoses_path: Optional[str] = get_data_path("mitoses"),
 ):
     # Create a Napari viewer
     viewer = napari.Viewer()
 
     # Add video
-    video = io.imread(os.path.join(image_path, "example_video.tif"))  # TYXC
-    # Move axes to TCYX to match napari
-    viewer_video = video.transpose(0, 3, 1, 2)  # TCYX
-    viewer.add_image(viewer_video, name="video", rgb=False)
+    video = io.imread(image_path)  # TYXC
+    # Match Napari video display
+    viewer.add_image(video, name="video", rgb=True)
 
     # Load mitosis tracks  # masques rajoutés qui suivent les cellules
     mitosis_tracks = []
@@ -29,7 +30,7 @@ def main(
         mitosis_tracks.append(mitosis_track)
 
     ResultsSavingFactory().generate_napari_tracking_mask(
-        mitosis_tracks, viewer_video, viewer
+        mitosis_tracks, video, viewer
     )
 
     napari.run()

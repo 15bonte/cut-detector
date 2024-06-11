@@ -406,7 +406,10 @@ class ResultsSavingFactory:
         f.close()
 
     def generate_napari_tracking_mask(
-        self, mitosis_tracks: list[MitosisTrack], video: np.ndarray, viewer: Viewer
+        self,
+        mitosis_tracks: list[MitosisTrack],
+        video: np.ndarray,
+        viewer: Viewer,
     ) -> None:
         """Generate napari tracking mask.
 
@@ -420,8 +423,12 @@ class ResultsSavingFactory:
             Napari viewer.
         """
 
-        # Re-organize channels
         channel_axis = np.argmin(video.shape)
+        # By default, Napari assumes that images with 3 dimensions in last
+        # axis are RGB
+        rgb = channel_axis == 3
+
+        # Re-organize channels
         video = re_organize_channels(video)  # TYXC
 
         # Video parameters
@@ -429,27 +436,42 @@ class ResultsSavingFactory:
 
         # Colors list
         colors = np.array(
-            [np.random.randint(0, 255) for _ in range(len(mitosis_tracks))],
+            [
+                [
+                    np.random.randint(0, 255),
+                    np.random.randint(0, 255),
+                    np.random.randint(0, 255),
+                ]
+                for _ in range(len(mitosis_tracks))
+            ],
             dtype=np.uint8,
         )
 
         # Iterate over mitosis_tracks
-        mask = np.zeros((nb_frames, height, width), dtype=np.uint8)  # TYX
+        mask = np.zeros((nb_frames, height, width, 3), dtype=np.uint8)  # TYXC
         for idx, mitosis_track in enumerate(mitosis_tracks):
             _, mask_movie = mitosis_track.generate_video_movie(video)
             cell_indexes = np.where(mask_movie == 1)
+            mask_movie = np.stack(
+                [mask_movie, mask_movie, mask_movie], axis=-1
+            )
             mask_movie[cell_indexes] = colors[idx]
             initial_mask = mask[
                 mitosis_track.min_frame : mitosis_track.max_frame + 1,
                 mitosis_track.position.min_y : mitosis_track.position.max_y,
                 mitosis_track.position.min_x : mitosis_track.position.max_x,
+                :,
             ]
             # Avoid colors overlap
             mask[
                 mitosis_track.min_frame : mitosis_track.max_frame + 1,
                 mitosis_track.position.min_y : mitosis_track.position.max_y,
                 mitosis_track.position.min_x : mitosis_track.position.max_x,
+                :,
             ] = np.maximum(mask_movie, initial_mask)
+        # Match original image shape
+        mask = np.moveaxis(mask, 3, channel_axis)
+        assert mask.shape == video.shape
 
         # Use point + text instead of red point for mid_body
         points = []
@@ -466,19 +488,22 @@ class ResultsSavingFactory:
                 single_layer_points = np.array(
                     [frame, frame_dict["y"], frame_dict["x"]]
                 )
-                for idx in range(3):  # 3 channels
-                    layer_points = np.insert(
-                        single_layer_points, channel_axis, idx
-                    )
-                    points += [layer_points]
+                if rgb:
+                    points += [single_layer_points]
                     features["category"] += [frame_dict["category"]]
+                else:
+                    for idx in range(3):  # 3 channels
+                        layer_points = np.insert(
+                            single_layer_points, channel_axis, idx
+                        )
+                        points += [layer_points]
+                        features["category"] += [frame_dict["category"]]
         features["category"] = np.array(features["category"])
         viewer.add_points(
             points,
             features=features,
             text=text,
+            name="Mid-bodies",
         )
 
-        # Match original image shape
-        mask = np.stack([mask, mask, mask], axis=channel_axis)
-        viewer.add_image(mask, name="Cell divisions", opacity=0.4)
+        viewer.add_image(mask, name="Cell divisions", opacity=0.4, rgb=rgb)
