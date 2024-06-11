@@ -3,6 +3,7 @@ from typing import Optional
 from scipy.stats import ttest_1samp
 import numpy as np
 import matplotlib.pyplot as plt
+from napari import Viewer
 
 from ..utils.tools import re_organize_channels
 from ..constants.tracking import TIME_RESOLUTION
@@ -405,7 +406,7 @@ class ResultsSavingFactory:
         f.close()
 
     def generate_napari_tracking_mask(
-        self, mitosis_tracks: list[MitosisTrack], video: np.ndarray, viewer
+        self, mitosis_tracks: list[MitosisTrack], video: np.ndarray, viewer: Viewer
     ) -> None:
         """Generate napari tracking mask.
 
@@ -420,24 +421,24 @@ class ResultsSavingFactory:
         """
 
         # Re-organize channels
-        original_shape = video.shape
+        channel_axis = np.argmin(video.shape)
         video = re_organize_channels(video)  # TYXC
 
         # Video parameters
         nb_frames, height, width, _ = video.shape
 
-        # Colors list (50 min to avoid too dark colors)
+        # Colors list
         colors = np.array(
-            [np.random.randint(50, 255) for _ in range(len(mitosis_tracks))],
+            [np.random.randint(0, 255) for _ in range(len(mitosis_tracks))],
             dtype=np.uint8,
         )
 
         # Iterate over mitosis_tracks
         mask = np.zeros((nb_frames, height, width), dtype=np.uint8)  # TYX
-        for i, mitosis_track in enumerate(mitosis_tracks):
+        for idx, mitosis_track in enumerate(mitosis_tracks):
             _, mask_movie = mitosis_track.generate_video_movie(video)
             cell_indexes = np.where(mask_movie == 1)
-            mask_movie[cell_indexes] = colors[i]
+            mask_movie[cell_indexes] = colors[idx]
             initial_mask = mask[
                 mitosis_track.min_frame : mitosis_track.max_frame + 1,
                 mitosis_track.position.min_y : mitosis_track.position.max_y,
@@ -450,33 +451,34 @@ class ResultsSavingFactory:
                 mitosis_track.position.min_x : mitosis_track.position.max_x,
             ] = np.maximum(mask_movie, initial_mask)
 
-            # Use point + text instead of red point for mid_body
-            for mitosis_track in mitosis_tracks:
-                mid_body_legend = mitosis_track.get_mid_body_legend()
-                points = []
-                features = {"category": []}
-                text = {
-                    "string": "{category}",
-                    "size": 10,
-                    "color": "white",
-                    "translation": np.array([-30, 0]),
-                }
-                for frame, frame_dict in mid_body_legend.items():
-                    for i in range(3):  # 3 channels
-                        points += [
-                            np.array(
-                                [frame, i, frame_dict["y"], frame_dict["x"]]
-                            )
-                        ]
-                        features["category"] += [frame_dict["category"]]
-                features["category"] = np.array(features["category"])
-                viewer.add_points(
-                    points,
-                    features=features,
-                    text=text,
+        # Use point + text instead of red point for mid_body
+        points = []
+        features = {"category": []}
+        text = {
+            "string": "{category}",
+            "size": 10,
+            "color": "white",
+            "translation": np.array([-30, 0]),
+        }
+        for mitosis_track in mitosis_tracks:
+            mid_body_legend = mitosis_track.get_mid_body_legend()
+            for frame, frame_dict in mid_body_legend.items():
+                single_layer_points = np.array(
+                    [frame, frame_dict["y"], frame_dict["x"]]
                 )
+                for idx in range(3):  # 3 channels
+                    layer_points = np.insert(
+                        single_layer_points, channel_axis, idx
+                    )
+                    points += [layer_points]
+                    features["category"] += [frame_dict["category"]]
+        features["category"] = np.array(features["category"])
+        viewer.add_points(
+            points,
+            features=features,
+            text=text,
+        )
 
         # Match original image shape
-        channel_axis = np.argmin(original_shape)
         mask = np.stack([mask, mask, mask], axis=channel_axis)
         viewer.add_image(mask, name="Cell divisions", opacity=0.4)

@@ -29,7 +29,7 @@ def main(
         mitosis_tracks.append(mitosis_track)
 
     ResultsSavingFactory().generate_napari_tracking_mask(
-        mitosis_tracks, video, viewer
+        mitosis_tracks, viewer_video, viewer
     )
 
     napari.run()

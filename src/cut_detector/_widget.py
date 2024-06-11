@@ -85,6 +85,7 @@ def video_whole_process(
 )
 def whole_process(
     img_layer: "napari.layers.Image",
+    viewer: "napari.Viewer",
     default_model_check_box: bool,
     segmentation_model: str,
     save_check_box: bool,
@@ -112,14 +113,19 @@ def whole_process(
     )
 
     # Results saving
-    perform_results_saving(mitoses_dir.name, save_dir=results_save_dir)
+    perform_results_saving(
+        mitoses_dir.name,
+        save_dir=results_save_dir,
+        video=img_layer.data,
+        viewer=viewer,
+    )
 
     # Delete temporary folders
     spots_dir.cleanup()
     tracks_dir.cleanup()
     mitoses_dir.cleanup()
 
-    print("\nWhole process finished with success!")
+    print("\nProcess finished with success!")
 
 
 @magic_factory(
@@ -190,7 +196,7 @@ def whole_process_folder(
     tracks_dir.cleanup()
     mitoses_dir.cleanup()
 
-    print("\nWhole process finished with success!")
+    print("\nProcess finished with success!")
 
 
 @magic_factory(
