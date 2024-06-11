@@ -1,4 +1,4 @@
-""" A function that relies on the Track Abstract Base Class in order to
+""" A module that relies on the Track Abstract Base Class in order to
 generate specialized tracks from points.
 
 See Track documentation to learn how to create new specialized Tracks/Spots
@@ -31,7 +31,19 @@ def generate_tracks_from_spots(
     """Generate a list of specialized tracks based on the underlying kind
     of spot.
     Spots must all be of the same type according to isinstance (more specifically,
-    they must all share the same type as the first one)
+    they must all share the same type as the first one).
+
+    Parameters
+    ----------
+    spot_dict : dict[int, list[S]]
+        A dictionary mapping frames to a list of spots.
+    method : LapTrack
+        The tracking method to use.
+
+    Returns
+    -------
+    list[T]
+        A list of specialized tracks.
     """
 
     if is_spot_dict_empty(spot_dict):
@@ -52,6 +64,18 @@ def generate_tracks_from_spots(
 
 
 def is_spot_dict_empty(spot_dict: dict[int, list[Spot]]) -> bool:
+    """Checks if a spot_dict is empty, meaning that all values are empty lists
+
+    Parameters
+    ----------
+    spot_dict : dict[int, list[Spot]]
+        A dictionary mapping frames to a list of spots
+
+    Returns
+    -------
+    bool
+        True if the spot_dict is empty, False otherwise
+    """
     if len(spot_dict.values()) == 0:
         return True
 
@@ -63,15 +87,39 @@ def is_spot_dict_empty(spot_dict: dict[int, list[Spot]]) -> bool:
 
 
 def validate_inferred_spot_kind(inference: type) -> S:
-    if inference in SPOT_AND_TRACK_MAPPING.keys():
+    """Validates the inference of the kind of spot.
+
+    Parameters
+    ----------
+    inference : type
+        The inferred kind of spot
+
+    Returns
+    -------
+    S
+        The kind of spot if it is valid
+    """
+    if inference in SPOT_AND_TRACK_MAPPING:
         return inference
-    else:
-        raise RuntimeError(
-            f"Tracks can only be built from {SPOT_AND_TRACK_MAPPING.keys()}, encountered {inference} instead"
-        )
+    raise RuntimeError(
+        f"Tracks can only be built from {SPOT_AND_TRACK_MAPPING.keys()}, encountered {inference} instead"
+    )
 
 
 def infer_spot_kind(spot_dict: dict[int, list[Spot]]) -> type:
+    """Infers the kind of spot from the first non-empty list of spots in the
+    spot_dict.
+
+    Parameters
+    ----------
+    spot_dict : dict[int, list[Spot]]
+        A dictionary mapping frames to a list of spots
+
+    Returns
+    -------
+    type
+        The kind of spot
+    """
     for v in spot_dict.values():
         if len(v) != 0:
             t = type(v[0])
@@ -81,8 +129,7 @@ def infer_spot_kind(spot_dict: dict[int, list[Spot]]) -> type:
                 )
             return t
 
-    # If we land here, it means that spot_dict.values is empty
-    # or only contains empty point lists.
+    # If we land here, it means that spot_dict.values is empty or only contains empty point lists.
     # This case must be handled earlier
     raise RuntimeError("No values in dict")
 
@@ -90,7 +137,17 @@ def infer_spot_kind(spot_dict: dict[int, list[Spot]]) -> type:
 def infer_specialized_track_kind(spot_kind: type[Spot]) -> type[Track]:
     """Infers the specialized type of track from the kind of Spot.
     If no specialized kind of track is associated with the kind of
-    spot, this function raises an error
+    spot, this function raises an error.
+
+    Parameters
+    ----------
+    spot_kind : type[Spot]
+        The kind of spot
+
+    Returns
+    -------
+    type[Track]
+        The specialized kind of track
     """
     kind_mapping = {MidBodySpot: MidBodyTrack, CellSpot: CellTrack}
     inferred_specialized_track_kind = kind_mapping.get(spot_kind)
@@ -98,13 +155,26 @@ def infer_specialized_track_kind(spot_kind: type[Spot]) -> type[Track]:
         raise RuntimeError(
             f"No known specialized track is associated with {type(spot_kind)}"
         )
-    else:
-        return inferred_specialized_track_kind
+    return inferred_specialized_track_kind
 
 
 def convert_spots_to_spotdf(
     spot_dict: dict[int, list[Spot]], spot_kind: type[Spot]
 ) -> pd.DataFrame:
+    """Converts a dictionary of spots to a DataFrame.
+
+    Parameters
+    ----------
+    spot_dict : dict[int, list[Spot]]
+        A dictionary mapping frames to a list of spots
+    spot_kind : type[Spot]
+        The kind of spot
+
+    Returns
+    -------
+    pd.DataFrame
+        A DataFrame containing the spots
+    """
 
     cols = [
         "frame",
@@ -141,9 +211,24 @@ def apply_tracking(
     spot_kind: type[Spot],
     spot_df: pd.DataFrame,
     method: LapTrack,
-) -> Tuple[
-    pd.DataFrame, pd.DataFrame, pd.DataFrame
-]:  # >track< / split / merge
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Applies the tracking method to the spot DataFrame.
+
+    Parameters
+    ----------
+    spot_kind : type[Spot]
+        The kind of spot
+    spot_df : pd.DataFrame
+        A DataFrame containing the spots
+    method : LapTrack
+        The tracking method to use
+
+    Returns
+    -------
+    Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]
+        A tuple containing the DataFrame of the tracks, the DataFrame of the
+        tracks' features, and the DataFrame of the tracks' links
+    """
     coord_cols = ["x", "y"]
     coord_cols.extend(spot_kind.get_extra_features_name())
 

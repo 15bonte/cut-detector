@@ -24,7 +24,7 @@ from .mid_body_spot import MidBodySpot
 from .cell_track import CellTrack
 from .box_dimensions_dln import BoxDimensionsDln
 from .box_dimensions import BoxDimensions
-from .bridges_classification.impossible_detection import ImpossibleDetection
+from .mt_cut_detection.impossible_detection import ImpossibleDetection
 from .image_tools import resize_image, smart_cropping
 
 

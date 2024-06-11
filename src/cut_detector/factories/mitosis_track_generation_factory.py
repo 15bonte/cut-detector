@@ -7,13 +7,13 @@ from ..utils.tools import perform_cnn_inference
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.cell_spot import CellSpot
 from ..utils.hidden_markov_models import HiddenMarkovModel
-from ..utils.cell_division_detection.metaphase_cnn_model_params import (
+from ..utils.mitosis_track_generation.metaphase_cnn_model_params import (
     MetaphaseCnnModelParams,
 )
-from ..utils.cell_division_detection.metaphase_cnn_data_set import (
+from ..utils.mitosis_track_generation.metaphase_cnn_data_set import (
     MetaphaseCnnDataSet,
 )
-from ..utils.cell_division_detection.metaphase_cnn_model import (
+from ..utils.mitosis_track_generation.metaphase_cnn_model import (
     MetaphaseCnnModel,
 )
 from ..constants.tracking import TIME_RESOLUTION

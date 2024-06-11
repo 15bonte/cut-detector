@@ -30,6 +30,10 @@ def perform_results_saving(
         Directory where to save results, by default None.
     verbose : bool, optional
         Verbose, by default False.
+    video : Optional[np.ndarray], optional
+        Video, by default None. Any dimension order.
+    viewer : Optional["napari.Viewer"], optional
+        Viewer, by default None.
     """
     print("\n### RESULTS SAVING ###")
 

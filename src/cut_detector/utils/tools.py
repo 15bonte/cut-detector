@@ -30,7 +30,8 @@ from .hidden_markov_models import HiddenMarkovModel
 
 
 def re_organize_channels(image: np.ndarray) -> np.ndarray:
-    """Expect a 4 dimensions image. Re-organize channels to get TXYC order.
+    """Expect a 4 dimensions image.
+    Re-organize channels to get time as first dimension and channel at last.
 
     Parameters
     ----------

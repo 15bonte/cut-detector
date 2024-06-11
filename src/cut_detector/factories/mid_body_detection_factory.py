@@ -7,7 +7,7 @@ from shapely.ops import nearest_points
 from shapely import Polygon, Point
 from tqdm import tqdm
 
-from ..utils.mb_support.detection import (
+from ..utils.mid_body_detection.detection import (
     DETECTION_FUNCTIONS,
 )
 from ..utils.cell_track import CellTrack
@@ -20,9 +20,9 @@ from ..utils.mid_body_track import MidBodyTrack
 from ..utils.image_tools import smart_cropping
 from ..utils.mid_body_spot import MidBodySpot
 from ..utils.mitosis_track import MitosisTrack
-from ..utils.gen_track import generate_tracks_from_spots
+from ..utils.track_generation import generate_tracks_from_spots
 from ..utils.cell_spot import CellSpot
-from ..utils.mb_support.tracking import TRACKING_FUNCTIONS
+from ..utils.mid_body_detection.tracking import TRACKING_FUNCTIONS
 
 
 class MidBodyDetectionFactory:
@@ -92,7 +92,7 @@ class MidBodyDetectionFactory:
             mitosis_track=mitosis_track,
         )
 
-        assert tracking_method in TRACKING_FUNCTIONS.keys()
+        assert tracking_method in TRACKING_FUNCTIONS
         mid_body_tracks: list[MidBodyTrack] = generate_tracks_from_spots(
             spots_candidates, TRACKING_FUNCTIONS[tracking_method]
         )
@@ -305,7 +305,7 @@ class MidBodyDetectionFactory:
                 f"Invalid type for argument mitosis_track: {mitosis_track}"
             )
 
-        if method in DETECTION_FUNCTIONS.keys():
+        if method in DETECTION_FUNCTIONS:
             # Function called referenced by name
             spots = [
                 (int(spot[0]), int(spot[1]), int(spot[2]))

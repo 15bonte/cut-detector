@@ -4,9 +4,10 @@ from scipy.stats import ttest_1samp
 import numpy as np
 import matplotlib.pyplot as plt
 
+from ..utils.tools import re_organize_channels
 from ..constants.tracking import TIME_RESOLUTION
 from ..utils.mitosis_track import MitosisTrack
-from ..utils.bridges_classification.impossible_detection import (
+from ..utils.mt_cut_detection.impossible_detection import (
     ImpossibleDetection,
 )
 
@@ -413,48 +414,40 @@ class ResultsSavingFactory:
         mitosis_tracks: list[MitosisTrack]
             List of mitosis tracks.
         video: np.ndarray
-            Video to process. TYXC
+            Video to process. Any dimension order.
         viewer: napari.Viewer
             Napari viewer.
         """
 
-        # Video parameters:
+        # Re-organize channels
+        original_shape = video.shape
+        video = re_organize_channels(video)  # TYXC
+
+        # Video parameters
         nb_frames, height, width, _ = video.shape
 
-        # Colors list (200 max to avoid too bright colors)
+        # Colors list (50 min to avoid too dark colors)
         colors = np.array(
-            [
-                [
-                    np.random.randint(0, 200),
-                    np.random.randint(0, 200),
-                    np.random.randint(0, 200),
-                ]
-                for _ in range(len(mitosis_tracks))
-            ],
+            [np.random.randint(50, 255) for _ in range(len(mitosis_tracks))],
             dtype=np.uint8,
         )
 
         # Iterate over mitosis_tracks
-        mask = np.zeros((nb_frames, height, width, 3), dtype=np.uint8)  # TYXC
+        mask = np.zeros((nb_frames, height, width), dtype=np.uint8)  # TYX
         for i, mitosis_track in enumerate(mitosis_tracks):
             _, mask_movie = mitosis_track.generate_video_movie(video)
             cell_indexes = np.where(mask_movie == 1)
-            mask_movie = np.stack(
-                [mask_movie, mask_movie, mask_movie], axis=-1
-            )
             mask_movie[cell_indexes] = colors[i]
             initial_mask = mask[
                 mitosis_track.min_frame : mitosis_track.max_frame + 1,
                 mitosis_track.position.min_y : mitosis_track.position.max_y,
                 mitosis_track.position.min_x : mitosis_track.position.max_x,
-                :,
             ]
             # Avoid colors overlap
             mask[
                 mitosis_track.min_frame : mitosis_track.max_frame + 1,
                 mitosis_track.position.min_y : mitosis_track.position.max_y,
                 mitosis_track.position.min_x : mitosis_track.position.max_x,
-                :,
             ] = np.maximum(mask_movie, initial_mask)
 
             # Use point + text instead of red point for mid_body
@@ -483,6 +476,7 @@ class ResultsSavingFactory:
                     text=text,
                 )
 
-        # Add dimension at second place
-        mask = mask.transpose(0, 3, 1, 2)  # TCYX
-        viewer.add_image(mask, name="masks", opacity=0.4)
+        # Match original image shape
+        channel_axis = np.argmin(original_shape)
+        mask = np.stack([mask, mask, mask], axis=channel_axis)
+        viewer.add_image(mask, name="Cell divisions", opacity=0.4)

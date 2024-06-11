@@ -23,7 +23,7 @@ def perform_tracking(
 
     Parameters
     ----------
-    video : np.ndarray, TXYC
+    video : np.ndarray, TYXC
         The video to run the segmentation and tracking on.
     model_path : str, optional
         Path to the cellpose model, by default None.
@@ -50,6 +50,8 @@ def perform_tracking(
         )
 
     segmentation_tracking_factory = SegmentationTrackingFactory(model_path)
+    # Swap dimensions from TYXC to TCYX
+    video = np.moveaxis(video, 3, 1)
     cell_spots, cell_tracks = (
         segmentation_tracking_factory.perform_segmentation_tracking(video)
     )

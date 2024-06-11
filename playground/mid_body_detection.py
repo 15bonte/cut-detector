@@ -11,9 +11,9 @@ from cut_detector.data.tools import get_data_path
 from cut_detector.factories.mid_body_detection_factory import (
     MidBodyDetectionFactory,
 )
-from cut_detector.utils.mb_support.tracking import TRACKING_FUNCTIONS
+from cut_detector.utils.mid_body_detection.tracking import TRACKING_FUNCTIONS
 from cut_detector.utils.mitosis_track import MitosisTrack
-from cut_detector.utils.gen_track import generate_tracks_from_spots
+from cut_detector.utils.track_generation import generate_tracks_from_spots
 
 
 def main(

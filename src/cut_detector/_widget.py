@@ -97,7 +97,7 @@ def whole_process(
     tracks_dir = tempfile.TemporaryDirectory()
     mitoses_dir = tempfile.TemporaryDirectory()
 
-    video = re_organize_channels(img_layer.data)  # TXYC
+    video = re_organize_channels(img_layer.data)  # TYXC
 
     video_whole_process(
         video,
@@ -224,7 +224,7 @@ def segmentation_tracking(
     segmentation_model: str,
 ):
 
-    raw_video = re_organize_channels(img_layer.data)  # TXYC
+    raw_video = re_organize_channels(img_layer.data)  # TYXC
 
     # Segmentation and tracking
     perform_tracking(
@@ -261,7 +261,7 @@ def mitosis_track_generation(
     tracks_load_dir: str,
     mitoses_save_dir: Optional[str],
 ):
-    raw_video = re_organize_channels(img_layer.data)  # TXYC
+    raw_video = re_organize_channels(img_layer.data)  # TYXC
 
     perform_mitosis_track_generation(
         raw_video,
@@ -301,7 +301,7 @@ def mid_body_detection(
     save_check_box: bool,
     movies_save_dir: str,
 ):
-    raw_video = re_organize_channels(img_layer.data)  # TXYC
+    raw_video = re_organize_channels(img_layer.data)  # TYXC
     perform_mid_body_detection(
         raw_video,
         img_layer.name,
@@ -324,7 +324,7 @@ def mid_body_detection(
 def micro_tubules_cut_detection(
     img_layer: "napari.layers.Image", exported_mitoses_dir: str
 ):
-    raw_video = re_organize_channels(img_layer.data)  # TXYC
+    raw_video = re_organize_channels(img_layer.data)  # TYXC
     perform_mt_cut_detection(
         raw_video,
         img_layer.name,
@@ -352,10 +352,9 @@ def results_saving(
     exported_mitoses_dir: str,
     results_save_dir: str,
 ):
-    raw_video = re_organize_channels(img_layer.data)  # TYXC
     perform_results_saving(
         exported_mitoses_dir,
         save_dir=results_save_dir,
-        video=raw_video,
+        video=img_layer.data,
         viewer=viewer,
     )

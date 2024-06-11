@@ -40,7 +40,7 @@ def main(
     # Initialize factory to get constants
     factory = SegmentationTrackingFactory(model_path)
 
-    results, flows, _ = factory.perform_segmentation(image.squeeze())  # TYX
+    results, flows, _ = factory.perform_segmentation(image)  # TCYX
 
     for frame in range(image.shape[0]):
         # Plot image_to_segment and segmented_image

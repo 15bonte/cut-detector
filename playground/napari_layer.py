@@ -17,12 +17,9 @@ def main(
 
     # Add video
     video = io.imread(os.path.join(image_path, "example_video.tif"))  # TYXC
-    # Move axes to TCYX
+    # Move axes to TCYX to match napari
     viewer_video = video.transpose(0, 3, 1, 2)  # TCYX
     viewer.add_image(viewer_video, name="video", rgb=False)
-    # viewer.add_image(video[..., 0].squeeze(), name="micro-tubules")
-    # viewer.add_image(video[..., 1].squeeze(), name="mid-body")
-    # viewer.add_image(video[..., 2].squeeze(), name="phase contrast")
 
     # Load mitosis tracks  # masques rajoutés qui suivent les cellules
     mitosis_tracks = []

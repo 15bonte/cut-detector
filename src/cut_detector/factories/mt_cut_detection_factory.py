@@ -3,14 +3,14 @@ import numpy as np
 from tqdm import tqdm
 
 from ..constants.tracking import TIME_RESOLUTION
-from ..utils.bridges_classification.bridges_mt_model_manager import (
+from ..utils.mt_cut_detection.bridges_mt_model_manager import (
     BridgesMtModelManager,
 )
-from ..utils.bridges_classification.bridges_mt_cnn_model_params import (
+from ..utils.mt_cut_detection.bridges_mt_cnn_model_params import (
     BridgesMtCnnModelParams,
 )
 from ..utils.tools import apply_hmm, perform_cnn_inference
-from ..utils.bridges_classification.impossible_detection import (
+from ..utils.mt_cut_detection.impossible_detection import (
     ImpossibleDetection,
 )
 from ..utils.mitosis_track import MitosisTrack
