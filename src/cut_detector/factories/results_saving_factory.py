@@ -429,10 +429,10 @@ class ResultsSavingFactory:
         rgb = channel_axis == 3
 
         # Re-organize channels
-        video = re_organize_channels(video)  # TYXC
+        video_to_process = re_organize_channels(video)  # TYXC
 
         # Video parameters
-        nb_frames, height, width, _ = video.shape
+        nb_frames, height, width, _ = video_to_process.shape
 
         # Colors list
         colors = np.array(
@@ -450,7 +450,9 @@ class ResultsSavingFactory:
         # Iterate over mitosis_tracks
         mask = np.zeros((nb_frames, height, width, 3), dtype=np.uint8)  # TYXC
         for idx, mitosis_track in enumerate(mitosis_tracks):
-            _, mask_movie = mitosis_track.generate_video_movie(video)
+            _, mask_movie = mitosis_track.generate_video_movie(
+                video_to_process
+            )
             cell_indexes = np.where(mask_movie == 1)
             mask_movie = np.stack(
                 [mask_movie, mask_movie, mask_movie], axis=-1
