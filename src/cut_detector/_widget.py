@@ -1,4 +1,6 @@
+import os
 from pathlib import Path
+import shutil
 from typing import Optional
 
 from magicgui import magic_factory
@@ -82,6 +84,11 @@ def video_whole_process(
         label="Directory to save results: ",
         mode="d",
     ),
+    debug_mode_check_box=dict(
+        widget_type="CheckBox",
+        text="Debug mode",
+        value=False,
+    ),
 )
 def whole_process(
     img_layer: "napari.layers.Image",
@@ -91,6 +98,7 @@ def whole_process(
     save_check_box: bool,
     movies_save_dir: str,
     results_save_dir: str,
+    debug_mode_check_box: bool,
 ):
 
     # Create temporary folders
@@ -119,6 +127,11 @@ def whole_process(
         video=img_layer.data,
         viewer=viewer,
     )
+
+    if not debug_mode_check_box:
+        shutil.copytree(spots_dir, os.path.join(results_save_dir, "spots"))
+        shutil.copytree(tracks_dir, os.path.join(results_save_dir, "tracks"))
+        shutil.copytree(mitoses_dir, os.path.join(results_save_dir, "mitoses"))
 
     # Delete temporary folders
     spots_dir.cleanup()

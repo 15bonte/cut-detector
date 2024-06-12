@@ -119,7 +119,7 @@ class MtCutDetectionFactory:
         Expect TYXC video.
         """
         # Run CNN classification
-        classified_bridges = self.classify_bridges(
+        classified_bridges = self._classify_bridges(
             mitosis_tracks, video, bridges_mt_cnn_model_path
         )
 
@@ -264,12 +264,12 @@ class MtCutDetectionFactory:
 
         return classified_bridges
 
-    def classify_bridges(
+    def _classify_bridges(
         self,
         mitosis_tracks: list[MitosisTrack],
         video: np.ndarray,
         bridges_mt_cnn_model_path: str,
-    ) -> dict[int, list[int]]:
+    ) -> dict[str, dict]:
         """
         Classify bridges using a CNN model.
         """

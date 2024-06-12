@@ -14,6 +14,7 @@ from cut_detector.factories.mt_cut_detection_factory import (
     MtCutDetectionFactory,
 )
 from cut_detector.utils.mitosis_track import MitosisTrack
+from cut_detector.utils.tools import re_organize_channels
 
 
 def main(
@@ -51,11 +52,11 @@ def main(
         mitosis_path = os.path.join(mitosis_path, os.listdir(mitosis_path)[0])
 
     # Read data: image, mitosis_track
-    image = TiffReader(image_path, respect_initial_type=True).image  # TCZYX
+    image = TiffReader(image_path, respect_initial_type=True).image
     with open(mitosis_path, "rb") as f:
         mitosis_track: MitosisTrack = pickle.load(f)
 
-    image = image.squeeze().transpose(0, 2, 3, 1)  # TYXC
+    image = re_organize_channels(image.squeeze())  # TYXC
 
     factory = MtCutDetectionFactory()
 
