@@ -193,7 +193,7 @@ class SegmentationTrackingFactory:
             augment=self.augment,
             resample=False,
         )
-        time_second = time.time() - start
+        time_second = int(time.time() - start)
         print(f"Done in {time_second} seconds.")
 
         return cellpose_results, flows, model.diam_labels

@@ -134,6 +134,7 @@ def whole_process(
     raw_data_dir=dict(
         widget_type="FileEdit",
         label="Data folder: ",
+        mode="d",
     ),
     default_model_check_box=dict(
         widget_type="CheckBox",

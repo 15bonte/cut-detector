@@ -22,7 +22,7 @@ def main(
     # Match Napari video display
     viewer.add_image(video, name="video", rgb=True)
 
-    # Load mitosis tracks  # masques rajoutés qui suivent les cellules
+    # Load mitosis tracks
     mitosis_tracks = []
     for state_path in os.listdir(mitoses_path):
         with open(os.path.join(mitoses_path, state_path), "rb") as f:
