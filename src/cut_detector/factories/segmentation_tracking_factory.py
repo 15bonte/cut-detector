@@ -1,4 +1,5 @@
 import concurrent.futures
+import time
 import numpy as np
 import torch
 from cellpose import models
@@ -60,7 +61,7 @@ class SegmentationTrackingFactory:
 
     @staticmethod
     def get_spots_from_cellpose(
-        cellpose_results: np.ndarray,
+        cellpose_results: np.ndarray, parallel: bool = False
     ) -> dict[int, list[CellSpot]]:
         """Extract spots from cellpose results.
 
@@ -68,6 +69,9 @@ class SegmentationTrackingFactory:
         ----------
         cellpose_results : np.ndarray
             TYX
+        parallel : bool
+            If True, use parallel processing.
+            Set to False by default, as it is not obvious that this is much faster.
 
         Returns
         -------
@@ -122,17 +126,23 @@ class SegmentationTrackingFactory:
                 cell_spots.append(cell_spot)
             return frame, cell_spots
 
-        future_list = []
-        with concurrent.futures.ThreadPoolExecutor() as e:
-            for frame, cellpose_result in enumerate((cellpose_results)):
-                future_list.append(
-                    e.submit(get_spots_from_frame, frame, cellpose_result)
-                )
+        if parallel:
+            future_list = []
+            with concurrent.futures.ThreadPoolExecutor() as e:
+                for frame, cellpose_result in enumerate(cellpose_results):
+                    future_list.append(
+                        e.submit(get_spots_from_frame, frame, cellpose_result)
+                    )
 
-        cell_dictionary = {
-            res.result()[0]: res.result()[1]
-            for res in concurrent.futures.as_completed(future_list)
-        }
+            cell_dictionary = {
+                res.result()[0]: res.result()[1]
+                for res in concurrent.futures.as_completed(future_list)
+            }
+        else:
+            cell_dictionary = {}
+            for frame, cellpose_result in enumerate(tqdm(cellpose_results)):
+                _, spots = get_spots_from_frame(frame, cellpose_result)
+                cell_dictionary[frame] = spots
 
         # Give id number to cell spots
         id_number = 0
@@ -173,6 +183,7 @@ class SegmentationTrackingFactory:
         )
 
         print("Run cellpose...")
+        start = time.time()
         cellpose_results, flows, _ = model.eval(  # TYX
             video,
             channels=[3, 0],
@@ -182,7 +193,8 @@ class SegmentationTrackingFactory:
             augment=self.augment,
             resample=False,
         )
-        print("Done.")
+        time_second = time.time() - start
+        print(f"Done in {time_second} seconds.")
 
         return cellpose_results, flows, model.diam_labels
 

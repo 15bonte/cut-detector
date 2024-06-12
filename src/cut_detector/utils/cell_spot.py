@@ -10,6 +10,27 @@ from .spot import Spot
 class CellSpot(Spot):
     """
     Useful information for a detected cell.
+
+    Parameters
+    ----------
+    frame : int
+        Frame number.
+    x : int
+        Centroid X coordinate.
+    y : int
+        Centroid Y coordinate.
+    id_number : int
+        Cell id.
+    abs_min_x : int
+        Absolute minimum x coordinate.
+    abs_max_x : int
+        Absolute maximum x coordinate.
+    abs_min_y : int
+        Absolute minimum y coordinate.
+    abs_max_y : int
+        Absolute maximum y coordinate.
+    spot_points : list[list[int]]
+        List of points that define the cell contour.
     """
 
     def __init__(
@@ -40,9 +61,23 @@ class CellSpot(Spot):
         # Corresponding (closest) metaphase spot in track
         self.corresponding_metaphase_spot = None
 
-    def is_stuck_to(self, other_spot: CellSpot, maximum_stuck_distance: float):
+    def is_stuck_to(
+        self, other_spot: CellSpot, maximum_stuck_distance: float
+    ) -> bool:
         """
         Distance between two spots hulls.
+
+        Parameters
+        ----------
+        other_spot : CellSpot
+            Other spot to compare.
+        maximum_stuck_distance : float
+            Maximum distance to consider two spots stuck.
+
+        Returns
+        -------
+        bool
+            True if the distance between the spots is less than the maximum distance.
         """
         return (
             distance(

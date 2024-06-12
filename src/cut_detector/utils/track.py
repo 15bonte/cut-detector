@@ -32,6 +32,11 @@ T = TypeVar("T", MidBodySpot, CellSpot)
 class Track(ABC, Generic[T]):
     """
     Class used for both cell and mid-body tracks.
+
+    Parameters
+    ----------
+    track_id : int
+        Track id.
     """
 
     def __init__(self, track_id: int) -> None:
@@ -51,7 +56,7 @@ class Track(ABC, Generic[T]):
         spot.track_id = self.track_id
         self.length += 1
         # Add children recursively
-        if hasattr(spot,"child_spot") and spot.child_spot is not None:
+        if hasattr(spot, "child_spot") and spot.child_spot is not None:
             self.add_spot(spot.child_spot)
 
     @staticmethod
@@ -60,11 +65,5 @@ class Track(ABC, Generic[T]):
         track_df: pd.DataFrame,
         spots: dict[int, list[Spot]],
     ) -> list[Track]:
-        """This is the last step of the 'generate_tracks_from_spots'.
-        It takes as input the pandas dataframe produced by 'generate_tracks_from_spots'.
-        From there you have to implement the code that will transform this dataframe
-        into a list of Track.
-
-        You can use MidbodyTrack's implementation as a starting point.
-        """
+        """Implemented in children classes."""
         return []
