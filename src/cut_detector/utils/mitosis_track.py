@@ -242,7 +242,7 @@ class MitosisTrack:
         Returns
         -------
         bool
-            True if the mitosis is near the border
+            True if the mitosis is near the border.
         """
 
         max_height, max_width = raw_video.shape[1], raw_video.shape[2]
