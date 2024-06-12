@@ -1,3 +1,4 @@
+import concurrent.futures
 import numpy as np
 import torch
 from cellpose import models
@@ -74,11 +75,16 @@ class SegmentationTrackingFactory:
             Dictionary with frame number as key and list of cell spots as value.
         """
 
-        cell_dictionary: dict[int, list[CellSpot]] = {}
-        id_number = 0
-        for frame, cellpose_result in enumerate(
-            tqdm(cellpose_results, desc="Creating cell spots")
-        ):
+        def get_spots_from_frame(
+            frame: int, cellpose_result: np.ndarray
+        ) -> tuple[int, list[CellSpot]]:
+            """Extract spots from a single frame.
+
+            Returns
+            -------
+            list[CellSpot]
+                List of cell spots.
+            """
             # Create and simplify polygons like Trackmate
             # NB: be careful, Trackmate switches x and y
             polygons = from_labeling_with_roi(cellpose_result)
@@ -90,7 +96,6 @@ class SegmentationTrackingFactory:
             # Get spots from polygons
             cell_spots = []
             for polygon in simplified_polygons:
-                id_number += 1
                 # Compute cell bounding box
                 abs_min_x, abs_max_x, abs_min_y, abs_max_y = (
                     np.abs(np.min(polygon.y)),
@@ -107,7 +112,7 @@ class SegmentationTrackingFactory:
                     frame,
                     cell_centroid[0],  # x
                     cell_centroid[1],  # y
-                    id_number,
+                    -1,
                     abs_min_x,
                     abs_max_x,
                     abs_min_y,
@@ -115,7 +120,28 @@ class SegmentationTrackingFactory:
                     [[x, y] for x, y in zip(polygon.y, polygon.x)],
                 )
                 cell_spots.append(cell_spot)
-            cell_dictionary[frame] = cell_spots
+            return frame, cell_spots
+
+        future_list = []
+        with concurrent.futures.ThreadPoolExecutor() as e:
+            for frame, cellpose_result in enumerate((cellpose_results)):
+                future_list.append(
+                    e.submit(get_spots_from_frame, frame, cellpose_result)
+                )
+
+        cell_dictionary = {
+            res.result()[0]: res.result()[1]
+            for res in concurrent.futures.as_completed(future_list)
+        }
+
+        # Give id number to cell spots
+        id_number = 0
+        for frame in range(len(cellpose_results)):
+            if frame not in cell_dictionary:
+                continue
+            for cell in cell_dictionary[frame]:
+                cell.id = id_number
+                id_number += 1
 
         return cell_dictionary
 
