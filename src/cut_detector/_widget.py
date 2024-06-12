@@ -128,10 +128,16 @@ def whole_process(
         viewer=viewer,
     )
 
-    if not debug_mode_check_box:
-        shutil.copytree(spots_dir, os.path.join(results_save_dir, "spots"))
-        shutil.copytree(tracks_dir, os.path.join(results_save_dir, "tracks"))
-        shutil.copytree(mitoses_dir, os.path.join(results_save_dir, "mitoses"))
+    if debug_mode_check_box:
+        shutil.copytree(
+            spots_dir.name, os.path.join(results_save_dir, "spots")
+        )
+        shutil.copytree(
+            tracks_dir.name, os.path.join(results_save_dir, "tracks")
+        )
+        shutil.copytree(
+            mitoses_dir.name, os.path.join(results_save_dir, "mitoses")
+        )
 
     # Delete temporary folders
     spots_dir.cleanup()
