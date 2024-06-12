@@ -18,7 +18,6 @@ from ..constants.tracking import (
     CYTOKINESIS_DURATION,
     FRAMES_AROUND_METAPHASE,
     METAPHASE_INDEX,
-    MINIMUM_DISTANCE_TO_BORDER,
 )
 from .mid_body_spot import MidBodySpot
 from .cell_track import CellTrack
@@ -110,9 +109,6 @@ class MitosisTrack:
         # Mid body spot indexed by absolute frame
         self.mid_body_spots: dict[int, MidBodySpot] = {}
         self.gt_mid_body_spots: Optional[dict[int, MidBodySpot]] = None
-
-        # Used to know if the track is near the border of the video
-        self.is_near_border = False
 
     def is_same_mitosis(
         self, mother_track_id: int, metaphase_frame: int
@@ -233,13 +229,20 @@ class MitosisTrack:
         self.min_frame = min_frame
         self.max_frame = max_frame
 
-    def update_is_near_border(self, raw_video: np.ndarray) -> None:
-        """Update is_near_border attribute.
+    def is_near_border(
+        self, raw_video: np.ndarray, minimum_distance=20
+    ) -> bool:
+        """Check if the mitosis is near the border of the video.
 
         Parameters
         ----------
         raw_video: np.ndarray
             TYXC
+
+        Returns
+        -------
+        bool
+            True if the mitosis is near the border
         """
 
         max_height, max_width = raw_video.shape[1], raw_video.shape[2]
@@ -272,7 +275,7 @@ class MitosisTrack:
 
             min_dist_to_border = min(min_dist_to_border, min_x, min_y)
 
-        self.is_near_border = min_dist_to_border < MINIMUM_DISTANCE_TO_BORDER
+        return min_dist_to_border < minimum_distance
 
     def update_key_events_frame(self, cell_tracks: list[CellTrack]) -> None:
         """Update key events frame for current mitosis.

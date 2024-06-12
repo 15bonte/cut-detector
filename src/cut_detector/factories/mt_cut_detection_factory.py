@@ -65,7 +65,7 @@ class MtCutDetectionFactory:
         - no midbody spot after cytokinesis
         """
 
-        if mitosis_track.is_near_border:
+        if mitosis_track.is_near_border():
             mitosis_track.key_events_frame["first_mt_cut"] = (
                 ImpossibleDetection.NEAR_BORDER
             )
