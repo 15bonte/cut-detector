@@ -32,7 +32,7 @@ def perform_mitosis_track_generation(
     Parameters
     ----------
     video : np.ndarray
-        Video.
+        Video. TYXC.
     video_name : str
         Video name.
     spots_dir : str

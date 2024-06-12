@@ -13,6 +13,7 @@ from cut_detector.factories.mid_body_detection_factory import (
 )
 from cut_detector.utils.mid_body_detection.tracking import TRACKING_FUNCTIONS
 from cut_detector.utils.mitosis_track import MitosisTrack
+from cut_detector.utils.tools import re_organize_channels
 from cut_detector.utils.track_generation import generate_tracks_from_spots
 
 
@@ -49,7 +50,7 @@ def main(
         mitosis_track: MitosisTrack = pickle.load(f)
 
     mitosis_movie = image[:, :3, ...].squeeze()  # T C=3 YX
-    mitosis_movie = mitosis_movie.transpose(0, 2, 3, 1)  # TYXC
+    mitosis_movie = re_organize_channels(mitosis_movie)  # TYXC
 
     # Search for mid-body in mitosis movie
     factory = MidBodyDetectionFactory()
