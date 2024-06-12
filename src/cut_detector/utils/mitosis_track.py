@@ -846,12 +846,9 @@ class MitosisTrack:
         ordered_mb_frames = sorted(self.mid_body_spots.keys())
         first_mb_frame = ordered_mb_frames[0]
         last_mb_frame = ordered_mb_frames[-1]
-        first_frame = max(
-            first_mb_frame, self.key_events_frame["cytokinesis"] - 2
-        )  # -2 because cytokinesis frame may be a bit too late
 
         bridge_images, frames = [], []
-        for frame in range(first_frame, last_mb_frame + 1):
+        for frame in range(first_mb_frame, last_mb_frame + 1):
             min_x = self.position.min_x
             min_y = self.position.min_y
 

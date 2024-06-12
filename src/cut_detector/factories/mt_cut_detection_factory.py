@@ -141,25 +141,8 @@ class MtCutDetectionFactory:
             if classification_impossible:
                 continue
 
-            # Make sure cytokinesis bridge is detected as class 0: "no MT cut"
-            first_frame = min(classified_bridges["frames"][mitosis_track.id])
-            relative_cytokinesis_frame = (
-                mitosis_track.key_events_frame["cytokinesis"] - first_frame
-            )
-            if (
-                relative_cytokinesis_frame < 0
-                or classified_bridges["predictions"][mitosis_track.id][
-                    relative_cytokinesis_frame
-                ]
-                != 0
-            ):
-                mitosis_track.key_events_frame["first_mt_cut"] = (
-                    ImpossibleDetection.MT_CUT_AT_CYTOKINESIS
-                )
-                mitosis_track.key_events_frame["second_mt_cut"] = (
-                    ImpossibleDetection.MT_CUT_AT_CYTOKINESIS
-                )
-                continue
+            # Force first frame to be class 0
+            classified_bridges["predictions"][mitosis_track.id][0] = 0
 
             # Correct the sequence with HMM
             classified_bridges["predictions_after_hmm"][mitosis_track.id] = (
@@ -194,6 +177,7 @@ class MtCutDetectionFactory:
                 continue
 
             # Ignore if cut is too short, i.e. less than 50 minutes
+            first_frame = min(classified_bridges["frames"][mitosis_track.id])
             first_mt_cut_frame_abs = first_frame + first_mt_cut_frame_rel
             if (
                 first_mt_cut_frame_abs
