@@ -409,7 +409,7 @@ class ResultsSavingFactory:
         self,
         mitosis_tracks: list[MitosisTrack],
         video: np.ndarray,
-        viewer: Viewer,
+        viewer: Optional[Viewer] = None,
     ) -> None:
         """Generate napari tracking mask.
 
@@ -501,11 +501,13 @@ class ResultsSavingFactory:
                         points += [layer_points]
                         features["category"] += [frame_dict["category"]]
         features["category"] = np.array(features["category"])
-        viewer.add_points(
-            points,
-            features=features,
-            text=text,
-            name="Mid-bodies",
-        )
 
-        viewer.add_image(mask, name="Cell divisions", opacity=0.4, rgb=rgb)
+        if viewer is not None:
+            viewer.add_points(
+                points,
+                features=features,
+                text=text,
+                name="Mid-bodies",
+            )
+
+            viewer.add_image(mask, name="Cell divisions", opacity=0.4, rgb=rgb)

@@ -1,5 +1,4 @@
 import os
-import napari
 from skimage import io
 
 from cut_detector._widget import results_saving
@@ -18,13 +17,10 @@ def test_results_saving():
         os.path.join(get_data_path("videos"), "example_video.tif")
     )  # TYXC
 
-    viewer = napari.Viewer()
-
     perform_results_saving(
         get_data_path("mitoses"),
         show=False,
         save_dir=get_data_path("results"),
         verbose=True,
         video=video,
-        viewer=viewer,
     )
