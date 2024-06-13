@@ -19,7 +19,7 @@ from cut_detector.utils.track_generation import generate_tracks_from_spots
 
 def main(
     image_path: Optional[str] = os.path.join(
-        get_data_path("mitosis_movies"), "example_video_mitosis_0_4_to_0.tiff"
+        get_data_path("mitosis_movies"), "example_video_mitosis_0_0_to_5.tiff"
     ),
     mitosis_path: Optional[str] = get_data_path("mitoses"),
     show_points: bool = True,
