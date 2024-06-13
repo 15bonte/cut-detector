@@ -21,6 +21,11 @@ and review the napari docs for plugin developers:
 https://napari.org/stable/plugins/index.html
 -->
 
+<video width="640" height="480" controls>
+  <source src="https://github.com/15bonte/cut-detector-models/blob/main/demo.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
 ## Installation
 
 ### Conda environment
