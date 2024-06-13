@@ -19,7 +19,7 @@ def perform_mt_cut_detection(
         "bridges_mt_cnn"
     ),
     save: bool = True,
-) -> None:
+) -> list[MitosisTrack]:
     """Perform micro-tubules cut detection.
 
     Parameters
@@ -61,18 +61,18 @@ def perform_mt_cut_detection(
         bridges_mt_cnn_model_path,
     )
 
-    if not save:
-        return
-
     # Save updated mitosis tracks
-    for mitosis_track in mitosis_tracks:
-        daughter_track_ids = ",".join(
-            [str(d) for d in mitosis_track.daughter_track_ids]
-        )
-        state_path = f"{video_name}_mitosis_{mitosis_track.id}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.bin"
-        save_path = os.path.join(
-            exported_mitoses_dir,
-            state_path,
-        )
-        with open(save_path, "wb") as f:
-            pickle.dump(mitosis_track, f)
+    if save:
+        for mitosis_track in mitosis_tracks:
+            daughter_track_ids = ",".join(
+                [str(d) for d in mitosis_track.daughter_track_ids]
+            )
+            state_path = f"{video_name}_mitosis_{mitosis_track.id}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.bin"
+            save_path = os.path.join(
+                exported_mitoses_dir,
+                state_path,
+            )
+            with open(save_path, "wb") as f:
+                pickle.dump(mitosis_track, f)
+
+    return mitosis_tracks
