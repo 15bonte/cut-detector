@@ -179,7 +179,7 @@ class SegmentationTrackingFactory:
         # Cellpose segmentation
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model = models.CellposeModel(
-            pretrained_model=[self.model_path], device=device
+            pretrained_model=self.model_path, device=device
         )
 
         print("Run cellpose...")
