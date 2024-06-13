@@ -101,7 +101,7 @@ def upload_annotations(
     annotations_folder: str,
     video_path: str,
     mitoses_folder: str,
-    update_mitoses: Optional[bool] = True,
+    save: Optional[bool] = True,
 ) -> tuple[int]:
     """Function used to upload annotations and perform mid-body detection evaluation.
 
@@ -113,7 +113,7 @@ def upload_annotations(
         Path to video file.
     mitoses_folder : str
         Folder containing mitosis tracks.
-    update_mitoses : Optional[bool], optional
+    save : Optional[bool], optional
         Whether to update mitoses with annotations, by default True.
 
     Returns
@@ -161,7 +161,7 @@ def upload_annotations(
             )
 
             # Save updated mitosis track
-            if update_mitoses:
+            if save:
                 daughter_track_ids = ",".join(
                     [str(d) for d in mitosis_track.daughter_track_ids]
                 )

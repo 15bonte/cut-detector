@@ -59,7 +59,7 @@ class MidBodyDetectionFactory:
         mitosis_movie: np.ndarray,
         tracks: list[CellTrack],
         parallel_detection: bool,
-        detection_method: str = "difference_gaussian",
+        detection_method: str,
         tracking_method: str = "spatial_laptrack",
         log_blob_spot: bool = False,
     ) -> None:

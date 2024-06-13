@@ -205,7 +205,7 @@ class MitosisTrackGenerationFactory:
         raw_spots : list[CellSpot]
             List of all spots.
         raw_video : np.ndarray
-            Video.
+            Video. TYXC.
         metaphase_model_path : str
             CNN model path.
         hmm_metaphase_parameters_file : str

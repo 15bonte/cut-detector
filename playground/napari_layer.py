@@ -20,7 +20,7 @@ def main(
     # Add video
     video = io.imread(image_path)  # TYXC
     # Match Napari video display
-    viewer.add_image(video, name="video", rgb=True)
+    viewer.add_image(video, name="example_video", rgb=True)
 
     # Load mitosis tracks
     mitosis_tracks = []

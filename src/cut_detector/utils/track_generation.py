@@ -204,6 +204,9 @@ def convert_spots_to_spotdf(
                 features.extend(spot.get_extra_coordinates())
                 spot_df.loc[len(spot_df.index)] = features
 
+    # Cast frame to int for laptrack
+    spot_df["frame"] = spot_df["frame"].astype(int)
+
     return spot_df
 
 

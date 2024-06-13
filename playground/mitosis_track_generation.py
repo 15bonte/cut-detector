@@ -10,6 +10,7 @@ from cut_detector.data.tools import get_data_path
 from cut_detector.utils.cell_spot import CellSpot
 from cut_detector.utils.cell_track import CellTrack
 from cut_detector.utils.mitosis_track import MitosisTrack
+from cut_detector.utils.tools import re_organize_channels
 from cut_detector.widget_functions.mitosis_track_generation import (
     perform_mitosis_track_generation,
 )
@@ -146,7 +147,7 @@ def main(
 
     # Read image and preprocess if needed
     image = TiffReader(image_path).image  # TCZYX
-    image = image.squeeze()  # TCYX
+    image = re_organize_channels(image.squeeze())  # TYXC
 
     mitosis_tracks, cell_spots, cell_tracks = perform_mitosis_track_generation(
         image, video_name, spots_dir, tracks_dir

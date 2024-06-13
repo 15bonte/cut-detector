@@ -19,7 +19,7 @@ def test_mid_body_detection():
         os.path.join(get_data_path("videos"), "example_video.tif")
     )  # TYXC
 
-    # Run process
+    # Run normal process
     mitosis_tracks = perform_mid_body_detection(
         video,
         "example_video",
@@ -28,7 +28,27 @@ def test_mid_body_detection():
         save=False,
         parallel_detection=True,
     )
+
     is_correctly_detected, _, _ = mitosis_tracks[
         0
     ].evaluate_mid_body_detection()
     assert is_correctly_detected
+
+    # Perform other strategies
+    perform_mid_body_detection(
+        video,
+        "example_video",
+        get_data_path("mitoses"),
+        get_data_path("tracks"),
+        save=False,
+        parallel_detection=False,
+    )
+    perform_mid_body_detection(
+        video,
+        "example_video",
+        get_data_path("mitoses"),
+        get_data_path("tracks"),
+        save=False,
+        parallel_detection=False,
+        detection_method="h_maxima",
+    )

@@ -65,7 +65,7 @@ def perform_results_saving(
     results_saving_factory.plot_cut_distributions(show, save_dir)
 
     # Display in napari
-    if viewer is not None:
+    if video is not None:
         results_saving_factory.generate_napari_tracking_mask(
             mitosis_tracks, video, viewer
         )

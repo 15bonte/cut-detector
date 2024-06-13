@@ -10,20 +10,19 @@ def get_data_path(data_name: str) -> None:
     """
     sub_folder_to_create = data_name
     if data_name == "mitoses":
-        files = ["example_video_mitosis_0_4_to_0.bin"]
-    elif data_name == "models":
-        files = ["example_video_model.xml"]
+        files = ["example_video_mitosis_0_0_to_5.bin"]
     elif data_name == "tracks":
         sub_folder_to_create = f"{data_name}/example_video"
         files = [
-            f"example_video/track_{track_id}.bin" for track_id in range(5)
+            f"example_video/track_{track_id}.bin"
+            for track_id in [0, 1, 2, 3, 5]
         ]
     elif data_name == "results":
         files = []  # no files to download here
     elif data_name == "videos":
         files = ["example_video.tif"]
     elif data_name == "mitosis_movies":
-        files = ["example_video_mitosis_0_4_to_0.tiff"]
+        files = ["example_video_mitosis_0_0_to_5.tiff"]
     elif data_name == "mid_bodies":
         files = []  # no files to download here
     elif data_name == "mid_bodies_tests":
@@ -32,11 +31,11 @@ def get_data_path(data_name: str) -> None:
         files = ["example_video.bin"]
     elif data_name == "spots":
         sub_folder_to_create = f"{data_name}/example_video"
-        files = [f"example_video/spot_{spot_id}.bin" for spot_id in range(237)]
+        files = [f"example_video/spot_{spot_id}.bin" for spot_id in range(236)]
     elif data_name == "annotations":
         sub_folder_to_create = f"{data_name}/example_video"
         files = [
-            "example_video/CellCounter_example_video_mitosis_0_4_to_0.xml"
+            "example_video/CellCounter_example_video_mitosis_0_0_to_5.xml"
         ]
     else:
         raise ValueError(f"Unknown data name: {data_name}")

@@ -9,6 +9,10 @@
 
 Automatic micro-tubules cut detector.
 
+
+https://github.com/15bonte/cut-detector/assets/28538099/3c59fbee-e599-4a9c-81a1-01e38a670fc1
+
+
 ---
 
 This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookiecutter-napari-plugin] template.
@@ -20,6 +24,11 @@ https://github.com/napari/cookiecutter-napari-plugin#getting-started
 and review the napari docs for plugin developers:
 https://napari.org/stable/plugins/index.html
 -->
+
+<video width="640" height="480" controls>
+  <source src="https://github.com/15bonte/cut-detector-models/blob/main/demo.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
 ## Installation
 

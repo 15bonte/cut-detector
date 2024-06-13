@@ -4,6 +4,7 @@ import os
 import pickle
 from typing import Optional
 import matplotlib.pyplot as plt
+import numpy as np
 
 from cut_detector.data.tools import get_data_path
 from cut_detector.factories.segmentation_tracking_factory import (
@@ -35,9 +36,10 @@ def main(
         frame_cells = [cell for cell in cell_spots if cell.frame == frame]
         plt.imshow(cellpose_result)
         for local_cell in frame_cells:
+            points = np.array(local_cell.spot_points)
             plt.plot(
-                local_cell.spot_points[:, 0],
-                local_cell.spot_points[:, 1],
+                points[:, 0],
+                points[:, 1],
                 "o",
             )
             plt.plot(

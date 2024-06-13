@@ -20,7 +20,7 @@ def test_track_generation():
         os.path.join(get_data_path("videos"), "example_video.tif")
     )  # TYXC
 
-    mitosis_tracks = perform_mitosis_track_generation(
+    mitosis_tracks, _, _ = perform_mitosis_track_generation(
         video,
         "example_video",
         get_data_path("spots"),
@@ -32,8 +32,8 @@ def test_track_generation():
 
     mitosis_track = mitosis_tracks[0]
 
-    assert mitosis_track.daughter_track_ids == [0]
-    assert mitosis_track.mother_track_id == 4
+    assert mitosis_track.daughter_track_ids == [5]
+    assert mitosis_track.mother_track_id == 0
     assert 7 <= mitosis_track.key_events_frame["metaphase"] <= 9  # should be 8
     assert (
         10 <= mitosis_track.key_events_frame["cytokinesis"] <= 12

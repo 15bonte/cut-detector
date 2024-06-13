@@ -20,19 +20,23 @@ class MtCutDetectionFactory:
     """
     Class to detect first and second MT cut.
 
-    Args:
-        margin (int): Number of pixels on each side of the midbody.
-
-        # Light spot detection parameters
-        intensity_threshold_light_spot (int): Intensity threshold for the light spot detection.
-        h_maxima_light_spot (int): h for the h_maxima function (light spot detection).
-        center_tolerance_light_spot (int): Center tolerance to not count the light spots that are
-        too close to the center.
-        min_percentage_light_spot (float): Minimum percentage of frames with light spots to
-        consider the mitosis as a light spot mitosis.
-        crop_size_light_spot (int): Size of the crop for the light spot detection.
-        length_light_spot (int): Length of the video to check around the mt cut for light spot
-        detection.
+    Parameters
+    ----------
+    margin : int
+        Number of pixels on each side of the midbody.
+    # Light spot detection parameters
+    intensity_threshold_light_spot : int
+        Intensity threshold for the light spot detection.
+    h_maxima_light_spot : int
+        h for the h_maxima function (light spot detection).
+    center_tolerance_light_spot : int
+        Center tolerance to not count the light spots that are too close to the center.
+    min_percentage_light_spot : float
+        Minimum percentage of frames with light spots to consider the mitosis as a light spot mitosis.
+    crop_size_light_spot : int
+        Size of the crop for the light spot detection.
+    length_light_spot : int
+        Length of the video to check around the mt cut for light spot detection.
     """
 
     def __init__(
@@ -55,7 +59,7 @@ class MtCutDetectionFactory:
 
     @staticmethod
     def _is_bridges_classification_impossible(
-        mitosis_track: MitosisTrack,
+        mitosis_track: MitosisTrack, video: np.ndarray
     ) -> bool:
         """
         Bridges classification is impossible if:
@@ -63,9 +67,21 @@ class MtCutDetectionFactory:
         - more than 2 daughter tracks
         - nucleus is near border
         - no midbody spot after cytokinesis
+
+        Parameters
+        ----------
+        mitosis_track : MitosisTrack
+            Mitosis track to check.
+        video : np.ndarray
+            Video of the mitosis track. TYXC.
+
+        Returns
+        -------
+        bool
+            True if classification is impossible, False otherwise.
         """
 
-        if mitosis_track.is_near_border():
+        if mitosis_track.is_near_border(video):
             mitosis_track.key_events_frame["first_mt_cut"] = (
                 ImpossibleDetection.NEAR_BORDER
             )
@@ -113,10 +129,27 @@ class MtCutDetectionFactory:
         hmm_bridges_parameters_file: str,
         bridges_mt_cnn_model_path: str,
         debug_mode=False,
-    ):
+    ) -> dict[str, dict]:
         """
         Update micro-tubules cut detection using bridges classification.
-        Expect TYXC video.
+
+        Parameters
+        ----------
+        mitosis_tracks : list[MitosisTrack]
+            List of mitosis tracks to update.
+        video : np.ndarray
+            Video of the mitosis tracks. TYXC.
+        hmm_bridges_parameters_file : str
+            Path to the HMM parameters file.
+        bridges_mt_cnn_model_path : str
+            Path to the bridges CNN model.
+        debug_mode : bool
+            If True, return the classified bridges.
+
+        Returns
+        -------
+        dict[str, dict]
+            Classified bridges.
         """
         # Run CNN classification
         classified_bridges = self._classify_bridges(
@@ -135,7 +168,9 @@ class MtCutDetectionFactory:
         # Check if classification is impossible and smooth
         for mitosis_track in tqdm(mitosis_tracks):
             classification_impossible = (
-                self._is_bridges_classification_impossible(mitosis_track)
+                self._is_bridges_classification_impossible(
+                    mitosis_track, video
+                )
             )
 
             if classification_impossible:
@@ -256,6 +291,20 @@ class MtCutDetectionFactory:
     ) -> dict[str, dict]:
         """
         Classify bridges using a CNN model.
+
+        Parameters
+        ----------
+        mitosis_tracks : list[MitosisTrack]
+            List of mitosis tracks to classify.
+        video : np.ndarray
+            Video of the mitosis tracks. TYXC.
+        bridges_mt_cnn_model_path : str
+            Path to the bridges CNN model.
+
+        Returns
+        -------
+        dict[str, dict]
+            Classified bridges.
         """
         # Get bridge crops
         bridges = {
