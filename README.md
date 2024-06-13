@@ -9,9 +9,7 @@
 
 Automatic micro-tubules cut detector.
 
-
 https://github.com/15bonte/cut-detector/assets/28538099/3c59fbee-e599-4a9c-81a1-01e38a670fc1
-
 
 ---
 
@@ -74,10 +72,8 @@ pip uninstall torch
 The GPU version of torch to be installed can be found [here](https://pytorch.org/get-started/locally/). You may choose the CUDA version supported by your GPU, and install it with conda. This package has been developed with the version 11.6, installed with this command:
 
 ```
-conda install numpy==1.25 pytorch==1.12.1 torchvision pytorch-cuda=11.6 -c pytorch -c nvidia
+conda install pytorch==1.12.1 torchvision pytorch-cuda=11.6 -c pytorch -c nvidia
 ```
-
-Note that we have added numpy here to prevent conda from installing a version higher than 1.25, which is not supported by numba.
 
 ## Update
 
