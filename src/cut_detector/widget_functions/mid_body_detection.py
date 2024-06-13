@@ -19,6 +19,7 @@ def perform_mid_body_detection(
     movies_save_dir: Optional[str] = None,
     save: bool = True,
     parallel_detection: bool = False,
+    detection_method: str = "difference_gaussian",
     target_mitosis_id: Optional[int] = None,
 ) -> list[MitosisTrack]:
     """Perform mid-body detection on mitosis tracks.
@@ -39,6 +40,8 @@ def perform_mid_body_detection(
         Save updated mitosis tracks, by default True.
     parallel_detection : bool, optional
         Perform detection in parallel, by default False.
+    detection_method : str, optional
+        Detection method to use, by default "difference_gaussian".
     target_mitosis_id : Optional[int], optional
         Target mitosis id to perform mid-body detection on, by default None.
 
@@ -98,6 +101,7 @@ def perform_mid_body_detection(
             mitosis_movie,
             cell_tracks,
             parallel_detection=parallel_detection,
+            detection_method=detection_method,
         )
 
         # Save updated mitosis track

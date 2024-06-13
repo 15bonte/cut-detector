@@ -66,6 +66,7 @@ def perform_results_saving(
 
     # Display in napari
     if viewer is not None:
+        assert video is not None
         results_saving_factory.generate_napari_tracking_mask(
             mitosis_tracks, video, viewer
         )
