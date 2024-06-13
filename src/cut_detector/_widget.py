@@ -194,7 +194,10 @@ def whole_process_folder(
 
     # Run process on each video
     tiff_files = list(Path(raw_data_dir).rglob("*.tif"))
-    for tiff_file in tiff_files:
+    for i, tiff_file in enumerate(tiff_files):
+        print(
+            f"\nProcessing {tiff_file.stem} - Video {i+1}/{len(tiff_files)}\n"
+        )
         video = io.imread(tiff_file)  # TYXC
         video_whole_process(
             video,
