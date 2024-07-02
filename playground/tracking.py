@@ -115,26 +115,6 @@ def main(
                 cell_dictionary[frame][i].spot_points[:, 0],
                 "o",
             )
-            axarr[0].plot(
-                cell_dictionary[frame][i].abs_max_x,
-                cell_dictionary[frame][i].abs_max_y,
-                "x",
-            )
-            axarr[0].plot(
-                cell_dictionary[frame][i].abs_min_x,
-                cell_dictionary[frame][i].abs_max_y,
-                "x",
-            )
-            axarr[0].plot(
-                cell_dictionary[frame][i].abs_min_x,
-                cell_dictionary[frame][i].abs_min_y,
-                "x",
-            )
-            axarr[0].plot(
-                cell_dictionary[frame][i].abs_max_x,
-                cell_dictionary[frame][i].abs_min_y,
-                "x",
-            )
         axarr[0].plot(
             barycenter(cellpose_results, frame)[0],
             barycenter(cellpose_results, frame)[1],
