@@ -45,8 +45,6 @@ class MitosisTrackGenerationFactory:
 
     Parameters
     ----------
-    min_track_spots : int
-        Minimum spots in track to consider it.
     minimum_metaphase_interval : int
         Minimum frames distance between two metaphases.
     max_spot_distance_for_split : int
@@ -55,11 +53,9 @@ class MitosisTrackGenerationFactory:
 
     def __init__(
         self,
-        min_track_spots=10,
         minimum_metaphase_interval=100 / TIME_RESOLUTION,
         max_spot_distance_for_split=20,
     ) -> None:
-        self.min_track_spots = min_track_spots
         self.minimum_metaphase_interval = minimum_metaphase_interval
         self.max_spot_distance_for_split = max_spot_distance_for_split
 
