@@ -227,7 +227,7 @@ class SegmentationTrackingFactory:
             gap_closing_dist_metric="euclidean",
             gap_closing_cost_cutoff=diam_labels
             * self.gap_closing_max_distance_ratio,
-            gap_closing_max_frame_count=3,
+            gap_closing_max_frame_count=self.max_frame_gap,
             splitting_cost_cutoff=False,
             merging_cost_cutoff=False,
             alternative_cost_percentile=100,
