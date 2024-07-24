@@ -284,7 +284,8 @@ class CellTrack(Track[CellSpot]):
             ]
         else:
             all_track_frame_points = [
-                [y, x] for x, y in all_track_frame_points
+                [[y, x] for x, y in track_frame_points]
+                for track_frame_points in all_track_frame_points
             ]
 
         # Compute list of hulls
