@@ -379,10 +379,10 @@ class MitosisTrack:
                 max_x - min_x,
             )  # current spot
             indices = np.stack(np.indices(current_frame_shape), axis=-1)
+            single_channel_mask = np.zeros(current_frame_shape)
 
             for dln in list_dln:
                 out_idx = np.nonzero(dln.find_simplex(indices) + 1)
-                single_channel_mask = np.zeros(current_frame_shape)
                 single_channel_mask[out_idx] = 1
 
             # Construct mask image
