@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import shutil
+import time
 from typing import Optional
 
 from magicgui import magic_factory
@@ -101,6 +102,8 @@ def whole_process(
     debug_mode_check_box: bool,
 ):
 
+    start = time.time()
+
     # Create temporary folders
     spots_dir = tempfile.TemporaryDirectory()
     tracks_dir = tempfile.TemporaryDirectory()
@@ -144,7 +147,8 @@ def whole_process(
     tracks_dir.cleanup()
     mitoses_dir.cleanup()
 
-    print("\nProcess finished with success!")
+    end = time.time()
+    print(f"\nProcess finished in {int((end - start) / 60)} minutes!")
 
 
 @magic_factory(
