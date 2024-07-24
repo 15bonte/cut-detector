@@ -30,7 +30,7 @@ def get_whole_box_dimensions_dln(
     Returns
     -------
     BoxDimensionsDln : Box dimension of merged tracks.
-    list[list[int]] : List of box dimension coordinates for all tracks.
+    list[list[list[int]]] : List of box dimension coordinates for all tracks.
 
     """
     box_dimensions_dln = BoxDimensionsDln()
@@ -40,7 +40,7 @@ def get_whole_box_dimensions_dln(
     for track in tracks:
         if frame in track.spots:
             current_spot = track.spots[frame]
-            track_frame_points = track_frame_points + current_spot.spot_points
+            track_frame_points.append(current_spot.spot_points)
             box_dimensions_dln.update(
                 current_spot.abs_min_x,
                 current_spot.abs_max_x,
@@ -243,8 +243,8 @@ class CellTrack(Track[CellSpot]):
         if additional_tracks is not None:
             tracks = tracks + additional_tracks
 
-        box_dimensions_dln, track_frame_points = get_whole_box_dimensions_dln(
-            tracks, frame
+        box_dimensions_dln, all_track_frame_points = (
+            get_whole_box_dimensions_dln(tracks, frame)
         )
 
         # If missing spot at this frame...
@@ -258,7 +258,7 @@ class CellTrack(Track[CellSpot]):
                 frame = frame - 1
                 (
                     box_dimensions_dln,
-                    track_frame_points,
+                    all_track_frame_points,
                 ) = get_whole_box_dimensions_dln(tracks, frame)
                 if not box_dimensions_dln.is_empty():
                     break
@@ -272,17 +272,38 @@ class CellTrack(Track[CellSpot]):
         # Else, compute convex hull and Delaunay triangulation
         # Switch dimensions
         if relative:
-            track_frame_points = [
-                [y - box_dimensions_dln.min_y, x - box_dimensions_dln.min_x]
-                for x, y in track_frame_points
+            all_track_frame_points = [
+                [
+                    [
+                        y - box_dimensions_dln.min_y,
+                        x - box_dimensions_dln.min_x,
+                    ]
+                    for x, y in track_frame_points
+                ]
+                for track_frame_points in all_track_frame_points
             ]
         else:
-            track_frame_points = [[y, x] for x, y in track_frame_points]
+            all_track_frame_points = [
+                [y, x] for x, y in all_track_frame_points
+            ]
+
+        # Compute list of hulls
+        for track_frame_points in all_track_frame_points:
+            hull = ConvexHull(points=track_frame_points)
+            track_frame_points = np.array(track_frame_points)
+            box_dimensions_dln.list_dln.append(
+                Delaunay(track_frame_points[hull.vertices])
+            )
+
         # Compute hull
+        track_frame_points = [
+            point
+            for track_frame_points in all_track_frame_points
+            for point in track_frame_points
+        ]
         hull = ConvexHull(points=track_frame_points)
-        box_dimensions_dln.dln = Delaunay(
-            np.array(track_frame_points)[hull.vertices]
-        )
+        track_frame_points = np.array(track_frame_points)
+        box_dimensions_dln.dln = Delaunay(track_frame_points[hull.vertices])
 
         return box_dimensions_dln
 

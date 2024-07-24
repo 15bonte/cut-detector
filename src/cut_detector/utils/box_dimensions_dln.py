@@ -7,3 +7,4 @@ class BoxDimensionsDln(BoxDimensions):
     def __init__(self):
         super().__init__()
         self.dln = None
+        self.list_dln = []
