@@ -21,4 +21,4 @@ class MetaphaseCnnModelParams(BaseModelParams):
         self.encoder_name = "resnet50"
 
         self.num_epochs = 500
-        self.learning_rate = 0.01
+        self.learning_rate = 5e-5

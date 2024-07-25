@@ -1,10 +1,6 @@
-from matplotlib import pyplot as plt
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-
-import cv2
-from scipy import ndimage
 
 from cnn_framework.utils.metrics.abstract_metric import AbstractMetric
 from cnn_framework.utils.data_sets.dataset_output import DatasetOutput

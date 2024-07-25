@@ -18,6 +18,9 @@ class BridgesMtCnnModelParams(BaseModelParams):
         self.c_indexes = [0]
         self.z_indexes = [0]
 
-        self.batch_size = 16
+        self.batch_size = 128
 
         self.encoder_name = "resnet18"
+
+        self.num_epochs = 100
+        self.learning_rate = 1e-4
