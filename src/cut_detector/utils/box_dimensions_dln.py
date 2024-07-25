@@ -8,3 +8,9 @@ class BoxDimensionsDln(BoxDimensions):
         super().__init__()
         self.dln = None
         self.list_dln = []
+
+    def get_list_dln(self):
+        """Protection against BoxDimensionsDln old version."""
+        if hasattr(self, "list_dln"):
+            return self.list_dln
+        return [self.dln]

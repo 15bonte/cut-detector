@@ -363,7 +363,7 @@ class MitosisTrack:
             max_x = self.dln_positions[frame].max_x
             min_y = self.dln_positions[frame].min_y
             max_y = self.dln_positions[frame].max_y
-            list_dln = self.dln_positions[frame].list_dln
+            list_dln = self.dln_positions[frame].get_list_dln()
 
             # Extract frame image, big enough to keep all spots for current track
             frame_image = raw_video[
