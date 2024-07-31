@@ -214,13 +214,14 @@ class MitosisTrackGenerationFactory:
             If True, only update predictions, do not apply HMM.
         """
 
-        nuclei_crops = []
+        nuclei_crops, numbers_crops = [], []
         # Get list of possible metaphase spots
         for track in cell_tracks:
             # Get current track spots data & images
             current_nuclei_crops = track.get_spots_data(raw_spots, raw_video)
             # Merge current_nuclei_crops with nuclei_crops
             nuclei_crops = nuclei_crops + current_nuclei_crops  # CYX
+            numbers_crops.append(len(current_nuclei_crops))
 
         # Apply CNN model to get metaphase spots, once for all
         predictions = self._predict_metaphase_spots(
@@ -239,9 +240,9 @@ class MitosisTrackGenerationFactory:
             )
 
         # Get list of possible metaphase spots
-        for track in cell_tracks:
-            track_predictions = predictions[: track.number_spots]
-            predictions = predictions[track.number_spots :]
+        for track, number_crops in zip(cell_tracks, numbers_crops):
+            track_predictions = predictions[:number_crops]
+            predictions = predictions[number_crops:]
 
             # Hidden Markov Model to smooth predictions
             # If we just want to get raw CNN predictions, we don't want to correct the predictions

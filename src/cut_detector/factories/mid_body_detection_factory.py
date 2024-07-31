@@ -285,7 +285,7 @@ class MidBodyDetectionFactory:
             mitosis_position = (
                 mitosis_track.position
             )  # mitosis position in movie
-            frame_position = mitosis_track.dln_positions[
+            frame_position = mitosis_track.contour_positions[
                 frame + mitosis_track.min_frame
             ]  # frame position in mitosis
             shift_x = frame_position.min_x - mitosis_position.min_x

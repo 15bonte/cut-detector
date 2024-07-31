@@ -21,7 +21,7 @@ from ..constants.tracking import (
 )
 from .mid_body_spot import MidBodySpot
 from .cell_track import CellTrack
-from .box_dimensions_dln import BoxDimensionsDln
+from .box_dimensions_contour import BoxDimensionsContour
 from .box_dimensions import BoxDimensions
 from .mt_cut_detection.impossible_detection import ImpossibleDetection
 from .image_tools import resize_image, smart_cropping
@@ -100,8 +100,8 @@ class MitosisTrack:
         # Position
         self.position = BoxDimensions()
 
-        # Delaunay triangulation, by frame
-        self.dln_positions: dict[int, BoxDimensionsDln] = {}
+        # Precise contour, by frame
+        self.contour_positions: dict[int, BoxDimensionsContour] = {}
 
         # Used for matching between ground truth and prediction
         self.matched = False
@@ -169,19 +169,19 @@ class MitosisTrack:
         ]
         return mother_track, daughter_tracks
 
-    def _add_dln_position(
-        self, frame: int, frame_dimensions: BoxDimensionsDln
+    def _add_contour_position(
+        self, frame: int, frame_dimensions: BoxDimensionsContour
     ) -> None:
-        """Add Delaunay position.
+        """Add contour position.
 
         Parameters
         ----------
         frame : int
             Frame number
-        frame_dimensions : BoxDimensionsDln
-            Delaunay box dimensions
+        frame_dimensions : BoxDimensionsContour
+            Contour box dimensions
         """
-        self.dln_positions[frame] = deepcopy(frame_dimensions)
+        self.contour_positions[frame] = deepcopy(frame_dimensions)
         # Update absolute min and max accordingly
         self.position.update_from_box_dimensions(frame_dimensions)
 
@@ -308,11 +308,11 @@ class MitosisTrack:
             [track.start for track in daughter_tracks]
         )
 
-    def update_mitosis_position_dln(
+    def update_mitosis_position_contour(
         self, cell_tracks: list[CellTrack]
     ) -> None:
         """
-        Update positions of mitosis for each frame and Delaunay triangulation.
+        Update positions of mitosis for each frame.
 
         Parameters
         ----------
@@ -325,17 +325,17 @@ class MitosisTrack:
             cell_tracks
         )
 
-        previous_box_dimensions_dln = None
+        previous_box_dimensions_contour = None
         for frame in range(min_frame, max_frame + 1):
-            box_dimensions_dln = mother_track.compute_dln_from_tracks(
+            box_dimensions_contour = mother_track.compute_contour_from_tracks(
                 frame,
-                previous_box_dimensions_dln,
+                previous_box_dimensions_contour,
                 additional_tracks=daughter_tracks,
             )
             # Store in case next frame is missing
-            previous_box_dimensions_dln = box_dimensions_dln
+            previous_box_dimensions_contour = box_dimensions_contour
             # Update accordingly
-            self._add_dln_position(frame, box_dimensions_dln)
+            self._add_contour_position(frame, box_dimensions_contour)
 
     def generate_video_movie(
         self, raw_video: np.ndarray
@@ -359,11 +359,10 @@ class MitosisTrack:
         mitosis_movie, mask_movie = [], []
         for frame in range(self.min_frame, self.max_frame + 1):
             # Get useful data for current frame
-            min_x = self.dln_positions[frame].min_x
-            max_x = self.dln_positions[frame].max_x
-            min_y = self.dln_positions[frame].min_y
-            max_y = self.dln_positions[frame].max_y
-            list_dln = self.dln_positions[frame].get_list_dln()
+            min_x = self.contour_positions[frame].min_x
+            max_x = self.contour_positions[frame].max_x
+            min_y = self.contour_positions[frame].min_y
+            max_y = self.contour_positions[frame].max_y
 
             # Extract frame image, big enough to keep all spots for current track
             frame_image = raw_video[
@@ -373,17 +372,14 @@ class MitosisTrack:
                 :,
             ]  # YXC
 
-            # Generate mask with Delaunay triangulation
+            # Generate mask
             current_frame_shape = (
                 max_y - min_y,
                 max_x - min_x,
             )  # current spot
-            indices = np.stack(np.indices(current_frame_shape), axis=-1)
-            single_channel_mask = np.zeros(current_frame_shape)
-
-            for dln in list_dln:
-                out_idx = np.nonzero(dln.find_simplex(indices) + 1)
-                single_channel_mask[out_idx] = 1
+            single_channel_mask = self.contour_positions[frame].get_mask(
+                current_frame_shape
+            )
 
             # Construct mask image
             mask_image = np.stack(
