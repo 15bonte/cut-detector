@@ -44,9 +44,6 @@ class Track(ABC, Generic[T]):
 
         self.spots: dict[int, T] = {}
         self.length = 0  # = len(self.spots)
-        self.number_spots = (
-            0  # can be different from length if we have a gap in the track
-        )
 
     def add_spot(self, spot: Spot) -> None:
         """

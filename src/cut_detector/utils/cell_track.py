@@ -361,7 +361,6 @@ class CellTrack(Track[CellSpot]):
             nucleus = np.moveaxis(nucleus, -1, 0)  # CYX
             cell_crops.append(nucleus)
 
-        self.number_spots = len(cell_crops)
         return cell_crops
 
     @staticmethod
