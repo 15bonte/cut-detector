@@ -10,14 +10,14 @@ from ..constants.tracking import (
     METAPHASE_INDEX,
 )
 from .track import Track
-from .box_dimensions_dln import BoxDimensionsDln
+from .box_dimensions_contour import BoxDimensionsContour
 from .box_dimensions import BoxDimensions
 from .cell_spot import CellSpot
 
 
 def get_whole_box_dimensions_advanced(
     tracks: list[CellTrack], frame: int
-) -> BoxDimensionsDln:
+) -> BoxDimensionsContour:
     """
     Merge different tracks.
 
@@ -28,23 +28,23 @@ def get_whole_box_dimensions_advanced(
 
     Returns
     -------
-    BoxDimensionsDln : Box dimension of merged tracks.
+    BoxDimensionsContour : Box dimension of merged tracks.
 
     """
-    box_dimensions_dln = BoxDimensionsDln()
+    box_dimensions_contour = BoxDimensionsContour()
 
     # For all tracks: mother and daughter(s)
     for track in tracks:
         if frame in track.spots:
             current_spot = track.spots[frame]
-            box_dimensions_dln.list_points.append(current_spot.spot_points)
-            box_dimensions_dln.update(
+            box_dimensions_contour.list_points.append(current_spot.spot_points)
+            box_dimensions_contour.update(
                 current_spot.abs_min_x,
                 current_spot.abs_max_x,
                 current_spot.abs_min_y,
                 current_spot.abs_max_y,
             )
-    return box_dimensions_dln
+    return box_dimensions_contour
 
 
 class CellTrack(Track[CellSpot]):
@@ -170,10 +170,10 @@ class CellTrack(Track[CellSpot]):
             return -1
 
         # Compute two regions
-        self_previous_region = self.compute_dln_from_tracks(
+        self_previous_region = self.compute_contour_from_tracks(
             daughter_track_first_frame - 1, relative=False
         )
-        daughter_region = daughter_track.compute_dln_from_tracks(
+        daughter_region = daughter_track.compute_contour_from_tracks(
             daughter_track_first_frame, relative=False
         )
 
@@ -194,13 +194,13 @@ class CellTrack(Track[CellSpot]):
 
         return overlap / previous_area
 
-    def compute_dln_from_tracks(
+    def compute_contour_from_tracks(
         self,
         frame: int,
-        previous_box_dimensions_dln: Optional[BoxDimensionsDln] = None,
+        previous_box_dimensions_contour: Optional[BoxDimensionsContour] = None,
         additional_tracks: Optional[list[CellTrack]] = None,
         relative: bool = True,
-    ) -> BoxDimensionsDln:
+    ) -> BoxDimensionsContour:
         """
         Compute Delaunay triangulation at given frame.
 
@@ -208,9 +208,9 @@ class CellTrack(Track[CellSpot]):
         ----------
         frame : int
             Frame at which Delaunay triangulation is computed.
-        previous_box_dimensions_dln : Optional[BoxDimensionsDln] = None
+        previous_box_dimensions_contour : Optional[BoxDimensionsContour] = None
             If specified and current track has no spot at frame, no computation is done
-            and previous_box_dimensions_dln is returned.
+            and previous_box_dimensions_contour is returned.
         additional_tracks : Optional[list[CellTrack]] = None
             If specified, perform computation on both current track and these additional tracks.
         relative : bool = True
@@ -218,7 +218,7 @@ class CellTrack(Track[CellSpot]):
 
         Returns
         -------
-        BoxDimensionsDln : Track(s) Delaunay triangulation.
+        BoxDimensionsContour : Track(s) Delaunay triangulation.
 
         """
         tracks = [self]
@@ -232,8 +232,8 @@ class CellTrack(Track[CellSpot]):
         # If missing spot at this frame...
         if box_dimensions_advanced.is_empty():
             # ... use previous frame data if provided
-            if previous_box_dimensions_dln:
-                return previous_box_dimensions_dln
+            if previous_box_dimensions_contour:
+                return previous_box_dimensions_contour
 
             # ... or try with previous frame if not
             for _ in range(CellTrack.max_frame_gap):
@@ -250,7 +250,7 @@ class CellTrack(Track[CellSpot]):
                 f"No previous box & Tracks with no spots in {CellTrack.max_frame_gap} frames in a row"
             )
 
-        box_dimensions_advanced.update_attributes(relative)
+        box_dimensions_advanced.update_list_points(relative)
 
         return box_dimensions_advanced
 
