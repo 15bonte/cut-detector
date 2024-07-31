@@ -65,7 +65,7 @@ class CellSpot(Spot):
         self, other_spot: CellSpot, maximum_stuck_distance: float
     ) -> bool:
         """
-        Distance between two spots hulls.
+        Distance between two spots.
 
         Parameters
         ----------

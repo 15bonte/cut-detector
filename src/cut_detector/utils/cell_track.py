@@ -152,8 +152,6 @@ class CellTrack(Track[CellSpot]):
         Ideally, it should be close to 0.5 as a daughter cell should occupy 50% of the area
         of the mother cell.
 
-        May be improved by checking overlap of areas instead of convex hulls.
-
         Parameters
         ----------
         daughter_track : CellTrack
@@ -161,8 +159,8 @@ class CellTrack(Track[CellSpot]):
 
         Returns
         -------
-        float : Intersection Over Union.
-
+        float
+            Intersection Over Union.
         """
 
         daughter_track_first_frame = min(daughter_track.spots.keys())
@@ -184,16 +182,9 @@ class CellTrack(Track[CellSpot]):
             max(self_previous_region.max_x, daughter_region.max_x),
         )
 
-        indices = np.stack(
-            np.indices(local_shape),
-            axis=-1,
-        )
-
         # Compute masks
-        self_previous_region_mask = self_previous_region.get_mask(
-            indices, local_shape
-        )
-        daughter_region_mask = daughter_region.get_mask(indices, local_shape)
+        self_previous_region_mask = self_previous_region.get_mask(local_shape)
+        daughter_region_mask = daughter_region.get_mask(local_shape)
 
         # Compute intersection of both regions
         overlap = np.sum(self_previous_region_mask * daughter_region_mask)
