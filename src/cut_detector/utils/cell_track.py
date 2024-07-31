@@ -202,12 +202,12 @@ class CellTrack(Track[CellSpot]):
         relative: bool = True,
     ) -> BoxDimensionsContour:
         """
-        Compute Delaunay triangulation at given frame.
+        Compute contours at given frame.
 
         Parameters
         ----------
         frame : int
-            Frame at which Delaunay triangulation is computed.
+            Frame at which contour is computed.
         previous_box_dimensions_contour : Optional[BoxDimensionsContour] = None
             If specified and current track has no spot at frame, no computation is done
             and previous_box_dimensions_contour is returned.
@@ -218,7 +218,7 @@ class CellTrack(Track[CellSpot]):
 
         Returns
         -------
-        BoxDimensionsContour : Track(s) Delaunay triangulation.
+        BoxDimensionsContour : Track(s) contour.
 
         """
         tracks = [self]

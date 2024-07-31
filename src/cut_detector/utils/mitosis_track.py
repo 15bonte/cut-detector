@@ -172,14 +172,14 @@ class MitosisTrack:
     def _add_contour_position(
         self, frame: int, frame_dimensions: BoxDimensionsContour
     ) -> None:
-        """Add Delaunay position.
+        """Add contour position.
 
         Parameters
         ----------
         frame : int
             Frame number
         frame_dimensions : BoxDimensionsContour
-            Delaunay box dimensions
+            Contour box dimensions
         """
         self.contour_positions[frame] = deepcopy(frame_dimensions)
         # Update absolute min and max accordingly
@@ -312,7 +312,7 @@ class MitosisTrack:
         self, cell_tracks: list[CellTrack]
     ) -> None:
         """
-        Update positions of mitosis for each frame and Delaunay triangulation.
+        Update positions of mitosis for each frame.
 
         Parameters
         ----------
@@ -372,7 +372,7 @@ class MitosisTrack:
                 :,
             ]  # YXC
 
-            # Generate mask with Delaunay triangulation
+            # Generate mask
             current_frame_shape = (
                 max_y - min_y,
                 max_x - min_x,
