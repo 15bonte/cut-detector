@@ -503,11 +503,16 @@ class ResultsSavingFactory:
         features["category"] = np.array(features["category"])
 
         if viewer is not None:
+            viewer.add_image(
+                mask,
+                name="Cell divisions",
+                opacity=0.4,
+                rgb=rgb,
+                colormap=None if rgb else "inferno",
+            )
             viewer.add_points(
                 points,
                 features=features,
                 text=text,
                 name="Mid-bodies",
             )
-
-            viewer.add_image(mask, name="Cell divisions", opacity=0.4, rgb=rgb)
