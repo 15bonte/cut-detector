@@ -115,7 +115,7 @@ def perform_mitosis_track_generation(
         mitosis_track.id = i
         mitosis_track.update_mitosis_start_end(cell_tracks, mitosis_tracks)
         mitosis_track.update_key_events_frame(cell_tracks)
-        mitosis_track.update_mitosis_position_dln(cell_tracks)
+        mitosis_track.update_mitosis_position_contour(cell_tracks)
 
         # Save mitosis track
         if mitoses_dir is not None and save:

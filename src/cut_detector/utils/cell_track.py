@@ -1,7 +1,6 @@
 from __future__ import annotations
-from typing import Optional, Tuple
+from typing import Optional
 
-from scipy.spatial import ConvexHull, Delaunay
 import numpy as np
 import pandas as pd
 
@@ -11,14 +10,14 @@ from ..constants.tracking import (
     METAPHASE_INDEX,
 )
 from .track import Track
-from .box_dimensions_dln import BoxDimensionsDln
+from .box_dimensions_contour import BoxDimensionsContour
 from .box_dimensions import BoxDimensions
 from .cell_spot import CellSpot
 
 
-def get_whole_box_dimensions_dln(
+def get_whole_box_dimensions_advanced(
     tracks: list[CellTrack], frame: int
-) -> Tuple[BoxDimensionsDln, list[list[int]]]:
+) -> BoxDimensionsContour:
     """
     Merge different tracks.
 
@@ -29,25 +28,23 @@ def get_whole_box_dimensions_dln(
 
     Returns
     -------
-    BoxDimensionsDln : Box dimension of merged tracks.
-    list[list[list[int]]] : List of box dimension coordinates for all tracks.
+    BoxDimensionsContour : Box dimension of merged tracks.
 
     """
-    box_dimensions_dln = BoxDimensionsDln()
-    track_frame_points = []
+    box_dimensions_contour = BoxDimensionsContour()
 
     # For all tracks: mother and daughter(s)
     for track in tracks:
         if frame in track.spots:
             current_spot = track.spots[frame]
-            track_frame_points.append(current_spot.spot_points)
-            box_dimensions_dln.update(
+            box_dimensions_contour.list_points.append(current_spot.spot_points)
+            box_dimensions_contour.update(
                 current_spot.abs_min_x,
                 current_spot.abs_max_x,
                 current_spot.abs_min_y,
                 current_spot.abs_max_y,
             )
-    return box_dimensions_dln, track_frame_points
+    return box_dimensions_contour
 
 
 class CellTrack(Track[CellSpot]):
@@ -155,8 +152,6 @@ class CellTrack(Track[CellSpot]):
         Ideally, it should be close to 0.5 as a daughter cell should occupy 50% of the area
         of the mother cell.
 
-        May be improved by checking overlap of areas instead of convex hulls.
-
         Parameters
         ----------
         daughter_track : CellTrack
@@ -164,8 +159,8 @@ class CellTrack(Track[CellSpot]):
 
         Returns
         -------
-        float : Intersection Over Union.
-
+        float
+            Intersection Over Union.
         """
 
         daughter_track_first_frame = min(daughter_track.spots.keys())
@@ -175,10 +170,10 @@ class CellTrack(Track[CellSpot]):
             return -1
 
         # Compute two regions
-        self_previous_region = self.compute_dln_from_tracks(
+        self_previous_region = self.compute_contour_from_tracks(
             daughter_track_first_frame - 1, relative=False
         )
-        daughter_region = daughter_track.compute_dln_from_tracks(
+        daughter_region = daughter_track.compute_contour_from_tracks(
             daughter_track_first_frame, relative=False
         )
 
@@ -187,22 +182,9 @@ class CellTrack(Track[CellSpot]):
             max(self_previous_region.max_x, daughter_region.max_x),
         )
 
-        indices = np.stack(
-            np.indices(local_shape),
-            axis=-1,
-        )
-
-        self_previous_out_idx = np.nonzero(
-            self_previous_region.dln.find_simplex(indices) + 1
-        )
-        self_previous_region_mask = np.zeros(local_shape, dtype=bool)
-        self_previous_region_mask[self_previous_out_idx] = True
-
-        daughter_out_idx = np.nonzero(
-            daughter_region.dln.find_simplex(indices) + 1
-        )
-        daughter_region_mask = np.zeros(local_shape, dtype=bool)
-        daughter_region_mask[daughter_out_idx] = True
+        # Compute masks
+        self_previous_region_mask = self_previous_region.get_mask(local_shape)
+        daughter_region_mask = daughter_region.get_mask(local_shape)
 
         # Compute intersection of both regions
         overlap = np.sum(self_previous_region_mask * daughter_region_mask)
@@ -212,23 +194,23 @@ class CellTrack(Track[CellSpot]):
 
         return overlap / previous_area
 
-    def compute_dln_from_tracks(
+    def compute_contour_from_tracks(
         self,
         frame: int,
-        previous_box_dimensions_dln: Optional[BoxDimensionsDln] = None,
+        previous_box_dimensions_contour: Optional[BoxDimensionsContour] = None,
         additional_tracks: Optional[list[CellTrack]] = None,
         relative: bool = True,
-    ) -> BoxDimensionsDln:
+    ) -> BoxDimensionsContour:
         """
-        Compute Delaunay triangulation at given frame.
+        Compute contours at given frame.
 
         Parameters
         ----------
         frame : int
-            Frame at which Delaunay triangulation is computed.
-        previous_box_dimensions_dln : Optional[BoxDimensionsDln] = None
+            Frame at which contour is computed.
+        previous_box_dimensions_contour : Optional[BoxDimensionsContour] = None
             If specified and current track has no spot at frame, no computation is done
-            and previous_box_dimensions_dln is returned.
+            and previous_box_dimensions_contour is returned.
         additional_tracks : Optional[list[CellTrack]] = None
             If specified, perform computation on both current track and these additional tracks.
         relative : bool = True
@@ -236,77 +218,41 @@ class CellTrack(Track[CellSpot]):
 
         Returns
         -------
-        BoxDimensionsDln : Track(s) Delaunay triangulation.
+        BoxDimensionsContour : Track(s) contour.
 
         """
         tracks = [self]
         if additional_tracks is not None:
             tracks = tracks + additional_tracks
 
-        box_dimensions_dln, all_track_frame_points = (
-            get_whole_box_dimensions_dln(tracks, frame)
+        box_dimensions_advanced = get_whole_box_dimensions_advanced(
+            tracks, frame
         )
 
         # If missing spot at this frame...
-        if box_dimensions_dln.is_empty():
+        if box_dimensions_advanced.is_empty():
             # ... use previous frame data if provided
-            if previous_box_dimensions_dln:
-                return previous_box_dimensions_dln
+            if previous_box_dimensions_contour:
+                return previous_box_dimensions_contour
 
             # ... or try with previous frame if not
             for _ in range(CellTrack.max_frame_gap):
                 frame = frame - 1
-                (
-                    box_dimensions_dln,
-                    all_track_frame_points,
-                ) = get_whole_box_dimensions_dln(tracks, frame)
-                if not box_dimensions_dln.is_empty():
+                box_dimensions_advanced = get_whole_box_dimensions_advanced(
+                    tracks, frame
+                )
+                if not box_dimensions_advanced.is_empty():
                     break
 
         # Should not be empty after this loop
-        if box_dimensions_dln.is_empty():
+        if box_dimensions_advanced.is_empty():
             raise ValueError(
-                f"No previous dln & Tracks with no spots in {CellTrack.max_frame_gap} frames in a row"
+                f"No previous box & Tracks with no spots in {CellTrack.max_frame_gap} frames in a row"
             )
 
-        # Else, compute convex hull and Delaunay triangulation
-        # Switch dimensions
-        if relative:
-            all_track_frame_points = [
-                [
-                    [
-                        y - box_dimensions_dln.min_y,
-                        x - box_dimensions_dln.min_x,
-                    ]
-                    for x, y in track_frame_points
-                ]
-                for track_frame_points in all_track_frame_points
-            ]
-        else:
-            all_track_frame_points = [
-                [[y, x] for x, y in track_frame_points]
-                for track_frame_points in all_track_frame_points
-            ]
+        box_dimensions_advanced.update_list_points(relative)
 
-        # Compute list of hulls
-        for track_frame_points in all_track_frame_points:
-            hull = ConvexHull(points=track_frame_points)
-            track_frame_points = np.array(track_frame_points)
-            box_dimensions_dln.list_dln.append(
-                Delaunay(track_frame_points[hull.vertices])
-            )
-
-        # Compute hull
-        track_frame_points = [
-            point
-            for track_frame_points in all_track_frame_points
-            for point in track_frame_points
-        ]
-        hull = ConvexHull(points=track_frame_points)
-        track_frame_points = np.array(track_frame_points)
-        box_dimensions_dln.dln = Delaunay(track_frame_points[hull.vertices])
-
-        return box_dimensions_dln
+        return box_dimensions_advanced
 
     def get_spots_data(
         self, raw_spots: list[CellSpot], raw_video: np.ndarray
