@@ -363,7 +363,6 @@ class MitosisTrack:
             max_x = self.dln_positions[frame].max_x
             min_y = self.dln_positions[frame].min_y
             max_y = self.dln_positions[frame].max_y
-            list_dln = self.dln_positions[frame].get_list_dln()
 
             # Extract frame image, big enough to keep all spots for current track
             frame_image = raw_video[
@@ -379,11 +378,10 @@ class MitosisTrack:
                 max_x - min_x,
             )  # current spot
             indices = np.stack(np.indices(current_frame_shape), axis=-1)
-            single_channel_mask = np.zeros(current_frame_shape)
 
-            for dln in list_dln:
-                out_idx = np.nonzero(dln.find_simplex(indices) + 1)
-                single_channel_mask[out_idx] = 1
+            single_channel_mask = self.dln_positions[frame].get_mask(
+                indices, current_frame_shape
+            )
 
             # Construct mask image
             mask_image = np.stack(
