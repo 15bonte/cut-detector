@@ -1,4 +1,5 @@
 import os
+import random
 from typing import Optional
 from scipy.stats import ttest_1samp
 import numpy as np
@@ -34,11 +35,20 @@ def grayscale_to_rgb(grayscale_image, channel_axis):
     grayscale_image = np.clip(grayscale_image, 0, 255)
     grayscale_image = grayscale_image.astype(np.uint8)  # TYX
 
+    indexes = np.unique(grayscale_image)
+    fake_second_channel = np.copy(grayscale_image)
+    fake_third_channel = np.copy(grayscale_image)
+    for index in indexes:
+        if index == 0:
+            continue
+        fake_second_channel[grayscale_image == index] = random.randint(0, 255)
+        fake_third_channel[grayscale_image == index] = random.randint(0, 255)
+
     grayscale_image = np.stack(
         [
             grayscale_image,
-            grayscale_image,
-            grayscale_image,
+            fake_second_channel,
+            fake_third_channel,
         ],
         axis=-1,
     )  # TYXC
@@ -575,7 +585,7 @@ class ResultsSavingFactory:
             viewer.add_image(
                 segmentation_results,
                 name="Segmentation",
-                opacity=0.8,
+                opacity=0.4,
                 rgb=rgb,
                 colormap=None if rgb else "inferno",
                 visible=False,
@@ -592,7 +602,7 @@ class ResultsSavingFactory:
             viewer.add_image(
                 tracking_results,
                 name="Tracking",
-                opacity=0.8,
+                opacity=0.4,
                 rgb=rgb,
                 colormap=None if rgb else "inferno",
                 visible=False,
