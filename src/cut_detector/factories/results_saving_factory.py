@@ -5,12 +5,47 @@ import numpy as np
 import matplotlib.pyplot as plt
 from napari import Viewer
 
+from ..utils.cell_track import CellTrack, generate_tracking_movie
 from ..utils.tools import re_organize_channels
 from ..constants.tracking import TIME_RESOLUTION
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.mt_cut_detection.impossible_detection import (
     ImpossibleDetection,
 )
+
+
+def grayscale_to_rgb(grayscale_image, channel_axis):
+    """Convert grayscale image to RGB image.
+
+    Parameters
+    ----------
+    grayscale_image: np.ndarray
+        Grayscale image. TYX.
+    channel_axis: int
+        Channel axis.
+
+    Returns
+    -------
+    np.ndarray
+        RGB image.
+    """
+    grayscale_image = grayscale_image.astype(np.float32)  # TYX
+    grayscale_image = grayscale_image / grayscale_image.max() * 255
+    grayscale_image = np.clip(grayscale_image, 0, 255)
+    grayscale_image = grayscale_image.astype(np.uint8)  # TYX
+
+    grayscale_image = np.stack(
+        [
+            grayscale_image,
+            grayscale_image,
+            grayscale_image,
+        ],
+        axis=-1,
+    )  # TYXC
+
+    # Match original image shape
+    grayscale_image = np.moveaxis(grayscale_image, 3, channel_axis)  # TCYX
+    return grayscale_image
 
 
 class ResultsSavingFactory:
@@ -411,6 +446,7 @@ class ResultsSavingFactory:
         video: np.ndarray,
         viewer: Optional[Viewer] = None,
         segmentation_results: Optional[np.ndarray] = None,
+        cell_tracks: Optional[list[CellTrack]] = None,
     ) -> None:
         """Generate napari tracking mask.
 
@@ -451,7 +487,9 @@ class ResultsSavingFactory:
         )
 
         # Iterate over mitosis_tracks
-        mask = np.zeros((nb_frames, height, width, 3), dtype=np.uint8)  # TYXC
+        tracking_results = np.zeros(
+            (nb_frames, height, width, 3), dtype=np.uint8
+        )  # TYXC
         for idx, mitosis_track in enumerate(mitosis_tracks):
             if not mitosis_track.display():
                 continue
@@ -463,22 +501,24 @@ class ResultsSavingFactory:
                 [mask_movie, mask_movie, mask_movie], axis=-1
             )
             mask_movie[cell_indexes] = colors[idx]
-            initial_mask = mask[
+            initial_mask = tracking_results[
                 mitosis_track.min_frame : mitosis_track.max_frame + 1,
                 mitosis_track.position.min_y : mitosis_track.position.max_y,
                 mitosis_track.position.min_x : mitosis_track.position.max_x,
                 :,
             ]
             # Avoid colors overlap
-            mask[
+            tracking_results[
                 mitosis_track.min_frame : mitosis_track.max_frame + 1,
                 mitosis_track.position.min_y : mitosis_track.position.max_y,
                 mitosis_track.position.min_x : mitosis_track.position.max_x,
                 :,
             ] = np.maximum(mask_movie, initial_mask)
         # Match original image shape
-        mask = np.moveaxis(mask, 3, channel_axis)  # TCYX
-        assert mask.shape == video.shape
+        tracking_results = np.moveaxis(
+            tracking_results, 3, channel_axis
+        )  # TCYX
+        assert tracking_results.shape == video.shape
 
         # Use point + text instead of red point for mid_body
         points = []
@@ -513,7 +553,7 @@ class ResultsSavingFactory:
             return
 
         viewer.add_image(
-            mask,
+            tracking_results,
             name="Cell divisions",
             opacity=0.4,
             rgb=rgb,
@@ -527,28 +567,31 @@ class ResultsSavingFactory:
         )
 
         if segmentation_results is not None:
-            segmentation_results = (
-                segmentation_results * 255 / segmentation_results.max()
-            ).astype(np.uint8)
-
-            segmentation_results = np.stack(
-                [
-                    segmentation_results,
-                    segmentation_results,
-                    segmentation_results,
-                ],
-                axis=-1,
-            )  # TYXC
-
-            # Match original image shape
-            segmentation_results = np.moveaxis(
-                segmentation_results, 3, channel_axis
-            )  # TCYX
+            segmentation_results = grayscale_to_rgb(
+                segmentation_results, channel_axis
+            )
             assert segmentation_results.shape == video.shape
 
             viewer.add_image(
                 segmentation_results,
                 name="Segmentation",
+                opacity=0.8,
+                rgb=rgb,
+                colormap=None if rgb else "inferno",
+                visible=False,
+            )
+
+        if cell_tracks is not None:
+            tracking_results = generate_tracking_movie(
+                cell_tracks, video_to_process
+            )  # TYX
+
+            tracking_results = grayscale_to_rgb(tracking_results, channel_axis)
+            assert tracking_results.shape == video.shape
+
+            viewer.add_image(
+                tracking_results,
+                name="Tracking",
                 opacity=0.8,
                 rgb=rgb,
                 colormap=None if rgb else "inferno",

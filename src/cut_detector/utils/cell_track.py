@@ -47,6 +47,43 @@ def get_whole_box_dimensions_advanced(
     return box_dimensions_contour
 
 
+def generate_tracking_movie(
+    tracks: list[CellTrack], video: np.ndarray
+) -> np.ndarray:
+    """
+    Generate tracking movie.
+
+    Parameters
+    ----------
+    tracks : list[CellTrack]
+        List of tracks.
+    video : np.ndarray
+        Video. TYXC.
+
+    Returns
+    -------
+    np.ndarray
+        Tracking movie. TYX.
+    """
+    nb_frames, height, width = video.shape[:-1]
+
+    mask = np.zeros((nb_frames, width, height)).astype(np.uint8)  # TXY
+    for frame in range(nb_frames):
+        for track in tracks:
+            box_dim_contours = get_whole_box_dimensions_advanced(
+                [track], frame
+            )  # (x, y)
+            mask[frame] = np.maximum(
+                mask[frame],
+                int(track.track_id + 1)
+                * box_dim_contours.get_mask(video[frame].shape[:-1]),
+            )
+
+    # Switch X and Y axes to match video shape
+    mask = np.moveaxis(mask, -1, 1)  # TYX
+    return mask
+
+
 class CellTrack(Track[CellSpot]):
     """
     Cell track.

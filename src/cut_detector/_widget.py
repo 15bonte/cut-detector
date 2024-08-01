@@ -10,6 +10,8 @@ import tempfile
 import numpy as np
 from skimage import io
 
+from cut_detector.utils.cell_track import CellTrack
+
 
 from .utils.tools import re_organize_channels
 
@@ -32,7 +34,7 @@ def video_whole_process(
     spots_dir_name: str,
     tracks_dir_name: str,
     mitoses_dir_name: str,
-) -> np.ndarray:
+) -> tuple[list[CellTrack], np.ndarray]:
     """Perform the whole process on a single video.
 
     Parameters
@@ -58,11 +60,13 @@ def video_whole_process(
 
     Returns
     -------
+    list[CellTrack]
+        Cell tracks and segmentation results.
     np.ndarray
         Segmentation results.
     """
 
-    _, _, segmentation_results = perform_tracking(
+    _, cell_tracks, segmentation_results = perform_tracking(
         video,
         str(Path(segmentation_model)) if not default_model_check_box else None,
         video_name,
@@ -86,7 +90,7 @@ def video_whole_process(
     )
     perform_mt_cut_detection(video, video_name, mitoses_dir_name)
 
-    return segmentation_results
+    return cell_tracks, segmentation_results
 
 
 @magic_factory(
@@ -140,7 +144,7 @@ def whole_process(
 
     video = re_organize_channels(img_layer.data)  # TYXC
 
-    segmentation_results = video_whole_process(
+    cell_tracks, segmentation_results = video_whole_process(
         video,
         img_layer.name,
         default_model_check_box,
@@ -159,6 +163,7 @@ def whole_process(
         video=img_layer.data,
         viewer=viewer,
         segmentation_results=segmentation_results,
+        cell_tracks=cell_tracks,
     )
 
     if debug_mode_check_box:

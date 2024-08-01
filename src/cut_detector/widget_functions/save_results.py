@@ -4,6 +4,7 @@ from typing import Optional
 
 import numpy as np
 
+from ..utils.cell_track import CellTrack
 from ..factories.results_saving_factory import ResultsSavingFactory
 from ..utils.mitosis_track import MitosisTrack
 
@@ -16,6 +17,7 @@ def perform_results_saving(
     video: Optional[np.ndarray] = None,
     viewer: Optional["napari.Viewer"] = None,
     segmentation_results: Optional[np.ndarray] = None,
+    cell_tracks: Optional[list[CellTrack]] = None,
 ) -> None:
     """Perform a series of tests, prints and plots following process.
 
@@ -70,5 +72,9 @@ def perform_results_saving(
     # Display in napari
     if video is not None:
         results_saving_factory.generate_napari_tracking_mask(
-            mitosis_tracks, video, viewer, segmentation_results
+            mitosis_tracks,
+            video,
+            viewer,
+            segmentation_results=segmentation_results,
+            cell_tracks=cell_tracks,
         )
