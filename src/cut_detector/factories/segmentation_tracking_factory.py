@@ -60,7 +60,7 @@ class SegmentationTrackingFactory:
     @staticmethod
     def get_spots_from_cellpose(
         cellpose_results: np.ndarray,
-        parallel: bool = True,
+        parallel: bool = False,
     ) -> dict[int, list[CellSpot]]:
         """Extract spots from cellpose results.
 
