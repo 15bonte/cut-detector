@@ -1,3 +1,4 @@
+from __future__ import annotations
 from enum import IntEnum
 
 
@@ -15,3 +16,26 @@ class ImpossibleDetection(IntEnum):
     TOO_SHORT_CUT = -8
     METAPHASE_AFTER_CYTOKINESIS = -9
 
+    @staticmethod
+    def display(detection: ImpossibleDetection) -> bool:
+        """Check if the detection status should be displayed.
+
+        Some ImpossibleDetection status are usually linked
+        to a false cell division detection, hence are not plotted.
+
+        Parameters
+        ----------
+        detection : ImpossibleDetection
+            Detection status.
+
+        Returns
+        -------
+        bool
+            Whether the mitosis should be displayed.
+        """
+        return detection in [
+            ImpossibleDetection.NORMAL,
+            ImpossibleDetection.NEAR_BORDER,
+            ImpossibleDetection.NO_CUT_DETECTED,
+            ImpossibleDetection.LIGHT_SPOT,
+        ]

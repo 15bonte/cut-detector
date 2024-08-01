@@ -906,3 +906,22 @@ class MitosisTrack:
                 "category": snake_to_normal(mid_body_category),
             }
         return mid_body_legend
+
+    def display(self) -> None:
+        """Check if the mitosis should be displayed depending on
+        the detection status.
+
+        Returns
+        -------
+        bool
+            True if the mitosis should be displayed.
+        """
+
+        if "first_mt_cut" not in self.key_events_frame:
+            return False
+        if self.key_events_frame["first_mt_cut"] > 0:
+            return True
+
+        return ImpossibleDetection.display(
+            self.key_events_frame["first_mt_cut"]
+        )
