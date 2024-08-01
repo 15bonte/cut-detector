@@ -60,6 +60,7 @@ class SegmentationTrackingFactory:
     @staticmethod
     def get_spots_from_cellpose(
         cellpose_results: np.ndarray,
+        parallel: bool = True,
     ) -> dict[int, list[CellSpot]]:
         """Extract spots from cellpose results.
 
@@ -67,17 +68,32 @@ class SegmentationTrackingFactory:
         ----------
         cellpose_results : np.ndarray
             TYX
+        parallel : bool
+            Whether to use parallel processing.
 
         Returns
         -------
         dict[int, list[CellSpot]]
             Dictionary with frame number as key and list of cell spots as value.
         """
+        print("Extracting spots from segmentation results.")
+        if parallel:
+            future_list = []
+            with concurrent.futures.ThreadPoolExecutor() as e:
+                for frame, cellpose_result in enumerate(cellpose_results):
+                    future_list.append(
+                        e.submit(get_spots_from_frame, frame, cellpose_result)
+                    )
 
-        cell_dictionary = {}
-        for frame, cellpose_result in enumerate(tqdm(cellpose_results)):
-            _, spots = get_spots_from_frame(frame, cellpose_result)
-            cell_dictionary[frame] = spots
+            cell_dictionary = {
+                res.result()[0]: res.result()[1]
+                for res in concurrent.futures.as_completed(future_list)
+            }
+        else:
+            cell_dictionary = {}
+            for frame, cellpose_result in enumerate(tqdm(cellpose_results)):
+                _, spots = get_spots_from_frame(frame, cellpose_result)
+                cell_dictionary[frame] = spots
 
         # Give id number to cell spots
         id_number = 0
