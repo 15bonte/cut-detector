@@ -32,10 +32,37 @@ def video_whole_process(
     spots_dir_name: str,
     tracks_dir_name: str,
     mitoses_dir_name: str,
-) -> None:
-    """Perform the whole process on a single video."""
+) -> np.ndarray:
+    """Perform the whole process on a single video.
 
-    perform_tracking(
+    Parameters
+    ----------
+    video : np.ndarray
+        Video. TYXC.
+    video_name : str
+        Video name.
+    default_model_check_box : bool
+        Use default segmentation model?
+    segmentation_model : str
+        Cellpose segmentation model.
+    save_check_box : bool
+        Save cell divisions movies?
+    movies_save_dir : str
+        Directory to save division movies.
+    spots_dir_name : str
+        Directory to save .bin cell spots.
+    tracks_dir_name : str
+        Directory to save .bin cell tracks.
+    mitoses_dir_name : str
+        Directory to save .bin mitoses.
+
+    Returns
+    -------
+    np.ndarray
+        Segmentation results.
+    """
+
+    _, _, segmentation_results = perform_tracking(
         video,
         str(Path(segmentation_model)) if not default_model_check_box else None,
         video_name,
@@ -58,6 +85,8 @@ def video_whole_process(
         parallel_detection=True,
     )
     perform_mt_cut_detection(video, video_name, mitoses_dir_name)
+
+    return segmentation_results
 
 
 @magic_factory(
@@ -111,7 +140,7 @@ def whole_process(
 
     video = re_organize_channels(img_layer.data)  # TYXC
 
-    video_whole_process(
+    segmentation_results = video_whole_process(
         video,
         img_layer.name,
         default_model_check_box,
@@ -129,6 +158,7 @@ def whole_process(
         save_dir=results_save_dir,
         video=img_layer.data,
         viewer=viewer,
+        segmentation_results=segmentation_results,
     )
 
     if debug_mode_check_box:

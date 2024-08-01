@@ -252,7 +252,7 @@ class SegmentationTrackingFactory:
     def perform_segmentation_tracking(
         self,
         video: np.ndarray,
-    ) -> tuple[list[CellSpot], list[CellTrack]]:
+    ) -> tuple[list[CellSpot], list[CellTrack], np.ndarray]:
         """Perform cell segmentation and tracking.
 
         Parameters
@@ -266,11 +266,13 @@ class SegmentationTrackingFactory:
             List of cell spots.
         list[CellTrack]
             List of cell tracks.
+        np.ndarray
+            Segmentation results. TYX.
         """
 
-        cellpose_results, _, diam_labels = self.perform_segmentation(video)
+        segmentation_results, _, diam_labels = self.perform_segmentation(video)
         cell_spots, cell_tracks = self.perform_tracking(
-            cellpose_results, diam_labels
+            segmentation_results, diam_labels
         )
 
-        return cell_spots, cell_tracks
+        return cell_spots, cell_tracks, segmentation_results

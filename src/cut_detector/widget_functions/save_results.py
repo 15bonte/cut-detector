@@ -15,6 +15,7 @@ def perform_results_saving(
     verbose: bool = False,
     video: Optional[np.ndarray] = None,
     viewer: Optional["napari.Viewer"] = None,
+    segmentation_results: Optional[np.ndarray] = None,
 ) -> None:
     """Perform a series of tests, prints and plots following process.
 
@@ -34,6 +35,8 @@ def perform_results_saving(
         Video, by default None. Any dimension order.
     viewer : Optional["napari.Viewer"], optional
         Viewer, by default None.
+    segmentation_results : Optional[np.ndarray], optional
+        Segmentation results, by default None. TYX.
     """
     print("\n### RESULTS SAVING ###")
 
@@ -67,5 +70,5 @@ def perform_results_saving(
     # Display in napari
     if video is not None:
         results_saving_factory.generate_napari_tracking_mask(
-            mitosis_tracks, video, viewer
+            mitosis_tracks, video, viewer, segmentation_results
         )

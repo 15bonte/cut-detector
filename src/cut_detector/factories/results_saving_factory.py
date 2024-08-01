@@ -410,6 +410,7 @@ class ResultsSavingFactory:
         mitosis_tracks: list[MitosisTrack],
         video: np.ndarray,
         viewer: Optional[Viewer] = None,
+        segmentation_results: Optional[np.ndarray] = None,
     ) -> None:
         """Generate napari tracking mask.
 
@@ -421,6 +422,8 @@ class ResultsSavingFactory:
             Video to process. Any dimension order.
         viewer: napari.Viewer
             Napari viewer.
+        segmentation_results: np.ndarray
+            Cellpose results. TYX.
         """
 
         channel_axis = np.argmin(video.shape)
@@ -472,7 +475,7 @@ class ResultsSavingFactory:
                 :,
             ] = np.maximum(mask_movie, initial_mask)
         # Match original image shape
-        mask = np.moveaxis(mask, 3, channel_axis)
+        mask = np.moveaxis(mask, 3, channel_axis)  # TCYX
         assert mask.shape == video.shape
 
         # Use point + text instead of red point for mid_body
@@ -502,17 +505,48 @@ class ResultsSavingFactory:
                         features["category"] += [frame_dict["category"]]
         features["category"] = np.array(features["category"])
 
-        if viewer is not None:
+        if viewer is None:
+            return
+
+        viewer.add_image(
+            mask,
+            name="Cell divisions",
+            opacity=0.4,
+            rgb=rgb,
+            colormap=None if rgb else "inferno",
+        )
+        viewer.add_points(
+            points,
+            features=features,
+            text=text,
+            name="Mid-bodies",
+        )
+
+        if segmentation_results is not None:
+            segmentation_results = (
+                segmentation_results * 255 / segmentation_results.max()
+            ).astype(np.uint8)
+
+            segmentation_results = np.stack(
+                [
+                    segmentation_results,
+                    segmentation_results,
+                    segmentation_results,
+                ],
+                axis=-1,
+            )  # TYXC
+
+            # Match original image shape
+            segmentation_results = np.moveaxis(
+                segmentation_results, 3, channel_axis
+            )  # TCYX
+            assert segmentation_results.shape == video.shape
+
             viewer.add_image(
-                mask,
-                name="Cell divisions",
-                opacity=0.4,
+                segmentation_results,
+                name="Segmentation",
+                opacity=0.8,
                 rgb=rgb,
                 colormap=None if rgb else "inferno",
-            )
-            viewer.add_points(
-                points,
-                features=features,
-                text=text,
-                name="Mid-bodies",
+                visible=False,
             )

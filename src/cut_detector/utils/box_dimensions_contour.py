@@ -38,7 +38,7 @@ class BoxDimensionsContour(BoxDimensions):
         return mask
 
     def update_list_points(self, relative: bool) -> None:
-        """Update attributes
+        """Update list of contour points.
 
         Parameters
         ----------
