@@ -1,12 +1,13 @@
 import concurrent.futures
 import time
 import numpy as np
-from skimage.measure import find_contours
 import torch
 from cellpose import models
 from tqdm import tqdm
 
-from ..utils.segmentation_tracking.mask_utils import centroid
+from ..utils.segmentation_tracking.mask_utils import (
+    get_spots_from_frame,
+)
 from ..utils.cell_spot import CellSpot
 from ..utils.cell_track import CellTrack
 from ..utils.mid_body_detection.spatial_laptrack import (
@@ -58,7 +59,7 @@ class SegmentationTrackingFactory:
 
     @staticmethod
     def get_spots_from_cellpose(
-        cellpose_results: np.ndarray, parallel: bool = False
+        cellpose_results: np.ndarray,
     ) -> dict[int, list[CellSpot]]:
         """Extract spots from cellpose results.
 
@@ -66,9 +67,6 @@ class SegmentationTrackingFactory:
         ----------
         cellpose_results : np.ndarray
             TYX
-        parallel : bool
-            If True, use parallel processing.
-            Set to False by default, as it is not obvious that this is much faster.
 
         Returns
         -------
@@ -76,83 +74,10 @@ class SegmentationTrackingFactory:
             Dictionary with frame number as key and list of cell spots as value.
         """
 
-        def get_spots_from_frame(
-            frame: int, cellpose_result: np.ndarray
-        ) -> tuple[int, list[CellSpot]]:
-            """Extract spots from a single frame.
-
-            Parameters
-            ----------
-            frame : int
-                Frame number.
-            cellpose_result : np.ndarray
-                TYX
-
-            Returns
-            -------
-            list[CellSpot]
-                List of cell spots.
-            """
-            # Pad cellpose results to ensure that the contours are closed
-            max_cellpose = np.max(cellpose_result)
-            padded_cellpose_result = np.pad(
-                cellpose_result, pad_width=1, mode="constant"
-            )
-
-            cell_spots = []
-            for i in range(1, max_cellpose + 1):
-                contours = find_contours(padded_cellpose_result == i)
-                sorted_contours = sorted(
-                    contours,
-                    key=lambda contour: contour.shape[0],
-                    reverse=True,
-                )
-                # -1 to remove padding
-                list_y = [int(l[0] - 1) for l in sorted_contours[0]]
-                list_x = [int(l[1] - 1) for l in sorted_contours[0]]
-                abs_min_x, abs_max_x, abs_min_y, abs_max_y = (
-                    np.abs(np.min(list_x)),
-                    np.abs(np.max(list_x)),
-                    np.abs(np.min(list_y)),
-                    np.abs(np.max(list_y)),
-                )
-                # Compute cell centroid
-                cell_centroid = centroid(
-                    list_y,
-                    list_x,
-                )  # (y, x)
-                cell_spot = CellSpot(
-                    frame,
-                    cell_centroid[1],  # x
-                    cell_centroid[0],  # y
-                    -1,
-                    abs_min_x,
-                    abs_max_x,
-                    abs_min_y,
-                    abs_max_y,
-                    [[x, y] for x, y in zip(list_x, list_y)],
-                )
-                cell_spots.append(cell_spot)
-
-            return frame, cell_spots
-
-        if parallel:
-            future_list = []
-            with concurrent.futures.ThreadPoolExecutor() as e:
-                for frame, cellpose_result in enumerate(cellpose_results):
-                    future_list.append(
-                        e.submit(get_spots_from_frame, frame, cellpose_result)
-                    )
-
-            cell_dictionary = {
-                res.result()[0]: res.result()[1]
-                for res in concurrent.futures.as_completed(future_list)
-            }
-        else:
-            cell_dictionary = {}
-            for frame, cellpose_result in enumerate(tqdm(cellpose_results)):
-                _, spots = get_spots_from_frame(frame, cellpose_result)
-                cell_dictionary[frame] = spots
+        cell_dictionary = {}
+        for frame, cellpose_result in enumerate(tqdm(cellpose_results)):
+            _, spots = get_spots_from_frame(frame, cellpose_result)
+            cell_dictionary[frame] = spots
 
         # Give id number to cell spots
         id_number = 0
