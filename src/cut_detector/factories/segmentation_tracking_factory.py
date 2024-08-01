@@ -1,15 +1,12 @@
 import concurrent.futures
 import time
 import numpy as np
+from skimage.measure import find_contours
 import torch
 from cellpose import models
 from tqdm import tqdm
 
-from ..utils.segmentation_tracking.mask_utils import (
-    centroid,
-    from_labeling_with_roi,
-    simplify,
-)
+from ..utils.segmentation_tracking.mask_utils import centroid
 from ..utils.cell_spot import CellSpot
 from ..utils.cell_track import CellTrack
 from ..utils.mid_body_detection.spatial_laptrack import (
@@ -84,46 +81,59 @@ class SegmentationTrackingFactory:
         ) -> tuple[int, list[CellSpot]]:
             """Extract spots from a single frame.
 
+            Parameters
+            ----------
+            frame : int
+                Frame number.
+            cellpose_result : np.ndarray
+                TYX
+
             Returns
             -------
             list[CellSpot]
                 List of cell spots.
             """
-            # Create and simplify polygons like Trackmate
-            # NB: be careful, Trackmate switches x and y
-            polygons = from_labeling_with_roi(cellpose_result)
-            # assert len(polygons) == cellpose_result.max()
-            simplified_polygons = []
-            for polygon in polygons:
-                simplified_polygon = simplify(polygon, interval=2, epsilon=0.5)
-                simplified_polygons.append(simplified_polygon)
-            # Get spots from polygons
+            # Pad cellpose results to ensure that the contours are closed
+            max_cellpose = np.max(cellpose_result)
+            padded_cellpose_result = np.pad(
+                cellpose_result, pad_width=1, mode="constant"
+            )
+
             cell_spots = []
-            for polygon in simplified_polygons:
-                # Compute cell bounding box
+            for i in range(1, max_cellpose + 1):
+                contours = find_contours(padded_cellpose_result == i)
+                sorted_contours = sorted(
+                    contours,
+                    key=lambda contour: contour.shape[0],
+                    reverse=True,
+                )
+                # -1 to remove padding
+                list_y = [int(l[0] - 1) for l in sorted_contours[0]]
+                list_x = [int(l[1] - 1) for l in sorted_contours[0]]
                 abs_min_x, abs_max_x, abs_min_y, abs_max_y = (
-                    np.abs(np.min(polygon.y)),
-                    np.abs(np.max(polygon.y)),
-                    np.abs(np.min(polygon.x)),
-                    np.abs(np.max(polygon.x)),
+                    np.abs(np.min(list_x)),
+                    np.abs(np.max(list_x)),
+                    np.abs(np.min(list_y)),
+                    np.abs(np.max(list_y)),
                 )
                 # Compute cell centroid
                 cell_centroid = centroid(
-                    polygon.y,
-                    polygon.x,
-                )  # (x, y)
+                    list_y,
+                    list_x,
+                )  # (y, x)
                 cell_spot = CellSpot(
                     frame,
-                    cell_centroid[0],  # x
-                    cell_centroid[1],  # y
+                    cell_centroid[1],  # x
+                    cell_centroid[0],  # y
                     -1,
                     abs_min_x,
                     abs_max_x,
                     abs_min_y,
                     abs_max_y,
-                    [[x, y] for x, y in zip(polygon.y, polygon.x)],
+                    [[x, y] for x, y in zip(list_x, list_y)],
                 )
                 cell_spots.append(cell_spot)
+
             return frame, cell_spots
 
         if parallel:
