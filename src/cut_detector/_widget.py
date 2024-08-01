@@ -123,6 +123,11 @@ def video_whole_process(
         text="Debug mode",
         value=False,
     ),
+    display_check_box=dict(
+        widget_type="CheckBox",
+        text="Display segmentation and tracking",
+        value=False,
+    ),
 )
 def whole_process(
     img_layer: "napari.layers.Image",
@@ -133,6 +138,7 @@ def whole_process(
     movies_save_dir: str,
     results_save_dir: str,
     debug_mode_check_box: bool,
+    display_check_box: bool,
 ):
 
     start = time.time()
@@ -157,14 +163,22 @@ def whole_process(
     )
 
     # Results saving
-    perform_results_saving(
-        mitoses_dir.name,
-        save_dir=results_save_dir,
-        video=img_layer.data,
-        viewer=viewer,
-        segmentation_results=segmentation_results,
-        cell_tracks=cell_tracks,
-    )
+    if display_check_box:
+        perform_results_saving(
+            mitoses_dir.name,
+            save_dir=results_save_dir,
+            video=img_layer.data,
+            viewer=viewer,
+            segmentation_results=segmentation_results,
+            cell_tracks=cell_tracks,
+        )
+    else:
+        perform_results_saving(
+            mitoses_dir.name,
+            save_dir=results_save_dir,
+            video=img_layer.data,
+            viewer=viewer,
+        )
 
     if debug_mode_check_box:
         shutil.copytree(
