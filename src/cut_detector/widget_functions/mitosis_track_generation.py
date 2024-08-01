@@ -111,6 +111,7 @@ def perform_mitosis_track_generation(
     )
 
     # Update useful attributes for each track
+    print("Updating division attributes.")
     for i, mitosis_track in enumerate(tqdm(mitosis_tracks)):
         mitosis_track.id = i
         mitosis_track.update_mitosis_start_end(cell_tracks, mitosis_tracks)

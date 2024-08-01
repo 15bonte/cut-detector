@@ -180,6 +180,7 @@ class MtCutDetectionFactory:
         hmm_parameters = np.load(hmm_bridges_parameters_file)
 
         # Check if classification is impossible and smooth
+        print("Correcting prediction inconsistencies.")
         for mitosis_track in tqdm(mitosis_tracks):
             classification_impossible = (
                 self._is_bridges_classification_impossible(

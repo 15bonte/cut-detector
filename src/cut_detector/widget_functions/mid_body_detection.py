@@ -78,6 +78,7 @@ def perform_mid_body_detection(
     print("\n### MID-BODY DETECTION ###")
 
     # Generate movie for each mitosis and save
+    print("Performing mid-body detection.")
     mid_body_detector = MidBodyDetectionFactory()
     for i, mitosis_track in enumerate(tqdm(mitosis_tracks)):
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Optional
-
+from tqdm import tqdm
 import numpy as np
 import pandas as pd
 
@@ -68,7 +68,7 @@ def generate_tracking_movie(
     nb_frames, height, width = video.shape[:-1]
 
     mask = np.zeros((nb_frames, width, height)).astype(np.uint8)  # TXY
-    for frame in range(nb_frames):
+    for frame in tqdm(range(nb_frames)):
         for track in tracks:
             box_dim_contours = get_whole_box_dimensions_advanced(
                 [track], frame

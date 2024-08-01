@@ -71,6 +71,7 @@ def perform_results_saving(
 
     # Display in napari
     if video is not None:
+        print("\nDisplaying results in Napari.")
         results_saving_factory.generate_napari_tracking_mask(
             mitosis_tracks,
             video,

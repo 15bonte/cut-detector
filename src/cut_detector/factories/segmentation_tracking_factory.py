@@ -133,7 +133,7 @@ class SegmentationTrackingFactory:
             pretrained_model=self.model_path, device=device
         )
 
-        print("Run cellpose...")
+        print("Running Cellpose.")
         start = time.time()
         cellpose_results, flows, _ = model.eval(  # TYX
             video,
