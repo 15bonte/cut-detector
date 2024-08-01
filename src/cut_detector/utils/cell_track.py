@@ -76,7 +76,7 @@ def generate_tracking_movie(
             mask[frame] = np.maximum(
                 mask[frame],
                 int(track.track_id + 1)
-                * box_dim_contours.get_mask(video[frame].shape[:-1]),
+                * box_dim_contours.get_mask((width, height)),
             )
 
     # Switch X and Y axes to match video shape
