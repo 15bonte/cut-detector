@@ -1,4 +1,3 @@
-from cut_detector.data.tools import get_data_path
 from cut_detector.utils.tools import upload_annotations_folder
 
 if __name__ == "__main__":

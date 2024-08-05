@@ -24,20 +24,7 @@ from .cell_track import CellTrack
 from .box_dimensions_contour import BoxDimensionsContour
 from .box_dimensions import BoxDimensions
 from .mt_cut_detection.impossible_detection import ImpossibleDetection
-from .image_tools import resize_image, smart_cropping
-
-
-def cell_counter_frame_to_video_frame(
-    cell_counter_frame: int, nb_channels=4
-) -> int:
-    """
-    Cell counter index starts at 1, just like Fiji.
-
-    To count frame, it just concatenates all channels.
-    For example, with 4 channels, frames 1, 2, 3 and 4 will be frame 1,
-    frames 5, 6, 7 and 8 will be frame 2, etc.
-    """
-    return (cell_counter_frame - 1) // nb_channels
+from .image_tools import resize_image, smart_cropping, cell_counter_frame_to_video_frame
 
 
 def snake_to_normal(snake_str: str) -> str:

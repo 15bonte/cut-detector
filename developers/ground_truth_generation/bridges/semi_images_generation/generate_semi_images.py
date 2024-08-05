@@ -57,7 +57,7 @@ def main(params, save_dir, debug_plot, circle_radius=11, diff_radius=4.54):
             intensities = factory.get_circle_data(radius, sir_tubulin_image)
             all_intensities.append(intensities)
 
-        # Alternative method: compute 2 best peaks on average circle
+        # Compute 2 best peaks on average circle
         average_circle_peaks = factory.get_average_circle_peaks(
             all_intensities, debug_plot=debug_plot
         )

@@ -407,3 +407,36 @@ def apply_hmm(hmm_parameters, sequence) -> list[int]:
     states_seq, _ = model.viterbi_inference(obs_seq)
 
     return states_seq
+
+
+def get_video_path(video_name: str, mitoses_path: str) -> str:
+    """Return the path of the video corresponding to the given name.
+    NB: used for developers only.
+
+    Parameters
+    ----------
+    video_name : str
+        Name of the video.
+    mitoses_path : str
+        Path to the mitoses folder.
+
+    Returns
+    -------
+    str
+        Path of the video.
+    """
+    # Video name start (acquisition name)
+    video_name_start = "*" + video_name.split("mitosis")[0].split(" ")[-1]
+    # Video name end (x_to_y.tiff)
+    video_name_end = "*" + "_".join(video_name.split("_")[-3:])
+    video_name_candidates = extract_patterns(
+        os.listdir(mitoses_path), [video_name_start + video_name_end]
+    )
+    # Check if video exists
+    if len(video_name_candidates) == 0:
+        return None
+
+    # Construct video path
+    video_path = os.path.join(mitoses_path, video_name_candidates[0])
+
+    return video_path

@@ -309,3 +309,16 @@ def smart_cropping(
         )
 
     return clipped_image
+
+
+def cell_counter_frame_to_video_frame(
+    cell_counter_frame: int, nb_channels=4
+) -> int:
+    """
+    Cell counter index starts at 1, just like Fiji.
+
+    To count frame, it just concatenates all channels.
+    For example, with 4 channels, frames 1, 2, 3 and 4 will be frame 1,
+    frames 5, 6, 7 and 8 will be frame 2, etc.
+    """
+    return (cell_counter_frame - 1) // nb_channels
