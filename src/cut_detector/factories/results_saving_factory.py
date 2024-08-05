@@ -1,16 +1,62 @@
 import os
+import random
 from typing import Optional
 from scipy.stats import ttest_1samp
 import numpy as np
 import matplotlib.pyplot as plt
 from napari import Viewer
+from tqdm import tqdm
 
+from ..utils.cell_track import CellTrack, generate_tracking_movie
 from ..utils.tools import re_organize_channels
 from ..constants.tracking import TIME_RESOLUTION
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.mt_cut_detection.impossible_detection import (
     ImpossibleDetection,
 )
+
+
+def grayscale_to_rgb(grayscale_image, channel_axis):
+    """Convert grayscale image to RGB image.
+
+    Parameters
+    ----------
+    grayscale_image: np.ndarray
+        Grayscale image. TYX.
+    channel_axis: int
+        Channel axis.
+
+    Returns
+    -------
+    np.ndarray
+        RGB image.
+    """
+    grayscale_image = grayscale_image.astype(np.float32)  # TYX
+    grayscale_image = grayscale_image / grayscale_image.max() * 255
+    grayscale_image = np.clip(grayscale_image, 0, 255)
+    grayscale_image = grayscale_image.astype(np.uint8)  # TYX
+
+    indexes = np.unique(grayscale_image)
+    fake_second_channel = np.copy(grayscale_image)
+    fake_third_channel = np.copy(grayscale_image)
+    for index in indexes:
+        if index == 0:
+            continue
+        fake_second_channel[grayscale_image == index] = random.randint(0, 255)
+        fake_third_channel[grayscale_image == index] = random.randint(0, 255)
+
+    grayscale_image = np.stack(
+        [
+            grayscale_image,
+            fake_second_channel,
+            fake_third_channel,
+        ],
+        axis=-1,
+    )  # TYXC
+
+    # Match original image shape
+    grayscale_image = np.moveaxis(grayscale_image, 3, channel_axis)  # TCYX
+    return grayscale_image
 
 
 class ResultsSavingFactory:
@@ -199,9 +245,7 @@ class ResultsSavingFactory:
         mitosis_tracks: list[MitosisTrack]
             List of mitosis tracks.
         """
-        print(
-            f"\n Among the {len(mitosis_tracks)} mitoses detected, there are:"
-        )
+        print(f"Among the {len(mitosis_tracks)} mitoses detected, there are:")
         for cut_id, count in self.mitosis_results_summary.items():
             print(
                 f"    - {count} mitoses in category {ImpossibleDetection(cut_id).name}"
@@ -209,8 +253,9 @@ class ResultsSavingFactory:
 
         if len(self.first_cut_times_gt) == 0:
             return
+
         print(
-            f"\n Among the {len(self.first_cut_times_gt)} mitoses annotated, there are:"
+            f"Among the {len(self.first_cut_times_gt)} mitoses annotated, there are:"
         )
         for cut_id, count in self.gt_mitosis_results_summary.items():
             print(
@@ -410,6 +455,8 @@ class ResultsSavingFactory:
         mitosis_tracks: list[MitosisTrack],
         video: np.ndarray,
         viewer: Optional[Viewer] = None,
+        segmentation_results: Optional[np.ndarray] = None,
+        cell_tracks: Optional[list[CellTrack]] = None,
     ) -> None:
         """Generate napari tracking mask.
 
@@ -421,6 +468,8 @@ class ResultsSavingFactory:
             Video to process. Any dimension order.
         viewer: napari.Viewer
             Napari viewer.
+        segmentation_results: np.ndarray
+            Cellpose results. TYX.
         """
 
         channel_axis = np.argmin(video.shape)
@@ -448,8 +497,12 @@ class ResultsSavingFactory:
         )
 
         # Iterate over mitosis_tracks
-        mask = np.zeros((nb_frames, height, width, 3), dtype=np.uint8)  # TYXC
-        for idx, mitosis_track in enumerate(mitosis_tracks):
+        mitoses_results = np.zeros(
+            (nb_frames, height, width, 3), dtype=np.uint8
+        )  # TYXC
+        for idx, mitosis_track in enumerate(tqdm(mitosis_tracks)):
+            if not mitosis_track.display():
+                continue
             _, mask_movie = mitosis_track.generate_video_movie(
                 video_to_process
             )
@@ -458,22 +511,22 @@ class ResultsSavingFactory:
                 [mask_movie, mask_movie, mask_movie], axis=-1
             )
             mask_movie[cell_indexes] = colors[idx]
-            initial_mask = mask[
+            initial_mask = mitoses_results[
                 mitosis_track.min_frame : mitosis_track.max_frame + 1,
                 mitosis_track.position.min_y : mitosis_track.position.max_y,
                 mitosis_track.position.min_x : mitosis_track.position.max_x,
                 :,
             ]
             # Avoid colors overlap
-            mask[
+            mitoses_results[
                 mitosis_track.min_frame : mitosis_track.max_frame + 1,
                 mitosis_track.position.min_y : mitosis_track.position.max_y,
                 mitosis_track.position.min_x : mitosis_track.position.max_x,
                 :,
             ] = np.maximum(mask_movie, initial_mask)
         # Match original image shape
-        mask = np.moveaxis(mask, 3, channel_axis)
-        assert mask.shape == video.shape
+        mitoses_results = np.moveaxis(mitoses_results, 3, channel_axis)  # TCYX
+        assert mitoses_results.shape == video.shape
 
         # Use point + text instead of red point for mid_body
         points = []
@@ -484,7 +537,9 @@ class ResultsSavingFactory:
             "color": "white",
             "translation": np.array([-30, 0]),
         }
-        for mitosis_track in mitosis_tracks:
+        for mitosis_track in tqdm(mitosis_tracks):
+            if not mitosis_track.display():
+                continue
             mid_body_legend = mitosis_track.get_mid_body_legend()
             for frame, frame_dict in mid_body_legend.items():
                 single_layer_points = np.array(
@@ -502,17 +557,51 @@ class ResultsSavingFactory:
                         features["category"] += [frame_dict["category"]]
         features["category"] = np.array(features["category"])
 
-        if viewer is not None:
+        if viewer is None:
+            return
+
+        viewer.add_image(
+            mitoses_results,
+            name="Cell divisions",
+            opacity=0.4,
+            rgb=rgb,
+            colormap=None if rgb else "inferno",
+        )
+        viewer.add_points(
+            points,
+            features=features,
+            text=text,
+            name="Mid-bodies",
+        )
+
+        if segmentation_results is not None:
+            segmentation_results = grayscale_to_rgb(
+                segmentation_results, channel_axis
+            )
+            assert segmentation_results.shape == video.shape
+
             viewer.add_image(
-                mask,
-                name="Cell divisions",
+                segmentation_results,
+                name="Segmentation",
                 opacity=0.4,
                 rgb=rgb,
                 colormap=None if rgb else "inferno",
+                visible=False,
             )
-            viewer.add_points(
-                points,
-                features=features,
-                text=text,
-                name="Mid-bodies",
+
+        if cell_tracks is not None:
+            mitoses_results = generate_tracking_movie(
+                cell_tracks, video_to_process
+            )  # TYX
+
+            mitoses_results = grayscale_to_rgb(mitoses_results, channel_axis)
+            assert mitoses_results.shape == video.shape
+
+            viewer.add_image(
+                mitoses_results,
+                name="Tracking",
+                opacity=0.4,
+                rgb=rgb,
+                colormap=None if rgb else "inferno",
+                visible=False,
             )

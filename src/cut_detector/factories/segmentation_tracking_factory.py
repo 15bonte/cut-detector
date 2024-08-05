@@ -6,9 +6,7 @@ from cellpose import models
 from tqdm import tqdm
 
 from ..utils.segmentation_tracking.mask_utils import (
-    centroid,
-    from_labeling_with_roi,
-    simplify,
+    get_spots_from_frame,
 )
 from ..utils.cell_spot import CellSpot
 from ..utils.cell_track import CellTrack
@@ -61,7 +59,8 @@ class SegmentationTrackingFactory:
 
     @staticmethod
     def get_spots_from_cellpose(
-        cellpose_results: np.ndarray, parallel: bool = False
+        cellpose_results: np.ndarray,
+        parallel: bool = False,
     ) -> dict[int, list[CellSpot]]:
         """Extract spots from cellpose results.
 
@@ -70,62 +69,14 @@ class SegmentationTrackingFactory:
         cellpose_results : np.ndarray
             TYX
         parallel : bool
-            If True, use parallel processing.
-            Set to False by default, as it is not obvious that this is much faster.
+            Whether to use parallel processing.
 
         Returns
         -------
         dict[int, list[CellSpot]]
             Dictionary with frame number as key and list of cell spots as value.
         """
-
-        def get_spots_from_frame(
-            frame: int, cellpose_result: np.ndarray
-        ) -> tuple[int, list[CellSpot]]:
-            """Extract spots from a single frame.
-
-            Returns
-            -------
-            list[CellSpot]
-                List of cell spots.
-            """
-            # Create and simplify polygons like Trackmate
-            # NB: be careful, Trackmate switches x and y
-            polygons = from_labeling_with_roi(cellpose_result)
-            # assert len(polygons) == cellpose_result.max()
-            simplified_polygons = []
-            for polygon in polygons:
-                simplified_polygon = simplify(polygon, interval=2, epsilon=0.5)
-                simplified_polygons.append(simplified_polygon)
-            # Get spots from polygons
-            cell_spots = []
-            for polygon in simplified_polygons:
-                # Compute cell bounding box
-                abs_min_x, abs_max_x, abs_min_y, abs_max_y = (
-                    np.abs(np.min(polygon.y)),
-                    np.abs(np.max(polygon.y)),
-                    np.abs(np.min(polygon.x)),
-                    np.abs(np.max(polygon.x)),
-                )
-                # Compute cell centroid
-                cell_centroid = centroid(
-                    polygon.y,
-                    polygon.x,
-                )  # (x, y)
-                cell_spot = CellSpot(
-                    frame,
-                    cell_centroid[0],  # x
-                    cell_centroid[1],  # y
-                    -1,
-                    abs_min_x,
-                    abs_max_x,
-                    abs_min_y,
-                    abs_max_y,
-                    [[x, y] for x, y in zip(polygon.y, polygon.x)],
-                )
-                cell_spots.append(cell_spot)
-            return frame, cell_spots
-
+        print("Extracting spots from segmentation results.")
         if parallel:
             future_list = []
             with concurrent.futures.ThreadPoolExecutor() as e:
@@ -182,7 +133,7 @@ class SegmentationTrackingFactory:
             pretrained_model=self.model_path, device=device
         )
 
-        print("Run cellpose...")
+        print("Running Cellpose.")
         start = time.time()
         cellpose_results, flows, _ = model.eval(  # TYX
             video,
@@ -252,7 +203,7 @@ class SegmentationTrackingFactory:
     def perform_segmentation_tracking(
         self,
         video: np.ndarray,
-    ) -> tuple[list[CellSpot], list[CellTrack]]:
+    ) -> tuple[list[CellSpot], list[CellTrack], np.ndarray]:
         """Perform cell segmentation and tracking.
 
         Parameters
@@ -266,11 +217,13 @@ class SegmentationTrackingFactory:
             List of cell spots.
         list[CellTrack]
             List of cell tracks.
+        np.ndarray
+            Segmentation results. TYX.
         """
 
-        cellpose_results, _, diam_labels = self.perform_segmentation(video)
+        segmentation_results, _, diam_labels = self.perform_segmentation(video)
         cell_spots, cell_tracks = self.perform_tracking(
-            cellpose_results, diam_labels
+            segmentation_results, diam_labels
         )
 
-        return cell_spots, cell_tracks
+        return cell_spots, cell_tracks, segmentation_results

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Optional
-
+from tqdm import tqdm
 import numpy as np
 import pandas as pd
 
@@ -45,6 +45,43 @@ def get_whole_box_dimensions_advanced(
                 current_spot.abs_max_y,
             )
     return box_dimensions_contour
+
+
+def generate_tracking_movie(
+    tracks: list[CellTrack], video: np.ndarray
+) -> np.ndarray:
+    """
+    Generate tracking movie.
+
+    Parameters
+    ----------
+    tracks : list[CellTrack]
+        List of tracks.
+    video : np.ndarray
+        Video. TYXC.
+
+    Returns
+    -------
+    np.ndarray
+        Tracking movie. TYX.
+    """
+    nb_frames, height, width = video.shape[:-1]
+
+    mask = np.zeros((nb_frames, width, height)).astype(np.uint8)  # TXY
+    for frame in tqdm(range(nb_frames)):
+        for track in tracks:
+            box_dim_contours = get_whole_box_dimensions_advanced(
+                [track], frame
+            )  # (x, y)
+            mask[frame] = np.maximum(
+                mask[frame],
+                int(track.track_id + 1)
+                * box_dim_contours.get_mask((width, height)),
+            )
+
+    # Switch X and Y axes to match video shape
+    mask = np.moveaxis(mask, -1, 1)  # TYX
+    return mask
 
 
 class CellTrack(Track[CellSpot]):

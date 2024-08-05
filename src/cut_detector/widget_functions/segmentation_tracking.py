@@ -17,7 +17,7 @@ def perform_tracking(
     spots_save_dir: Optional[str] = None,
     tracks_save_dir: Optional[str] = None,
     save: bool = True,
-) -> tuple[list[CellSpot], list[CellTrack]]:
+) -> tuple[list[CellSpot], list[CellTrack], np.ndarray]:
     """
     Run cell segmentation and tracking on the given video.
 
@@ -38,8 +38,8 @@ def perform_tracking(
 
     Returns
     -------
-    tuple[list[CellSpot], list[CellTrack]]
-        List of cell spots and list of cell tracks.
+    tuple[list[CellSpot], list[CellTrack], np.ndarray]
+        List of cell spots, list of cell tracks, segmentation results.
     """
 
     print("### SEGMENTATION & TRACKING ###")
@@ -52,12 +52,12 @@ def perform_tracking(
     segmentation_tracking_factory = SegmentationTrackingFactory(model_path)
     # Swap dimensions from TYXC to TCYX
     video = np.moveaxis(video, 3, 1)
-    cell_spots, cell_tracks = (
+    cell_spots, cell_tracks, segmentation_results = (
         segmentation_tracking_factory.perform_segmentation_tracking(video)
     )
 
     if not save:
-        return cell_spots, cell_tracks
+        return cell_spots, cell_tracks, segmentation_results
 
     assert spots_save_dir is not None
     assert tracks_save_dir is not None
@@ -90,4 +90,4 @@ def perform_tracking(
         with open(save_path, "wb") as f:
             pickle.dump(cell_track, f)
 
-    return cell_spots, cell_tracks
+    return cell_spots, cell_tracks, segmentation_results

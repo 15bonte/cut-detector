@@ -22,7 +22,7 @@ class BoxDimensionsContour(BoxDimensions):
         Returns
         -------
         np.ndarray
-            Mask.
+            Mask 2D.
         """
         mask = np.zeros(local_shape)
         for points in self.list_points:
@@ -38,7 +38,7 @@ class BoxDimensionsContour(BoxDimensions):
         return mask
 
     def update_list_points(self, relative: bool) -> None:
-        """Update attributes
+        """Update list of contour points.
 
         Parameters
         ----------

@@ -25,11 +25,14 @@ def main(
     """
     # Load Cellpose results
     with open(segmentation_results_path, "rb") as f:
-        cellpose_results = pickle.load(f)
+        cellpose_results = pickle.load(f)  # TYX
 
     # Perform tracking from Cellpose results
     factory = SegmentationTrackingFactory("")
-    cell_spots, cell_tracks = factory.perform_tracking(cellpose_results, 171)
+    cell_spots, _ = factory.perform_tracking(
+        cellpose_results,
+        diam_labels=171,  # hardcoded since normally included in Cellpose model
+    )
 
     # Display results
     for frame, cellpose_result in enumerate(cellpose_results):

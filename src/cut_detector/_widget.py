@@ -10,6 +10,8 @@ import tempfile
 import numpy as np
 from skimage import io
 
+from cut_detector.utils.cell_track import CellTrack
+
 
 from .utils.tools import re_organize_channels
 
@@ -32,10 +34,39 @@ def video_whole_process(
     spots_dir_name: str,
     tracks_dir_name: str,
     mitoses_dir_name: str,
-) -> None:
-    """Perform the whole process on a single video."""
+) -> tuple[list[CellTrack], np.ndarray]:
+    """Perform the whole process on a single video.
 
-    perform_tracking(
+    Parameters
+    ----------
+    video : np.ndarray
+        Video. TYXC.
+    video_name : str
+        Video name.
+    default_model_check_box : bool
+        Use default segmentation model?
+    segmentation_model : str
+        Cellpose segmentation model.
+    save_check_box : bool
+        Save cell divisions movies?
+    movies_save_dir : str
+        Directory to save division movies.
+    spots_dir_name : str
+        Directory to save .bin cell spots.
+    tracks_dir_name : str
+        Directory to save .bin cell tracks.
+    mitoses_dir_name : str
+        Directory to save .bin mitoses.
+
+    Returns
+    -------
+    list[CellTrack]
+        Cell tracks and segmentation results.
+    np.ndarray
+        Segmentation results.
+    """
+
+    _, cell_tracks, segmentation_results = perform_tracking(
         video,
         str(Path(segmentation_model)) if not default_model_check_box else None,
         video_name,
@@ -58,6 +89,8 @@ def video_whole_process(
         parallel_detection=True,
     )
     perform_mt_cut_detection(video, video_name, mitoses_dir_name)
+
+    return cell_tracks, segmentation_results
 
 
 @magic_factory(
@@ -90,6 +123,11 @@ def video_whole_process(
         text="Debug mode",
         value=False,
     ),
+    display_check_box=dict(
+        widget_type="CheckBox",
+        text="Display segmentation and tracking",
+        value=False,
+    ),
 )
 def whole_process(
     img_layer: "napari.layers.Image",
@@ -100,6 +138,7 @@ def whole_process(
     movies_save_dir: str,
     results_save_dir: str,
     debug_mode_check_box: bool,
+    display_check_box: bool,
 ):
 
     start = time.time()
@@ -111,7 +150,7 @@ def whole_process(
 
     video = re_organize_channels(img_layer.data)  # TYXC
 
-    video_whole_process(
+    cell_tracks, segmentation_results = video_whole_process(
         video,
         img_layer.name,
         default_model_check_box,
@@ -124,12 +163,22 @@ def whole_process(
     )
 
     # Results saving
-    perform_results_saving(
-        mitoses_dir.name,
-        save_dir=results_save_dir,
-        video=img_layer.data,
-        viewer=viewer,
-    )
+    if display_check_box:
+        perform_results_saving(
+            mitoses_dir.name,
+            save_dir=results_save_dir,
+            video=img_layer.data,
+            viewer=viewer,
+            segmentation_results=segmentation_results,
+            cell_tracks=cell_tracks,
+        )
+    else:
+        perform_results_saving(
+            mitoses_dir.name,
+            save_dir=results_save_dir,
+            video=img_layer.data,
+            viewer=viewer,
+        )
 
     if debug_mode_check_box:
         shutil.copytree(

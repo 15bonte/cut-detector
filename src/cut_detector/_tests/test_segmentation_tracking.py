@@ -19,7 +19,7 @@ def test_track_generation():
         os.path.join(get_data_path("videos"), "example_video.tif")
     )  # TYXC
 
-    cell_spots, cell_tracks = perform_tracking(video, save=False)
+    cell_spots, cell_tracks, _ = perform_tracking(video, save=False)
 
     assert 230 <= len(cell_spots) <= 240  # should be 236
     assert len(cell_tracks) == 5

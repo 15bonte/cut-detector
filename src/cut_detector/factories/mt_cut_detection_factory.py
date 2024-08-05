@@ -67,6 +67,7 @@ class MtCutDetectionFactory:
         - more than 2 daughter tracks
         - nucleus is near border
         - no midbody spot after cytokinesis
+        - metaphase detected after cytokinesis
 
         Parameters
         ----------
@@ -80,6 +81,19 @@ class MtCutDetectionFactory:
         bool
             True if classification is impossible, False otherwise.
         """
+
+        if (
+            mitosis_track.key_events_frame["metaphase"]
+            > mitosis_track.key_events_frame["cytokinesis"]
+        ):
+            mitosis_track.key_events_frame["first_mt_cut"] = (
+                ImpossibleDetection.METAPHASE_AFTER_CYTOKINESIS
+            )
+
+            mitosis_track.key_events_frame["second_mt_cut"] = (
+                ImpossibleDetection.METAPHASE_AFTER_CYTOKINESIS
+            )
+            return True
 
         if mitosis_track.is_near_border(video):
             mitosis_track.key_events_frame["first_mt_cut"] = (
@@ -166,6 +180,7 @@ class MtCutDetectionFactory:
         hmm_parameters = np.load(hmm_bridges_parameters_file)
 
         # Check if classification is impossible and smooth
+        print("Correcting prediction inconsistencies.")
         for mitosis_track in tqdm(mitosis_tracks):
             classification_impossible = (
                 self._is_bridges_classification_impossible(
