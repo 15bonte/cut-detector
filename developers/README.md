@@ -1,4 +1,4 @@
-# Developers README
+# README for developers
 
 ## How to generate ground truth for training and evaluation
 
@@ -12,17 +12,22 @@ Annotations are performed using Fiji and plugin CellCounter. In Fiji, open a cel
 
 ## Rename categories
 
-Create and rename categories as follows. Order is not very important, but naming is. “?” is used for categories where you are not sure of the true category.
+Create and rename categories as follows. Order is not very important, but naming is. “?” is used for categories where you are not sure of the true category. Note that these categories correspond to the ones in cut_detector/constants/annotations.py.
 
 <img src="https://github.com/15bonte/cut-detector/blob/main/developers/images/CellCounter_categories.png">
 
-• Annotate
-One annotation should correspond to one midbody. Just select the corresponding category and click on the image. A marker will appear with the class number.
-If there is no mid-body, do not annotate.
+## Annotate
 
-It is not important on which channel you annotate, but do not make the same annotation on two different channels.
-If you have made a mistake, click on “Delete” to remove the last marker.
-If you want to remove a marker which is not the last one, move back to the frame, select “Delete mode” and the corresponding class, and click on the marker to remove it.
+One annotation should correspond to one midbody. Just select the corresponding category and click on the image. A marker will appear with the class number. If there is no mid-body, do not annotate.
 
-• Save
+<img src="https://github.com/15bonte/cut-detector/blob/main/developers/images/CellCounter_annotations.png">
+
+It is not important on which channel you annotate, but do not make the same annotation on two different channels. If you have made a mistake, click on “Delete” to remove the last marker. If you want to remove a marker which is not the last one, move back to the frame, select “Delete mode” and the corresponding class, and click on the marker to remove it.
+
+## Save
+
 Once you have annotated everything, save your results with “Save markers”. Keep default name for the file. It should start by “CellCounter\_”.
+
+## Update .bin mitoses files
+
+Use cut_detector/developers/ground_truth_generation/annotations_upload.py to store ground truth data in .bin mitoses files.

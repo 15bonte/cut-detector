@@ -101,7 +101,7 @@ def upload_annotations(
     annotations_folder: str,
     video_path: str,
     mitoses_folder: str,
-    save: Optional[bool] = True,
+    save: bool,
 ) -> tuple[int]:
     """Function used to upload annotations and perform mid-body detection evaluation.
 
@@ -113,8 +113,8 @@ def upload_annotations(
         Path to video file.
     mitoses_folder : str
         Folder containing mitosis tracks.
-    save : Optional[bool], optional
-        Whether to update mitoses with annotations, by default True.
+    save : bool
+        Whether to update mitoses with annotations.
 
     Returns
     -------
@@ -217,6 +217,49 @@ def upload_annotations(
     )
 
     return mb_detected, mb_not_detected
+
+
+def upload_annotations_folder(
+    annotations_folder: str,
+    video_folder: str,
+    mitoses_folder: str,
+    save: bool,
+) -> tuple[int]:
+    """Main annotations upload function.
+
+    Parameters
+    ----------
+    annotations_folder : str
+        Folder containing annotations.
+    video_path : str
+        Path to video folder.
+    mitoses_folder : str
+        Folder containing mitosis tracks.
+    save : Optional[bool], optional
+        Whether to update mitoses with annotations, by default True.
+
+    Returns
+    -------
+    tuple[int]
+        Number of mid-bodies detected and not detected.
+    """
+    all_detected, all_not_detected = 0, 0
+
+    video_paths = os.listdir(video_folder)
+    for video_idx, video in enumerate(video_paths):
+        video_progress = f"{video_idx + 1}/{len(video_paths)}"
+        print(f"\nVideo {video_progress}...")
+        # Perform mid-body detection evaluation
+        detected, not_detected = upload_annotations(
+            annotations_folder,
+            os.path.join(video_folder, video),
+            mitoses_folder,
+            save=save,
+        )
+        all_detected += detected
+        all_not_detected += not_detected
+
+    return all_detected, all_not_detected
 
 
 def csv_parameters_to_dict(parameters_path: str) -> dict:
