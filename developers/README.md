@@ -14,10 +14,10 @@ Annotations are performed using Fiji and plugin CellCounter. In Fiji, open a cel
 
 Create and rename categories as follows. Order is not very important, but naming is. “?” is used for categories where you are not sure of the true category.
 
-![Cell Counter categories](cut_detector/developers/images/CellCounter categories.png)
+<img src="https://github.com/15bonte/cut-detector/blob/main/developers/images/CellCounter_categories.png">
 
 • Annotate
-One annotation should correspond to one mid-body. Just select the corresponding category and click on the image. A marker will appear with the class number.
+One annotation should correspond to one midbody. Just select the corresponding category and click on the image. A marker will appear with the class number.
 If there is no mid-body, do not annotate.
 
 It is not important on which channel you annotate, but do not make the same annotation on two different channels.
