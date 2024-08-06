@@ -16,7 +16,7 @@ from ..utils.mt_cut_detection.impossible_detection import (
 )
 
 
-def grayscale_to_rgb(grayscale_image, channel_axis):
+def grayscale_to_rgb(grayscale_image, channel_axis, minimum_value=50):
     """Convert grayscale image to RGB image.
 
     Parameters
@@ -34,16 +34,23 @@ def grayscale_to_rgb(grayscale_image, channel_axis):
     grayscale_image = grayscale_image.astype(np.float32)  # TYX
     grayscale_image = grayscale_image / grayscale_image.max() * 255
     grayscale_image = np.clip(grayscale_image, 0, 255)
+    # Avoid values close to 0 as they are too dark
+    grayscale_image[grayscale_image > 0] = (
+        grayscale_image[grayscale_image > 0] / 255 * (255 - minimum_value)
+        + minimum_value
+    )
     grayscale_image = grayscale_image.astype(np.uint8)  # TYX
 
     indexes = np.unique(grayscale_image)
     fake_second_channel = np.copy(grayscale_image)
     fake_third_channel = np.copy(grayscale_image)
-    for index in indexes:
+
+    random_colors = get_random_different_colors(len(indexes), nb_channels=2)
+    for random_color, index in zip(random_colors, indexes):
         if index == 0:
             continue
-        fake_second_channel[grayscale_image == index] = random.randint(0, 255)
-        fake_third_channel[grayscale_image == index] = random.randint(0, 255)
+        fake_second_channel[grayscale_image == index] = random_color[0]
+        fake_third_channel[grayscale_image == index] = random_color[1]
 
     grayscale_image = np.stack(
         [
