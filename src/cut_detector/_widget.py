@@ -162,6 +162,9 @@ def whole_process(
         mitoses_dir.name,
     )
 
+    end = time.time()
+    print(f"\nProcess finished in {int((end - start) / 60)} minutes!")
+
     # Results saving
     if display_check_box:
         perform_results_saving(
@@ -195,9 +198,6 @@ def whole_process(
     spots_dir.cleanup()
     tracks_dir.cleanup()
     mitoses_dir.cleanup()
-
-    end = time.time()
-    print(f"\nProcess finished in {int((end - start) / 60)} minutes!")
 
 
 @magic_factory(
