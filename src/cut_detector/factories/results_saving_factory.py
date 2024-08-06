@@ -59,6 +59,47 @@ def grayscale_to_rgb(grayscale_image, channel_axis):
     return grayscale_image
 
 
+def get_random_different_colors(
+    nb_colors: int, minimum_value=50, nb_channels=3, interval=15
+) -> np.ndarray:
+    """Get random different colors.
+
+    Parameters
+    ----------
+    nb_colors: int
+        Number of colors.
+    minimum_value: int
+        Minimum value for colors to avoid dark colors. The default is 50.
+    nb_channels: int
+        Number of channels. The default is 3.
+    interval: int
+        Interval between colors. The default is 15.
+
+    Returns
+    -------
+    np.ndarray
+        Colors. Shape: (nb_colors, nb_channels).
+    """
+    colors = []
+    for _ in range(nb_channels):
+        colors_pick_list = np.array(range(minimum_value, 256))
+        channel_colors = []
+        for _ in range(nb_colors):
+            if len(colors_pick_list) == 0:
+                colors_pick_list = np.array(range(minimum_value, 256))
+            random_color = np.random.choice(colors_pick_list)
+            channel_colors.append(random_color)
+            # Remove values close to random_color to avoid similar colors
+            colors_pick_list = np.delete(
+                colors_pick_list,
+                np.where(np.abs(colors_pick_list - random_color) < interval),
+            )
+        colors.append(channel_colors)
+
+    colors = np.array(colors).T.astype(np.uint8)
+    return np.array(colors)
+
+
 class ResultsSavingFactory:
     """Factory to save results.
 
@@ -484,17 +525,7 @@ class ResultsSavingFactory:
         nb_frames, height, width, _ = video_to_process.shape
 
         # Colors list
-        colors = np.array(
-            [
-                [
-                    np.random.randint(0, 255),
-                    np.random.randint(0, 255),
-                    np.random.randint(0, 255),
-                ]
-                for _ in range(len(mitosis_tracks))
-            ],
-            dtype=np.uint8,
-        )
+        colors = get_random_different_colors(len(mitosis_tracks))
 
         # Iterate over mitosis_tracks
         mitoses_results = np.zeros(
