@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import pickle
 import shutil
 import time
 from typing import Optional
@@ -422,6 +423,11 @@ def micro_tubules_cut_detection(
         label="Directory to load .bin mitoses: ",
         mode="d",
     ),
+    exported_tracks_dir=dict(
+        widget_type="FileEdit",
+        label="Directory to load .bin tracks: ",
+        mode="d",
+    ),
     results_save_dir=dict(
         widget_type="FileEdit",
         label="Directory to save results: ",
@@ -432,11 +438,27 @@ def results_saving(
     img_layer: "napari.layers.Image",
     viewer: "napari.Viewer",
     exported_mitoses_dir: str,
+    exported_tracks_dir: str,
     results_save_dir: str,
 ):
+    # Load cell tracks
+    cell_tracks: list[CellTrack] = []
+    # Iterate over "bin" files in exported_tracks_dir
+    video_exported_tracks_dir = os.path.join(
+        exported_tracks_dir, img_layer.name
+    )
+    for state_path in os.listdir(video_exported_tracks_dir):
+        # Load mitosis track
+        with open(
+            os.path.join(video_exported_tracks_dir, state_path), "rb"
+        ) as f:
+            cell_track: CellTrack = pickle.load(f)
+            cell_tracks.append(cell_track)
+
     perform_results_saving(
         exported_mitoses_dir,
         save_dir=results_save_dir,
         video=img_layer.data,
         viewer=viewer,
+        cell_tracks=cell_tracks,
     )
