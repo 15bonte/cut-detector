@@ -9,11 +9,14 @@
 
 Automatic micro-tubules cut detector.
 
-https://github.com/15bonte/cut-detector/assets/28538099/3c59fbee-e599-4a9c-81a1-01e38a670fc1
+https://github.com/user-attachments/assets/89d63336-729c-43c1-8fa3-43a4ec4cfc87
 
 ---
 
 This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookiecutter-napari-plugin] template.
+
+
+
 
 <!--
 Don't miss the full getting started guide to set up your new package:
