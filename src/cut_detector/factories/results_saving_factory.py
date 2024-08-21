@@ -430,6 +430,7 @@ class ResultsSavingFactory:
     def save_csv_results(
         self,
         mitosis_tracks: list[MitosisTrack],
+        mitosis_video_names: list[str],
         save_dir: Optional[str] = None,
     ) -> None:
         """Save results in CSV file.
@@ -438,6 +439,8 @@ class ResultsSavingFactory:
         ----------
         mitosis_tracks: list[MitosisTrack]
             List of mitosis tracks.
+        mitosis_video_names: list[str]
+            List of mitosis video names.
         save_dir: Optional[str]
             Directory to save the results.
         """
@@ -449,7 +452,7 @@ class ResultsSavingFactory:
         if not os.path.exists(csv_path):
             with open(csv_path, "w") as f:
                 f.write(
-                    "id;mother track;daughter track(s);metaphase frame;cytokinesis frame;first MT cut frame;second MT cut frame;first MT cut time;second MT cut time\n"
+                    "video;id;mother track;daughter track(s);metaphase frame;cytokinesis frame;first MT cut frame;second MT cut frame;first MT cut time;second MT cut time\n"
                 )
             f.close()
 
@@ -462,7 +465,8 @@ class ResultsSavingFactory:
 
         # Store useful results in global results file
         with open(csv_path, "a") as f:
-            for mitosis_track in mitosis_tracks:
+            for mitosis_track, mitosis_video_name in zip(mitosis_tracks, mitosis_video_names):
+                f.write(f"{mitosis_video_name};")
                 f.write(f"{mitosis_track.id};")
                 f.write(f"{mitosis_track.mother_track_id};")
                 daughter_ids = ",".join(

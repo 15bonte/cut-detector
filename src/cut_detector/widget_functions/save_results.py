@@ -47,11 +47,13 @@ def perform_results_saving(
         os.makedirs(save_dir)
 
     mitosis_tracks: list[MitosisTrack] = []
+    mitosis_video_names: list[str] = []
     # Iterate over "bin" files in exported_mitoses_dir
     for state_path in os.listdir(exported_mitoses_dir):
         with open(os.path.join(exported_mitoses_dir, state_path), "rb") as f:
             mitosis_track: MitosisTrack = pickle.load(f)
             mitosis_tracks.append(mitosis_track)
+            mitosis_video_names.append(state_path.split("_mitosis_")[0])
 
     # Define lists and dictionaries to store results
     results_saving_factory = ResultsSavingFactory()
@@ -65,7 +67,9 @@ def perform_results_saving(
     # Perform a series of tests, prints and plots
     results_saving_factory.perform_t_test()
     results_saving_factory.print_analysis_summary(mitosis_tracks)
-    results_saving_factory.save_csv_results(mitosis_tracks, save_dir)
+    results_saving_factory.save_csv_results(
+        mitosis_tracks, mitosis_video_names, save_dir
+    )
     results_saving_factory.box_plot_cut_differences(show, save_dir)
     results_saving_factory.plot_cut_distributions(show, save_dir)
 
