@@ -10,9 +10,9 @@ class ImpossibleDetection(IntEnum):
     MORE_THAN_TWO_DAUGHTER_TRACKS = -2
     NEAR_BORDER = -3
     NO_MID_BODY_DETECTED_AFTER_CYTOKINESIS = -4
-    MT_CUT_AT_CYTOKINESIS = -5
+    MT_CUT_AT_CYTOKINESIS = -5  # deprecated
     NO_CUT_DETECTED = -6
-    LIGHT_SPOT = -7
+    LIGHT_SPOT = -7  # deprecated
     TOO_SHORT_CUT = -8
     METAPHASE_AFTER_CYTOKINESIS = -9
 

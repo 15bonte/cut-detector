@@ -24,38 +24,13 @@ class MtCutDetectionFactory:
     ----------
     margin : int
         Number of pixels on each side of the midbody.
-    # Light spot detection parameters
-    intensity_threshold_light_spot : int
-        Intensity threshold for the light spot detection.
-    h_maxima_light_spot : int
-        h for the h_maxima function (light spot detection).
-    center_tolerance_light_spot : int
-        Center tolerance to not count the light spots that are too close to the center.
-    min_percentage_light_spot : float
-        Minimum percentage of frames with light spots to consider the mitosis as a light spot mitosis.
-    crop_size_light_spot : int
-        Size of the crop for the light spot detection.
-    length_light_spot : int
-        Length of the video to check around the mt cut for light spot detection.
     """
 
     def __init__(
         self,
         margin=50,
-        intensity_threshold_light_spot=350,
-        h_maxima_light_spot=130,
-        center_tolerance_light_spot=5,
-        min_percentage_light_spot=0.1,
-        crop_size_light_spot=20,
-        length_light_spot=3,
     ) -> None:
         self.margin = margin
-        self.intensity_threshold_light_spot = intensity_threshold_light_spot
-        self.h_maxima_light_spot = h_maxima_light_spot
-        self.center_tolerance_light_spot = center_tolerance_light_spot
-        self.min_percentage_light_spot = min_percentage_light_spot
-        self.crop_size_light_spot = crop_size_light_spot
-        self.length_light_spot = length_light_spot
 
     @staticmethod
     def _is_bridges_classification_impossible(
@@ -238,24 +213,6 @@ class MtCutDetectionFactory:
                 )
                 mitosis_track.key_events_frame["second_mt_cut"] = (
                     ImpossibleDetection.TOO_SHORT_CUT
-                )
-                continue
-
-            if mitosis_track.light_spot_detected(
-                video,
-                first_mt_cut_frame_abs,
-                self.length_light_spot,
-                self.crop_size_light_spot,
-                self.h_maxima_light_spot,
-                self.intensity_threshold_light_spot,
-                self.center_tolerance_light_spot,
-                self.min_percentage_light_spot,
-            ):
-                mitosis_track.key_events_frame["first_mt_cut"] = (
-                    ImpossibleDetection.LIGHT_SPOT
-                )
-                mitosis_track.key_events_frame["second_mt_cut"] = (
-                    ImpossibleDetection.LIGHT_SPOT
                 )
                 continue
 

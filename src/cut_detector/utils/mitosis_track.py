@@ -24,7 +24,11 @@ from .cell_track import CellTrack
 from .box_dimensions_contour import BoxDimensionsContour
 from .box_dimensions import BoxDimensions
 from .mt_cut_detection.impossible_detection import ImpossibleDetection
-from .image_tools import resize_image, smart_cropping, cell_counter_frame_to_video_frame
+from .image_tools import (
+    resize_image,
+    smart_cropping,
+    cell_counter_frame_to_video_frame,
+)
 
 
 def snake_to_normal(snake_str: str) -> str:
@@ -658,149 +662,6 @@ class MitosisTrack:
             percent_detected,
             average_position_difference,
         )
-
-    def light_spot_detected(
-        self,
-        video: np.ndarray,
-        first_cut_frame: int,
-        length_light_spot: int,
-        crop_size_light_spot: int,
-        h_maxima_light_spot: int,
-        intensity_threshold_light_spot: int,
-        center_tolerance_light_spot: int,
-        min_percentage_light_spot: float,
-        print_enabled=False,
-    ) -> bool:
-        """
-        Check if there is a light spot in crops of size crop_size_light_spot
-        around the mid-body, in length_light_spot frames around the first micro-tubules cut.
-
-        Spots are detected using h-maxima method with h=h_maxima_light_spot.
-        Ignore spots with intensity lower than intensity_threshold_light_spot.
-        Ignore spots close to the center (potential mid-bodies), i.e. within
-        center_tolerance_light_spot pixels.
-
-        Light spot is considered as detected if at least in min_percentage_light_spot % of frames.
-
-        Parameters
-        ----------
-        video : np.ndarray
-            TYXC
-        first_cut_frame : int
-            frame of first micro-tubules cut
-        length_light_spot : int
-            number of frames around first_cut_frame to consider
-        crop_size_light_spot : int
-            size of crop around mid-body to consider
-        h_maxima_light_spot : int
-            h parameter of h-maxima method
-        intensity_threshold_light_spot : int
-            minimum intensity of spot to consider
-        center_tolerance_light_spot : int
-            tolerance around mid-body to ignore spots
-        min_percentage_light_spot : float
-            minimum percentage of frames where light spot is detected
-        print_enabled : bool
-            if True, print intermediate results
-
-        Returns
-        -------
-        spot_detected : bool
-            True if light spot is detected
-        """
-        # Get the mitosis video crop
-        video = video[
-            :,
-            self.position.min_y : self.position.max_y,
-            self.position.min_x : self.position.max_x,
-            :,
-        ]
-
-        nb_spot_detected = 0
-        frame_counted = 0
-        # Iterate over video frames
-        for i in range(-length_light_spot // 2, length_light_spot // 2):
-            frame = first_cut_frame + i
-
-            # Make sure mid-body exists at frame
-            if not self.mid_body_spots or frame not in self.mid_body_spots:
-                continue
-
-            # Get mid-body coordinates
-            mid_body_frame = self.mid_body_spots[frame]
-            x_pos, y_pos = mid_body_frame.x, mid_body_frame.y
-
-            # Extract image and crop on the midbody
-            img = np.transpose(video[frame, ...], (2, 0, 1))  # CYX
-            crop = smart_cropping(
-                img, crop_size_light_spot, x_pos, y_pos, pad=True
-            )[
-                0, ...
-            ]  # YX
-
-            # Perform opening to remove small spots and apply h_maxima to get potential spots
-            filtered_image = opening(crop, footprint=np.ones((3, 3)))
-            local_maxima = extrema.h_maxima(
-                filtered_image, h_maxima_light_spot
-            )
-
-            # Label spot regions and remove inconsistent ones
-            labeled_local_maxima, nb_labels = ndimage.label(
-                local_maxima, structure=np.ones((3, 3))
-            )
-            for label in range(1, nb_labels + 1):
-                # Labels intensity in original image has to be higher than threshold
-                if (
-                    crop[np.where(labeled_local_maxima == label)].mean()
-                    < intensity_threshold_light_spot
-                ):
-                    labeled_local_maxima[labeled_local_maxima == label] = 0
-            # Re-label accordingly
-            labeled_local_maxima, nb_labels = ndimage.label(
-                labeled_local_maxima > 0, structure=np.ones((3, 3))
-            )
-
-            # Get center of mass to locate spots
-            spots = ndimage.center_of_mass(
-                local_maxima, labeled_local_maxima, range(1, nb_labels + 1)
-            )
-            spots = np.asarray(spots, dtype=np.int64)
-
-            # Remove spots that are too close to the center
-            for spot in spots:
-                if (
-                    np.abs(spot[0] - crop_size_light_spot)
-                    < center_tolerance_light_spot
-                ) and (
-                    np.abs(spot[1] - crop_size_light_spot)
-                    < center_tolerance_light_spot
-                ):
-                    spots = np.delete(
-                        spots, np.where((spots == spot).all(axis=1))[0], axis=0
-                    )
-
-            if len(spots) > 0:
-                nb_spot_detected += 1
-            frame_counted += 1
-
-        # Light spot is considered as detected if at least in MIN_PERCENTAGE_LIGHTSPOT % of frames
-        if frame_counted > 0:
-            percentage_spot_detected = nb_spot_detected / frame_counted
-            spot_detected = (
-                percentage_spot_detected >= min_percentage_light_spot
-            )
-        else:
-            spot_detected = False
-
-        if spot_detected and print_enabled:
-            print("nb_spot_detected: ", nb_spot_detected)
-            print("frame_counted: ", frame_counted)
-            print("spot_detected: ", spot_detected)
-            print(
-                f"Track: {self.id}_{self.mother_track_id}_to_{','.join(str(daughter) for daughter in self.daughter_track_ids)}"
-            )
-
-        return spot_detected
 
     def get_bridge_images(
         self, video: np.ndarray, margin: int
