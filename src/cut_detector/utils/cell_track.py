@@ -127,36 +127,46 @@ class CellTrack(Track[CellSpot]):
         ----------
         predictions : list[int]
             list of predictions for each frame of the track.
-
-        Returns
-        -------
-        None.
-
         """
-        for idx, frame in enumerate(sorted(self.spots.keys())):
-            self.spots[frame].predicted_phase = predictions[idx]
+        assert len(predictions) == self.stop - self.start + 1
 
         # Store last metaphase spot of each group
         metaphase_finished = False
-        for frame in range(self.start, self.stop + 1):
+        metaphase_frames = []
+        for abs_frame in range(self.start, self.stop + 1):
+            rel_frame = abs_frame - self.start
+
+            if (
+                abs_frame not in self.spots
+            ):  # current frame does not contains a spot = tracking gap
+                continue
+
+            self.spots[abs_frame].predicted_phase = predictions[rel_frame]
+
             # Ignore first spots of cell as they are metaphase only if end of previous metaphase
-            if predictions[frame - self.start] == INTERPHASE_INDEX:
+            if predictions[rel_frame] == INTERPHASE_INDEX:
                 metaphase_finished = True
             if not metaphase_finished:
                 continue
 
+            if (
+                abs_frame in self.spots  # current frame contains a spot
+                and predictions[rel_frame]
+                == METAPHASE_INDEX  # current spot is in metaphase
+            ):
+                metaphase_frames.append(abs_frame)
             # From this point, get metaphase spots
             if (
-                frame in self.spots  # current frame contains a spot
-                and predictions[frame - self.start]
+                abs_frame in self.spots  # current frame contains a spot
+                and predictions[abs_frame - self.start]
                 == METAPHASE_INDEX  # current spot is in metaphase
-                and frame != self.stop  # current spot is not last spot
+                and abs_frame != self.stop  # current spot is not last spot
                 and (
-                    predictions[frame - self.start + 1] != METAPHASE_INDEX
-                    and frame in self.spots
+                    predictions[abs_frame - self.start + 1] != METAPHASE_INDEX
+                    and abs_frame in self.spots
                 )  # next frame is not a spot in metaphase
             ):
-                self.metaphase_spots.append(self.spots[frame])
+                self.metaphase_spots.append(self.spots[abs_frame])
 
     def has_close_metaphase(self, spot: CellSpot, target_frame: int) -> bool:
         """

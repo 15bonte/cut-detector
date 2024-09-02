@@ -3,10 +3,8 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Optional, Tuple, Union
 import numpy as np
-from skimage.morphology import extrema, opening
 import xmltodict
 from munch import Munch
-from scipy import ndimage
 
 from ..constants.annotations import (
     NAMES_DICTIONARY,
