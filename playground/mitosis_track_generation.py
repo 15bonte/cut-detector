@@ -44,7 +44,9 @@ def plot_predictions_evolution(
     detected_mitoses = {frame: detected_spots[0] for frame in detected_spots}
     max_frame = max(detected_spots.keys())
     for mitosis_track in mitosis_tracks:
-        for frame in range(mitosis_track.metaphase_frame, max_frame + 1):
+        for frame in range(
+            mitosis_track.metaphase_sequence.last_frame, max_frame + 1
+        ):
             detected_mitoses[frame] += len(mitosis_track.daughter_track_ids)
 
     min_frame, max_frame = 0, max(detected_spots.keys())
@@ -97,7 +99,9 @@ def plot_predictions_evolution(
         ax.axvline(metaphase_spot_frame, color="y", linewidth=2.0)
 
     # Actual mitoses
-    actual_mitoses = [mitosis.metaphase_frame for mitosis in mitosis_tracks]
+    actual_mitoses = [
+        mitosis.metaphase_sequence.last_frame for mitosis in mitosis_tracks
+    ]
     for actual_mitosis in actual_mitoses:
         ax.axvline(actual_mitosis, color="c", linewidth=2.0)
 

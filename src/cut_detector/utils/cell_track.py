@@ -1,4 +1,6 @@
 from __future__ import annotations
+from io import BufferedReader
+import pickle
 from typing import Optional
 from tqdm import tqdm
 import numpy as np
@@ -13,6 +15,7 @@ from .track import Track
 from .box_dimensions_contour import BoxDimensionsContour
 from .box_dimensions import BoxDimensions
 from .cell_spot import CellSpot
+from .metaphase_sequence import MetaphaseSequence
 
 
 def get_whole_box_dimensions_advanced(
@@ -100,6 +103,7 @@ class CellTrack(Track[CellSpot]):
         self.stop = stop
 
         self.metaphase_spots: list[CellSpot] = []
+        self.metaphase_sequences: list[MetaphaseSequence] = []
 
     @classmethod
     def from_spots(cls, track_id: int, spots: list[CellSpot]) -> CellTrack:
@@ -149,12 +153,16 @@ class CellTrack(Track[CellSpot]):
             if not metaphase_finished:
                 continue
 
-            if (
-                abs_frame in self.spots  # current frame contains a spot
-                and predictions[rel_frame]
-                == METAPHASE_INDEX  # current spot is in metaphase
-            ):
+            if predictions[rel_frame] == METAPHASE_INDEX:
                 metaphase_frames.append(abs_frame)
+
+            if predictions[rel_frame] == INTERPHASE_INDEX and metaphase_frames:
+                # End of metaphase
+                self.metaphase_sequences.append(
+                    MetaphaseSequence(metaphase_frames, self.track_id)
+                )
+                metaphase_frames = []
+
             # From this point, get metaphase spots
             if (
                 abs_frame in self.spots  # current frame contains a spot
@@ -180,15 +188,12 @@ class CellTrack(Track[CellSpot]):
         bool : True if corresponding track contains one metaphase spot close to target frame.
 
         """
-        # Look for metaphase spot
-        for metaphase_spot in self.metaphase_spots:
-            if (
-                abs(metaphase_spot.frame - target_frame)
-                < FRAMES_AROUND_METAPHASE
-            ):
+        for metaphase_sequence in self.metaphase_sequences:
+            if metaphase_sequence.is_mother_candidate(target_frame):
                 # Mother track found!
-                spot.corresponding_metaphase_spot = metaphase_spot
+                spot.corresponding_metaphase_sequence = metaphase_sequence
                 return True
+
         return False
 
     def compute_metaphase_iou(self, daughter_track: CellTrack) -> float:
@@ -379,3 +384,11 @@ class CellTrack(Track[CellSpot]):
             CellTrack.from_spots(track_id, spots)
             for track_id, spots in enumerate(id_to_track.values())
         ]
+
+    @staticmethod
+    def load(file: BufferedReader) -> CellTrack:
+        """Load a CellTrack from a file, and adapt attributes if necessary."""
+        cell_track: CellTrack = pickle.load(file)
+        if "metaphase_sequences" not in cell_track.__dict__:
+            cell_track.metaphase_sequences = []
+        return cell_track

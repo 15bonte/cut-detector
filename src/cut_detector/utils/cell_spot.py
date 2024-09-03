@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+from io import BufferedReader
+import pickle
 from typing import Optional, Any
 from shapely.geometry.polygon import Polygon
 from shapely import distance
+
+from cut_detector.utils.metaphase_sequence import MetaphaseSequence
 
 from .spot import Spot
 
@@ -59,7 +63,7 @@ class CellSpot(Spot):
         # Phase predicted by model
         self.predicted_phase: Optional[int] = None
         # Corresponding (closest) metaphase spot in track
-        self.corresponding_metaphase_spot = None
+        self.corresponding_metaphase_sequence = None
 
     def is_stuck_to(
         self, other_spot: CellSpot, maximum_stuck_distance: float
@@ -92,3 +96,15 @@ class CellSpot(Spot):
 
     def get_extra_coordinates(self) -> list[Any]:
         return []
+
+    @staticmethod
+    def load(file: BufferedReader) -> CellSpot:
+        """Load a MitosisTrack from a file, and adapt attributes if necessary."""
+        cell_spot: CellSpot = pickle.load(file)
+        if not hasattr(cell_spot, "corresponding_metaphase_sequence"):
+            if cell_spot.corresponding_metaphase_spot is not None:
+                cell_spot.corresponding_metaphase_sequence = MetaphaseSequence(
+                    [cell_spot.corresponding_metaphase_spot.frame],
+                    cell_spot.corresponding_metaphase_spot.track_id,
+                )
+        return cell_spot
