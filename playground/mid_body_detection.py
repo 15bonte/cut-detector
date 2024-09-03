@@ -3,7 +3,6 @@ Detected spots and tracks are printed in the console."""
 
 import os
 from typing import Optional
-import pickle
 
 from cnn_framework.utils.readers.tiff_reader import TiffReader
 
@@ -47,7 +46,7 @@ def main(
     # Read data: image, mitosis_track
     image = TiffReader(image_path, respect_initial_type=True).image  # TCZYX
     with open(mitosis_path, "rb") as f:
-        mitosis_track: MitosisTrack = pickle.load(f)
+        mitosis_track = MitosisTrack.load(f)
 
     mitosis_movie = image[:, :3, ...].squeeze()  # T C=3 YX
     mitosis_movie = re_organize_channels(mitosis_movie)  # TYXC

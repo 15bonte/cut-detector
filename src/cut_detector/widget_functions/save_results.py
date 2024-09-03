@@ -1,5 +1,4 @@
 import os
-import pickle
 from typing import Optional
 
 import numpy as np
@@ -51,7 +50,7 @@ def perform_results_saving(
     # Iterate over "bin" files in exported_mitoses_dir
     for state_path in os.listdir(exported_mitoses_dir):
         with open(os.path.join(exported_mitoses_dir, state_path), "rb") as f:
-            mitosis_track: MitosisTrack = pickle.load(f)
+            mitosis_track = MitosisTrack.load(f)
             mitosis_tracks.append(mitosis_track)
             mitosis_video_names.append(state_path.split("_mitosis_")[0])
 

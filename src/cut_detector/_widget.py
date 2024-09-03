@@ -452,7 +452,7 @@ def results_saving(
         with open(
             os.path.join(video_exported_tracks_dir, state_path), "rb"
         ) as f:
-            cell_track: CellTrack = pickle.load(f)
+            cell_track = CellTrack.load(f)
             cell_tracks.append(cell_track)
 
     perform_results_saving(
