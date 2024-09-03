@@ -57,19 +57,6 @@ class MtCutDetectionFactory:
             True if classification is impossible, False otherwise.
         """
 
-        if (
-            mitosis_track.key_events_frame["metaphase"]
-            > mitosis_track.key_events_frame["cytokinesis"]
-        ):
-            mitosis_track.key_events_frame["first_mt_cut"] = (
-                ImpossibleDetection.METAPHASE_AFTER_CYTOKINESIS
-            )
-
-            mitosis_track.key_events_frame["second_mt_cut"] = (
-                ImpossibleDetection.METAPHASE_AFTER_CYTOKINESIS
-            )
-            return True
-
         if mitosis_track.is_near_border(video):
             mitosis_track.key_events_frame["first_mt_cut"] = (
                 ImpossibleDetection.NEAR_BORDER
