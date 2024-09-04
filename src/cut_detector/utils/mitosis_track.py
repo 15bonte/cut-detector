@@ -184,8 +184,9 @@ class MitosisTrack:
             for track_to_merge_bis in mitosis_tracks:
                 if (
                     track_to_merge_bis.mother_track_id == track.track_id
-                    and track_to_merge_bis.metaphase_sequence.last_frame
-                    > self.metaphase_sequence.last_frame  # other mitosis should be strictly after
+                    and track_to_merge_bis.metaphase_sequence.is_after(
+                        self.metaphase_sequence
+                    )  # other mitosis should be strictly after
                 ):
                     track_end_frame = min(
                         track_end_frame,

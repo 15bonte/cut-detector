@@ -55,3 +55,26 @@ class MetaphaseSequence:
             self.track_id == metaphase_sequence.track_id
             and self.last_frame == metaphase_sequence.last_frame
         )
+
+    def is_after(self, metaphase_sequence: MetaphaseSequence):
+        """Check if the current metaphase sequence is after the input one.
+
+        Parameters
+        ----------
+        metaphase_sequence : MetaphaseSequence
+            Metaphase sequence.
+
+        Returns
+        -------
+        bool
+        """
+        # Return False if sequence are the same
+        if self.is_same(metaphase_sequence):
+            return False
+
+        # Make sure sequences do not overlap
+        assert (self.first_frame > metaphase_sequence.last_frame) or (
+            metaphase_sequence.first_frame > self.last_frame
+        )
+
+        return self.last_frame > metaphase_sequence.last_frame
