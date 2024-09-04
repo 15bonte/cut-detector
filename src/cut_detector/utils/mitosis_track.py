@@ -773,3 +773,21 @@ class MitosisTrack:
         return ImpossibleDetection.display(
             self.key_events_frame["first_mt_cut"]
         )
+
+    def get_event_frame(self, event: str, relative: bool, zero_indexed=False):
+        if event not in self.key_events_frame:
+            raise ValueError(f"Unknown {event} frame.")
+
+        frame = self.key_events_frame[event]
+
+        if "cut" in event:  # potential impossible detection
+            if frame < 0:
+                return ImpossibleDetection(frame).name
+
+        if relative:
+            frame -= self.min_frame
+
+        if not zero_indexed:
+            frame += 1
+
+        return frame

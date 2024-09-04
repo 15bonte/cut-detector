@@ -448,55 +448,72 @@ class ResultsSavingFactory:
             return
 
         csv_path = os.path.join(save_dir, "results.csv")
+
+        column_names = [
+            "video",
+            "id",
+            "mother track",
+            "daughter track(s)",
+            "metaphase frame - mitosis video",
+            "cytokinesis frame - mitosis video",
+            "first MT cut frame - mitosis video",
+            "second MT cut frame - mitosis video",
+            "metaphase frame",
+            "cytokinesis frame",
+            "first MT cut frame",
+            "second MT cut frame",
+            "first MT cut time",
+            "second MT cut time",
+        ]
+
         # Create CSV results file if it does not exist
         if not os.path.exists(csv_path):
             with open(csv_path, "w") as f:
-                f.write(
-                    "video;id;mother track;daughter track(s);metaphase frame;cytokinesis frame;first MT cut frame;second MT cut frame;first MT cut time;second MT cut time\n"
-                )
+                f.write(";".join(column_names) + "\n")
             f.close()
-
-        def handle_impossible_detection(cut_frame: int) -> str:
-            return (
-                ImpossibleDetection(cut_frame).name
-                if cut_frame < 0
-                else str(cut_frame)
-            )
 
         # Store useful results in global results file
         with open(csv_path, "a") as f:
-            for mitosis_track, mitosis_video_name in zip(mitosis_tracks, mitosis_video_names):
+            for m_track, mitosis_video_name in zip(
+                mitosis_tracks, mitosis_video_names
+            ):
                 f.write(f"{mitosis_video_name};")
-                f.write(f"{mitosis_track.id};")
-                f.write(f"{mitosis_track.mother_track_id};")
+                f.write(f"{m_track.id};")
+                f.write(f"{m_track.mother_track_id};")
+                # Daughter ids
                 daughter_ids = ",".join(
-                    [str(d) for d in mitosis_track.daughter_track_ids]
+                    [str(d) for d in m_track.daughter_track_ids]
                 )
                 f.write(f"{daughter_ids};")
-                f.write(f"{mitosis_track.key_events_frame['metaphase']};")
-                cytokinesis_frame = mitosis_track.key_events_frame[
-                    "cytokinesis"
-                ]
+                # Relative frames
+                f.write(f"{m_track.get_event_frame('metaphase', True)};")
+                cytokinesis_frame = m_track.get_event_frame(
+                    "cytokinesis", True
+                )
                 f.write(f"{cytokinesis_frame};")
-                first_cut_frame = mitosis_track.key_events_frame[
-                    "first_mt_cut"
-                ]
-                f.write(f"{handle_impossible_detection(first_cut_frame)};")
-                second_cut_frame = mitosis_track.key_events_frame[
-                    "second_mt_cut"
-                ]
-                f.write(f"{handle_impossible_detection(second_cut_frame)};")
+                first_cut_frame = m_track.get_event_frame("first_mt_cut", True)
+                f.write(f"{first_cut_frame};")
+                second_cut_frame = m_track.get_event_frame(
+                    "second_mt_cut", True
+                )
+                f.write(f"{second_cut_frame};")
+                # Absolute frames
+                f.write(f"{m_track.get_event_frame('metaphase', False)};")
+                f.write(f"{m_track.get_event_frame('cytokinesis', False)};")
+                f.write(f"{m_track.get_event_frame('first_mt_cut', False)};")
+                f.write(f"{m_track.get_event_frame('second_mt_cut', False)};")
+                # Cut times
                 first_cut_time = (
                     (first_cut_frame - cytokinesis_frame)
                     * self.time_resolution
-                    if first_cut_frame >= 0
+                    if isinstance(first_cut_frame, int)
                     else ""
                 )
                 f.write(f"{first_cut_time};")
                 second_cut_time = (
                     (second_cut_frame - cytokinesis_frame)
                     * self.time_resolution
-                    if second_cut_frame >= 0
+                    if isinstance(second_cut_frame, int)
                     else ""
                 )
                 f.write(f"{second_cut_time};\n")
