@@ -757,3 +757,8 @@ class MitosisTrack:
                 [mitosis_track.metaphase_frame], mitosis_track.mother_track_id
             )
         return mitosis_track
+
+    def apply_consistency_checks(self):
+        """Verify crucial assertions."""
+        assert self.key_events_frame["first_mt_cut"] <= self.max_frame
+        assert self.key_events_frame["second_mt_cut"] <= self.max_frame
