@@ -462,6 +462,8 @@ class ResultsSavingFactory:
             "cytokinesis frame",
             "first MT cut frame",
             "second MT cut frame",
+            "position min x",
+            "position min y",
             "first MT cut time",
             "second MT cut time",
         ]
@@ -502,6 +504,9 @@ class ResultsSavingFactory:
                 f.write(f"{m_track.get_event_frame('cytokinesis', False)};")
                 f.write(f"{m_track.get_event_frame('first_mt_cut', False)};")
                 f.write(f"{m_track.get_event_frame('second_mt_cut', False)};")
+                # Positions
+                f.write(f"{m_track.position.min_x};")
+                f.write(f"{m_track.position.min_y};")
                 # Cut times
                 first_cut_time = (
                     (first_cut_frame - cytokinesis_frame)
