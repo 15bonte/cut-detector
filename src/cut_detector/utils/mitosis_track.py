@@ -18,7 +18,6 @@ from ..constants.annotations import (
 from ..constants.tracking import (
     CYTOKINESIS_DURATION,
     FRAMES_AROUND_METAPHASE,
-    METAPHASE_INDEX,
 )
 from .mid_body_spot import MidBodySpot
 from .cell_track import CellTrack
