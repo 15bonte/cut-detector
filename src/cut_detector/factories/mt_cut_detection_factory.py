@@ -57,16 +57,12 @@ class MtCutDetectionFactory:
             True if classification is impossible, False otherwise.
         """
 
-        if (
-            mitosis_track.key_events_frame["metaphase"]
-            > mitosis_track.key_events_frame["cytokinesis"]
-        ):
+        if len(mitosis_track.daughter_track_ids) >= 2:
             mitosis_track.key_events_frame["first_mt_cut"] = (
-                ImpossibleDetection.METAPHASE_AFTER_CYTOKINESIS
+                ImpossibleDetection.MORE_THAN_TWO_DAUGHTER_TRACKS
             )
-
             mitosis_track.key_events_frame["second_mt_cut"] = (
-                ImpossibleDetection.METAPHASE_AFTER_CYTOKINESIS
+                ImpossibleDetection.MORE_THAN_TWO_DAUGHTER_TRACKS
             )
             return True
 
@@ -76,15 +72,6 @@ class MtCutDetectionFactory:
             )
             mitosis_track.key_events_frame["second_mt_cut"] = (
                 ImpossibleDetection.NEAR_BORDER
-            )
-            return True
-
-        if len(mitosis_track.daughter_track_ids) >= 2:
-            mitosis_track.key_events_frame["first_mt_cut"] = (
-                ImpossibleDetection.MORE_THAN_TWO_DAUGHTER_TRACKS
-            )
-            mitosis_track.key_events_frame["second_mt_cut"] = (
-                ImpossibleDetection.MORE_THAN_TWO_DAUGHTER_TRACKS
             )
             return True
 

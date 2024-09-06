@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from io import BufferedReader
+import pickle
 from typing import Optional, Tuple, Union
 import numpy as np
-from skimage.morphology import extrema, opening
 import xmltodict
 from munch import Munch
-from scipy import ndimage
+
 
 from ..constants.annotations import (
     NAMES_DICTIONARY,
@@ -29,6 +30,7 @@ from .image_tools import (
     smart_cropping,
     cell_counter_frame_to_video_frame,
 )
+from .metaphase_sequence import MetaphaseSequence
 
 
 def snake_to_normal(snake_str: str) -> str:
@@ -58,26 +60,23 @@ class MitosisTrack:
 
     Parameters
     ----------
-    mother_track_id : int
-        Mother track id
     daughter_track_id : int
         Daughter track id
-    metaphase_frame : int
-        Metaphase frame
+    metaphase_sequence : MetaphaseSequence
+        Metaphase sequence
     """
 
     def __init__(
         self,
-        mother_track_id: int,
         daughter_track_id: int,
-        metaphase_frame: int,
+        metaphase_sequence: MetaphaseSequence,
     ):
         # Elementary information
-        self.mother_track_id = mother_track_id
+        self.mother_track_id = metaphase_sequence.track_id
         self.daughter_track_ids = [daughter_track_id]
         self.id: Optional[int] = None
 
-        self.metaphase_frame = metaphase_frame
+        self.metaphase_sequence = metaphase_sequence
 
         # Key events: metaphase/cytokinesis/first_mt_cut/second_mt_cut/first_membrane_cut
         # Absolute frame
@@ -100,28 +99,6 @@ class MitosisTrack:
         # Mid body spot indexed by absolute frame
         self.mid_body_spots: dict[int, MidBodySpot] = {}
         self.gt_mid_body_spots: Optional[dict[int, MidBodySpot]] = None
-
-    def is_same_mitosis(
-        self, mother_track_id: int, metaphase_frame: int
-    ) -> bool:
-        """Check if current mitosis is the same as the one given in parameters.
-
-        Parameters
-        ----------
-        mother_track_id : int
-            Mother track id
-        metaphase_frame : int
-            Metaphase frame
-
-        Returns
-        -------
-        bool
-            True if current mitosis is the same as the one given in parameters
-        """
-        return (
-            self.mother_track_id == mother_track_id
-            and self.metaphase_frame == metaphase_frame
-        )
 
     def add_daughter_track(self, daughter_track_id: int) -> None:
         """Add daughter track id to current mitosis track.
@@ -199,7 +176,7 @@ class MitosisTrack:
         # Min is the metaphase frame minus FRAMES_AROUND_METAPHASE, protected against frames before start of mother track
         min_frame = max(
             mother_track.start,
-            self.metaphase_frame - FRAMES_AROUND_METAPHASE,
+            self.metaphase_sequence.last_frame - FRAMES_AROUND_METAPHASE,
         )
         # For each daughter track, the end is the end of the track OR the next metaphase event of this track
         max_frame = mother_track.stop
@@ -208,11 +185,12 @@ class MitosisTrack:
             for track_to_merge_bis in mitosis_tracks:
                 if (
                     track_to_merge_bis.mother_track_id == track.track_id
-                    and track_to_merge_bis.metaphase_frame
-                    > self.metaphase_frame  # other mitosis should be strictly after
+                    and track_to_merge_bis.metaphase_sequence.last_frame
+                    > self.metaphase_sequence.last_frame  # other mitosis should be strictly after
                 ):
                     track_end_frame = min(
-                        track_end_frame, track_to_merge_bis.metaphase_frame
+                        track_end_frame,
+                        track_to_merge_bis.metaphase_sequence.last_frame,
                     )
             max_frame = min(max_frame, track_end_frame)
 
@@ -276,27 +254,20 @@ class MitosisTrack:
         cell_tracks : list[CellTrack]
             List of all tracks in the video
         """
-        # Get all tracks involved in current mitosis
-        mother_track, daughter_tracks = self.get_mother_daughters_tracks(
-            cell_tracks
+        _, daughter_tracks = self.get_mother_daughters_tracks(cell_tracks)
+
+        self.key_events_frame["metaphase"] = (
+            self.metaphase_sequence.first_frame
         )
-
-        # Store first metaphase frame
-        for frame in range(self.metaphase_frame, mother_track.start, -1):
-            # Some frames may be missing since gap closing is allowed
-            if frame not in mother_track.spots:
-                continue
-            if mother_track.spots[frame].predicted_phase != METAPHASE_INDEX:
-                self.key_events_frame["metaphase"] = frame + 1
-                break
-
-        # If no metaphase frame found, consider it is the first frame of the mother track
-        if "metaphase" not in self.key_events_frame:
-            self.key_events_frame["metaphase"] = mother_track.start
 
         # Store first cytokinesis frame - considered as the first frame of daughter tracks
         self.key_events_frame["cytokinesis"] = min(
             [track.start for track in daughter_tracks]
+        )
+
+        assert (
+            self.key_events_frame["metaphase"]
+            <= self.key_events_frame["cytokinesis"]
         )
 
     def update_mitosis_position_contour(
@@ -416,7 +387,10 @@ class MitosisTrack:
             True if match is possible.
         """
         if (
-            abs(other_track.metaphase_frame - self.metaphase_frame)
+            abs(
+                other_track.metaphase_sequence.last_frame
+                - self.metaphase_sequence.last_frame
+            )
             > FRAMES_AROUND_METAPHASE
         ):
             return False
@@ -774,6 +748,16 @@ class MitosisTrack:
             self.key_events_frame["first_mt_cut"]
         )
 
+    @staticmethod
+    def load(file: BufferedReader) -> MitosisTrack:
+        """Load a MitosisTrack from a file, and adapt attributes if necessary."""
+        mitosis_track: MitosisTrack = pickle.load(file)
+        if not hasattr(mitosis_track, "metaphase_sequence"):
+            mitosis_track.metaphase_sequence = MetaphaseSequence(
+                [mitosis_track.metaphase_frame], mitosis_track.mother_track_id
+            )
+        return mitosis_track
+        
     def get_event_frame(self, event: str, relative: bool, zero_indexed=False):
         if event not in self.key_events_frame:
             raise ValueError(f"Unknown {event} frame.")

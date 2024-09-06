@@ -3,7 +3,6 @@ Predicted classes and bridge crops are displayed."""
 
 import os
 from typing import Optional
-import pickle
 from matplotlib import pyplot as plt
 
 from cnn_framework.utils.readers.tiff_reader import TiffReader
@@ -54,7 +53,7 @@ def main(
     # Read data: image, mitosis_track
     image = TiffReader(image_path, respect_initial_type=True).image
     with open(mitosis_path, "rb") as f:
-        mitosis_track: MitosisTrack = pickle.load(f)
+        mitosis_track = MitosisTrack.load(f)
 
     image = re_organize_channels(image.squeeze())  # TYXC
 

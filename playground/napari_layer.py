@@ -43,7 +43,7 @@ def main(
     video_tracks_save_dir = os.path.join(tracks_dir, video_name)
     for state_path in os.listdir(video_tracks_save_dir):
         with open(os.path.join(video_tracks_save_dir, state_path), "rb") as f:
-            cell_track: CellTrack = pickle.load(f)
+            cell_track = CellTrack.load(f)
             cell_tracks.append(cell_track)
 
     # Add video

@@ -14,7 +14,7 @@ class ImpossibleDetection(IntEnum):
     NO_CUT_DETECTED = -6
     LIGHT_SPOT = -7  # deprecated
     TOO_SHORT_CUT = -8
-    METAPHASE_AFTER_CYTOKINESIS = -9
+    METAPHASE_AFTER_CYTOKINESIS = -9  # deprecated
 
     @staticmethod
     def display(detection: ImpossibleDetection) -> bool:

@@ -58,7 +58,7 @@ def perform_mid_body_detection(
             continue
         # Load mitosis track
         with open(os.path.join(exported_mitoses_dir, state_path), "rb") as f:
-            mitosis_track: MitosisTrack = pickle.load(f)
+            mitosis_track = MitosisTrack.load(f)
 
         # Add mitosis track to list
         mitosis_tracks.append(mitosis_track)
@@ -72,7 +72,7 @@ def perform_mid_body_detection(
         with open(
             os.path.join(video_exported_tracks_dir, state_path), "rb"
         ) as f:
-            cell_track: CellTrack = pickle.load(f)
+            cell_track = CellTrack.load(f)
             cell_tracks.append(cell_track)
 
     print("\n### MID-BODY DETECTION ###")

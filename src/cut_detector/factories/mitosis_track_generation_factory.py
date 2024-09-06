@@ -2,6 +2,7 @@ import json
 import os
 import numpy as np
 
+from ..utils.metaphase_sequence import MetaphaseSequence
 from ..utils.cell_track import CellTrack
 from ..utils.tools import perform_cnn_inference
 from ..utils.mitosis_track import MitosisTrack
@@ -103,7 +104,7 @@ class MitosisTrackGenerationFactory:
                 )
             )
 
-            # Keep only spots with metaphase frame close to track first frame
+            # Keep only spots with metaphase sequence close to track first frame
             metaphase_spots = list(
                 filter(
                     lambda x: get_track_from_id(
@@ -125,14 +126,15 @@ class MitosisTrackGenerationFactory:
                 ).compute_metaphase_iou(track),
             )[-1]
 
-            # Mother cell spot is spot in metaphase for corresponding track
-            mother_cell_spot = selected_spot.corresponding_metaphase_spot
+            metaphase_sequence: MetaphaseSequence = (
+                selected_spot.corresponding_metaphase_sequence
+            )
 
             # Check if it should be merged to existing split (division into 3 cells)
             triple_division = False
             for mitosis_track in mitosis_tracks:
-                if mitosis_track.is_same_mitosis(
-                    mother_cell_spot.track_id, mother_cell_spot.frame
+                if metaphase_sequence.is_same(
+                    mitosis_track.metaphase_sequence
                 ):
                     mitosis_track.add_daughter_track(track.track_id)
                     triple_division = True
@@ -142,9 +144,8 @@ class MitosisTrackGenerationFactory:
             if not triple_division:
                 mitosis_tracks.append(
                     MitosisTrack(
-                        mother_cell_spot.track_id,
                         track.track_id,
-                        mother_cell_spot.frame,
+                        metaphase_sequence,
                     )
                 )
 
