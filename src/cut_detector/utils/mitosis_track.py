@@ -750,15 +750,44 @@ class MitosisTrack:
 
     @staticmethod
     def load(file: BufferedReader) -> MitosisTrack:
-        """Load a MitosisTrack from a file, and adapt attributes if necessary."""
+        """Load a MitosisTrack from a file, and adapt attributes if necessary.
+
+        Parameters
+        ----------
+        file : BufferedReader
+            File to load.
+
+        Returns
+        -------
+        MitosisTrack
+            Mitosis track.
+        """
         mitosis_track: MitosisTrack = pickle.load(file)
         if not hasattr(mitosis_track, "metaphase_sequence"):
             mitosis_track.metaphase_sequence = MetaphaseSequence(
                 [mitosis_track.metaphase_frame], mitosis_track.mother_track_id
             )
         return mitosis_track
-        
-    def get_event_frame(self, event: str, relative: bool, zero_indexed=False):
+
+    def get_event_frame(
+        self, event: str, relative: bool, zero_indexed=False
+    ) -> int:
+        """Get the frame of a key event.
+
+        Parameters
+        ----------
+        event : str
+            Key event name.
+        relative : bool
+            If True, return the frame relative to the start of the mitosis.
+        zero_indexed : bool
+            If True, return the frame in zero-indexed format.
+
+        Returns
+        -------
+        int
+            Frame of the key event.
+        """
         if event not in self.key_events_frame:
             raise ValueError(f"Unknown {event} frame.")
 
