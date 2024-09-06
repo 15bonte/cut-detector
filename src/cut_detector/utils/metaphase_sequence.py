@@ -68,13 +68,4 @@ class MetaphaseSequence:
         -------
         bool
         """
-        # Return False if sequence are the same
-        if self.is_same(metaphase_sequence):
-            return False
-
-        # Make sure sequences do not overlap
-        assert (self.first_frame > metaphase_sequence.last_frame) or (
-            metaphase_sequence.first_frame > self.last_frame
-        )
-
-        return self.last_frame > metaphase_sequence.last_frame
+        return self.first_frame > metaphase_sequence.first_frame
