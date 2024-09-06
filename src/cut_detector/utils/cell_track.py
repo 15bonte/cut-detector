@@ -101,7 +101,6 @@ class CellTrack(Track[CellSpot]):
         self.start = start
         self.stop = stop
 
-        self.metaphase_spots: list[CellSpot] = []
         self.metaphase_sequences: list[MetaphaseSequence] = []
 
     @classmethod
@@ -161,19 +160,6 @@ class CellTrack(Track[CellSpot]):
                     MetaphaseSequence(metaphase_frames, self.track_id)
                 )
                 metaphase_frames = []
-
-            # From this point, get metaphase spots
-            if (
-                abs_frame in self.spots  # current frame contains a spot
-                and predictions[abs_frame - self.start]
-                == METAPHASE_INDEX  # current spot is in metaphase
-                and abs_frame != self.stop  # current spot is not last spot
-                and (
-                    predictions[abs_frame - self.start + 1] != METAPHASE_INDEX
-                    and abs_frame in self.spots
-                )  # next frame is not a spot in metaphase
-            ):
-                self.metaphase_spots.append(self.spots[abs_frame])
 
     def has_close_metaphase(self, spot: CellSpot, target_frame: int) -> bool:
         """

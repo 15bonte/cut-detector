@@ -52,10 +52,11 @@ def plot_predictions_evolution(
     min_frame, max_frame = 0, max(detected_spots.keys())
 
     detected_tracks = {}
-    metaphase_spots = []
+    metaphase_frames = []
     for track in raw_tracks:
-        metaphase_spots = metaphase_spots + [
-            metaphase_spot.frame for metaphase_spot in track.metaphase_spots
+        metaphase_frames = metaphase_frames + [
+            metaphase_sequence.last_frame
+            for metaphase_sequence in track.metaphase_sequences
         ]
         for frame in range(track.start, track.stop + 1):
             if frame not in detected_tracks:
@@ -94,8 +95,8 @@ def plot_predictions_evolution(
     ax.axvline(-10, color="k", linewidth=2.0, linestyle="--")
 
     # Potential mitoses
-    metaphase_spots = list(set(metaphase_spots))
-    for metaphase_spot_frame in metaphase_spots:
+    metaphase_frames = list(set(metaphase_frames))
+    for metaphase_spot_frame in metaphase_frames:
         ax.axvline(metaphase_spot_frame, color="y", linewidth=2.0)
 
     # Actual mitoses
