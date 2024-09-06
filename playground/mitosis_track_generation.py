@@ -151,7 +151,7 @@ def main(
         image_path = os.path.join(image_path, os.listdir(image_path)[0])
 
     # Read image and preprocess if needed
-    image = TiffReader(image_path).image  # TCZYX
+    image = TiffReader(image_path, respect_initial_type=True).image  # TCZYX
     image = re_organize_channels(image.squeeze())  # TYXC
 
     mitosis_tracks, cell_spots, cell_tracks = perform_mitosis_track_generation(

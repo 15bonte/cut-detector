@@ -1,5 +1,4 @@
 import os
-import random
 from typing import Optional
 from scipy.stats import ttest_1samp
 import numpy as np
