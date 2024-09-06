@@ -804,3 +804,21 @@ class MitosisTrack:
             frame += 1
 
         return frame
+
+    def get_file_name(self, video_name: str) -> str:
+        """Get the file name used for both .bin and .tiff files.
+
+        Parameters
+        ----------
+        video_name : str
+            Name of the video.
+
+        Returns
+        -------
+        str
+            File name.
+        """
+        daughter_track_ids = ",".join(
+            [str(d) for d in self.daughter_track_ids]
+        )
+        return f"{video_name}_mitosis_{self.id}_{self.mother_track_id}_to_{daughter_track_ids}"
