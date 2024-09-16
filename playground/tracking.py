@@ -31,7 +31,7 @@ def main(
     factory = SegmentationTrackingFactory("")
     cell_spots, _ = factory.perform_tracking(
         cellpose_results,
-        diam_labels=171,  # hardcoded since normally included in Cellpose model
+        diam_labels=164,  # hardcoded since normally included in Cellpose model
     )
 
     # Display results
