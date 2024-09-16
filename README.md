@@ -15,9 +15,6 @@ https://github.com/user-attachments/assets/89d63336-729c-43c1-8fa3-43a4ec4cfc87
 
 This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookiecutter-napari-plugin] template.
 
-
-
-
 <!--
 Don't miss the full getting started guide to set up your new package:
 https://github.com/napari/cookiecutter-napari-plugin#getting-started
@@ -86,6 +83,18 @@ To update cut-detector to the latest version, open an Anaconda prompt and use th
 conda activate cut_detector
 pip install cut-detector --upgrade
 ```
+
+## Definitions
+
+Each detected cell division is labeled with one of the following categories:
+
+- NORMAL: Division happening as expected, where (at least) 1 micro-tubule cut is detected.
+- NO_MID_BODY_DETECTED: Along the cell division, no mid-body was detected on the MKLP1 channel. This category encompasses different cases: the detection may have failed, the mid-body may not express the fluorescence, or this may not actually be a division.
+- MORE_THAN_TWO_DAUGHTER_TRACKS: Tripolar division. This category encompasses both actual tripolar divisions and wrong identifications of daughter cells (mainly caused by segmentation issues).
+- NEAR_BORDER: Division close to the border of the image, hence ignored as it is likely to be difficult to detect micro-tubule cuts. A division is classified as NEAR_BORDER as soon as the distance between 1 detected mid-body and the border of the image is less than 20px.
+- NO_MID_BODY_DETECTED_AFTER_CYTOKINESIS: Detected mid-body disappears after cytokinesis, i.e. when the two daughter cells are segmented separately. This can be explained similarly to NO_MID_BODY_DETECTED.
+- NO_CUT_DETECTED: Division whose mid-body was detected, but with all micro-tubules bridges classified as "No cut". Likely to be at the end of the video.
+- TOO_SHORT_CUT: First micro-tubule cut detected before 50 minutes. Ignored as this is very unlikely, so it is probably caused by a wrong division detection.
 
 ## Contributing
 

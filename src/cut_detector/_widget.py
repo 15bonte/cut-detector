@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-import pickle
 import shutil
 import time
 from typing import Optional
@@ -22,7 +21,10 @@ from .widget_functions.mitosis_track_generation import (
     perform_mitosis_track_generation,
 )
 from .widget_functions.mt_cut_detection import perform_mt_cut_detection
-from .widget_functions.save_results import perform_results_saving
+from .widget_functions.save_results import (
+    perform_results_saving,
+    save_galleries,
+)
 
 
 def video_whole_process(
@@ -35,6 +37,7 @@ def video_whole_process(
     spots_dir_name: str,
     tracks_dir_name: str,
     mitoses_dir_name: str,
+    results_save_dir: str,
 ) -> tuple[list[CellTrack], np.ndarray]:
     """Perform the whole process on a single video.
 
@@ -58,6 +61,8 @@ def video_whole_process(
         Directory to save .bin cell tracks.
     mitoses_dir_name : str
         Directory to save .bin mitoses.
+    results_save_dir : str
+        Directory to save results.
 
     Returns
     -------
@@ -90,6 +95,7 @@ def video_whole_process(
         parallel_detection=True,
     )
     perform_mt_cut_detection(video, video_name, mitoses_dir_name)
+    save_galleries(video, video_name, mitoses_dir_name, results_save_dir)
 
     return cell_tracks, segmentation_results
 
@@ -161,6 +167,7 @@ def whole_process(
         spots_dir.name,
         tracks_dir.name,
         mitoses_dir.name,
+        results_save_dir,
     )
 
     end = time.time()
@@ -263,6 +270,7 @@ def whole_process_folder(
             spots_dir.name,
             tracks_dir.name,
             mitoses_dir.name,
+            results_save_dir,
         )
 
     # Results saving

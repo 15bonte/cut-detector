@@ -34,7 +34,7 @@ def main(
         model_path = os.path.join(model_path, os.listdir(model_path)[0])
 
     # Read image and preprocess if needed
-    image = TiffReader(image_path).image  # TCZYX
+    image = TiffReader(image_path, respect_initial_type=True).image  # TCZYX
     image = image.squeeze()  # TCYX
 
     # Initialize factory to get constants

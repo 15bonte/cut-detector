@@ -107,10 +107,7 @@ def perform_mid_body_detection(
 
         # Save updated mitosis track
         if save:
-            daughter_track_ids = ",".join(
-                [str(d) for d in mitosis_track.daughter_track_ids]
-            )
-            state_path = f"{video_name}_mitosis_{mitosis_track.id}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.bin"
+            state_path = f"{mitosis_track.get_file_name(video_name)}.bin"
             save_path = os.path.join(
                 exported_mitoses_dir,
                 state_path,
@@ -125,7 +122,7 @@ def perform_mid_body_detection(
             )  # TYX C=C+1
             image_save_path = os.path.join(
                 movies_save_dir,
-                f"{video_name}_mitosis_{mitosis_track.id}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.tiff",
+                f"{mitosis_track.get_file_name(video_name)}.tiff",
             )
             # Transpose to match TCYX
             final_mitosis_movie = np.transpose(
