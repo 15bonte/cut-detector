@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 
 from ..constants.tracking import (
-    FRAMES_AROUND_METAPHASE,
     INTERPHASE_INDEX,
     METAPHASE_INDEX,
 )
