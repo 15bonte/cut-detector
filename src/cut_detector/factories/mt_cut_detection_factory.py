@@ -236,6 +236,8 @@ class MtCutDetectionFactory:
                 second_mt_cut_frame_abs
             )
 
+            mitosis_track.apply_consistency_checks()
+
             if debug_mode:
                 # In debug, expect only one mitosis track
                 return classified_bridges
