@@ -104,7 +104,10 @@ class SegmentationTrackingFactory:
                 cell.id = id_number
                 id_number += 1
 
-        return cell_dictionary
+        # Return a sorted dictionary to ensure tracking consistency
+        ordered_cell_dictionary = dict(sorted(cell_dictionary.items()))
+
+        return ordered_cell_dictionary
 
     def perform_segmentation(
         self,
