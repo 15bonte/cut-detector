@@ -1,3 +1,4 @@
+import collections
 import concurrent.futures
 from typing import Optional
 import numpy as np
@@ -149,18 +150,24 @@ class MidBodyDetectionFactory:
         assert isinstance(parallelization, bool)
 
         if parallelization:
-            return self.thread_pool_detect_mid_body_spots(
+            mid_bodies = self.thread_pool_detect_mid_body_spots(
                 mitosis_movie,
                 method,
                 mitosis_track,
             )
 
-        return self.serial_detect_mid_body_spots(
-            mitosis_movie,
-            method,
-            log_blob_spot,
-            mitosis_track,
-        )
+        else:
+            mid_bodies = self.serial_detect_mid_body_spots(
+                mitosis_movie,
+                method,
+                log_blob_spot,
+                mitosis_track,
+            )
+
+        # Return a sorted dictionary to ensure tracking consistency
+        ordered_mid_bodies = dict(sorted(mid_bodies.items()))
+
+        return ordered_mid_bodies
 
     def serial_detect_mid_body_spots(
         self,
