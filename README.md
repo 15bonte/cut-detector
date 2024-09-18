@@ -93,7 +93,7 @@ Each detected cell division is labeled with one of the following categories:
 - MORE_THAN_TWO_DAUGHTER_TRACKS: Tripolar division. This category encompasses both actual tripolar divisions and wrong identifications of daughter cells (mainly caused by segmentation issues).
 - NEAR_BORDER: Division close to the border of the image, hence ignored as it is likely to be difficult to detect micro-tubule cuts. A division is classified as NEAR_BORDER as soon as the distance between 1 detected mid-body and the border of the image is less than 20px.
 - NO_MID_BODY_DETECTED_AFTER_CYTOKINESIS: Detected mid-body disappears after cytokinesis, i.e. when the two daughter cells are segmented separately. This can be explained similarly to NO_MID_BODY_DETECTED.
-- NO_CUT_DETECTED: Division whose mid-body was detected, but with all micro-tubule bridges classified as "No cut". Likely to be at the end of the video.
+- NO_CUT_DETECTED: Division whose mid-body was detected, but with all micro-tubule bridges classified as "No cut". Likely to be at the end of the video, cells dying before the end of division, or cells going out of frame.
 - TOO_SHORT_CUT: First micro-tubule cut detected before 50 minutes. Ignored as this is very unlikely, so it is probably caused by a wrong division detection.
 
 ## Contributing
