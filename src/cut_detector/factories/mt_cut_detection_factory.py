@@ -89,10 +89,10 @@ class MtCutDetectionFactory:
             < mitosis_track.key_events_frame["cytokinesis"]
         ):
             mitosis_track.key_events_frame["first_mt_cut"] = (
-                ImpossibleDetection.NO_MID_BODY_DETECTED_AFTER_CYTOKINESIS
+                ImpossibleDetection.NO_MID_BODY_DETECTED
             )
             mitosis_track.key_events_frame["second_mt_cut"] = (
-                ImpossibleDetection.NO_MID_BODY_DETECTED_AFTER_CYTOKINESIS
+                ImpossibleDetection.NO_MID_BODY_DETECTED
             )
             return True
 
