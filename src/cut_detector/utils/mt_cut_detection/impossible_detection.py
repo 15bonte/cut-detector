@@ -37,5 +37,4 @@ class ImpossibleDetection(IntEnum):
             ImpossibleDetection.NORMAL,
             ImpossibleDetection.NEAR_BORDER,
             ImpossibleDetection.NO_CUT_DETECTED,
-            ImpossibleDetection.LIGHT_SPOT,
         ]
