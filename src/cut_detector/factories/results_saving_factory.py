@@ -563,7 +563,7 @@ class ResultsSavingFactory:
         mitoses_results = np.zeros(
             (nb_frames, height, width, 3), dtype=np.uint8
         )  # TYXC
-        for idx, mitosis_track in enumerate(tqdm(mitosis_tracks)):
+        for idx, mitosis_track in enumerate(mitosis_tracks):
             if not mitosis_track.display():
                 continue
             _, mask_movie = mitosis_track.generate_video_movie(
@@ -600,7 +600,7 @@ class ResultsSavingFactory:
             "color": "white",
             "translation": np.array([-30, 0]),
         }
-        for mitosis_track in tqdm(mitosis_tracks):
+        for mitosis_track in mitosis_tracks:
             if not mitosis_track.display():
                 continue
             mid_body_legend = mitosis_track.get_mid_body_legend()
