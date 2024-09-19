@@ -81,7 +81,7 @@ class SegmentationTrackingFactory:
         augment=True,
         cellprob_threshold=0.0,
         flow_threshold=0.0,
-        gap_closing_max_distance_ratio=1,
+        gap_closing_max_distance_ratio=0.5,
         linking_max_distance_ratio=1,
         max_frame_gap=CellTrack.max_frame_gap,
         minimum_cell_track_length=10,
@@ -214,7 +214,7 @@ class SegmentationTrackingFactory:
         tracking_method = SpatialLapTrack(
             spatial_coord_slice=slice(0, 2),
             spatial_metric="euclidean",  # distance function for maximum distance
-            track_dist_metric=iou_distance,  # distance function
+            track_dist_metric=iou_distance,  # distance function for linking
             track_cost_cutoff=diam_labels * self.linking_max_distance_ratio,
             gap_closing_dist_metric=iou_distance,
             gap_closing_cost_cutoff=diam_labels
