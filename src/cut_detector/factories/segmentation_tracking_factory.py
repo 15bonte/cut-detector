@@ -5,6 +5,7 @@ import torch
 from cellpose import models
 from tqdm import tqdm
 
+from ..utils.box_dimensions import BoxDimensions
 from ..utils.segmentation_tracking.mask_utils import (
     get_spots_from_frame,
 )
@@ -14,6 +15,43 @@ from ..utils.mid_body_detection.spatial_laptrack import (
     SpatialLapTrack,
 )
 from ..utils.track_generation import generate_tracks_from_spots
+
+
+def iou_distance(
+    c1: tuple,
+    c2: tuple,
+) -> float:
+    """
+    Compute the square of the IoU distance between two spots.
+
+    Parameters
+    ----------
+    c1 : tuple
+        Tuple containing spatial coordinates and bounding boxes coordinates of the first spot.
+    c2 : tuple
+        Tuple containing spatial coordinates and bounding boxes coordinates of the second spot.
+
+    Returns
+    -------
+    float
+        Square of IoU distance between two spots.
+    """
+
+    # unwrapping
+    (_, _, min_x1, max_x1, min_y1, max_y1), (
+        _,
+        _,
+        min_x2,
+        max_x2,
+        min_y2,
+        max_y2,
+    ) = (c1, c2)
+
+    box_1 = BoxDimensions(min_x1, max_x1, min_y1, max_y1)
+    box_2 = BoxDimensions(min_x2, max_x2, min_y2, max_y2)
+    iou = box_1.compute_iou(box_2)
+
+    return (1 - iou) ** 2
 
 
 class SegmentationTrackingFactory:
@@ -43,7 +81,7 @@ class SegmentationTrackingFactory:
         augment=True,
         cellprob_threshold=0.0,
         flow_threshold=0.0,
-        gap_closing_max_distance_ratio=0.5,
+        gap_closing_max_distance_ratio=1,
         linking_max_distance_ratio=1,
         max_frame_gap=CellTrack.max_frame_gap,
         minimum_cell_track_length=10,
@@ -175,10 +213,10 @@ class SegmentationTrackingFactory:
 
         tracking_method = SpatialLapTrack(
             spatial_coord_slice=slice(0, 2),
-            spatial_metric="euclidean",
-            track_dist_metric="euclidean",
+            spatial_metric="euclidean",  # distance function for maximum distance
+            track_dist_metric=iou_distance,  # distance function
             track_cost_cutoff=diam_labels * self.linking_max_distance_ratio,
-            gap_closing_dist_metric="euclidean",
+            gap_closing_dist_metric=iou_distance,
             gap_closing_cost_cutoff=diam_labels
             * self.gap_closing_max_distance_ratio,
             gap_closing_max_frame_count=self.max_frame_gap,

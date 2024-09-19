@@ -92,10 +92,10 @@ class CellSpot(Spot):
 
     @staticmethod
     def get_extra_features_name() -> list[str]:
-        return []
+        return ["min_x", "max_x", "min_y", "max_y"]
 
     def get_extra_coordinates(self) -> list[Any]:
-        return []
+        return [self.abs_min_x, self.abs_max_x, self.abs_min_y, self.abs_max_y]
 
     @staticmethod
     def load(file: BufferedReader) -> CellSpot:

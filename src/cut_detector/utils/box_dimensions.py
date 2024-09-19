@@ -59,3 +59,22 @@ class BoxDimensions:
             and self.min_y <= box_dimensions.max_y
             and self.max_y >= box_dimensions.min_y
         )
+
+    def compute_iou(self, box_dimensions: BoxDimensions) -> float:
+        """Compute the intersection over union between two boxes."""
+        intersection = max(
+            0,
+            min(self.max_x, box_dimensions.max_x)
+            - max(self.min_x, box_dimensions.min_x),
+        ) * max(
+            0,
+            min(self.max_y, box_dimensions.max_y)
+            - max(self.min_y, box_dimensions.min_y),
+        )
+        union = (
+            (self.max_x - self.min_x) * (self.max_y - self.min_y)
+            + (box_dimensions.max_x - box_dimensions.min_x)
+            * (box_dimensions.max_y - box_dimensions.min_y)
+            - intersection
+        )
+        return intersection / union

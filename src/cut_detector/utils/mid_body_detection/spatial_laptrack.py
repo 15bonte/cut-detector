@@ -97,7 +97,7 @@ class SpatialLapTrack(LapTrack):
             spatial_dist_matrix[force_end_indices, :] = np.inf
             spatial_dist_matrix[:, force_start_indices] = np.inf
 
-            # ind = np.where(dist_matrix < self.track_cost_cutoff)
+            # ind = np.where(dist_matrix < self.track_cost_cutoff) # original code
             ind = np.where(spatial_dist_matrix < self.track_cost_cutoff)
             dist_matrix = coo_matrix_builder(  # keeping the true score here
                 dist_matrix.shape,

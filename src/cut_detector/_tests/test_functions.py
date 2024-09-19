@@ -1,3 +1,4 @@
+from cut_detector.utils.box_dimensions import BoxDimensions
 from cut_detector.utils.mid_body_spot import MidBodySpot
 from cut_detector.utils.mid_body_track import MidBodyTrack
 
@@ -42,3 +43,24 @@ def test_mid_body_track_fill_gaps_all():
     assert track.spots[1].x == 1
     assert track.spots[3].x == 3
     assert track.spots[4].x == 4
+
+
+def test_iou_zero():
+    """Test the iou_distance function with zero IoU."""
+    c1 = BoxDimensions(min_x=0, max_x=1, min_y=0, max_y=1)
+    c2 = BoxDimensions(min_x=1, max_x=2, min_y=1, max_y=2)
+    assert c1.compute_iou(c2) == 0
+
+
+def test_iou_intersection():
+    """Test the iou_distance function with intersection."""
+    c1 = BoxDimensions(min_x=0, max_x=2, min_y=0, max_y=2)
+    c2 = BoxDimensions(min_x=1, max_x=3, min_y=1, max_y=3)
+    assert c1.compute_iou(c2) == 1 / 7
+
+
+def test_iou_one():
+    """Test the iou_distance function with full IoU."""
+    c1 = BoxDimensions(min_x=0, max_x=2, min_y=0, max_y=2)
+    c2 = BoxDimensions(min_x=0, max_x=2, min_y=0, max_y=2)
+    assert c1.compute_iou(c2) == 1
