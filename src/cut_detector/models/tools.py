@@ -9,6 +9,7 @@ def get_model_path(model_name: str) -> None:
     Returns absolute path to model file.
     """
     if model_name == "segmentation":
+        model_name = "segmentation_v120"
         files = ["segmentation_model"]
     elif model_name == "metaphase_cnn":
         model_name = "metaphase_cnn_v012"
