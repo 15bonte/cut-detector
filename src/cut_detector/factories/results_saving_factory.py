@@ -4,7 +4,6 @@ from scipy.stats import ttest_1samp
 import numpy as np
 import matplotlib.pyplot as plt
 from napari import Viewer
-from tqdm import tqdm
 
 from ..utils.cell_track import CellTrack, generate_tracking_movie
 from ..utils.tools import re_organize_channels
@@ -563,7 +562,7 @@ class ResultsSavingFactory:
         mitoses_results = np.zeros(
             (nb_frames, height, width, 3), dtype=np.uint8
         )  # TYXC
-        for idx, mitosis_track in enumerate(tqdm(mitosis_tracks)):
+        for idx, mitosis_track in enumerate(mitosis_tracks):
             if not mitosis_track.display():
                 continue
             _, mask_movie = mitosis_track.generate_video_movie(
@@ -600,7 +599,7 @@ class ResultsSavingFactory:
             "color": "white",
             "translation": np.array([-30, 0]),
         }
-        for mitosis_track in tqdm(mitosis_tracks):
+        for mitosis_track in mitosis_tracks:
             if not mitosis_track.display():
                 continue
             mid_body_legend = mitosis_track.get_mid_body_legend()
