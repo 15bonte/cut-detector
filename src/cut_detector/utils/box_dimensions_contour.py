@@ -24,8 +24,14 @@ class BoxDimensionsContour(BoxDimensions):
         np.ndarray
             Mask 2D.
         """
+        if not hasattr(self, "list_points"):
+            assert hasattr(self, "dln")
+            list_points = [self.dln.points]
+        else:
+            list_points = self.list_points
+
         mask = np.zeros(local_shape)
-        for points in self.list_points:
+        for points in list_points:
             binary_image = Image.new("1", (local_shape[1], local_shape[0]), 0)
             draw = ImageDraw.Draw(binary_image)
             draw.polygon(

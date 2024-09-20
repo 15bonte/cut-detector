@@ -785,6 +785,34 @@ class MitosisTrack:
             mitosis_track.metaphase_sequence = MetaphaseSequence(
                 [mitosis_track.metaphase_frame], mitosis_track.mother_track_id
             )
+        if mitosis_track.key_events_frame.get(0) is not None:
+            mitosis_track.key_events_frame["metaphase"] = (
+                mitosis_track.key_events_frame[0]
+            )
+            del mitosis_track.key_events_frame[0]
+        if mitosis_track.key_events_frame.get(1) is not None:
+            mitosis_track.key_events_frame["cytokinesis"] = (
+                mitosis_track.key_events_frame[1]
+            )
+            del mitosis_track.key_events_frame[1]
+        if mitosis_track.key_events_frame.get(2) is not None:
+            mitosis_track.key_events_frame["first_mt_cut"] = (
+                mitosis_track.key_events_frame[2]
+            )
+            del mitosis_track.key_events_frame[2]
+        if mitosis_track.key_events_frame.get(3) is not None:
+            mitosis_track.key_events_frame["second_mt_cut"] = (
+                mitosis_track.key_events_frame[3]
+            )
+            del mitosis_track.key_events_frame[3]
+        if mitosis_track.key_events_frame.get(4) is not None:
+            mitosis_track.key_events_frame["first_membrane_cut"] = (
+                mitosis_track.key_events_frame[4]
+            )
+            del mitosis_track.key_events_frame[4]
+        if not hasattr(mitosis_track, "contour_positions"):
+            assert hasattr(mitosis_track, "dln_positions")
+            mitosis_track.contour_positions = mitosis_track.dln_positions
         return mitosis_track
 
     def apply_consistency_checks(self):

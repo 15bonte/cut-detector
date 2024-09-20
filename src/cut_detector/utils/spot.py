@@ -30,6 +30,8 @@ class Spot(ABC):
         np.ndarray
             Position as numpy array.
         """
+        if hasattr(self, "position"):  # old versions
+            return np.array(self.position)
         return np.array([self.x, self.y])
 
     def distance_to(self, other_spot: Spot) -> float:

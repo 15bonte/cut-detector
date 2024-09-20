@@ -86,6 +86,26 @@ def generate_tracking_movie(
     return mask
 
 
+class CustomUnPickle(pickle.Unpickler):
+    """Custom unpickler to handle class renaming."""
+
+    def find_class(self, module, name):
+        """Check if the module and class have been renamed or moved."""
+        if (
+            module == "pasteur.trackmate.utils.TrackMateTrack"
+            and name == "TrackMateTrack"
+        ):
+            module = "cut_detector.utils.cell_track"
+            name = "CellTrack"
+        elif (
+            module == "pasteur.trackmate.utils.TrackMateSpot"
+            and name == "TrackMateSpot"
+        ):
+            module = "cut_detector.utils.cell_spot"
+            name = "CellSpot"
+        return super().find_class(module, name)
+
+
 class CellTrack(Track[CellSpot]):
     """
     Cell track.
@@ -373,7 +393,10 @@ class CellTrack(Track[CellSpot]):
     @staticmethod
     def load(file: BufferedReader) -> CellTrack:
         """Load a CellTrack from a file, and adapt attributes if necessary."""
-        cell_track: CellTrack = pickle.load(file)
-        if "metaphase_sequences" not in cell_track.__dict__:
+        cell_track: CellTrack = CustomUnPickle(file).load()
+        if not hasattr(cell_track, "metaphase_sequences"):
             cell_track.metaphase_sequences = []
+        if not hasattr(cell_track, "spots"):
+            assert hasattr(cell_track, "track_spots")
+            cell_track.spots = cell_track.track_spots
         return cell_track
