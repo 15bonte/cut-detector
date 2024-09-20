@@ -29,4 +29,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main(r"C:\Users\thoma\data\Data Pasteur\main_data\exported_mitoses")
+    main()

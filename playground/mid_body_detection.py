@@ -19,6 +19,7 @@ def main(
     mitoses_path: Optional[str] = get_data_path("mitoses"),
     tracks_path: Optional[str] = get_data_path("tracks"),
     save: Optional[bool] = False,
+    movies_save_dir: Optional[str] = None,
 ) -> None:
     """
     Parameters
@@ -42,18 +43,15 @@ def main(
     image = image.squeeze()  # TCYX
     image = re_organize_channels(image)  # TYXC
 
-    a = perform_mid_body_detection(
-        image, video_name, mitoses_path, tracks_path, save=save
+    perform_mid_body_detection(
+        image,
+        video_name,
+        mitoses_path,
+        tracks_path,
+        save=save,
+        movies_save_dir=movies_save_dir,
     )
-    b = 0
 
 
 if __name__ == "__main__":
-    main(
-        videos_path=r"C:\Users\thoma\data\Data Pasteur\main_data\videos",
-        video_name="t1_NG-MKLP1-clone-1-1",
-        mitoses_path=r"C:\Users\thoma\data\Data Pasteur\main_data\mitoses_new",
-        tracks_path=r"C:\Users\thoma\data\Data Pasteur\main_data\exported_tracks_new",
-        save=False,
-    )
-    # main()
+    main()

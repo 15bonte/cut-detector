@@ -211,7 +211,7 @@ def upload_annotations(
         return 0, 0
 
     print(
-        f"\nMid-body detection evaluation: {mb_detected / (mb_detected + mb_not_detected) * 100:.2f}%"
+        f"\nMid-body detection evaluation: {mb_detected / (mb_detected + mb_not_detected) * 100:.2f}% - {mb_detected}/{mb_detected + mb_not_detected}"
     )
 
     return mb_detected, mb_not_detected

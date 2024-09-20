@@ -5,7 +5,6 @@ from typing import Optional
 
 from cut_detector.data.tools import get_data_path
 from cut_detector.utils.cell_track import CellTrack
-from cut_detector.utils.mitosis_track import MitosisTrack
 
 
 def main(
@@ -32,6 +31,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main(
-        r"C:\Users\thoma\data\Data Pasteur\main_data\exported_tracks_new\t1_NG-MKLP1-clone-1-1"
-    )
+    main()
