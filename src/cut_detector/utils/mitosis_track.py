@@ -53,6 +53,24 @@ def snake_to_normal(snake_str: str) -> str:
     return normal_case_str
 
 
+class CustomUnPickle(pickle.Unpickler):
+    """Custom unpickler to handle class renaming."""
+
+    def find_class(self, module, name):
+        """Check if the module and class have been renamed or moved."""
+        if module == "pasteur.trackmate.utils.MitosisTrack":
+            if name == "MitosisTrack":
+                module = "cut_detector.utils.mitosis_track"
+            elif name == "BoxDimensionsDln":
+                module = "cut_detector.utils.box_dimensions_contour"
+                name = "BoxDimensionsContour"
+        elif module == "utils.Box":
+            module = "cut_detector.utils.box_dimensions"
+        elif module == "pasteur.trackmate.utils.MidBodySpot":
+            module = "cut_detector.utils.mid_body_spot"
+        return super().find_class(module, name)
+
+
 class MitosisTrack:
     """
     A class to store the information of a mitosis track.
@@ -445,7 +463,7 @@ class MitosisTrack:
         return mitosis_movie
 
     def update_mid_body_ground_truth(
-        self, annotation_file: str, nb_channels: int
+        self, annotation_file: str, nb_channels: Optional[int] = 4
     ) -> None:
         """
         Update mid body ground truth from CellCounter annotations.
@@ -762,7 +780,7 @@ class MitosisTrack:
         MitosisTrack
             Mitosis track.
         """
-        mitosis_track: MitosisTrack = pickle.load(file)
+        mitosis_track: MitosisTrack = CustomUnPickle(file).load()
         if not hasattr(mitosis_track, "metaphase_sequence"):
             mitosis_track.metaphase_sequence = MetaphaseSequence(
                 [mitosis_track.metaphase_frame], mitosis_track.mother_track_id
@@ -773,7 +791,7 @@ class MitosisTrack:
         """Verify crucial assertions."""
         assert self.key_events_frame["first_mt_cut"] <= self.max_frame
         assert self.key_events_frame["second_mt_cut"] <= self.max_frame
-    
+
     def get_event_frame(
         self, event: str, relative: bool, zero_indexed=False
     ) -> int:

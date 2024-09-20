@@ -7,6 +7,7 @@ import napari
 from cut_detector.data.tools import get_data_path
 from cut_detector.factories.results_saving_factory import ResultsSavingFactory
 from cut_detector.utils.cell_track import CellTrack
+from cut_detector.utils.mitosis_track import MitosisTrack
 
 
 def main(
@@ -56,7 +57,7 @@ def main(
     mitosis_tracks = []
     for state_path in os.listdir(mitoses_path):
         with open(os.path.join(mitoses_path, state_path), "rb") as f:
-            mitosis_track = pickle.load(f)
+            mitosis_track = MitosisTrack.load(f)
         mitosis_tracks.append(mitosis_track)
 
     ResultsSavingFactory().generate_napari_tracking_mask(

@@ -25,6 +25,7 @@ from cnn_framework.utils.enum import PredictMode
 from cnn_framework.utils.models.resnet_classifier import ResnetClassifier
 from cnn_framework.utils.model_params.base_model_params import BaseModelParams
 
+from .mitosis_track import MitosisTrack
 from .cnn_data_set import CnnDataSet
 from .hidden_markov_models import HiddenMarkovModel
 
@@ -125,7 +126,7 @@ def upload_annotations(
     # Read video
     video_name = os.path.basename(video_path).split(".")[0]
 
-    mitosis_tracks = []
+    mitosis_tracks: list[MitosisTrack] = []
     # Iterate over "bin" files in exported_mitoses_dir
     for state_path in os.listdir(mitoses_folder):
         # Ignore if not for current video
@@ -133,7 +134,7 @@ def upload_annotations(
             continue
         # Load mitosis track
         with open(os.path.join(mitoses_folder, state_path), "rb") as f:
-            mitosis_track = pickle.load(f)
+            mitosis_track = MitosisTrack.load(f)
 
         # Add mitosis track to list
         mitosis_tracks.append(mitosis_track)
@@ -156,9 +157,7 @@ def upload_annotations(
             video_path, mitosis_track, annotations_files
         )
         if annotation_file is not None:
-            mitosis_track.update_mid_body_ground_truth(
-                annotation_file, nb_channels=4
-            )
+            mitosis_track.update_mid_body_ground_truth(annotation_file)
 
             # Save updated mitosis track
             if save:
