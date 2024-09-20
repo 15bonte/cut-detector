@@ -24,7 +24,7 @@ class BoxDimensionsContour(BoxDimensions):
         np.ndarray
             Mask 2D.
         """
-        if not hasattr(self, "list_points"):
+        if not hasattr(self, "list_points"):  # old versions
             assert hasattr(self, "dln")
             list_points = [self.dln.points]
         else:
