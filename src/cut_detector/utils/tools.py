@@ -190,7 +190,6 @@ def upload_annotations(
                             "average_position_difference": average_position_difference,
                         }
                     )
-                    mitosis_track.evaluate_mid_body_detection()
 
         display_progress(
             "Update with annotations and evaluate",
@@ -246,7 +245,7 @@ def upload_annotations_folder(
 
     video_paths = os.listdir(video_folder)
     for video_idx, video in enumerate(video_paths):
-        video_progress = f"{video_idx + 1}/{len(video_paths)}"
+        video_progress = f"{video} - {video_idx + 1}/{len(video_paths)}"
         print(f"\nVideo {video_progress}...")
         # Perform mid-body detection evaluation
         detected, not_detected = upload_annotations(

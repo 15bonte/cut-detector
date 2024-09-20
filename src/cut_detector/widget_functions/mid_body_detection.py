@@ -27,7 +27,7 @@ def perform_mid_body_detection(
     Parameters
     ----------
     raw_video : np.ndarray
-        Raw video to extract mitosis movies from.
+        Raw video to extract mitosis movies from. TYXC.
     video_name : str
         Name of the video.
     exported_mitoses_dir : str
