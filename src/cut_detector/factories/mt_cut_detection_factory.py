@@ -194,7 +194,7 @@ class MtCutDetectionFactory:
             if (
                 first_mt_cut_frame_abs
                 - mitosis_track.key_events_frame["cytokinesis"]
-            ) < 50 / TIME_RESOLUTION:
+            ) <= 50 / TIME_RESOLUTION:
                 mitosis_track.key_events_frame["first_mt_cut"] = (
                     ImpossibleDetection.TOO_SHORT_CUT
                 )
