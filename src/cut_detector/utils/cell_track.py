@@ -154,7 +154,7 @@ class CellTrack(Track[CellSpot]):
 
         # Ignore first spots of cell as they are metaphase only if end of previous metaphase
         # Exception if track starts at first frame
-        metaphase_finished = self.start > 0
+        initial_metaphase_finished = self.start == 0
 
         metaphase_frames = []
         for abs_frame in range(self.start, self.stop + 1):
@@ -168,8 +168,8 @@ class CellTrack(Track[CellSpot]):
             self.spots[abs_frame].predicted_phase = predictions[rel_frame]
 
             if predictions[rel_frame] == INTERPHASE_INDEX:
-                metaphase_finished = True
-            if not metaphase_finished:
+                initial_metaphase_finished = True
+            if not initial_metaphase_finished:
                 continue
 
             if predictions[rel_frame] == METAPHASE_INDEX:
