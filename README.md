@@ -38,7 +38,7 @@ It is highly recommended to create a dedicated conda environment, by following t
 
 2. Open an Anaconda prompt as admin to create a new environment using [conda]. We advice to use python 3.10 and conda 23.10.0, to get conda-libmamba-solver as default solver.
 
-```
+```bash
 conda create --name cut_detector python=3.10 conda=23.10.0
 conda activate cut_detector
 ```
@@ -47,13 +47,13 @@ conda activate cut_detector
 
 Once in a dedicated environment, our package can be installed via [pip]:
 
-```
+```bash
 pip install cut_detector
 ```
 
 Alternatively, you can clone the github repo to access to playground scripts.
 
-```
+```bash
 git clone https://github.com/15bonte/cut-detector.git
 cd cut-detector
 pip install -e .
@@ -65,13 +65,13 @@ We highly recommend to use GPU to speed up segmentation. To use your NVIDIA GPU,
 
 Next we need to remove the CPU version of torch:
 
-```
+```bash
 pip uninstall torch
 ```
 
 The GPU version of torch to be installed can be found [here](https://pytorch.org/get-started/locally/). You may choose the CUDA version supported by your GPU, and install it with conda. This package has been developed with the version 11.6, installed with this command:
 
-```
+```bash
 conda install pytorch==1.12.1 torchvision pytorch-cuda=11.6 -c pytorch -c nvidia
 ```
 
@@ -79,7 +79,7 @@ conda install pytorch==1.12.1 torchvision pytorch-cuda=11.6 -c pytorch -c nvidia
 
 To update cut-detector to the latest version, open an Anaconda prompt and use the following commands:
 
-```
+```bash
 conda activate cut_detector
 pip install cut-detector --upgrade
 ```
