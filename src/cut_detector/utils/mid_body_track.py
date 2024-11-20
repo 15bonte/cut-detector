@@ -37,7 +37,7 @@ class MidBodyTrack(Track[MidBodySpot]):
     def get_expected_distance(
         self,
         expected_positions: dict[int, list[int]],
-        max_distance: float,
+        max_distance=175,
     ) -> float:
         """
         Compute the average distance between mid-body expected positions and current

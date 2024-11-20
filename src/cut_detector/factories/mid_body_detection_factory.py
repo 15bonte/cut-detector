@@ -27,24 +27,18 @@ class MidBodyDetectionFactory:
 
     Parameters
     ----------
-    weight_mklp_intensity_factor : float
-        Weight of intensity in spot dist calculation (cf TrackMate).
-    weight_sir_intensity_factor : float
-        Weight of sir intensity in spot distance calculation.
-    mid_body_linking_max_distance :int
-        Maximum distance between two mid-bodies to link them.
+    params : Parameters
+        Video parameters.
     minimum_mid_body_track_length : int
         Minimum spots in mid-body track to consider it.
     """
 
     def __init__(
         self,
-        params=Parameters(),
-        track_linking_max_distance=175,
+        params: Parameters,
         minimum_mid_body_track_length=5,
     ):
         self.params = params
-        self.track_linking_max_distance = track_linking_max_distance
         self.minimum_mid_body_track_length = minimum_mid_body_track_length
 
     def update_mid_body_spots(
@@ -585,7 +579,6 @@ class MidBodyDetectionFactory:
             expected_distances.append(
                 track.get_expected_distance(
                     expected_positions,
-                    self.track_linking_max_distance,
                 )
             )
         assert len(expected_distances) == len(kept_tracks)

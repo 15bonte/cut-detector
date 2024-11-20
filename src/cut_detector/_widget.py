@@ -10,9 +10,8 @@ import tempfile
 import numpy as np
 from skimage import io
 
-from cut_detector.utils.cell_track import CellTrack
-
-
+from .utils.cell_track import CellTrack
+from .utils.parameters import Parameters
 from .utils.tools import re_organize_channels
 
 from .widget_functions.segmentation_tracking import perform_tracking
@@ -38,6 +37,7 @@ def video_whole_process(
     tracks_dir_name: str,
     mitoses_dir_name: str,
     results_save_dir: str,
+    params=Parameters(),
 ) -> tuple[list[CellTrack], np.ndarray]:
     """Perform the whole process on a single video.
 
@@ -63,6 +63,8 @@ def video_whole_process(
         Directory to save .bin mitoses.
     results_save_dir : str
         Directory to save results.
+    params : Parameters, optional
+        Video parameters.
 
     Returns
     -------
@@ -93,6 +95,7 @@ def video_whole_process(
         tracks_dir_name,
         movies_save_dir if save_check_box else None,
         parallel_detection=True,
+        params=params,
     )
     perform_mt_cut_detection(video, video_name, mitoses_dir_name)
     save_galleries(video, video_name, mitoses_dir_name, results_save_dir)
@@ -150,6 +153,8 @@ def whole_process(
 
     start = time.time()
 
+    params = Parameters()
+
     # Create temporary folders
     spots_dir = tempfile.TemporaryDirectory()
     tracks_dir = tempfile.TemporaryDirectory()
@@ -168,6 +173,7 @@ def whole_process(
         tracks_dir.name,
         mitoses_dir.name,
         results_save_dir,
+        params=params,
     )
 
     end = time.time()
@@ -253,6 +259,8 @@ def whole_process_folder(
     tracks_dir = tempfile.TemporaryDirectory()
     mitoses_dir = tempfile.TemporaryDirectory()
 
+    params = Parameters()
+
     # Run process on each video
     tiff_files = list(Path(raw_data_dir).rglob("*.tif"))
     for i, tiff_file in enumerate(tiff_files):
@@ -271,6 +279,7 @@ def whole_process_folder(
             tracks_dir.name,
             mitoses_dir.name,
             results_save_dir,
+            params,
         )
 
     # Results saving
@@ -392,6 +401,8 @@ def mid_body_detection(
     save_check_box: bool,
     movies_save_dir: str,
 ):
+    params = Parameters()
+
     raw_video = re_organize_channels(img_layer.data)  # TYXC
     perform_mid_body_detection(
         raw_video,
@@ -400,6 +411,7 @@ def mid_body_detection(
         exported_tracks_dir,
         movies_save_dir if save_check_box else None,
         parallel_detection=True,
+        params=params,
     )
 
 

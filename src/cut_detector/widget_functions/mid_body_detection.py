@@ -5,10 +5,12 @@ import numpy as np
 from aicsimageio.writers import OmeTiffWriter
 from tqdm import tqdm
 
+
 from ..factories.mid_body_detection_factory import MidBodyDetectionFactory
 
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.cell_track import CellTrack
+from ..utils.parameters import Parameters
 
 
 def perform_mid_body_detection(
@@ -21,6 +23,7 @@ def perform_mid_body_detection(
     parallel_detection: bool = False,
     detection_method: str = "difference_gaussian",
     target_mitosis_id: Optional[int] = None,
+    params=Parameters(),
 ) -> list[MitosisTrack]:
     """Perform mid-body detection on mitosis tracks.
 
@@ -44,6 +47,8 @@ def perform_mid_body_detection(
         Detection method to use, by default "difference_gaussian".
     target_mitosis_id : Optional[int], optional
         Target mitosis id to perform mid-body detection on, by default None.
+    params : Parameters, optional
+        Video parameters.
 
     Returns
     -------
@@ -79,7 +84,7 @@ def perform_mid_body_detection(
 
     # Generate movie for each mitosis and save
     print("Performing mid-body detection.")
-    mid_body_detector = MidBodyDetectionFactory()
+    mid_body_detector = MidBodyDetectionFactory(params)
     for i, mitosis_track in enumerate(tqdm(mitosis_tracks)):
 
         if (
