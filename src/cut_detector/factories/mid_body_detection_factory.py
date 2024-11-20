@@ -18,7 +18,7 @@ from ..utils.mid_body_spot import MidBodySpot
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.track_generation import generate_tracks_from_spots
 from ..utils.cell_spot import CellSpot
-from ..utils.mid_body_detection.tracking import TRACKING_FUNCTIONS
+from ..utils.mid_body_detection.tracking import get_tracking_method
 
 
 class MidBodyDetectionFactory:
@@ -86,9 +86,11 @@ class MidBodyDetectionFactory:
             mitosis_track=mitosis_track,
         )
 
-        assert tracking_method in TRACKING_FUNCTIONS
         mid_body_tracks: list[MidBodyTrack] = generate_tracks_from_spots(
-            spots_candidates, TRACKING_FUNCTIONS[tracking_method]
+            spots_candidates,
+            get_tracking_method(
+                tracking_method, self.params.spatial_resolution
+            ),
         )
 
         kept_track = self._select_best_track(

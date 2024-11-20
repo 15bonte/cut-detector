@@ -58,45 +58,64 @@ def spatial_intensity_dist(
     return (spatial_e * penalty) ** 2
 
 
-# Distance functions
+def get_tracking_method(
+    method_name: str, spatial_resolution: int
+) -> Union[LapTrack, SpatialLapTrack]:
+    """Get tracking method by name.
 
-custom_spatial_distance = partial(
-    spatial_intensity_dist,
-    max_distance=175,
-    mklp_weight_factor=5.0,
-    sir_weight_factor=1.50,
-)
+    Parameters
+    ----------
+    method_name : str
+        Name of the tracking method.
 
-custom_distance = partial(
-    spatial_intensity_dist,
-    max_distance=175,
-    mklp_weight_factor=5.0,
-    sir_weight_factor=1.50,
-)
+    Returns
+    -------
+    LapTrack or SpatialLapTrack
+        Tracking method.
+    """
+    max_distance = 39.375  # um
+    max_distance_px = int(max_distance / spatial_resolution * 1000)  # px
 
-# Tracking methods
+    if method_name == "spatial_laptrack":
 
-TRACKING_FUNCTIONS = {
-    "spatial_laptrack": SpatialLapTrack(
-        spatial_coord_slice=slice(0, 2),
-        spatial_metric="euclidean",
-        track_dist_metric=custom_spatial_distance,
-        track_cost_cutoff=175,
-        gap_closing_dist_metric=custom_spatial_distance,
-        gap_closing_cost_cutoff=175,
-        gap_closing_max_frame_count=3,
-        splitting_cost_cutoff=False,
-        merging_cost_cutoff=False,
-        alternative_cost_percentile=100,
-    ),
-    "laptrack": LapTrack(
-        track_dist_metric=custom_distance,
-        track_cost_cutoff=175**2,
-        gap_closing_dist_metric=custom_distance,
-        gap_closing_cost_cutoff=175**2,
-        gap_closing_max_frame_count=2,
-        splitting_cost_cutoff=False,
-        merging_cost_cutoff=False,
-        alternative_cost_percentile=90,
-    ),
-}
+        custom_spatial_distance = partial(
+            spatial_intensity_dist,
+            max_distance=max_distance_px,
+            mklp_weight_factor=5.0,
+            sir_weight_factor=1.50,
+        )
+
+        return SpatialLapTrack(
+            spatial_coord_slice=slice(0, 2),
+            spatial_metric="euclidean",
+            track_dist_metric=custom_spatial_distance,
+            track_cost_cutoff=max_distance_px,
+            gap_closing_dist_metric=custom_spatial_distance,
+            gap_closing_cost_cutoff=max_distance_px,
+            gap_closing_max_frame_count=3,
+            splitting_cost_cutoff=False,
+            merging_cost_cutoff=False,
+            alternative_cost_percentile=100,
+        )
+
+    if method_name == "laptrack":
+
+        custom_distance = partial(
+            spatial_intensity_dist,
+            max_distance=max_distance_px,
+            mklp_weight_factor=5.0,
+            sir_weight_factor=1.50,
+        )
+
+        return LapTrack(
+            track_dist_metric=custom_distance,
+            track_cost_cutoff=max_distance_px**2,
+            gap_closing_dist_metric=custom_distance,
+            gap_closing_cost_cutoff=max_distance_px**2,
+            gap_closing_max_frame_count=2,
+            splitting_cost_cutoff=False,
+            merging_cost_cutoff=False,
+            alternative_cost_percentile=90,
+        )
+
+    raise ValueError(f"Method {method_name} not implemented.")
