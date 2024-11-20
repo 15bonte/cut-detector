@@ -6,8 +6,7 @@ from typing import Optional, Any
 from shapely.geometry.polygon import Polygon
 from shapely import distance
 
-from cut_detector.utils.metaphase_sequence import MetaphaseSequence
-
+from .metaphase_sequence import MetaphaseSequence
 from .spot import Spot
 
 

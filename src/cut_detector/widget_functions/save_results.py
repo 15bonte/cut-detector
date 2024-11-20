@@ -4,7 +4,7 @@ from typing import Optional
 import numpy as np
 import h5py
 
-from cut_detector.utils.mt_cut_detection.impossible_detection import (
+from ..utils.mt_cut_detection.impossible_detection import (
     ImpossibleDetection,
 )
 from ..utils.parameters import Parameters

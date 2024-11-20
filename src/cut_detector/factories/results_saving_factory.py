@@ -5,8 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from napari import Viewer
 
-from cut_detector.utils.parameters import Parameters
-
+from ..utils.parameters import Parameters
 from ..utils.cell_track import CellTrack, generate_tracking_movie
 from ..utils.tools import re_organize_channels
 from ..utils.mitosis_track import MitosisTrack
