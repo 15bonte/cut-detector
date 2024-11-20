@@ -264,7 +264,11 @@ class MitosisTrackGenerationFactory:
                 track_predictions = self._correct_sequence(track_predictions)
 
             # Save prediction for each spot
-            track.update_metaphase_spots(track_predictions)
+            track.update_metaphase_spots(
+                track_predictions,
+                self.params.interphase_index,
+                self.params.metaphase_index,
+            )
 
         self._update_predictions_file(
             cell_tracks, predictions_file, video_name
