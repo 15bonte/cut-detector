@@ -6,10 +6,6 @@ from tqdm import tqdm
 import numpy as np
 import pandas as pd
 
-from ..constants.tracking import (
-    INTERPHASE_INDEX,
-    METAPHASE_INDEX,
-)
 from .track import Track
 from .box_dimensions_contour import BoxDimensionsContour
 from .box_dimensions import BoxDimensions
@@ -141,7 +137,12 @@ class CellTrack(Track[CellSpot]):
             track.add_spot(spot)
         return track
 
-    def update_metaphase_spots(self, predictions: list[int]) -> None:
+    def update_metaphase_spots(
+        self,
+        predictions: list[int],
+        interphase_index: int,
+        metaphase_index: int,
+    ) -> None:
         """
         Populate metaphase_spots with candidates.
 
@@ -149,6 +150,10 @@ class CellTrack(Track[CellSpot]):
         ----------
         predictions : list[int]
             list of predictions for each frame of the track.
+        interphase_index : int
+            Index for interphase in CNN classification model.
+        metaphase_index : int
+            Index for metaphase in CNN classification model.
         """
         assert len(predictions) == self.stop - self.start + 1
 
@@ -167,15 +172,15 @@ class CellTrack(Track[CellSpot]):
 
             self.spots[abs_frame].predicted_phase = predictions[rel_frame]
 
-            if predictions[rel_frame] == INTERPHASE_INDEX:
+            if predictions[rel_frame] == interphase_index:
                 initial_metaphase_finished = True
             if not initial_metaphase_finished:
                 continue
 
-            if predictions[rel_frame] == METAPHASE_INDEX:
+            if predictions[rel_frame] == metaphase_index:
                 metaphase_frames.append(abs_frame)
 
-            if predictions[rel_frame] == INTERPHASE_INDEX and metaphase_frames:
+            if predictions[rel_frame] == interphase_index and metaphase_frames:
                 # End of metaphase
                 self.metaphase_sequences.append(
                     MetaphaseSequence(metaphase_frames, self.track_id)

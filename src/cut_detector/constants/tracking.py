@@ -1,6 +1,3 @@
-INTERPHASE_INDEX = 0  # interphase index for CNN classification model
-METAPHASE_INDEX = 1  # metaphase index for CNN classification model
-
 # Mid-body tracking
 CYTOKINESIS_DURATION = (
     20  # number of frames to look for mid-body in between cells
