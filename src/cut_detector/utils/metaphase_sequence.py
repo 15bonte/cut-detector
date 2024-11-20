@@ -1,5 +1,4 @@
 from __future__ import annotations
-from ..constants.tracking import FRAMES_AROUND_METAPHASE
 
 
 class MetaphaseSequence:
@@ -19,7 +18,7 @@ class MetaphaseSequence:
 
         self.track_id = track_id
 
-    def is_mother_candidate(self, frame):
+    def is_mother_candidate(self, frame: int, frames_around_metaphase: int):
         """Check if the frame can be the first one of a daughter frame form this metaphase.
         Returns True if the frame is close to the last frame of the metaphase.
 
@@ -27,6 +26,8 @@ class MetaphaseSequence:
         ----------
         frame : int
             Frame number.
+        frames_around_metaphase : int
+            Range to look for metaphase candidate spots.
 
         Returns
         -------
@@ -34,7 +35,7 @@ class MetaphaseSequence:
             Whether the frame is a daughter candidate.
         """
         return (
-            abs(self.last_frame - frame) < FRAMES_AROUND_METAPHASE
+            abs(self.last_frame - frame) < frames_around_metaphase
             and frame >= self.first_frame
         )
 

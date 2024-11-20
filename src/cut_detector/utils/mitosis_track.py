@@ -15,10 +15,8 @@ from ..constants.annotations import (
     get_class_ids_after_second_mt_cut,
     get_class_ids_after_first_membrane_cut,
 )
-from ..constants.tracking import (
-    CYTOKINESIS_DURATION,
-    FRAMES_AROUND_METAPHASE,
-)
+from ..constants.tracking import CYTOKINESIS_DURATION
+
 from .mid_body_spot import MidBodySpot
 from .cell_track import CellTrack
 from .box_dimensions_contour import BoxDimensionsContour
@@ -174,6 +172,7 @@ class MitosisTrack:
         self,
         cell_tracks: list[CellTrack],
         mitosis_tracks: list[MitosisTrack],
+        frames_around_metaphase: int,
     ) -> None:
         """Update min and max frame of current mitosis.
 
@@ -183,6 +182,8 @@ class MitosisTrack:
             List of all tracks in the video
         mitosis_tracks : list[MitosisTrack]
             List of all mitosis tracks in the video
+        frames_around_metaphase : int
+            Range to look for metaphase candidate spots.
         """
         # Get all tracks involved in current mitosis
         mother_track, daughter_tracks = self.get_mother_daughters_tracks(
@@ -190,10 +191,10 @@ class MitosisTrack:
         )
 
         # Get min and max frame of current mitosis
-        # Min is the metaphase frame minus FRAMES_AROUND_METAPHASE, protected against frames before start of mother track
+        # Min is the metaphase frame minus frames_around_metaphase, protected against frames before start of mother track
         min_frame = max(
             mother_track.start,
-            self.metaphase_sequence.last_frame - FRAMES_AROUND_METAPHASE,
+            self.metaphase_sequence.last_frame - frames_around_metaphase,
         )
         # For each daughter track, the end is the end of the track OR the next metaphase event of this track
         max_frame = mother_track.stop
@@ -388,16 +389,20 @@ class MitosisTrack:
 
         return mitosis_movie, mask_movie
 
-    def is_possible_match(self, other_track: MitosisTrack) -> bool:
+    def is_possible_match(
+        self, other_track: MitosisTrack, frames_around_metaphase: int
+    ) -> bool:
         """
         Check if two tracks are a possible match. Other track is typically a ground truth track.
         Match is possible if there is an overlap between the two tracks,
-        and other track starts no earlier/no later than FRAMES_AROUND_METAPHASE around self start.
+        and other track starts no earlier/no later than frames_around_metaphase around self start.
 
         Parameters
         ----------
         other_track : MitosisTrack
             Other track to compare with.
+        frames_around_metaphase : int
+            Range to look for metaphase candidate spots.
 
         Returns
         -------
@@ -409,7 +414,7 @@ class MitosisTrack:
                 other_track.metaphase_sequence.last_frame
                 - self.metaphase_sequence.last_frame
             )
-            > FRAMES_AROUND_METAPHASE
+            > frames_around_metaphase
         ):
             return False
 

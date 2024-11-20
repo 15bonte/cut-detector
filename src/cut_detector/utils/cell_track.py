@@ -182,12 +182,16 @@ class CellTrack(Track[CellSpot]):
                 )
                 metaphase_frames = []
 
-    def has_close_metaphase(self, spot: CellSpot, target_frame: int) -> bool:
+    def has_close_metaphase(
+        self, spot: CellSpot, target_frame: int, frames_around_metaphase: int
+    ) -> bool:
         """
         Parameters
         ----------
         spot : CellSpot
             Only used to update corresponding metaphase spot.
+        frames_around_metaphase : int
+            Range to look for metaphase candidate spots.
 
         Returns
         -------
@@ -195,7 +199,9 @@ class CellTrack(Track[CellSpot]):
 
         """
         for metaphase_sequence in self.metaphase_sequences:
-            if metaphase_sequence.is_mother_candidate(target_frame):
+            if metaphase_sequence.is_mother_candidate(
+                target_frame, frames_around_metaphase
+            ):
                 # Mother track found!
                 spot.corresponding_metaphase_sequence = metaphase_sequence
                 return True

@@ -21,11 +21,13 @@ class Parameters:
 
         # Range to look for metaphase candidate spots
         metaphase_interval = 100  # minutes
-        self.frames_around_metaphase = metaphase_interval / time_resolution
+        self.frames_around_metaphase = int(
+            metaphase_interval / time_resolution
+        )
 
         # Range to look for midbody in between cells
         cytokinesis_interval = 200  # minutes
-        self.cytokinesis_duration = cytokinesis_interval / time_resolution
+        self.cytokinesis_duration = int(cytokinesis_interval / time_resolution)
 
         # Channels
         self.mid_body_channel = 1

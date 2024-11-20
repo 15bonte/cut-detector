@@ -2,6 +2,7 @@ import json
 import os
 import numpy as np
 
+from ..utils.parameters import Parameters
 from ..utils.metaphase_sequence import MetaphaseSequence
 from ..utils.cell_track import CellTrack
 from ..utils.tools import perform_cnn_inference
@@ -17,7 +18,6 @@ from ..utils.mitosis_track_generation.metaphase_cnn_data_set import (
 from ..utils.mitosis_track_generation.metaphase_cnn_model import (
     MetaphaseCnnModel,
 )
-from ..constants.tracking import TIME_RESOLUTION
 
 
 def get_track_from_id(tracks: list[CellTrack], track_id: int) -> CellTrack:
@@ -47,18 +47,24 @@ class MitosisTrackGenerationFactory:
     Parameters
     ----------
     minimum_metaphase_interval : int
-        Minimum frames distance between two metaphases.
+        Minimum time interval distance between two metaphases (minutes).
     max_spot_distance_for_split : int
-        Maximum distance between two spots to consider them.
+        Maximum distance between two spots to consider them stuck (um).
     """
 
     def __init__(
         self,
-        minimum_metaphase_interval=100 / TIME_RESOLUTION,
-        max_spot_distance_for_split=20,
+        params=Parameters(),
+        minimum_metaphase_interval=100,
+        max_spot_distance_for_split=4.5,
     ) -> None:
-        self.minimum_metaphase_interval = minimum_metaphase_interval
-        self.max_spot_distance_for_split = max_spot_distance_for_split
+        self.params = params
+        self.minimum_metaphase_interval = (
+            minimum_metaphase_interval / params.time_resolution
+        )
+        self.max_spot_distance_for_split = (
+            max_spot_distance_for_split / params.spatial_resolution * 1000
+        )
 
     def get_tracks_to_merge(
         self, raw_tracks: list[CellTrack]
@@ -109,7 +115,11 @@ class MitosisTrackGenerationFactory:
                 filter(
                     lambda x: get_track_from_id(
                         raw_tracks, x.track_id
-                    ).has_close_metaphase(x, track_first_frame),
+                    ).has_close_metaphase(
+                        x,
+                        track_first_frame,
+                        self.params.frames_around_metaphase,
+                    ),
                     stuck_spots,
                 )
             )

@@ -114,7 +114,11 @@ def perform_mitosis_track_generation(
     print("Updating division attributes.")
     for i, mitosis_track in enumerate(tqdm(mitosis_tracks)):
         mitosis_track.id = i
-        mitosis_track.update_mitosis_start_end(cell_tracks, mitosis_tracks)
+        mitosis_track.update_mitosis_start_end(
+            cell_tracks,
+            mitosis_tracks,
+            tracks_merging_factory.params.frames_around_metaphase,
+        )
         mitosis_track.update_key_events_frame(cell_tracks)
         mitosis_track.update_mitosis_position_contour(cell_tracks)
 
