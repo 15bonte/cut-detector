@@ -15,7 +15,6 @@ from ..constants.annotations import (
     get_class_ids_after_second_mt_cut,
     get_class_ids_after_first_membrane_cut,
 )
-from ..constants.tracking import CYTOKINESIS_DURATION
 
 from .mid_body_spot import MidBodySpot
 from .cell_track import CellTrack
@@ -218,7 +217,11 @@ class MitosisTrack:
         self.max_frame = max_frame
 
     def is_near_border(
-        self, raw_video: np.ndarray, minimum_distance=20
+        self,
+        raw_video: np.ndarray,
+        cytokinesis_duration: int,
+        spatial_resolution: int,
+        minimum_distance=4.5,
     ) -> bool:
         """Check if the mitosis is near the border of the video.
 
@@ -226,6 +229,12 @@ class MitosisTrack:
         ----------
         raw_video: np.ndarray
             TYXC
+        cytokinesis_duration: int
+            Duration of cytokinesis in frames.
+        spatial_resolution: int
+            Spatial resolution of the video (nanometers per pixel).
+        minimum_distance: int
+            Minimum distance to consider the mitosis near the border (um).
 
         Returns
         -------
@@ -236,7 +245,7 @@ class MitosisTrack:
         max_height, max_width = raw_video.shape[1], raw_video.shape[2]
 
         cyto_frame = self.key_events_frame["cytokinesis"]
-        last_frame = cyto_frame + CYTOKINESIS_DURATION
+        last_frame = cyto_frame + cytokinesis_duration
 
         # Get mitosis coordinates between cyto_frame and last_frame
         min_dist_to_border = np.inf
@@ -263,7 +272,8 @@ class MitosisTrack:
 
             min_dist_to_border = min(min_dist_to_border, min_x, min_y)
 
-        return min_dist_to_border < minimum_distance
+        minimum_distance_px = minimum_distance * 1e3 / spatial_resolution
+        return min_dist_to_border < minimum_distance_px
 
     def update_key_events_frame(self, cell_tracks: list[CellTrack]) -> None:
         """Update key events frame for current mitosis.

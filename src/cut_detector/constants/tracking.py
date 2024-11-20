@@ -1,8 +1,3 @@
-# Mid-body tracking
-CYTOKINESIS_DURATION = (
-    20  # number of frames to look for mid-body in between cells
-)
-
 # Time resolution
 TIME_RESOLUTION = 10  # 1 frame = 10 minutes
 

@@ -2,6 +2,7 @@ import os
 import numpy as np
 from tqdm import tqdm
 
+from ..utils.parameters import Parameters
 from ..constants.tracking import TIME_RESOLUTION
 from ..utils.mt_cut_detection.bridges_mt_model_manager import (
     BridgesMtModelManager,
@@ -28,13 +29,14 @@ class MtCutDetectionFactory:
 
     def __init__(
         self,
+        params=Parameters(),
         margin=50,
     ) -> None:
+        self.params = params
         self.margin = margin
 
-    @staticmethod
     def _is_bridges_classification_impossible(
-        mitosis_track: MitosisTrack, video: np.ndarray
+        self, mitosis_track: MitosisTrack, video: np.ndarray
     ) -> bool:
         """
         Bridges classification is impossible if:
@@ -66,7 +68,11 @@ class MtCutDetectionFactory:
             )
             return True
 
-        if mitosis_track.is_near_border(video):
+        if mitosis_track.is_near_border(
+            video,
+            self.params.cytokinesis_duration,
+            self.params.spatial_resolution,
+        ):
             mitosis_track.key_events_frame["first_mt_cut"] = (
                 ImpossibleDetection.NEAR_BORDER
             )

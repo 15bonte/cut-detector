@@ -1,4 +1,3 @@
-import collections
 import concurrent.futures
 from typing import Optional
 import numpy as np
@@ -8,12 +7,12 @@ from shapely.ops import nearest_points
 from shapely import Polygon, Point
 from tqdm import tqdm
 
+from ..utils.parameters import Parameters
 from ..utils.mid_body_detection.detection import (
     DETECTION_FUNCTIONS,
 )
 from ..utils.cell_track import CellTrack
 from ..constants.tracking import (
-    CYTOKINESIS_DURATION,
     MID_BODY_CHANNEL,
     SIR_CHANNEL,
 )
@@ -38,20 +37,18 @@ class MidBodyDetectionFactory:
         Weight of sir intensity in spot distance calculation.
     mid_body_linking_max_distance :int
         Maximum distance between two mid-bodies to link them.
-    cytokinesis_duration : int
-        Number of frames to look for mid-body between cells.
     minimum_mid_body_track_length : int
         Minimum spots in mid-body track to consider it.
     """
 
     def __init__(
         self,
+        params=Parameters(),
         track_linking_max_distance=175,
-        cytokinesis_duration=CYTOKINESIS_DURATION,
         minimum_mid_body_track_length=5,
     ):
+        self.params = params
         self.track_linking_max_distance = track_linking_max_distance
-        self.cytokinesis_duration = cytokinesis_duration
         self.minimum_mid_body_track_length = minimum_mid_body_track_length
 
     def update_mid_body_spots(
@@ -441,7 +438,7 @@ class MidBodyDetectionFactory:
         rel_expected_positions = {}
         for frame in range(
             daughter_track.start,
-            daughter_track.start + self.cytokinesis_duration,
+            daughter_track.start + self.params.cytokinesis_duration,
         ):
             # If one cell does not exist anymore, stop
             if (
@@ -529,7 +526,9 @@ class MidBodyDetectionFactory:
         abs_min_frame = mitosis_track.key_events_frame[
             "cytokinesis"
         ]  # Cytokinesis start
-        abs_max_frame = abs_min_frame + int(self.cytokinesis_duration / 2)
+        abs_max_frame = abs_min_frame + int(
+            self.params.cytokinesis_duration / 2
+        )
         # Randomly sample 1000 intensities to compute threshold
         intensities = np.random.choice(
             tubulin_movie[
