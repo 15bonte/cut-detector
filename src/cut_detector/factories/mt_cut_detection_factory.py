@@ -3,7 +3,6 @@ import numpy as np
 from tqdm import tqdm
 
 from ..utils.parameters import Parameters
-from ..constants.tracking import TIME_RESOLUTION
 from ..utils.mt_cut_detection.bridges_mt_model_manager import (
     BridgesMtModelManager,
 )
@@ -200,7 +199,7 @@ class MtCutDetectionFactory:
             if (
                 first_mt_cut_frame_abs
                 - mitosis_track.key_events_frame["cytokinesis"]
-            ) <= 50 / TIME_RESOLUTION:
+            ) <= 50 / self.params.time_resolution:  # 50 minutes
                 mitosis_track.key_events_frame["first_mt_cut"] = (
                     ImpossibleDetection.TOO_SHORT_CUT
                 )

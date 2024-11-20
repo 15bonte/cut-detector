@@ -5,9 +5,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from napari import Viewer
 
+from cut_detector.utils.parameters import Parameters
+
 from ..utils.cell_track import CellTrack, generate_tracking_movie
 from ..utils.tools import re_organize_channels
-from ..constants.tracking import TIME_RESOLUTION
 from ..utils.mitosis_track import MitosisTrack
 from ..utils.mt_cut_detection.impossible_detection import (
     ImpossibleDetection,
@@ -110,18 +111,16 @@ class ResultsSavingFactory:
 
     Parameters
     ----------
-    time_resolution: int
-        Time resolution in minutes. The default is TIME_RESOLUTION.
     max_frame: float
         Maximum frame to consider. The default is np.inf.
     """
 
     def __init__(
         self,
-        time_resolution=TIME_RESOLUTION,
+        params=Parameters(),
         max_frame=np.inf,
     ):
-        self.time_resolution = time_resolution
+        self.params = params
         self.max_frame = max_frame  # for debug, 48*6 <-> 48h * 6 frames/hour
 
         self.first_cut_times: list[int] = []  # time in absolute time
@@ -213,7 +212,9 @@ class ResultsSavingFactory:
                 # At least one cut was actually detected
                 assert cut_frame >= cyto_frame  # should not be possible
                 # Add the difference time to the list
-                cut_time = (cut_frame - cyto_frame) * self.time_resolution
+                cut_time = (
+                    cut_frame - cyto_frame
+                ) * self.params.time_resolution
                 self.first_cut_times.append(cut_time)
                 selected_tracks.append(mitosis_track)
 
@@ -241,7 +242,7 @@ class ResultsSavingFactory:
             cut_time_gt = (
                 mitosis_track.gt_key_events_frame["first_mt_cut"]
                 - mitosis_track.gt_key_events_frame["cytokinesis"]
-            ) * self.time_resolution
+            ) * self.params.time_resolution
             self.first_cut_times_gt.append(cut_time_gt)
 
             if cut_time is not None:
@@ -508,14 +509,14 @@ class ResultsSavingFactory:
                 # Cut times
                 first_cut_time = (
                     (first_cut_frame - cytokinesis_frame)
-                    * self.time_resolution
+                    * self.params.time_resolution
                     if isinstance(first_cut_frame, int)
                     else ""
                 )
                 f.write(f"{first_cut_time};")
                 second_cut_time = (
                     (second_cut_frame - cytokinesis_frame)
-                    * self.time_resolution
+                    * self.params.time_resolution
                     if isinstance(second_cut_frame, int)
                     else ""
                 )
