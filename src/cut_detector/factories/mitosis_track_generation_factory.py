@@ -59,10 +59,10 @@ class MitosisTrackGenerationFactory:
         max_spot_distance_for_split=4.5,
     ) -> None:
         self.params = params
-        self.minimum_metaphase_interval = (
+        self.minimum_metaphase_interval = int(
             minimum_metaphase_interval / params.time_resolution
         )
-        self.max_spot_distance_for_split = (
+        self.max_spot_distance_for_split = int(
             max_spot_distance_for_split / params.spatial_resolution * 1000
         )
 
