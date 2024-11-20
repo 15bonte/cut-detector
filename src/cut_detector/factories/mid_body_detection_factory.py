@@ -12,10 +12,6 @@ from ..utils.mid_body_detection.detection import (
     DETECTION_FUNCTIONS,
 )
 from ..utils.cell_track import CellTrack
-from ..constants.tracking import (
-    MID_BODY_CHANNEL,
-    SIR_CHANNEL,
-)
 from ..utils.mid_body_track import MidBodyTrack
 from ..utils.image_tools import smart_cropping
 from ..utils.mid_body_spot import MidBodySpot
@@ -99,7 +95,7 @@ class MidBodyDetectionFactory:
             mitosis_track,
             mid_body_tracks,
             tracks,
-            mitosis_movie[..., SIR_CHANNEL],
+            mitosis_movie[..., self.params.sir_channel],
         )
 
         if kept_track is None:
@@ -282,8 +278,8 @@ class MidBodyDetectionFactory:
 
         # Try to load mitosis_track to get mask positions
         if mitosis_track is None:
-            image_sir = image[:, :, SIR_CHANNEL]
-            image_mklp = image[:, :, MID_BODY_CHANNEL]
+            image_sir = image[:, :, self.params.sir_channel]
+            image_mklp = image[:, :, self.params.mid_body_channel]
             shift_x, shift_y = 0, 0
         elif isinstance(mitosis_track, MitosisTrack):
             mitosis_position = (
@@ -297,12 +293,12 @@ class MidBodyDetectionFactory:
             image_sir = image[
                 shift_y : frame_position.max_y - mitosis_position.min_y,
                 shift_x : frame_position.max_x - mitosis_position.min_x,
-                SIR_CHANNEL,
+                self.params.sir_channel,
             ]
             image_mklp = image[
                 shift_y : frame_position.max_y - mitosis_position.min_y,
                 shift_x : frame_position.max_x - mitosis_position.min_x,
-                MID_BODY_CHANNEL,
+                self.params.mid_body_channel,
             ]
         else:
             raise RuntimeError(

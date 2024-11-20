@@ -1,3 +1,0 @@
-# Channels
-MID_BODY_CHANNEL = 1
-SIR_CHANNEL = 0
