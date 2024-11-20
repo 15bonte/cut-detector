@@ -37,12 +37,24 @@ class MidBodyTrack(Track[MidBodySpot]):
     def get_expected_distance(
         self,
         expected_positions: dict[int, list[int]],
-        max_distance=175,
+        spatial_resolution: int,
+        max_distance=39.375,
     ) -> float:
         """
         Compute the average distance between mid-body expected positions and current
         track positions.
+
+        Parameters
+        ----------
+        expected_positions : dict[int, list[int]]
+            Expected mid-body positions.
+        spatial_resolution : int
+            Spatial resolution.
+        max_distance : float, optional
+            Maximum distance to consider the track (um).
         """
+        max_distance_px = int(max_distance / spatial_resolution * 1000)  # px
+
         distances = []
         for frame, position in expected_positions.items():
             if frame not in self.spots:
@@ -56,7 +68,7 @@ class MidBodyTrack(Track[MidBodySpot]):
             return np.inf
         mean_distance = np.mean(distances)
         # If the mean distance is too high, discard the track
-        if mean_distance > max_distance:
+        if mean_distance > max_distance_px:
             return np.inf
         return mean_distance
 

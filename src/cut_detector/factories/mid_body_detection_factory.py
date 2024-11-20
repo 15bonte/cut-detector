@@ -578,7 +578,7 @@ class MidBodyDetectionFactory:
         for track in kept_tracks:
             expected_distances.append(
                 track.get_expected_distance(
-                    expected_positions,
+                    expected_positions, self.params.spatial_resolution
                 )
             )
         assert len(expected_distances) == len(kept_tracks)

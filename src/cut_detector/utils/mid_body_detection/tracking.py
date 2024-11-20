@@ -59,7 +59,7 @@ def spatial_intensity_dist(
 
 
 def get_tracking_method(
-    method_name: str, spatial_resolution: int
+    method_name: str, spatial_resolution: int, max_distance=39.375
 ) -> Union[LapTrack, SpatialLapTrack]:
     """Get tracking method by name.
 
@@ -67,13 +67,16 @@ def get_tracking_method(
     ----------
     method_name : str
         Name of the tracking method.
+    spatial_resolution : int
+        Spatial resolution.
+    max_distance : float
+        Maximum distance for connection (um).
 
     Returns
     -------
     LapTrack or SpatialLapTrack
         Tracking method.
     """
-    max_distance = 39.375  # um
     max_distance_px = int(max_distance / spatial_resolution * 1000)  # px
 
     if method_name == "spatial_laptrack":
