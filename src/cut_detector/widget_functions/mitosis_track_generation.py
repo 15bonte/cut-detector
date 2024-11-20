@@ -4,6 +4,7 @@ import pickle
 import numpy as np
 from tqdm import tqdm
 
+from ..utils.parameters import Parameters
 from ..utils.cell_track import CellTrack
 from ..utils.cell_spot import CellSpot
 from ..factories.mitosis_track_generation_factory import (
@@ -26,6 +27,7 @@ def perform_mitosis_track_generation(
     predictions_file: Optional[str] = None,
     only_predictions_update: bool = False,
     save: bool = True,
+    params=Parameters(),
 ) -> tuple[Union[list[MitosisTrack], None], list[CellSpot], list[CellTrack]]:
     """Perform mitosis track generation.
 
@@ -51,6 +53,8 @@ def perform_mitosis_track_generation(
         Only update predictions, by default False.
     save : bool, optional
         Save, by default True.
+    params: Parameters, optional
+        Video parameters, by default Parameters().
 
     Returns
     -------
@@ -69,7 +73,7 @@ def perform_mitosis_track_generation(
         os.makedirs(mitoses_dir)
 
     # Create factory instance, where useful functions are defined
-    tracks_merging_factory = MitosisTrackGenerationFactory()
+    tracks_merging_factory = MitosisTrackGenerationFactory(params)
 
     # Load cell spots
     cell_spots: list[CellSpot] = []

@@ -3,6 +3,7 @@ import pickle
 from typing import Optional
 import numpy as np
 
+from ..utils.parameters import Parameters
 from ..factories.mt_cut_detection_factory import MtCutDetectionFactory
 from ..models.tools import get_model_path
 from ..utils.mitosis_track import MitosisTrack
@@ -19,6 +20,7 @@ def perform_mt_cut_detection(
         "bridges_mt_cnn"
     ),
     save: bool = True,
+    params=Parameters(),
 ) -> list[MitosisTrack]:
     """Perform micro-tubules cut detection.
 
@@ -36,6 +38,8 @@ def perform_mt_cut_detection(
         Bridges micro-tubules CNN model path.
     save : bool, optional
         Save updated mitosis tracks, by default True.
+    params: Parameters, optional
+        Video parameters, by default Parameters().
     """
     print("\n### MICRO-TUBULES CUT DETECTION ###")
 
@@ -53,7 +57,7 @@ def perform_mt_cut_detection(
         mitosis_tracks.append(mitosis_track)
 
     # Perform cut detection
-    mt_cut_detector = MtCutDetectionFactory()
+    mt_cut_detector = MtCutDetectionFactory(params)
     mt_cut_detector.update_mt_cut_detection(
         mitosis_tracks,
         raw_video,

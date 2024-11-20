@@ -7,7 +7,7 @@ import h5py
 from cut_detector.utils.mt_cut_detection.impossible_detection import (
     ImpossibleDetection,
 )
-
+from ..utils.parameters import Parameters
 from ..utils.image_tools import resize_image
 from ..utils.cell_track import CellTrack
 from ..factories.results_saving_factory import ResultsSavingFactory
@@ -23,6 +23,7 @@ def perform_results_saving(
     viewer: Optional["napari.Viewer"] = None,
     segmentation_results: Optional[np.ndarray] = None,
     cell_tracks: Optional[list[CellTrack]] = None,
+    params=Parameters(),
 ) -> None:
     """Perform a series of tests, prints and plots following process.
 
@@ -61,7 +62,7 @@ def perform_results_saving(
             mitosis_video_names.append(state_path.split("_mitosis_")[0])
 
     # Define lists and dictionaries to store results
-    results_saving_factory = ResultsSavingFactory()
+    results_saving_factory = ResultsSavingFactory(params=params)
     results_saving_factory.update_cut_times(mitosis_tracks, verbose)
 
     # Protect against no detection

@@ -54,7 +54,7 @@ class MitosisTrackGenerationFactory:
 
     def __init__(
         self,
-        params=Parameters(),
+        params,
         minimum_metaphase_interval=100,
         max_spot_distance_for_split=4.5,
     ) -> None:

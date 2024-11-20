@@ -87,6 +87,7 @@ def video_whole_process(
         spots_dir_name,
         tracks_dir_name,
         mitoses_dir_name,
+        params=params,
     )
     perform_mid_body_detection(
         video,
@@ -97,7 +98,9 @@ def video_whole_process(
         parallel_detection=True,
         params=params,
     )
-    perform_mt_cut_detection(video, video_name, mitoses_dir_name)
+    perform_mt_cut_detection(
+        video, video_name, mitoses_dir_name, params=params
+    )
     save_galleries(video, video_name, mitoses_dir_name, results_save_dir)
 
     return cell_tracks, segmentation_results
@@ -363,12 +366,15 @@ def mitosis_track_generation(
 ):
     raw_video = re_organize_channels(img_layer.data)  # TYXC
 
+    params = Parameters()
+
     perform_mitosis_track_generation(
         raw_video,
         img_layer.name,
         spots_load_dir,
         tracks_load_dir,
         mitoses_save_dir,
+        params=params,
     )
 
 
@@ -428,10 +434,12 @@ def micro_tubules_cut_detection(
     img_layer: "napari.layers.Image", exported_mitoses_dir: str
 ):
     raw_video = re_organize_channels(img_layer.data)  # TYXC
+    params = Parameters()
     perform_mt_cut_detection(
         raw_video,
         img_layer.name,
         exported_mitoses_dir,
+        params=params,
     )
 
 
@@ -461,6 +469,7 @@ def results_saving(
     exported_tracks_dir: str,
     results_save_dir: str,
 ):
+    params = Parameters()
     # Load cell tracks
     cell_tracks: list[CellTrack] = []
     # Iterate over "bin" files in exported_tracks_dir
@@ -481,4 +490,5 @@ def results_saving(
         video=img_layer.data,
         viewer=viewer,
         cell_tracks=cell_tracks,
+        params=params,
     )
