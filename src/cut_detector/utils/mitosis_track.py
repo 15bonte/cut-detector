@@ -873,7 +873,16 @@ class MitosisTrack:
         daughter_track_ids = ",".join(
             [str(d) for d in self.daughter_track_ids]
         )
-        return f"{video_name}_mitosis_{self.id}_{self.mother_track_id}_to_{daughter_track_ids}"
+
+        # Relative frames - +1 for Fiji compatibility
+        rel_metaphase_frame = (
+            self.key_events_frame["metaphase"] - self.min_frame + 1
+        )
+        rel_t0_frame = (
+            self.key_events_frame["cytokinesis"] - self.min_frame + 1
+        )
+
+        return f"{video_name}_mitosis_{self.id}_{self.mother_track_id}_to_{daughter_track_ids}_meta_{rel_metaphase_frame}_t0_{rel_t0_frame}"
 
     def get_first_mid_body_position(self, absolute=True) -> dict[str, int]:
         """Get the mid-body at the first frame where the mid-body is detected.

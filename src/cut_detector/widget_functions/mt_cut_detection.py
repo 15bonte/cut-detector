@@ -64,10 +64,7 @@ def perform_mt_cut_detection(
     # Save updated mitosis tracks
     if save:
         for mitosis_track in mitosis_tracks:
-            daughter_track_ids = ",".join(
-                [str(d) for d in mitosis_track.daughter_track_ids]
-            )
-            state_path = f"{video_name}_mitosis_{mitosis_track.id}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.bin"
+            state_path = f"{mitosis_track.get_file_name(video_name)}.bin"
             save_path = os.path.join(
                 exported_mitoses_dir,
                 state_path,
