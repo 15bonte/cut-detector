@@ -95,6 +95,16 @@ Each detected cell division is labeled with one of the following categories:
 - NO_CUT_DETECTED: Division whose mid-body was detected, but with all micro-tubule bridges classified as "No cut". Likely to be at the end of the video, cells dying before the end of division, or cells going out of frame.
 - TOO_SHORT_CUT: First micro-tubule cut detected before or at 50 minutes. Ignored as this is very unlikely, so it is probably caused by a wrong division detection.
 
+Division movies start at the maximum between:
+
+- Mother cell start frame
+- 10 frames before the end of metaphase
+
+Division movies end at the minimum between:
+
+- Last frame of any of the daughter cells
+- Metaphase of any of the daughter cells
+
 ## Contributing
 
 Contributions are very welcome. Tests can be run with [tox], please ensure
