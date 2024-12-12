@@ -91,7 +91,7 @@ class MtCutDetectionFactory:
 
         if (
             max(mitosis_track.mid_body_spots.keys())
-            < mitosis_track.key_events_frame["cytokinesis"]
+            < mitosis_track.key_events_frame["no_mt_cut"]
         ):
             mitosis_track.key_events_frame["first_mt_cut"] = (
                 ImpossibleDetection.NO_MID_BODY_DETECTED
@@ -198,7 +198,7 @@ class MtCutDetectionFactory:
             first_mt_cut_frame_abs = first_frame + first_mt_cut_frame_rel
             if (
                 first_mt_cut_frame_abs
-                - mitosis_track.key_events_frame["cytokinesis"]
+                - mitosis_track.key_events_frame["no_mt_cut"]
             ) <= 50 / self.params.time_resolution:  # 50 minutes
                 mitosis_track.key_events_frame["first_mt_cut"] = (
                     ImpossibleDetection.TOO_SHORT_CUT

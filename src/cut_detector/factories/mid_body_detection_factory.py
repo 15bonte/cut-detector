@@ -516,7 +516,7 @@ class MidBodyDetectionFactory:
         # Filter: keep only tracks with sir-tubulin signal at cytokinesis
         # Define range of frames to study
         abs_min_frame = mitosis_track.key_events_frame[
-            "cytokinesis"
+            "no_mt_cut"
         ]  # Cytokinesis start
         abs_max_frame = abs_min_frame + int(
             self.params.cytokinesis_duration / 2

@@ -47,6 +47,9 @@ def snake_to_normal(snake_str: str) -> str:
     # Capitalize the first letter of the first word and make the rest lowercase
     normal_case_str = " ".join(words).capitalize()
 
+    # Replace mt with MT (special handling of microtubules)
+    normal_case_str = normal_case_str.replace("mt", "MT")
+
     return normal_case_str
 
 
@@ -244,7 +247,7 @@ class MitosisTrack:
 
         max_height, max_width = raw_video.shape[1], raw_video.shape[2]
 
-        cyto_frame = self.key_events_frame["cytokinesis"]
+        cyto_frame = self.key_events_frame["no_mt_cut"]
         last_frame = cyto_frame + cytokinesis_duration
 
         # Get mitosis coordinates between cyto_frame and last_frame
@@ -290,13 +293,13 @@ class MitosisTrack:
         )
 
         # Store first cytokinesis frame - considered as the first frame of daughter tracks
-        self.key_events_frame["cytokinesis"] = min(
+        self.key_events_frame["no_mt_cut"] = min(
             [track.start for track in daughter_tracks]
         )
 
         assert (
             self.key_events_frame["metaphase"]
-            <= self.key_events_frame["cytokinesis"]
+            <= self.key_events_frame["no_mt_cut"]
         )
 
     def update_mitosis_position_contour(
@@ -495,7 +498,7 @@ class MitosisTrack:
         # Initialize gt_key_events_frame - first two events are shared
         self.gt_key_events_frame = {
             "metaphase": self.key_events_frame["metaphase"],
-            "cytokinesis": self.key_events_frame["cytokinesis"],
+            "no_mt_cut": self.key_events_frame["no_mt_cut"],
         }
         self.gt_mid_body_spots = {}
 
@@ -550,7 +553,7 @@ class MitosisTrack:
             ):
                 assert (
                     class_abs_first_frame
-                    >= self.gt_key_events_frame["cytokinesis"]
+                    >= self.gt_key_events_frame["no_mt_cut"]
                 )  # after metaphase
                 self.gt_key_events_frame["first_mt_cut"] = (
                     class_abs_first_frame
@@ -618,7 +621,7 @@ class MitosisTrack:
             else max(self.gt_mid_body_spots.keys())
         )
 
-        for frame in range(self.gt_key_events_frame["cytokinesis"], max_frame):
+        for frame in range(self.gt_key_events_frame["no_mt_cut"], max_frame):
             if frame not in self.gt_mid_body_spots:
                 continue
             if frame not in self.mid_body_spots:
@@ -801,13 +804,14 @@ class MitosisTrack:
             mitosis_track.metaphase_sequence = MetaphaseSequence(
                 [mitosis_track.metaphase_frame], mitosis_track.mother_track_id
             )
+        # Adapt key events to new format
         if mitosis_track.key_events_frame.get(0) is not None:
             mitosis_track.key_events_frame["metaphase"] = (
                 mitosis_track.key_events_frame[0]
             )
             del mitosis_track.key_events_frame[0]
         if mitosis_track.key_events_frame.get(1) is not None:
-            mitosis_track.key_events_frame["cytokinesis"] = (
+            mitosis_track.key_events_frame["no_mt_cut"] = (
                 mitosis_track.key_events_frame[1]
             )
             del mitosis_track.key_events_frame[1]
@@ -826,6 +830,21 @@ class MitosisTrack:
                 mitosis_track.key_events_frame[4]
             )
             del mitosis_track.key_events_frame[4]
+        # Rename cytokinesis to no_mt_cut
+        if "no_mt_cut" not in mitosis_track.key_events_frame:
+            assert "cytokinesis" in mitosis_track.key_events_frame
+            mitosis_track.key_events_frame["no_mt_cut"] = (
+                mitosis_track.key_events_frame["cytokinesis"]
+            )
+        # Same for ground truth key events
+        if mitosis_track.gt_key_events_frame is not None:
+            if (
+                "cytokinesis" in mitosis_track.gt_key_events_frame
+                and "no_mt_cut" not in mitosis_track.gt_key_events_frame
+            ):
+                mitosis_track.gt_key_events_frame["no_mt_cut"] = (
+                    mitosis_track.gt_key_events_frame["cytokinesis"]
+                )
         if not hasattr(mitosis_track, "contour_positions"):
             assert hasattr(mitosis_track, "dln_positions")
             mitosis_track.contour_positions = mitosis_track.dln_positions

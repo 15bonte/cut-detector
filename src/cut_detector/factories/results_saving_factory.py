@@ -147,12 +147,12 @@ class ResultsSavingFactory:
             track
             for track in selected_tracks
             if track.key_events_frame["first_mt_cut"]
-            - track.key_events_frame["cytokinesis"]
+            - track.key_events_frame["no_mt_cut"]
             <= min_acceptable_frame
         ]
         ordered_tracks.sort(
             key=lambda x: x.key_events_frame["first_mt_cut"]
-            - x.key_events_frame["cytokinesis"]
+            - x.key_events_frame["no_mt_cut"]
         )
 
         print("Weird mitoses (early cut):")
@@ -201,7 +201,7 @@ class ResultsSavingFactory:
 
         for mitosis_track in mitosis_tracks:
             # Get first cut frame and start of cytokinesis frame
-            cyto_frame = mitosis_track.key_events_frame["cytokinesis"]
+            cyto_frame = mitosis_track.key_events_frame["no_mt_cut"]
             cut_frame = mitosis_track.key_events_frame["first_mt_cut"]
 
             if cut_frame < 0 or cut_frame > self.max_frame:
@@ -240,7 +240,7 @@ class ResultsSavingFactory:
 
             cut_time_gt = (
                 mitosis_track.gt_key_events_frame["first_mt_cut"]
-                - mitosis_track.gt_key_events_frame["cytokinesis"]
+                - mitosis_track.gt_key_events_frame["no_mt_cut"]
             ) * self.params.time_resolution
             self.first_cut_times_gt.append(cut_time_gt)
 
@@ -487,9 +487,7 @@ class ResultsSavingFactory:
                 f.write(f"{daughter_ids};")
                 # Relative frames
                 f.write(f"{m_track.get_event_frame('metaphase', True)};")
-                cytokinesis_frame = m_track.get_event_frame(
-                    "cytokinesis", True
-                )
+                cytokinesis_frame = m_track.get_event_frame("no_mt_cut", True)
                 f.write(f"{cytokinesis_frame};")
                 first_cut_frame = m_track.get_event_frame("first_mt_cut", True)
                 f.write(f"{first_cut_frame};")
@@ -499,7 +497,7 @@ class ResultsSavingFactory:
                 f.write(f"{second_cut_frame};")
                 # Absolute frames
                 f.write(f"{m_track.get_event_frame('metaphase', False)};")
-                f.write(f"{m_track.get_event_frame('cytokinesis', False)};")
+                f.write(f"{m_track.get_event_frame('no_mt_cut', False)};")
                 f.write(f"{m_track.get_event_frame('first_mt_cut', False)};")
                 f.write(f"{m_track.get_event_frame('second_mt_cut', False)};")
                 # Positions

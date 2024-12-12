@@ -36,5 +36,5 @@ def test_track_generation():
     assert mitosis_track.mother_track_id == 0
     assert 7 <= mitosis_track.key_events_frame["metaphase"] <= 9  # should be 8
     assert (
-        10 <= mitosis_track.key_events_frame["cytokinesis"] <= 12
-    )  # should be 11
+        10 <= mitosis_track.key_events_frame["no_mt_cut"] <= 12
+    )  # beginning of cytokinesis - should be 11
