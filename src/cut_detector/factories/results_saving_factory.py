@@ -460,8 +460,8 @@ class ResultsSavingFactory:
             "cytokinesis frame",
             "first MT cut frame",
             "second MT cut frame",
-            "position min x",
-            "position min y",
+            "position midbody x",
+            "position midbody y",
             "first MT cut time",
             "second MT cut time",
         ]
@@ -486,25 +486,39 @@ class ResultsSavingFactory:
                 )
                 f.write(f"{daughter_ids};")
                 # Relative frames
-                f.write(f"{m_track.get_event_frame('metaphase', True)};")
+                f.write(
+                    f"{m_track.get_event_frame('metaphase', relative=True)};"
+                )
                 cytokinesis_frame = m_track.get_event_frame(
-                    "cytokinesis", True
+                    "cytokinesis", relative=True
                 )
                 f.write(f"{cytokinesis_frame};")
-                first_cut_frame = m_track.get_event_frame("first_mt_cut", True)
+                first_cut_frame = m_track.get_event_frame(
+                    "first_mt_cut", relative=True
+                )
                 f.write(f"{first_cut_frame};")
                 second_cut_frame = m_track.get_event_frame(
-                    "second_mt_cut", True
+                    "second_mt_cut", relative=True
                 )
                 f.write(f"{second_cut_frame};")
                 # Absolute frames
-                f.write(f"{m_track.get_event_frame('metaphase', False)};")
-                f.write(f"{m_track.get_event_frame('cytokinesis', False)};")
-                f.write(f"{m_track.get_event_frame('first_mt_cut', False)};")
-                f.write(f"{m_track.get_event_frame('second_mt_cut', False)};")
+                f.write(
+                    f"{m_track.get_event_frame('metaphase', relative=False)};"
+                )
+                f.write(
+                    f"{m_track.get_event_frame('cytokinesis', relative=False)};"
+                )
+                f.write(
+                    f"{m_track.get_event_frame('first_mt_cut', relative=False)};"
+                )
+                f.write(
+                    f"{m_track.get_event_frame('second_mt_cut', relative=False)};"
+                )
                 # Positions
-                f.write(f"{m_track.position.min_x};")
-                f.write(f"{m_track.position.min_y};")
+                first_mb_position = m_track.get_first_mid_body_position()
+                mb_x, mb_y = first_mb_position["x"], first_mb_position["y"]
+                f.write(f"{mb_x};")
+                f.write(f"{mb_y};")
                 # Cut times
                 first_cut_time = (
                     (first_cut_frame - cytokinesis_frame)

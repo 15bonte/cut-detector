@@ -874,3 +874,32 @@ class MitosisTrack:
             [str(d) for d in self.daughter_track_ids]
         )
         return f"{video_name}_mitosis_{self.id}_{self.mother_track_id}_to_{daughter_track_ids}"
+
+    def get_first_mid_body_position(self, absolute=True) -> dict[str, int]:
+        """Get the mid-body at the first frame where the mid-body is detected.
+
+        Parameters
+        ----------
+        absolute : bool
+            If True, return the absolute position (not the mitosis movie position).
+
+        Returns
+        -------
+        dict[str, int]
+            Mid-body position.
+        """
+        if not self.mid_body_spots:
+            x, y = -1, -1
+
+        else:
+            first_frame = min(self.mid_body_spots.keys())
+            x, y = (
+                self.mid_body_spots[first_frame].x,
+                self.mid_body_spots[first_frame].y,
+            )
+
+            if absolute:
+                x += self.position.min_x
+                y += self.position.min_y
+
+        return {"x": x, "y": y}
