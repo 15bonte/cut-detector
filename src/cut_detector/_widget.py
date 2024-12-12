@@ -11,6 +11,9 @@ import numpy as np
 from skimage import io
 
 from cut_detector.utils.cell_track import CellTrack
+from cut_detector.widget_functions.divisions_matching import (
+    perform_divisions_matching,
+)
 
 
 from .utils.tools import re_organize_channels
@@ -469,4 +472,41 @@ def results_saving(
         video=img_layer.data,
         viewer=viewer,
         cell_tracks=cell_tracks,
+    )
+
+
+@magic_factory(
+    call_button="Match divisions",
+    layout="vertical",
+    cut_detector_file=dict(
+        widget_type="FileEdit",
+        label="Cut Detector results (csv): ",
+    ),
+    folder_manual=dict(
+        widget_type="FileEdit",
+        label="Manual annotations folder: ",
+        mode="d",
+    ),
+    maximum_frame_distance=dict(
+        widget_type="SpinBox",
+        label="Max cytokinesis frame difference: ",
+        value=5,  # Default value
+    ),
+    maximum_position_distance=dict(
+        widget_type="SpinBox",
+        label="Max midbody position distance: ",
+        value=10,  # Default value
+    ),
+)
+def divisions_matching(
+    cut_detector_file: str,
+    folder_manual: str,
+    maximum_frame_distance: str,
+    maximum_position_distance: str,
+):
+    perform_divisions_matching(
+        str(Path(cut_detector_file)),
+        folder_manual,
+        maximum_frame_distance,
+        maximum_position_distance,
     )
