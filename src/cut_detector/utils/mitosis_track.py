@@ -832,18 +832,18 @@ class MitosisTrack:
             del mitosis_track.key_events_frame[4]
         # Rename cytokinesis to no_mt_cut
         if "no_mt_cut" not in mitosis_track.key_events_frame:
-            assert "cytokinesis" in mitosis_track.key_events_frame
+            assert "no_mt_cut" in mitosis_track.key_events_frame
             mitosis_track.key_events_frame["no_mt_cut"] = (
-                mitosis_track.key_events_frame["cytokinesis"]
+                mitosis_track.key_events_frame["no_mt_cut"]
             )
         # Same for ground truth key events
         if mitosis_track.gt_key_events_frame is not None:
             if (
-                "cytokinesis" in mitosis_track.gt_key_events_frame
+                "no_mt_cut" in mitosis_track.gt_key_events_frame
                 and "no_mt_cut" not in mitosis_track.gt_key_events_frame
             ):
                 mitosis_track.gt_key_events_frame["no_mt_cut"] = (
-                    mitosis_track.gt_key_events_frame["cytokinesis"]
+                    mitosis_track.gt_key_events_frame["no_mt_cut"]
                 )
         if not hasattr(mitosis_track, "contour_positions"):
             assert hasattr(mitosis_track, "dln_positions")
@@ -912,9 +912,7 @@ class MitosisTrack:
         rel_metaphase_frame = (
             self.key_events_frame["metaphase"] - self.min_frame + 1
         )
-        rel_t0_frame = (
-            self.key_events_frame["cytokinesis"] - self.min_frame + 1
-        )
+        rel_t0_frame = self.key_events_frame["no_mt_cut"] - self.min_frame + 1
 
         return f"{video_name}_mitosis_{self.id}_{self.mother_track_id}_to_{daughter_track_ids}_meta_{rel_metaphase_frame}_t0_{rel_t0_frame}"
 

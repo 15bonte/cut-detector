@@ -147,12 +147,12 @@ class ResultsSavingFactory:
             track
             for track in selected_tracks
             if track.key_events_frame["first_mt_cut"]
-            - track.key_events_frame["cytokinesis"]
+            - track.key_events_frame["no_mt_cut"]
             <= min_acceptable_frame
         ]
         ordered_tracks.sort(
             key=lambda x: x.key_events_frame["first_mt_cut"]
-            - x.key_events_frame["cytokinesis"]
+            - x.key_events_frame["no_mt_cut"]
         )
 
         print("Weird mitoses (early cut):")
@@ -201,7 +201,7 @@ class ResultsSavingFactory:
 
         for mitosis_track in mitosis_tracks:
             # Get first cut frame and start of cytokinesis frame
-            cyto_frame = mitosis_track.key_events_frame["cytokinesis"]
+            cyto_frame = mitosis_track.key_events_frame["no_mt_cut"]
             cut_frame = mitosis_track.key_events_frame["first_mt_cut"]
 
             if cut_frame < 0 or cut_frame > self.max_frame:
@@ -506,7 +506,7 @@ class ResultsSavingFactory:
                     f"{m_track.get_event_frame('metaphase', relative=False)};"
                 )
                 f.write(
-                    f"{m_track.get_event_frame('cytokinesis', relative=False)};"
+                    f"{m_track.get_event_frame('no_mt_cut', relative=False)};"
                 )
                 f.write(
                     f"{m_track.get_event_frame('first_mt_cut', relative=False)};"
