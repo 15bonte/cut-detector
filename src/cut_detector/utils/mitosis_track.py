@@ -832,18 +832,18 @@ class MitosisTrack:
             del mitosis_track.key_events_frame[4]
         # Rename cytokinesis to no_mt_cut
         if "no_mt_cut" not in mitosis_track.key_events_frame:
-            assert "no_mt_cut" in mitosis_track.key_events_frame
+            assert "cytokinesis" in mitosis_track.key_events_frame
             mitosis_track.key_events_frame["no_mt_cut"] = (
-                mitosis_track.key_events_frame["no_mt_cut"]
+                mitosis_track.key_events_frame["cytokinesis"]
             )
         # Same for ground truth key events
         if mitosis_track.gt_key_events_frame is not None:
             if (
-                "no_mt_cut" in mitosis_track.gt_key_events_frame
+                "cytokinesis" in mitosis_track.gt_key_events_frame
                 and "no_mt_cut" not in mitosis_track.gt_key_events_frame
             ):
                 mitosis_track.gt_key_events_frame["no_mt_cut"] = (
-                    mitosis_track.gt_key_events_frame["no_mt_cut"]
+                    mitosis_track.gt_key_events_frame["cytokinesis"]
                 )
         if not hasattr(mitosis_track, "contour_positions"):
             assert hasattr(mitosis_track, "dln_positions")
