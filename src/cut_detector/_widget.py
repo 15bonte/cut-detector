@@ -10,12 +10,7 @@ import tempfile
 import numpy as np
 from skimage import io
 
-from cut_detector.utils.cell_track import CellTrack
-from cut_detector.widget_functions.divisions_matching import (
-    perform_divisions_matching,
-)
-
-
+from .utils.cell_track import CellTrack
 from .utils.tools import re_organize_channels
 
 from .widget_functions.segmentation_tracking import perform_tracking
@@ -27,6 +22,9 @@ from .widget_functions.mt_cut_detection import perform_mt_cut_detection
 from .widget_functions.save_results import (
     perform_results_saving,
     save_galleries,
+)
+from .widget_functions.divisions_matching import (
+    perform_divisions_matching,
 )
 
 
