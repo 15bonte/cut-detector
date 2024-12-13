@@ -490,12 +490,12 @@ def results_saving(
     maximum_frame_distance=dict(
         widget_type="SpinBox",
         label="Max cytokinesis frame difference: ",
-        value=5,  # Default value
+        value=3,  # Default value
     ),
     maximum_position_distance=dict(
         widget_type="SpinBox",
         label="Max midbody position distance: ",
-        value=10,  # Default value
+        value=50,  # Default value
     ),
 )
 def divisions_matching(
