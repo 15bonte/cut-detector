@@ -478,6 +478,11 @@ def results_saving(
 @magic_factory(
     call_button="Match divisions",
     layout="vertical",
+    requirements=dict(
+        widget_type="Label",
+        label="Requirements",
+        value="Manual annotation files must contain the following columns:\n - Video name ('video') \n - Cytokinesis onset frame ('cyto')\n - MT cut frame ('cut')\n - Midbody position x ('x')\n - Midbody position y ('y')\n \n Video names must match exactly.\n",
+    ),
     cut_detector_file=dict(
         widget_type="FileEdit",
         label="Cut Detector results (csv): ",
@@ -499,6 +504,7 @@ def results_saving(
     ),
 )
 def divisions_matching(
+    requirements: str,
     cut_detector_file: str,
     folder_manual: str,
     maximum_frame_distance: str,
