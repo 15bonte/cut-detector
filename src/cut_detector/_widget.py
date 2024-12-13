@@ -10,6 +10,7 @@ import tempfile
 import numpy as np
 from skimage import io
 
+
 from .utils.cell_track import CellTrack
 from .utils.parameters import Parameters
 from .utils.tools import re_organize_channels
@@ -23,6 +24,9 @@ from .widget_functions.mt_cut_detection import perform_mt_cut_detection
 from .widget_functions.save_results import (
     perform_results_saving,
     save_galleries,
+)
+from .widget_functions.divisions_matching import (
+    perform_divisions_matching,
 )
 
 
@@ -491,4 +495,47 @@ def results_saving(
         viewer=viewer,
         cell_tracks=cell_tracks,
         params=params,
+    )
+
+
+@magic_factory(
+    call_button="Match divisions",
+    layout="vertical",
+    requirements=dict(
+        widget_type="Label",
+        label="Requirements",
+        value="Manual annotation files must contain the following columns:\n - Video name ('video') \n - Cytokinesis onset frame ('cyto')\n - MT cut frame ('cut')\n - Midbody position x ('x')\n - Midbody position y ('y')\n \n Video names must match exactly.\n",
+    ),
+    cut_detector_file=dict(
+        widget_type="FileEdit",
+        label="Cut Detector results (csv): ",
+    ),
+    folder_manual=dict(
+        widget_type="FileEdit",
+        label="Manual annotations folder: ",
+        mode="d",
+    ),
+    maximum_frame_distance=dict(
+        widget_type="SpinBox",
+        label="Max cytokinesis frame difference: ",
+        value=3,  # Default value
+    ),
+    maximum_position_distance=dict(
+        widget_type="SpinBox",
+        label="Max midbody position distance: ",
+        value=50,  # Default value
+    ),
+)
+def divisions_matching(
+    requirements: str,
+    cut_detector_file: str,
+    folder_manual: str,
+    maximum_frame_distance: str,
+    maximum_position_distance: str,
+):
+    perform_divisions_matching(
+        str(Path(cut_detector_file)),
+        folder_manual,
+        maximum_frame_distance,
+        maximum_position_distance,
     )

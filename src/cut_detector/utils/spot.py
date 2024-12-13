@@ -51,8 +51,22 @@ class Spot(ABC):
             np.array(self.get_position()) - np.array(other_spot.get_position())
         )
 
+    def temporal_distance_to(self, other_spot: Spot) -> float:
+        """Compute temporal distance between two spots.
+
+        Parameters
+        ----------
+        other_spot : Spot
+            Other spot to compute distance to.
+
+        Returns
+        -------
+        float
+            Temporal distance between two spots.
+        """
+        return abs(self.frame - other_spot.frame)
+
     @staticmethod
-    @abstractmethod
     def get_extra_features_name() -> list[str]:
         """To have better tracking for classes that inherit from this one.
         These classes can declare here their extra coordinate fields.
@@ -67,7 +81,6 @@ class Spot(ABC):
         """
         return []
 
-    @abstractmethod
     def get_extra_coordinates(self) -> list:
         """To have better tracking for classes that inherit from this one.
         These classes can return here their extra coordinate fields.

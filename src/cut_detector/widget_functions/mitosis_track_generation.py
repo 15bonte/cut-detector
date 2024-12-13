@@ -128,10 +128,7 @@ def perform_mitosis_track_generation(
 
         # Save mitosis track
         if mitoses_dir is not None and save:
-            daughter_track_ids = ",".join(
-                [str(d) for d in mitosis_track.daughter_track_ids]
-            )
-            state_path = f"{video_name}_mitosis_{i}_{mitosis_track.mother_track_id}_to_{daughter_track_ids}.bin"
+            state_path = f"{mitosis_track.get_file_name(video_name)}.bin"
             save_path = os.path.join(
                 mitoses_dir,
                 state_path,

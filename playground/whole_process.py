@@ -24,13 +24,10 @@ def main(
 
     # Read image and preprocess if needed
     image = TiffReader(image_path, respect_initial_type=True).image  # TCZYX
-    image = image.squeeze()  # CTYX
-    image = image.transpose(1, 2, 3, 0)  # TYXC
+    image = image.squeeze()  # TCYX
+    image = image.transpose(0, 2, 3, 1)  # TYXC
 
     image_name = os.path.basename(image_path).split(".")[0]
-
-    spots_dir_name = os.path.join(get_data_path("spots"), image_name)
-    tracks_dir_name = os.path.join(get_data_path("tracks"), image_name)
 
     video_whole_process(
         image,
@@ -39,9 +36,10 @@ def main(
         segmentation_model="",
         save_check_box=False,
         movies_save_dir="",
-        spots_dir_name=spots_dir_name,
-        tracks_dir_name=tracks_dir_name,
+        spots_dir_name=get_data_path("spots"),
+        tracks_dir_name=get_data_path("tracks"),
         mitoses_dir_name=get_data_path("mitoses"),
+        results_save_dir=get_data_path("results"),
     )
 
 

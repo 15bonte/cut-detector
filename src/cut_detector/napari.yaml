@@ -23,6 +23,9 @@ contributions:
     # - id: cut-detector.results_saving
     #   python_name: cut_detector._widget:results_saving
     #   title: 5 - Results Saving
+    - id: cut-detector.divisions_matching
+      python_name: cut_detector._widget:divisions_matching
+      title: Divisions Matching
   widgets:
     - command: cut-detector.whole_process
       display_name: Single Video
@@ -38,3 +41,5 @@ contributions:
     #   display_name: 4 - Micro Tubules Cut Detection
     # - command: cut-detector.results_saving
     #   display_name: 5 - Results Saving
+    - command: cut-detector.divisions_matching
+      display_name: Divisions Matching
