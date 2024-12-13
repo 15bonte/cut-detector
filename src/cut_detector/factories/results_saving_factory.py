@@ -240,8 +240,8 @@ class ResultsSavingFactory:
 
             cut_time_gt = (
                 mitosis_track.gt_key_events_frame["first_mt_cut"]
+                - mitosis_track.gt_key_events_frame["no_mt_cut"]
             ) * self.params.time_resolution
-                - mitosis_track.gt_key_events_frame["cytokinesis"]
             self.first_cut_times_gt.append(cut_time_gt)
 
             if cut_time is not None:
