@@ -110,6 +110,8 @@ Division movies end at the minimum between:
 Contributions are very welcome. Tests can be run with [tox], please ensure
 the coverage at least stays the same before you submit a pull request.
 
+Scripts required to improve any of Cut Detector tasks can be found in the folder [developers].
+
 ## License
 
 Distributed under the terms of the [BSD-3] license,
@@ -130,6 +132,7 @@ If you encounter any problems, please [file an issue] along with a detailed desc
 [Mozilla Public License 2.0]: https://www.mozilla.org/media/MPL/2.0/index.txt
 [cookiecutter-napari-plugin]: https://github.com/napari/cookiecutter-napari-plugin
 [file an issue]: https://github.com/15bonte/cut-detector/issues
+[developers]: https://github.com/15bonte/cut-detector/tree/main/developers
 [napari]: https://github.com/napari/napari
 [tox]: https://tox.readthedocs.io/en/latest/
 [pip]: https://pypi.org/project/pip/
