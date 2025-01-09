@@ -10,7 +10,6 @@ import tempfile
 import numpy as np
 from skimage import io
 
-
 from .utils.cell_track import CellTrack
 from .utils.parameters import Parameters
 from .utils.tools import re_organize_channels
