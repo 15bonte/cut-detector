@@ -11,11 +11,18 @@ from cnn_framework.utils.models.resnet_classifier import ResnetClassifier
 from cut_detector.utils.mt_cut_detection.bridges_mt_model_manager import (
     BridgesMtModelManager,
 )
-
-from developers.binary_bridges_cnn.data_set_inference import BridgesCnnDataSet
-from developers.binary_bridges_cnn.model_params import BinaryBridgesModelParams
-from developers.binary_bridges_cnn.bridges_parser import BridgesParser
-from developers.binary_bridges_cnn.tools import evaluate_frame_error
+from developers.training_and_evaluation.binary_bridges_cnn.bridges_parser import (
+    BridgesParser,
+)
+from developers.training_and_evaluation.binary_bridges_cnn.data_set_inference import (
+    BridgesCnnDataSet,
+)
+from developers.training_and_evaluation.binary_bridges_cnn.model_params import (
+    BinaryBridgesModelParams,
+)
+from developers.training_and_evaluation.binary_bridges_cnn.tools import (
+    evaluate_frame_error,
+)
 
 
 def main(params):

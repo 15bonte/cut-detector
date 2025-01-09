@@ -7,8 +7,9 @@ from scipy.signal import find_peaks
 from cut_detector.factories.mt_cut_detection_factory import (
     MtCutDetectionFactory,
 )
-
-from developers.binary_bridges_cnn.semi_images_generation.peak import Peak
+from developers.ground_truth_generation.bridges.semi_images_generation.peak import (
+    Peak,
+)
 
 
 class MtCutDetectionFactoryAdvanced(MtCutDetectionFactory):

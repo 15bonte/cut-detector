@@ -11,9 +11,15 @@ from cnn_framework.utils.metrics.classification_accuracy import (
 )
 from cnn_framework.utils.models.resnet_classifier import ResnetClassifier
 
-from developers.binary_bridges_cnn.data_set import BinaryBridgesCnnDataSet
-from developers.binary_bridges_cnn.model_params import BinaryBridgesModelParams
-from developers.binary_bridges_cnn.bridges_parser import BridgesParser
+from developers.training_and_evaluation.binary_bridges_cnn.bridges_parser import (
+    BridgesParser,
+)
+from developers.training_and_evaluation.binary_bridges_cnn.data_set import (
+    BinaryBridgesCnnDataSet,
+)
+from developers.training_and_evaluation.binary_bridges_cnn.model_params import (
+    BinaryBridgesModelParams,
+)
 
 
 def main(params):

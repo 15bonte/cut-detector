@@ -13,15 +13,15 @@ from cnn_framework.utils.metrics.classification_accuracy import (
     ClassificationAccuracy,
 )
 from cnn_framework.utils.parsers.cnn_parser import CnnParser
-
 from cut_detector.utils.mitosis_track_generation.metaphase_cnn_model import (
     MetaphaseCnnModel,
 )
 from cut_detector.utils.mitosis_track_generation.metaphase_cnn_model_params import (
     MetaphaseCnnModelParams,
 )
-
-from developers.metaphase_cnn.data_set import MetaphaseCnnDataSet
+from developers.training_and_evaluation.metaphase_cnn.data_set import (
+    MetaphaseCnnDataSet,
+)
 
 
 def main(params):

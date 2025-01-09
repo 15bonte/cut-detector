@@ -10,7 +10,9 @@ from cnn_framework.utils.tools import to_one_hot
 from cnn_framework.utils.readers.utils.projection import Projection
 from cnn_framework.utils.file_name_encoder import FileNameEncoder
 
-from developers.binary_bridges_cnn.tools import get_category_from_name
+from developers.training_and_evaluation.binary_bridges_cnn.tools import (
+    get_category_from_name,
+)
 
 
 class BridgesCnnDataSet(AbstractDataSet):

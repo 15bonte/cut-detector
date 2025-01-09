@@ -3,8 +3,9 @@ from typing import Optional
 from cut_detector.utils.mt_cut_detection.micro_tubules_augmentation import (
     MicroTubulesAugmentation,
 )
-
-from developers.binary_bridges_cnn.semi_images_generation.peak import Peak
+from developers.ground_truth_generation.bridges.semi_images_generation.peak import (
+    Peak,
+)
 
 
 class MicroTubulesAugmentationAdvanced(MicroTubulesAugmentation):

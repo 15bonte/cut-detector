@@ -5,13 +5,18 @@ import os
 from cnn_framework.utils.tools import save_tiff
 from cnn_framework.utils.readers.tiff_reader import TiffReader
 
-from developers.binary_bridges_cnn.model_params import BinaryBridgesModelParams
-from developers.binary_bridges_cnn.bridges_parser import BridgesParser
-from developers.binary_bridges_cnn.semi_images_generation.micro_tubules_augmentations_advanced import (
+
+from developers.ground_truth_generation.bridges.semi_images_generation.micro_tubules_augmentations_advanced import (
     MicroTubulesAugmentationAdvanced,
 )
-from developers.binary_bridges_cnn.semi_images_generation.mt_cut_detection_factory_advanced import (
+from developers.ground_truth_generation.bridges.semi_images_generation.mt_cut_detection_factory_advanced import (
     MtCutDetectionFactoryAdvanced,
+)
+from developers.training_and_evaluation.binary_bridges_cnn.bridges_parser import (
+    BridgesParser,
+)
+from developers.training_and_evaluation.binary_bridges_cnn.model_params import (
+    BinaryBridgesModelParams,
 )
 
 
