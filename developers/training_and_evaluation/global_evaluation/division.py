@@ -97,8 +97,9 @@ class Division:
                 "Real First cut frame",
                 "CD Cut time",
                 "Real Cut time",
-                "Cytokinesis frame difference",
-                "First cut frame difference",
+                "Cytokinesis difference",
+                "First cut difference",
+                "Cut time difference",
             ]
         ]
 
@@ -111,15 +112,20 @@ class Division:
                 division.first,
             ]
             if division.is_both():
+                cd_cut_time = (
+                    division.cd_first - division.cd_cytokinesis
+                ) * time_resolution
+                real_cut_time = (
+                    division.first - division.cytokinesis
+                ) * time_resolution
                 csv_line.extend(
                     [
-                        (division.cd_first - division.cd_cytokinesis)
-                        * time_resolution,
-                        (division.first - division.cytokinesis)
-                        * time_resolution,
+                        cd_cut_time,
+                        real_cut_time,
                         (division.cd_cytokinesis - division.cytokinesis)
                         * time_resolution,
                         (division.cd_first - division.first) * time_resolution,
+                        cd_cut_time - real_cut_time,
                     ]
                 )
             else:
