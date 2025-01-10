@@ -64,15 +64,17 @@ class Division:
         return only_cd, only_manual, both
 
     @staticmethod
-    def get_cuts(divisions, div_type):
+    def get_cuts(divisions, div_type, time_resolution=10):
         cuts = []
         assert div_type in ["cd", "manual"]
 
         for division in divisions:
             if div_type == "cd":
-                cut = division.cd_first - division.cd_cytokinesis
+                cut = (
+                    division.cd_first - division.cd_cytokinesis
+                ) * time_resolution
             else:
-                cut = division.first - division.cytokinesis
+                cut = (division.first - division.cytokinesis) * time_resolution
             cuts.append(cut)
 
         return cuts

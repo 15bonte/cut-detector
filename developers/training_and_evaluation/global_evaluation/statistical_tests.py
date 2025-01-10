@@ -12,9 +12,9 @@ def wilcoxon_equivalence(data1, data2, delta):
     _, p_value_2 = wilcoxon(data1, data2 + delta, alternative="less")
     p_value = max(p_value_1, p_value_2)
     if p_value < 0.05:
-        message = f"Wilcoxon signed-rank test:\n p-value = {round(p_value, 3)}\n -> Distribution are {delta} frames-close "
+        message = f"Wilcoxon signed-rank test: p-value = {round(p_value, 3)} -> Distribution are {delta} frames-close "
     else:
-        message = f"Wilcoxon signed-rank test:\n p-value = {round(p_value, 3)}\n -> No conclusion"
+        message = f"Wilcoxon signed-rank test: p-value = {round(p_value, 3)} -> No conclusion"
     print(message)
     return message
 
@@ -26,29 +26,54 @@ def mannwhitneyu_equivalence(data1, data2, delta):
     _, p_value_2 = mannwhitneyu(data1, data2 + delta, alternative="less")
     p_value = max(p_value_1, p_value_2)
     if p_value < 0.05:
-        message = f"Mann-Withney U test:\n p-value = {round(p_value, 3)}\n -> Distribution are {delta} frames-close "
+        message = f"Mann-Withney U test: p-value = {round(p_value, 3)} -> Distribution are {delta} frames-close "
     else:
-        message = f"Mann-Withney U test:\n p-value = {round(p_value, 3)}\n -> No conclusion"
+        message = f"Mann-Withney U test: p-value = {round(p_value, 3)} -> No conclusion"
     print(message)
     return message
 
 
-def create_plot(data, names, title):
+def mannwhitneyu_difference(data1, data2):
+    _, p_value = mannwhitneyu(data1, data2)
+    if p_value < 0.05:
+        message = f"Mann-Withney U test: p-value = {round(p_value, 3)} -> Distributions are different"
+    else:
+        message = f"Mann-Withney U test: p-value = {round(p_value, 3)} -> No conclusion"
+    print(message)
+    return message
+
+
+def create_plot(data, names, title, mode):
+    assert mode in ["box", "cumulative"]
     colors = [
         "#1f77b4",  # blue
         "#ff7f0e",  # orange
     ]
 
     # Create traces for each column with specified colors
-    traces = [
-        go.Box(
-            y=data[i],
-            name=names[i],
-            marker=dict(color=colors[i % len(colors)]),
-            x=[i] * len(data[i]),
-        )
-        for i in range(len(data))
-    ]
+    traces = []
+    for i, local_data in enumerate(data):
+        if mode == "box":
+            trace = go.Box(
+                y=local_data,
+                name=names[i],
+                marker=dict(color=colors[i % len(colors)]),
+                x=[i] * len(local_data),
+            )
+        else:
+            sorted_data = np.sort(local_data)
+            cumulative = np.linspace(0, 1, len(sorted_data))
+
+            trace = go.Scatter(
+                x=sorted_data,
+                y=cumulative,
+                name=names[i],
+                mode="lines",
+                marker=dict(color=colors[i % len(colors)]),
+            )
+
+        traces.append(trace)
+
     layout = go.Layout(
         xaxis=dict(
             title=dict(text=title, font=dict(size=20)),
