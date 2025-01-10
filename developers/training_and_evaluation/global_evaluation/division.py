@@ -1,3 +1,7 @@
+import csv
+import os
+
+
 class Division:
     def __init__(self, csv_line):
 
@@ -78,3 +82,52 @@ class Division:
             cuts.append(cut)
 
         return cuts
+
+    def is_both(self):
+        return self.cd_metaphase != -1 and self.cytokinesis != -1
+
+    @staticmethod
+    def generate_csv_summary(divisions, save_folder, time_resolution=10):
+        csv_lines = [
+            [
+                "Video",
+                "CD Cytokinesis frame",
+                "CD First cut frame",
+                "Real Cytokinesis frame",
+                "Real First cut frame",
+                "CD Cut time",
+                "Real Cut time",
+                "Cytokinesis frame difference",
+                "First cut frame difference",
+            ]
+        ]
+
+        for division in divisions:
+            csv_line = [
+                division.video,
+                division.cd_cytokinesis,
+                division.cd_first,
+                division.cytokinesis,
+                division.first,
+            ]
+            if division.is_both():
+                csv_line.extend(
+                    [
+                        (division.cd_first - division.cd_cytokinesis)
+                        * time_resolution,
+                        (division.first - division.cytokinesis)
+                        * time_resolution,
+                        (division.cd_cytokinesis - division.cytokinesis)
+                        * time_resolution,
+                        (division.cd_first - division.first) * time_resolution,
+                    ]
+                )
+            else:
+                csv_line.extend(["-", "-", "-", "-"])
+            csv_lines.append(csv_line)
+
+        csv_path = os.path.join(save_folder, "divisions_summary.csv")
+        with open(csv_path, "w", newline="") as f:
+            writer = csv.writer(f, delimiter=";")
+            for row in csv_lines:
+                writer.writerow(row)

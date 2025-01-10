@@ -51,6 +51,8 @@ def main(
         and division.cd_cytokinesis <= max_cytokinesis_frame
     ]
 
+    Division.generate_csv_summary(divisions, save_folder)
+
     # Compare Cut Detector and manual annotations
     for condition in conditions_vs_manual:
 
@@ -165,8 +167,8 @@ def main(
 
 
 if __name__ == "__main__":
-    MATCHED_CSV = r"C:\Users\thoma\Downloads\RE_ Bilan journée hier + nouvelle version Cut Detector\results EXP3 - CutD-ALL_matched.csv"
-    MANUAL_CSV = r"C:\Users\thoma\Downloads\RE_ Bilan journée hier + nouvelle version Cut Detector\Manual annotation - Cut_D auto comparaison ALL EXP3.csv"
+    MATCHED_CSV = r"C:\Users\thoma\Downloads\RE_ Bilan journée hier + nouvelle version Cut Detector\results EXP1 - CutD-ALL_matched.csv"
+    MANUAL_CSV = r"C:\Users\thoma\Downloads\RE_ Bilan journée hier + nouvelle version Cut Detector\Manual annotation - Cut_D auto comparaison ALL EXP1.csv"
     SAVE_FOLDER = r"C:\Users\thoma\Downloads"
 
     main(
@@ -174,9 +176,9 @@ if __name__ == "__main__":
         MANUAL_CSV,
         SAVE_FOLDER,
         max_cytokinesis_frame=216,
-        conditions_vs_manual=[],
-        conditions_vs_control=["MICAL1"],
-        deltas=[10, 20, 30, 40],
+        conditions_vs_manual=["Control"],
+        conditions_vs_control=[],
+        deltas=[20],
         mode="cumulative",  # cumulative or box
         show=False,
     )
