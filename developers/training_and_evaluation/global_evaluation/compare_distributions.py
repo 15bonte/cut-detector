@@ -138,7 +138,9 @@ def main(
     # Compare conditions vs Control
     control_divisions = Division.split_divisions(divisions, "Control")
     cd_control = control_divisions[0] + control_divisions[2]
-    control_cuts = Division.get_cuts(cd_control, div_type="cd")
+    manual_control = control_divisions[1] + control_divisions[2]
+    control_cd_cuts = Division.get_cuts(cd_control, div_type="cd")
+    control_manual_cuts = Division.get_cuts(manual_control, div_type="manual")
     for condition in conditions_vs_control:
         print(f"\n ### Condition {condition} vs Control ###")
 
@@ -148,18 +150,63 @@ def main(
             condition_divisions = Division.split_divisions(
                 divisions, condition
             )
+
+            # Compare Cut Detector
+            print("# Cut Detector #")
             cd_condition = condition_divisions[0] + condition_divisions[2]
             condition_cuts = Division.get_cuts(cd_condition, div_type="cd")
+            mannwhitneyu_equivalence(
+                control_cd_cuts, condition_cuts, delta=delta
+            )
+            title_1 = mannwhitneyu_difference(control_cd_cuts, condition_cuts)
 
-            mannwhitneyu_equivalence(control_cuts, condition_cuts, delta=delta)
-            mannwhitneyu_difference(control_cuts, condition_cuts)
+            fig_1 = create_plot(
+                [control_cd_cuts, condition_cuts],
+                ["Control", condition],
+                "",
+                mode=mode,
+            )
 
-        fig = create_plot(
-            [control_cuts, condition_cuts],
-            ["Control", condition],
-            "",
-            mode=mode,
-        )
+            # Compare Manual
+            print("# Manual #")
+            manual_condition = condition_divisions[1] + condition_divisions[2]
+            condition_cuts = Division.get_cuts(
+                manual_condition, div_type="manual"
+            )
+            mannwhitneyu_equivalence(
+                control_manual_cuts, condition_cuts, delta=delta
+            )
+            title_2 = mannwhitneyu_difference(
+                control_manual_cuts, condition_cuts
+            )
+
+            fig_2 = create_plot(
+                [control_manual_cuts, condition_cuts],
+                ["Control", condition],
+                "",
+                mode=mode,
+            )
+
+            # Combine plots using make_subplots
+            fig = make_subplots(
+                rows=2,
+                cols=1,
+                subplot_titles=(title_1, title_2),
+                specs=[
+                    [{"type": "box"}],
+                    [{"type": "box"}],
+                ],
+            )
+
+            # Add traces to the subplots
+            fig.add_trace(fig_1.data[0], row=1, col=1)
+            fig.add_trace(fig_1.data[1], row=1, col=1)
+
+            fig.add_trace(fig_2.data[0], row=2, col=1)
+            fig.add_trace(fig_2.data[1], row=2, col=1)
+
+            fig.add_trace(fig_2.data[0], row=2, col=1)
+            fig.add_trace(fig_2.data[1], row=2, col=1)
 
         # Show the figure
         if show:
