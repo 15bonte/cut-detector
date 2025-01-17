@@ -5,24 +5,25 @@ import os
 class Division:
     def __init__(self, csv_line):
 
-        self.video = csv_line[0]
+        self.exp = csv_line[0]
+        self.video = csv_line[1]
 
-        if len(csv_line) == 21:  # Cut Detector
+        if len(csv_line) == 22:  # Cut Detector
 
-            self.cd_metaphase = csv_line[8]
-            self.cd_cytokinesis = csv_line[9]
-            self.cd_first = int(csv_line[10])
+            self.cd_metaphase = csv_line[9]
+            self.cd_cytokinesis = csv_line[10]
+            self.cd_first = int(csv_line[11])
 
-            self.cd_position_x = csv_line[12]
-            self.cd_position_y = csv_line[13]
+            self.cd_position_x = csv_line[13]
+            self.cd_position_y = csv_line[14]
 
-            self.cytokinesis = csv_line[17]
-            self.first = csv_line[18]
+            self.cytokinesis = csv_line[18]
+            self.first = csv_line[19]
 
-            self.position_x = csv_line[19]
-            self.position_y = csv_line[20]
+            self.position_x = csv_line[20]
+            self.position_y = csv_line[21]
 
-        elif len(csv_line) == 6:  # Manual
+        elif len(csv_line) == 7:  # Manual
 
             self.cd_metaphase = -1
             self.cd_cytokinesis = -1
@@ -31,17 +32,21 @@ class Division:
             self.cd_position_x = -1
             self.cd_position_y = -1
 
-            self.cytokinesis = csv_line[2]
-            self.first = csv_line[3]
+            self.cytokinesis = csv_line[3]
+            self.first = csv_line[4]
 
-            self.position_x = csv_line[4]
-            self.position_y = csv_line[5]
+            self.position_x = csv_line[5]
+            self.position_y = csv_line[6]
+
+        else:
+            raise ValueError("Invalid csv_line length")
 
     def exists_in(self, divisions):
         """Check if annotated division already exists in annotated divisions list"""
         for division in divisions:
             if (
-                division.video == self.video
+                division.exp == self.exp
+                and division.video == self.video
                 and division.cytokinesis == self.cytokinesis
                 and division.first == self.first
                 and division.position_x == self.position_x
@@ -90,6 +95,7 @@ class Division:
     def generate_csv_summary(divisions, save_folder, time_resolution=10):
         csv_lines = [
             [
+                "Experiment",
                 "Video",
                 "CD Cytokinesis frame",
                 "CD First cut frame",
@@ -105,6 +111,7 @@ class Division:
 
         for division in divisions:
             csv_line = [
+                division.exp,
                 division.video,
                 division.cd_cytokinesis,
                 division.cd_first,

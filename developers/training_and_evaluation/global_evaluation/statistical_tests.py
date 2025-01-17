@@ -42,6 +42,15 @@ def mannwhitneyu_difference(data1, data2):
     print(message)
     return message
 
+def wilcoxon_difference(data1, data2):
+    _, p_value = wilcoxon(data1, data2)
+    if p_value < 0.05:
+        message = f"Wilcoxon signed-rank test: p-value = {round(p_value, 3)} -> Distributions are different"
+    else:
+        message = f"Wilcoxon signed-rank test: p-value = {round(p_value, 3)} -> No conclusion"
+    print(message)
+    return message
+
 
 def create_plot(data, names, title, mode):
     assert mode in ["box", "cumulative"]

@@ -10,6 +10,7 @@ from developers.training_and_evaluation.global_evaluation.statistical_tests impo
     mannwhitneyu_difference,
     mannwhitneyu_equivalence,
     wilcoxon_equivalence,
+    wilcoxon_difference,
 )
 
 
@@ -31,7 +32,7 @@ def main(
     sheet_data = [df[col].tolist() for col in df.columns]
     for idx in range(len(sheet_data[0])):
         division_data = [col[idx] for col in sheet_data]
-        if len(division_data[10]) > 3:  # impossible detection
+        if len(division_data[11]) > 3:  # impossible detection
             continue
         division = Division(division_data)
         divisions.append(division)
@@ -68,9 +69,11 @@ def main(
             print(f"\n ### Delta {delta} ###")
 
             # Same
+            print("# Same #")
             cd_cuts = Division.get_cuts(both, div_type="cd")
             manual_cuts = Division.get_cuts(both, div_type="manual")
             title_1 = wilcoxon_equivalence(cd_cuts, manual_cuts, delta=delta)
+            wilcoxon_difference(cd_cuts, manual_cuts)
             fig_1 = create_plot(
                 [cd_cuts, manual_cuts],
                 ["Cut Detector Same", "Manual Same"],
@@ -79,6 +82,7 @@ def main(
             )
 
             # False positive
+            print("# False positive #")
             fp_cuts = Division.get_cuts(only_cd, div_type="cd")
             cd_cuts = Division.get_cuts(both, div_type="cd")
             title_2 = mannwhitneyu_equivalence(cd_cuts, fp_cuts, delta=delta)
@@ -90,11 +94,13 @@ def main(
             )
 
             # False negative
+            print("# False negative #")
             fn_cuts = Division.get_cuts(only_manual, div_type="manual")
             manual_cuts = Division.get_cuts(both, div_type="manual")
             title_3 = mannwhitneyu_equivalence(
                 manual_cuts, fn_cuts, delta=delta
             )
+            mannwhitneyu_difference(manual_cuts, fn_cuts)
             fig_3 = create_plot(
                 [manual_cuts, fn_cuts],
                 ["Manual Same", "FN"],
@@ -214,9 +220,9 @@ def main(
 
 
 if __name__ == "__main__":
-    MATCHED_CSV = r"C:\Users\thoma\Downloads\RE_ Bilan journée hier + nouvelle version Cut Detector\results EXP1 - CutD-ALL_matched.csv"
-    MANUAL_CSV = r"C:\Users\thoma\Downloads\RE_ Bilan journée hier + nouvelle version Cut Detector\Manual annotation - Cut_D auto comparaison ALL EXP1.csv"
-    SAVE_FOLDER = r"C:\Users\thoma\Downloads"
+    MATCHED_CSV = r"C:\Users\messa\Downloads\RE_ Bilan journée hier + nouvelle version Cut Detector\results EXP2 - CutD-ALL_matched.csv"
+    MANUAL_CSV = r"C:\Users\messa\Downloads\RE_ Bilan journée hier + nouvelle version Cut Detector\Manual annotation - Cut_D auto comparaison ALL EXP2.csv"
+    SAVE_FOLDER = r"C:\Users\messa\Downloads"
 
     main(
         MATCHED_CSV,
@@ -227,5 +233,5 @@ if __name__ == "__main__":
         conditions_vs_control=[],
         deltas=[20],
         mode="cumulative",  # cumulative or box
-        show=False,
+        show=True,
     )
