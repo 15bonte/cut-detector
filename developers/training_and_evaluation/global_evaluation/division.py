@@ -87,6 +87,34 @@ class Division:
             cuts.append(cut)
 
         return cuts
+    
+    @staticmethod
+    def get_onsets(divisions, div_type, time_resolution=10):
+        onsets = []
+        assert div_type in ["cd", "manual"]
+
+        for division in divisions:
+            if div_type == "cd":
+                onset =  division.cd_cytokinesis * time_resolution
+            else:
+                onset = division.cytokinesis * time_resolution
+            onsets.append(onset)
+
+        return onsets
+    
+    @staticmethod
+    def get_cut_time(divisions, div_type, time_resolution=10):
+        frames = []
+        assert div_type in ["cd", "manual"]
+
+        for division in divisions:
+            if div_type == "cd":
+                frame = division.cd_first * time_resolution
+            else:
+                frame = division.first * time_resolution
+            frames.append(frame)
+
+        return frames
 
     def is_both(self):
         return self.cd_metaphase != -1 and self.cytokinesis != -1

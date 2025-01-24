@@ -81,6 +81,18 @@ def main(
                 mode=mode,
             )
 
+            # Same onset
+            print("# Same onset #")
+            cd_onset = Division.get_onsets(both, div_type="cd")
+            manual_onset = Division.get_onsets(both, div_type="manual")
+            wilcoxon_equivalence(cd_onset, manual_onset, delta=delta)
+
+            # Same cut
+            print("# Same cut #")
+            cd_cut = Division.get_cut_time(both, div_type="cd")
+            manual_cut = Division.get_cut_time(both, div_type="manual")
+            wilcoxon_equivalence(cd_cut, manual_cut, delta=delta)
+
             # False positive
             print("# False positive #")
             fp_cuts = Division.get_cuts(only_cd, div_type="cd")
