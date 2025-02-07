@@ -25,6 +25,10 @@ def main(
     mode,
     show,
 ):
+    # Remove empty strings from conditions_vs_manual and conditions_vs_control
+    conditions_vs_manual = [condition for condition in conditions_vs_manual if condition]
+    conditions_vs_control = [condition for condition in conditions_vs_control if condition]
+
     divisions = []
 
     # Read matched csv
@@ -229,11 +233,18 @@ def main(
         # Show the figure
         if show:
             fig.show()
+        if save_folder:
+            fig.write_html(
+                os.path.join(save_folder, f"control_vs_condition_{condition}.html")
+            )
 
 
 if __name__ == "__main__":
-    MATCHED_CSV = r"C:\Users\messa\Downloads\RE_ Bilan journée hier + nouvelle version Cut Detector\results EXP2 - CutD-ALL_matched.csv"
-    MANUAL_CSV = r"C:\Users\messa\Downloads\RE_ Bilan journée hier + nouvelle version Cut Detector\Manual annotation - Cut_D auto comparaison ALL EXP2.csv"
+    EXP = "" # "EXP1", "EXP2", "EXP3" or "" (for all)
+    CONDITION = "" # "Spastin" or ""
+
+    MATCHED_CSV = r"C:\Users\messa\Downloads\RE_ Bilan journée hier + nouvelle version Cut Detector\results " + EXP + "- CutD-ALL_matched" + CONDITION + ".csv"
+    MANUAL_CSV = r"C:\Users\messa\Downloads\RE_ Bilan journée hier + nouvelle version Cut Detector\Manual annotation - Cut_D auto comparaison ALL" + EXP + CONDITION + ".csv"
     SAVE_FOLDER = r"C:\Users\messa\Downloads"
 
     main(
@@ -241,9 +252,9 @@ if __name__ == "__main__":
         MANUAL_CSV,
         SAVE_FOLDER,
         max_cytokinesis_frame=216,
-        conditions_vs_manual=["Control"],
-        conditions_vs_control=[],
-        deltas=[20],
+        conditions_vs_manual=["Control"], # Control, MICAL1, CEP55, Spastin
+        conditions_vs_control=[""],
+        deltas=[10, 20, 30, 40],
         mode="cumulative",  # cumulative or box
-        show=True,
+        show=False,
     )
