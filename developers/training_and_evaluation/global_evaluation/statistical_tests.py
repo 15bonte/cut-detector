@@ -2,8 +2,11 @@ import numpy as np
 from scipy.stats import wilcoxon, mannwhitneyu
 import plotly.graph_objs as go
 
+def print_v(txt, verbose):
+    if verbose:
+        print(txt)
 
-def wilcoxon_equivalence(data1, data2, delta):
+def wilcoxon_equivalence(data1, data2, delta, verbose):
     """Perform Wilcoxon signed-rank test for equivalence of two paired samples"""
     assert len(data1) == len(data2)
     data1 = np.array(data1)
@@ -15,11 +18,11 @@ def wilcoxon_equivalence(data1, data2, delta):
         message = f"Wilcoxon signed-rank test: p-value = {round(p_value, 3)} -> Distribution are {delta} frames-close "
     else:
         message = f"Wilcoxon signed-rank test: p-value = {round(p_value, 3)} -> No conclusion"
-    print(message)
-    return message
+    print_v(message, verbose)
+    return message, p_value
 
 
-def mannwhitneyu_equivalence(data1, data2, delta):
+def mannwhitneyu_equivalence(data1, data2, delta, verbose):
     data1 = np.array(data1)
     data2 = np.array(data2)
     _, p_value_1 = mannwhitneyu(data1, data2 - delta, alternative="greater")
@@ -29,27 +32,27 @@ def mannwhitneyu_equivalence(data1, data2, delta):
         message = f"Mann-Withney U test: p-value = {round(p_value, 3)} -> Distribution are {delta} frames-close "
     else:
         message = f"Mann-Withney U test: p-value = {round(p_value, 3)} -> No conclusion"
-    print(message)
-    return message
+    print_v(message, verbose)
+    return message, p_value
 
 
-def mannwhitneyu_difference(data1, data2):
+def mannwhitneyu_difference(data1, data2, verbose):
     _, p_value = mannwhitneyu(data1, data2)
     if p_value < 0.05:
         message = f"Mann-Withney U test: p-value = {round(p_value, 3)} -> Distributions are different"
     else:
         message = f"Mann-Withney U test: p-value = {round(p_value, 3)} -> No conclusion"
-    print(message)
-    return message
+    print_v(message, verbose)
+    return message, p_value
 
-def wilcoxon_difference(data1, data2):
+def wilcoxon_difference(data1, data2, verbose):
     _, p_value = wilcoxon(data1, data2)
     if p_value < 0.05:
         message = f"Wilcoxon signed-rank test: p-value = {round(p_value, 3)} -> Distributions are different"
     else:
         message = f"Wilcoxon signed-rank test: p-value = {round(p_value, 3)} -> No conclusion"
-    print(message)
-    return message
+    print_v(message, verbose)
+    return message, p_value
 
 
 def create_plot(data, names, title, mode):

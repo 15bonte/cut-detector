@@ -56,9 +56,9 @@ class Division:
         return False
 
     @staticmethod
-    def split_divisions(divisions, condition):
+    def split_divisions(divisions, condition, exp):
         condition_divisions = [
-            division for division in divisions if condition in division.video
+            division for division in divisions if condition in division.video and exp in division.exp
         ]
 
         only_cd, only_manual, both = [], [], []
