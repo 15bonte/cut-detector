@@ -9,7 +9,7 @@
 
 Automatic micro-tubule cut detector.
 
-https://github.com/user-attachments/assets/356efbf6-d78a-44a0-ad94-de3de83f01ed
+https://github.com/user-attachments/assets/2af2e1a6-adf9-4d63-a353-e190c4814d83
 
 ---
 
