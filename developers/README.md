@@ -73,3 +73,5 @@ python compare_distributions.py --matched_csv_file "results - CutD-ALL_matched.c
 ```
 
 Please refer to the file for additional arguments. Additionally, this script generates a division summary file and saves corresponding plots.
+
+This can also be run directly from Napari, using the Distribution Comparison widget.

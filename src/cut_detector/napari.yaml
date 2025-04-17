@@ -26,6 +26,9 @@ contributions:
     - id: cut-detector.divisions_matching
       python_name: cut_detector._widget:divisions_matching
       title: Divisions Matching
+    - id: cut-detector.distribution_comparison
+      python_name: cut_detector._widget:distribution_comparison
+      title: Distribution Comparison
   widgets:
     - command: cut-detector.whole_process
       display_name: Single Video
@@ -43,3 +46,5 @@ contributions:
     #   display_name: 5 - Results Saving
     - command: cut-detector.divisions_matching
       display_name: Divisions Matching
+    - command: cut-detector.distribution_comparison
+      display_name: Distribution Comparison

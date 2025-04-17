@@ -27,6 +27,7 @@ from .widget_functions.save_results import (
 from .widget_functions.divisions_matching import (
     perform_divisions_matching,
 )
+from .widget_functions.distribution_comparison import perform_distribution_comparison
 
 
 def video_whole_process(
@@ -537,4 +538,66 @@ def divisions_matching(
         folder_manual,
         maximum_frame_distance,
         maximum_position_distance,
+    )
+
+@magic_factory(
+    call_button="Compare distributions",
+    layout="vertical",
+    requirements=dict(
+        widget_type="Label",
+        label="Requirements",
+        value="Matched Cut Detector results is the output from the 'Match divisions'.\nManual annotations file is the same as in this previous widget.\nImportant note: add a first column to both files with the name of the experiment.",
+    ),
+    matched_csv=dict(
+        widget_type="FileEdit",
+        label="Matched Cut Detector results (csv): ",
+    ),
+    manual_csv=dict(
+        widget_type="FileEdit",
+        label="Manual annotations file (csv): ",
+    ),
+    save_folder=dict(
+        widget_type="FileEdit",
+        label="Directory to save results: ",
+        mode="d",
+    ),
+    max_cytokinesis_frame=dict(
+        widget_type="SpinBox",
+        label="Max frame for cytokinesis onset: ",
+        value=216,  # Default value
+    ),
+    conditions_vs_manual=dict(
+        widget_type="ListEdit",
+        label="List of conditions to compare with manual annotations: ",
+        value=["Control"],  # Default value
+    ),   
+    conditions_vs_control=dict(
+        widget_type="ListEdit",
+        label="List of conditions to compare to control: ",
+        value=[],  # Default value
+    ),   
+    deltas=dict(
+        widget_type="ListEdit",
+        label="List of deltas to consider for equivalence tests: ",
+        value=[10, 20, 30, 40],  # Default value
+    ),   
+)
+def distribution_comparison(
+    requirements: str,
+    matched_csv: str,
+    manual_csv: str,
+    save_folder: str,
+    max_cytokinesis_frame: int,
+    conditions_vs_manual: list[str],
+    conditions_vs_control: list[str],
+    deltas: list[int],
+):
+    perform_distribution_comparison(
+        matched_csv,
+        manual_csv,
+        save_folder,
+        max_cytokinesis_frame,
+        conditions_vs_manual,
+        conditions_vs_control,
+        deltas
     )
