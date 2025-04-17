@@ -120,7 +120,7 @@ class Division:
         return self.cd_metaphase != -1 and self.cytokinesis != -1
 
     @staticmethod
-    def generate_csv_summary(divisions, save_folder, time_resolution=10):
+    def generate_csv_summary(divisions, save_folder, hour_date_string, time_resolution=10):
         csv_lines = [
             [
                 "Experiment",
@@ -167,7 +167,7 @@ class Division:
                 csv_line.extend(["-", "-", "-", "-"])
             csv_lines.append(csv_line)
 
-        csv_path = os.path.join(save_folder, "divisions_summary.csv")
+        csv_path = os.path.join(save_folder, f"divisions_summary_{hour_date_string}.csv")
         with open(csv_path, "w", newline="") as f:
             writer = csv.writer(f, delimiter=";")
             for row in csv_lines:

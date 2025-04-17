@@ -36,6 +36,8 @@ def main(
     save_fig,
     verbose
 ):
+    hour_date_string = pd.Timestamp.now().strftime("%Y-%m-%d %H-%M-%S")
+
     # Remove empty strings from conditions_vs_manual and conditions_vs_control
     conditions_vs_manual = [condition for condition in conditions_vs_manual if condition]
     conditions_vs_control = [condition for condition in conditions_vs_control if condition]
@@ -69,7 +71,7 @@ def main(
     ]
 
     if save_folder:
-        Division.generate_csv_summary(divisions, save_folder)
+        Division.generate_csv_summary(divisions, save_folder, hour_date_string)
 
     results_header = ["EXP", "Comparison", "Condition 1", "Condition 2", "Delta", "Test", "p-value", "Result"]
     results = []
@@ -145,7 +147,7 @@ def main(
                     title_3,
                     mode=mode,
                 )
-                results.append([exp, "Are FP cuts equivalent to detected cuts (t1-t0)?", condition, "-", delta, "TOST Mann-Whitney U", p_value, title_3])
+                results.append([exp, "Are FN cuts equivalent to detected cuts (t1-t0)?", condition, "-", delta, "TOST Mann-Whitney U", p_value, title_3])
 
             printer.print("\n### Difference ###")
 
@@ -195,7 +197,7 @@ def main(
                 if save_fig:
                     assert save_folder
                     fig.write_html(
-                        os.path.join(save_folder, f"condition_{condition}.html")
+                        os.path.join(save_folder, f"condition_{condition}_{hour_date_string}.html")
                     )
 
     for exp in experiments_set:
@@ -298,24 +300,24 @@ def main(
             if save_fig:
                 assert save_folder
                 fig.write_html(
-                    os.path.join(save_folder, f"control_vs_condition_{condition}.html")
+                    os.path.join(save_folder, f"control_vs_condition_{condition}_{hour_date_string}.html")
                 )
 
     # Save results as csv
     results_df = pd.DataFrame(results, columns=results_header)
-    results_df.to_csv(os.path.join(save_folder, "results.csv"), index=False, sep=";")
+    results_df.to_csv(os.path.join(save_folder, f"results_{hour_date_string}.csv"), index=False, sep=";")
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--matched_csv_file",
-        default=r"C:\Users\messa\Downloads\RE_ Bilan journée hier + nouvelle version Cut Detector\results - CutD-ALL_matched.csv",
+        default=r"C:\Users\messa\OneDrive\Thomas\OneDrive\Documents\Doctorat\Pasteur\Annotations Pasteur final\results - CutD-ALL_matched.csv",
         help="Matched CSV file",
     )
     parser.add_argument(
         "--manual_csv_file",
-        default=r"C:\Users\messa\Downloads\RE_ Bilan journée hier + nouvelle version Cut Detector\Manual annotation - Cut_D auto comparaison ALL.csv",
+        default=r"C:\Users\messa\OneDrive\Thomas\OneDrive\Documents\Doctorat\Pasteur\Annotations Pasteur final\Manual annotation - Cut_D auto comparaison ALL.csv",
         help="Manual CSV file",
     )
     parser.add_argument(
