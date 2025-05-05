@@ -23,7 +23,7 @@ class Division:
             self.position_x = csv_line[20]
             self.position_y = csv_line[21]
 
-        elif len(csv_line) == 7:  # Manual
+        elif len(csv_line) == 6:  # Manual
 
             self.cd_metaphase = -1
             self.cd_cytokinesis = -1
@@ -32,14 +32,17 @@ class Division:
             self.cd_position_x = -1
             self.cd_position_y = -1
 
-            self.cytokinesis = csv_line[3]
-            self.first = csv_line[4]
+            self.cytokinesis = csv_line[2]
+            self.first = csv_line[3]
 
-            self.position_x = csv_line[5]
-            self.position_y = csv_line[6]
+            self.position_x = csv_line[4]
+            self.position_y = csv_line[5]
+
+        elif len(csv_line) == 7:  # Old manual
+            raise ValueError(f"Seems to have additional column 'id' in manual csv file. Deprecated, please remove.")
 
         else:
-            raise ValueError("Invalid csv_line length")
+            raise ValueError(f"Invalid csv_line length: {len(csv_line)}")
 
     def exists_in(self, divisions):
         """Check if annotated division already exists in annotated divisions list"""

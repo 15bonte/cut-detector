@@ -102,7 +102,7 @@ def perform_distribution_comparison(
     results_header = ["EXP", "Comparison", "Condition 1", "Condition 2", "Delta", "Test", "p-value", "Result"]
     results = []
 
-    experiments_set = set(sheet_data[0] + ["EXP"])  # to gather all
+    experiments_set = set(sheet_data[0] + ["EXP"])  # EXP gathers all
 
     # Compare Cut Detector and manual annotations
     for condition in conditions_vs_manual:
