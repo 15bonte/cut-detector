@@ -167,7 +167,7 @@ class Division:
                     ]
                 )
             else:
-                csv_line.extend(["-", "-", "-", "-"])
+                csv_line.extend(["-", "-", "-", "-", "-"])
             csv_lines.append(csv_line)
 
         csv_path = os.path.join(save_folder, f"divisions_summary_{hour_date_string}.csv")
