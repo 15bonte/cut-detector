@@ -1,6 +1,22 @@
 import csv
 import os
 
+def is_valid_frame(frame):
+    """Check if the frame is a valid."""
+    try:
+        frame = int(frame)
+        return -1 <= frame <= 500  # Assuming a maximum of 500 frames
+    except ValueError:
+        return False
+
+def is_valid_position(position):
+    """Check if the position is valid."""
+    try:
+        position = int(position)
+        return -1 <= position <= 3000  # Assuming a maximum of 3000 px
+    except ValueError:
+        return False
+
 
 class Division:
     def __init__(self, csv_line):
@@ -11,17 +27,25 @@ class Division:
         if len(csv_line) == 22:  # Cut Detector
 
             self.cd_metaphase = csv_line[9]
+            assert is_valid_frame(self.cd_metaphase), f"Invalid cd_metaphase frame: {self.cd_metaphase}"
             self.cd_cytokinesis = csv_line[10]
+            assert is_valid_frame(self.cd_cytokinesis), f"Invalid cd_cytokinesis frame: {self.cd_cytokinesis}"
             self.cd_first = int(csv_line[11])
 
             self.cd_position_x = csv_line[13]
+            assert is_valid_position(self.cd_position_x), f"Invalid cd_position_x: {self.cd_position_x}"
             self.cd_position_y = csv_line[14]
+            assert is_valid_position(self.cd_position_y), f"Invalid cd_position_y: {self.cd_position_y}"
 
             self.cytokinesis = csv_line[18]
+            assert is_valid_frame(self.cytokinesis), f"Invalid cytokinesis frame: {self.cytokinesis}"
             self.first = csv_line[19]
+            assert is_valid_frame(self.first), f"Invalid first frame: {self.first}"
 
             self.position_x = csv_line[20]
+            assert is_valid_position(self.position_x), f"Invalid position_x: {self.position_x}"
             self.position_y = csv_line[21]
+            assert is_valid_position(self.position_y), f"Invalid position_y: {self.position_y}"
 
         elif len(csv_line) == 6:  # Manual
 
@@ -33,10 +57,14 @@ class Division:
             self.cd_position_y = -1
 
             self.cytokinesis = csv_line[2]
+            assert is_valid_frame(self.cytokinesis), f"Invalid cytokinesis frame: {self.cytokinesis}"
             self.first = csv_line[3]
+            assert is_valid_frame(self.first), f"Invalid first frame: {self.first}"
 
             self.position_x = csv_line[4]
+            assert is_valid_position(self.position_x), f"Invalid position_x: {self.position_x}"
             self.position_y = csv_line[5]
+            assert is_valid_position(self.position_y), f"Invalid position_y: {self.position_y}"
 
         elif len(csv_line) == 7:  # Old manual
             raise ValueError(f"Seems to have additional column 'id' in manual csv file. Deprecated, please remove.")
