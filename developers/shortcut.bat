@@ -1,0 +1,2 @@
+call activate cut_detector
+napari
