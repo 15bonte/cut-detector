@@ -13,13 +13,15 @@ from ..utils.statistical_tests import (
     wilcoxon_difference,
 )
 
+
 class VerbosePrinter:
     def __init__(self, verbose):
         self.verbose = verbose
-    
+
     def print(self, message):
         if self.verbose:
             print(message)
+
 
 def perform_distribution_comparison(
     matched_csv,
@@ -33,7 +35,7 @@ def perform_distribution_comparison(
     show=False,
     save_fig=False,
     verbose=False,
-)-> None:
+) -> None:
     """
     Compare distributions of Cut Detector and manual annotations using statistical tests.
 
@@ -65,8 +67,12 @@ def perform_distribution_comparison(
     hour_date_string = pd.Timestamp.now().strftime("%Y-%m-%d %H-%M-%S")
 
     # Remove empty strings from conditions_vs_manual and conditions_vs_control
-    conditions_vs_manual = [condition for condition in conditions_vs_manual if condition]
-    conditions_vs_control = [condition for condition in conditions_vs_control if condition]
+    conditions_vs_manual = [
+        condition for condition in conditions_vs_manual if condition
+    ]
+    conditions_vs_control = [
+        condition for condition in conditions_vs_control if condition
+    ]
 
     divisions = []
     printer = VerbosePrinter(verbose)
@@ -99,17 +105,28 @@ def perform_distribution_comparison(
     if save_folder:
         Division.generate_csv_summary(divisions, save_folder, hour_date_string)
 
-    results_header = ["EXP", "Comparison", "Condition 1", "Condition 2", "Delta", "Test", "p-value", "Result"]
+    results_header = [
+        "EXP",
+        "Comparison",
+        "Condition 1",
+        "Condition 2",
+        "Delta",
+        "Test",
+        "p-value",
+        "Result",
+    ]
     results = []
 
-    experiments_set = set(sheet_data[0] + ["EXP"])  # EXP gathers all
+    experiments_set = set(sheet_data[0] + ["All EXP"])  # EXP gathers all
 
     # Compare Cut Detector and manual annotations
     for condition in conditions_vs_manual:
 
         for exp in experiments_set:
 
-            printer.print(f"\n### Condition {condition} {exp} - Cut Detector vs Manual ###")
+            printer.print(
+                f"\n### Condition {condition} {exp} - Cut Detector vs Manual ###"
+            )
             only_cd, only_manual, both = Division.split_divisions(
                 divisions, condition, exp
             )
@@ -124,41 +141,93 @@ def perform_distribution_comparison(
                 printer.print("# Same #")
                 cd_cuts = Division.get_cuts(both, div_type="cd")
                 manual_cuts = Division.get_cuts(both, div_type="manual")
-                title_1, p_value = wilcoxon_equivalence(cd_cuts, manual_cuts, delta=delta, verbose=verbose)
+                title_1, p_value = wilcoxon_equivalence(
+                    cd_cuts, manual_cuts, delta=delta, verbose=verbose
+                )
                 fig_1 = create_plot(
                     [cd_cuts, manual_cuts],
                     ["Cut Detector Same", "Manual Same"],
                     title_1,
                     mode=mode,
                 )
-                results.append([exp, "On the same divisions, is Cut-Detector equivalent to manual (t1-t0)?", condition, "-", delta, "TOST Wilcoxon signed-rank", p_value, title_1])
+                results.append(
+                    [
+                        exp,
+                        "On the same divisions, is Cut-Detector equivalent to manual (t1-t0)?",
+                        condition,
+                        "-",
+                        delta,
+                        "TOST Wilcoxon signed-rank",
+                        p_value,
+                        title_1,
+                    ]
+                )
 
                 # Same onset
                 printer.print("# Same onset #")
                 cd_onset = Division.get_onsets(both, div_type="cd")
                 manual_onset = Division.get_onsets(both, div_type="manual")
-                message, p_value = wilcoxon_equivalence(cd_onset, manual_onset, delta=delta, verbose=verbose)
-                results.append([exp, "On the same divisions, is Cut-Detector equivalent to manual (t0)?", condition, "-", delta, "TOST Wilcoxon signed-rank", p_value, message])
+                message, p_value = wilcoxon_equivalence(
+                    cd_onset, manual_onset, delta=delta, verbose=verbose
+                )
+                results.append(
+                    [
+                        exp,
+                        "On the same divisions, is Cut-Detector equivalent to manual (t0)?",
+                        condition,
+                        "-",
+                        delta,
+                        "TOST Wilcoxon signed-rank",
+                        p_value,
+                        message,
+                    ]
+                )
 
                 # Same cut
                 printer.print("# Same cut #")
                 cd_cut = Division.get_cut_time(both, div_type="cd")
                 manual_cut = Division.get_cut_time(both, div_type="manual")
-                message, p_value = wilcoxon_equivalence(cd_cut, manual_cut, delta=delta, verbose=verbose)
-                results.append([exp, "On the same divisions, is Cut-Detector equivalent to manual (t1)?", condition, "-", delta, "TOST Wilcoxon signed-rank", p_value, message])
+                message, p_value = wilcoxon_equivalence(
+                    cd_cut, manual_cut, delta=delta, verbose=verbose
+                )
+                results.append(
+                    [
+                        exp,
+                        "On the same divisions, is Cut-Detector equivalent to manual (t1)?",
+                        condition,
+                        "-",
+                        delta,
+                        "TOST Wilcoxon signed-rank",
+                        p_value,
+                        message,
+                    ]
+                )
 
                 # False positive
                 printer.print("# False positive #")
                 fp_cuts = Division.get_cuts(only_cd, div_type="cd")
                 cd_cuts = Division.get_cuts(both, div_type="cd")
-                title_2, p_value = mannwhitneyu_equivalence(cd_cuts, fp_cuts, delta=delta, verbose=verbose)
+                title_2, p_value = mannwhitneyu_equivalence(
+                    cd_cuts, fp_cuts, delta=delta, verbose=verbose
+                )
                 fig_2 = create_plot(
                     [cd_cuts, fp_cuts],
                     ["Cut Detector Same", "FP"],
                     title_2,
                     mode=mode,
                 )
-                results.append([exp, "Are FP cuts equivalent to detected cuts (t1-t0)?", condition, "-", delta, "TOST Mann-Whitney U", p_value, title_2])
+                results.append(
+                    [
+                        exp,
+                        "Are FP cuts equivalent to detected cuts (Cut-Detector, t1-t0)?",
+                        condition,
+                        "-",
+                        delta,
+                        "TOST Mann-Whitney U",
+                        p_value,
+                        title_2,
+                    ]
+                )
 
                 # False negative
                 printer.print("# False negative #")
@@ -173,7 +242,18 @@ def perform_distribution_comparison(
                     title_3,
                     mode=mode,
                 )
-                results.append([exp, "Are FN cuts equivalent to detected cuts (t1-t0)?", condition, "-", delta, "TOST Mann-Whitney U", p_value, title_3])
+                results.append(
+                    [
+                        exp,
+                        "Are FN cuts equivalent to detected cuts (manual, t1-t0)?",
+                        condition,
+                        "-",
+                        delta,
+                        "TOST Mann-Whitney U",
+                        p_value,
+                        title_3,
+                    ]
+                )
 
             printer.print("\n### Difference ###")
 
@@ -181,50 +261,81 @@ def perform_distribution_comparison(
             printer.print("# Same #")
             cd_cuts = Division.get_cuts(both, div_type="cd")
             manual_cuts = Division.get_cuts(both, div_type="manual")
-            message, p_value = wilcoxon_difference(cd_cuts, manual_cuts, verbose=verbose)
-            results.append([exp, "On the same divisions, is Cut-Detector different from manual (t1-t0)?", condition, "-", "-", "Wilcoxon signed-rank", p_value, message])
+            message, p_value = wilcoxon_difference(
+                cd_cuts, manual_cuts, verbose=verbose
+            )
+            results.append(
+                [
+                    exp,
+                    "On the same divisions, is Cut-Detector different from manual (t1-t0)?",
+                    condition,
+                    "-",
+                    "-",
+                    "Wilcoxon signed-rank",
+                    p_value,
+                    message,
+                ]
+            )
 
             # False negative
             printer.print("# False negative #")
             fn_cuts = Division.get_cuts(only_manual, div_type="manual")
             manual_cuts = Division.get_cuts(both, div_type="manual")
-            message, p_value = mannwhitneyu_difference(manual_cuts, fn_cuts, verbose=verbose)
-            results.append([exp, "Are FN cuts different from detected cuts (t1-t0)?", condition, "-", "-", "Mann-Whitney U", p_value, message])
+            message, p_value = mannwhitneyu_difference(
+                manual_cuts, fn_cuts, verbose=verbose
+            )
+            results.append(
+                [
+                    exp,
+                    "Are FN cuts different from detected cuts (manual, t1-t0)?",
+                    condition,
+                    "-",
+                    "-",
+                    "Mann-Whitney U",
+                    p_value,
+                    message,
+                ]
+            )
 
         if show or save_fig:
-                # Combine plots using make_subplots
-                fig = make_subplots(
-                    rows=3,
-                    cols=1,
-                    subplot_titles=(title_1, title_2, title_3),
-                    specs=[
-                        [{"type": "box"}],
-                        [{"type": "box"}],
-                        [{"type": "box"}],
-                    ],
-                )
+            # Combine plots using make_subplots
+            fig = make_subplots(
+                rows=3,
+                cols=1,
+                subplot_titles=(title_1, title_2, title_3),
+                specs=[
+                    [{"type": "box"}],
+                    [{"type": "box"}],
+                    [{"type": "box"}],
+                ],
+            )
 
-                # Add traces to the subplots
-                fig.add_trace(fig_1.data[0], row=1, col=1)
-                fig.add_trace(fig_1.data[1], row=1, col=1)
+            # Add traces to the subplots
+            fig.add_trace(fig_1.data[0], row=1, col=1)
+            fig.add_trace(fig_1.data[1], row=1, col=1)
 
-                fig.add_trace(fig_2.data[0], row=2, col=1)
-                fig.add_trace(fig_2.data[1], row=2, col=1)
+            fig.add_trace(fig_2.data[0], row=2, col=1)
+            fig.add_trace(fig_2.data[1], row=2, col=1)
 
-                fig.add_trace(fig_3.data[0], row=3, col=1)
-                fig.add_trace(fig_3.data[1], row=3, col=1)
+            fig.add_trace(fig_3.data[0], row=3, col=1)
+            fig.add_trace(fig_3.data[1], row=3, col=1)
 
-                # Update layout for better appearance
-                fig.update_layout(height=900, width=900, title_text=numbers_summary)
+            # Update layout for better appearance
+            fig.update_layout(
+                height=900, width=900, title_text=numbers_summary
+            )
 
-                # Show the figure
-                if show:
-                    fig.show()
-                if save_fig:
-                    assert save_folder
-                    fig.write_html(
-                        os.path.join(save_folder, f"condition_{condition}_{hour_date_string}.html")
+            # Show the figure
+            if show:
+                fig.show()
+            if save_fig:
+                assert save_folder
+                fig.write_html(
+                    os.path.join(
+                        save_folder,
+                        f"condition_{condition}_{hour_date_string}.html",
                     )
+                )
 
     for exp in experiments_set:
 
@@ -233,8 +344,10 @@ def perform_distribution_comparison(
         cd_control = control_divisions[0] + control_divisions[2]
         manual_control = control_divisions[1] + control_divisions[2]
         control_cd_cuts = Division.get_cuts(cd_control, div_type="cd")
-        control_manual_cuts = Division.get_cuts(manual_control, div_type="manual")
-        
+        control_manual_cuts = Division.get_cuts(
+            manual_control, div_type="manual"
+        )
+
         for condition in conditions_vs_control:
             printer.print(f"\n### Condition {condition} vs Control ###")
             condition_divisions = Division.split_divisions(
@@ -250,7 +363,10 @@ def perform_distribution_comparison(
                 cd_condition = condition_divisions[0] + condition_divisions[2]
                 condition_cuts = Division.get_cuts(cd_condition, div_type="cd")
                 title_1, p_value = mannwhitneyu_equivalence(
-                    control_cd_cuts, condition_cuts, delta=delta, verbose=verbose
+                    control_cd_cuts,
+                    condition_cuts,
+                    delta=delta,
+                    verbose=verbose,
                 )
                 fig_1 = create_plot(
                     [control_cd_cuts, condition_cuts],
@@ -258,16 +374,32 @@ def perform_distribution_comparison(
                     "",
                     mode=mode,
                 )
-                results.append([exp, "Is control equivalent to condition (Cut-Detector, t1-t0)?", "Control", condition, delta, "TOST Mann-Withney U", p_value, title_1])
+                results.append(
+                    [
+                        exp,
+                        "Is control equivalent to condition (Cut-Detector, t1-t0)?",
+                        "Control",
+                        condition,
+                        delta,
+                        "TOST Mann-Withney U",
+                        p_value,
+                        title_1,
+                    ]
+                )
 
                 # Compare Manual
                 printer.print("# Manual #")
-                manual_condition = condition_divisions[1] + condition_divisions[2]
+                manual_condition = (
+                    condition_divisions[1] + condition_divisions[2]
+                )
                 condition_cuts = Division.get_cuts(
                     manual_condition, div_type="manual"
                 )
                 title_2, p_value = mannwhitneyu_equivalence(
-                    control_manual_cuts, condition_cuts, delta=delta, verbose=verbose
+                    control_manual_cuts,
+                    condition_cuts,
+                    delta=delta,
+                    verbose=verbose,
                 )
                 fig_2 = create_plot(
                     [control_manual_cuts, condition_cuts],
@@ -275,7 +407,18 @@ def perform_distribution_comparison(
                     "",
                     mode=mode,
                 )
-                results.append([exp, "Is control equivalent to condition (manual, t1-t0)?", "Control", condition, delta, "TOST Mann-Withney U", p_value, title_2])
+                results.append(
+                    [
+                        exp,
+                        "Is control equivalent to condition (manual, t1-t0)?",
+                        "Control",
+                        condition,
+                        delta,
+                        "TOST Mann-Withney U",
+                        p_value,
+                        title_2,
+                    ]
+                )
 
             printer.print("\n### Difference ###")
 
@@ -283,8 +426,21 @@ def perform_distribution_comparison(
             printer.print("# Cut Detector #")
             cd_condition = condition_divisions[0] + condition_divisions[2]
             condition_cuts = Division.get_cuts(cd_condition, div_type="cd")
-            message, p_value = mannwhitneyu_difference(control_cd_cuts, condition_cuts, verbose=verbose)
-            results.append([exp, "Is control different from condition (Cut-Detector, t1-t0)?", "Control", condition, "-", "TOST Mann-Withney U", p_value, message])
+            message, p_value = mannwhitneyu_difference(
+                control_cd_cuts, condition_cuts, verbose=verbose
+            )
+            results.append(
+                [
+                    exp,
+                    "Is control different from condition (Cut-Detector, t1-t0)?",
+                    "Control",
+                    condition,
+                    "-",
+                    "TOST Mann-Withney U",
+                    p_value,
+                    message,
+                ]
+            )
 
             # Compare Manual
             printer.print("# Manual #")
@@ -295,7 +451,18 @@ def perform_distribution_comparison(
             message, p_value = mannwhitneyu_difference(
                 control_manual_cuts, condition_cuts, verbose=verbose
             )
-            results.append([exp, "Is control different from condition (manual, t1-t0)?", "Control", condition, "-", "TOST Mann-Withney U", p_value, message])
+            results.append(
+                [
+                    exp,
+                    "Is control different from condition (manual, t1-t0)?",
+                    "Control",
+                    condition,
+                    "-",
+                    "TOST Mann-Withney U",
+                    p_value,
+                    message,
+                ]
+            )
 
         if show or save_fig:
 
@@ -326,9 +493,16 @@ def perform_distribution_comparison(
             if save_fig:
                 assert save_folder
                 fig.write_html(
-                    os.path.join(save_folder, f"control_vs_condition_{condition}_{hour_date_string}.html")
+                    os.path.join(
+                        save_folder,
+                        f"control_vs_condition_{condition}_{hour_date_string}.html",
+                    )
                 )
 
     # Save results as csv
     results_df = pd.DataFrame(results, columns=results_header)
-    results_df.to_csv(os.path.join(save_folder, f"results_{hour_date_string}.csv"), index=False, sep=";")
+    results_df.to_csv(
+        os.path.join(save_folder, f"results_{hour_date_string}.csv"),
+        index=False,
+        sep=";",
+    )
