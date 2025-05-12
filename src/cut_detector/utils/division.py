@@ -1,6 +1,7 @@
 import csv
 import os
 
+
 def is_valid_frame(frame):
     """Check if the frame is a valid."""
     try:
@@ -8,6 +9,7 @@ def is_valid_frame(frame):
         return -1 <= frame <= 500  # Assuming a maximum of 500 frames
     except ValueError:
         return False
+
 
 def is_valid_position(position):
     """Check if the position is valid."""
@@ -27,25 +29,41 @@ class Division:
         if len(csv_line) == 22:  # Cut Detector
 
             self.cd_metaphase = csv_line[9]
-            assert is_valid_frame(self.cd_metaphase), f"Invalid cd_metaphase frame: {self.cd_metaphase}"
+            assert is_valid_frame(
+                self.cd_metaphase
+            ), f"Invalid cd_metaphase frame: {self.cd_metaphase}"
             self.cd_cytokinesis = csv_line[10]
-            assert is_valid_frame(self.cd_cytokinesis), f"Invalid cd_cytokinesis frame: {self.cd_cytokinesis}"
+            assert is_valid_frame(
+                self.cd_cytokinesis
+            ), f"Invalid cd_cytokinesis frame: {self.cd_cytokinesis}"
             self.cd_first = int(csv_line[11])
 
             self.cd_position_x = csv_line[13]
-            assert is_valid_position(self.cd_position_x), f"Invalid cd_position_x: {self.cd_position_x}"
+            assert is_valid_position(
+                self.cd_position_x
+            ), f"Invalid cd_position_x: {self.cd_position_x}"
             self.cd_position_y = csv_line[14]
-            assert is_valid_position(self.cd_position_y), f"Invalid cd_position_y: {self.cd_position_y}"
+            assert is_valid_position(
+                self.cd_position_y
+            ), f"Invalid cd_position_y: {self.cd_position_y}"
 
             self.cytokinesis = csv_line[18]
-            assert is_valid_frame(self.cytokinesis), f"Invalid cytokinesis frame: {self.cytokinesis}"
+            assert is_valid_frame(
+                self.cytokinesis
+            ), f"Invalid cytokinesis frame: {self.cytokinesis}"
             self.first = csv_line[19]
-            assert is_valid_frame(self.first), f"Invalid first frame: {self.first}"
+            assert is_valid_frame(
+                self.first
+            ), f"Invalid first frame: {self.first}"
 
             self.position_x = csv_line[20]
-            assert is_valid_position(self.position_x), f"Invalid position_x: {self.position_x}"
+            assert is_valid_position(
+                self.position_x
+            ), f"Invalid position_x: {self.position_x}"
             self.position_y = csv_line[21]
-            assert is_valid_position(self.position_y), f"Invalid position_y: {self.position_y}"
+            assert is_valid_position(
+                self.position_y
+            ), f"Invalid position_y: {self.position_y}"
 
         elif len(csv_line) == 6:  # Manual
 
@@ -57,17 +75,27 @@ class Division:
             self.cd_position_y = -1
 
             self.cytokinesis = csv_line[2]
-            assert is_valid_frame(self.cytokinesis), f"Invalid cytokinesis frame: {self.cytokinesis}"
+            assert is_valid_frame(
+                self.cytokinesis
+            ), f"Invalid cytokinesis frame: {self.cytokinesis}"
             self.first = csv_line[3]
-            assert is_valid_frame(self.first), f"Invalid first frame: {self.first}"
+            assert is_valid_frame(
+                self.first
+            ), f"Invalid first frame: {self.first}"
 
             self.position_x = csv_line[4]
-            assert is_valid_position(self.position_x), f"Invalid position_x: {self.position_x}"
+            assert is_valid_position(
+                self.position_x
+            ), f"Invalid position_x: {self.position_x}"
             self.position_y = csv_line[5]
-            assert is_valid_position(self.position_y), f"Invalid position_y: {self.position_y}"
+            assert is_valid_position(
+                self.position_y
+            ), f"Invalid position_y: {self.position_y}"
 
         elif len(csv_line) == 7:  # Old manual
-            raise ValueError(f"Seems to have additional column 'id' in manual csv file. Deprecated, please remove.")
+            raise ValueError(
+                f"Seems to have additional column 'id' in manual csv file. Deprecated, please remove."
+            )
 
         else:
             raise ValueError(f"Invalid csv_line length: {len(csv_line)}")
@@ -89,7 +117,10 @@ class Division:
     @staticmethod
     def split_divisions(divisions, condition, exp):
         condition_divisions = [
-            division for division in divisions if condition in division.video and exp in division.exp
+            division
+            for division in divisions
+            if condition in division.video
+            and (exp in division.exp or exp == "All EXP")
         ]
 
         only_cd, only_manual, both = [], [], []
@@ -118,7 +149,7 @@ class Division:
             cuts.append(cut)
 
         return cuts
-    
+
     @staticmethod
     def get_onsets(divisions, div_type, time_resolution=10):
         onsets = []
@@ -126,13 +157,13 @@ class Division:
 
         for division in divisions:
             if div_type == "cd":
-                onset =  division.cd_cytokinesis * time_resolution
+                onset = division.cd_cytokinesis * time_resolution
             else:
                 onset = division.cytokinesis * time_resolution
             onsets.append(onset)
 
         return onsets
-    
+
     @staticmethod
     def get_cut_time(divisions, div_type, time_resolution=10):
         frames = []
@@ -151,7 +182,9 @@ class Division:
         return self.cd_metaphase != -1 and self.cytokinesis != -1
 
     @staticmethod
-    def generate_csv_summary(divisions, save_folder, hour_date_string, time_resolution=10):
+    def generate_csv_summary(
+        divisions, save_folder, hour_date_string, time_resolution=10
+    ):
         csv_lines = [
             [
                 "Experiment",
@@ -198,7 +231,9 @@ class Division:
                 csv_line.extend(["-", "-", "-", "-", "-"])
             csv_lines.append(csv_line)
 
-        csv_path = os.path.join(save_folder, f"divisions_summary_{hour_date_string}.csv")
+        csv_path = os.path.join(
+            save_folder, f"divisions_summary_{hour_date_string}.csv"
+        )
         with open(csv_path, "w", newline="") as f:
             writer = csv.writer(f, delimiter=";")
             for row in csv_lines:
