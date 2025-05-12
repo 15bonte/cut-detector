@@ -27,7 +27,9 @@ from .widget_functions.save_results import (
 from .widget_functions.divisions_matching import (
     perform_divisions_matching,
 )
-from .widget_functions.distribution_comparison import perform_distribution_comparison
+from .widget_functions.distribution_comparison import (
+    perform_distribution_comparison,
+)
 
 
 def video_whole_process(
@@ -540,6 +542,7 @@ def divisions_matching(
         maximum_position_distance,
     )
 
+
 @magic_factory(
     call_button="Compare distributions",
     layout="vertical",
@@ -570,17 +573,17 @@ def divisions_matching(
         widget_type="ListEdit",
         label="List of conditions to compare with manual annotations: ",
         value=["Control"],  # Default value
-    ),   
+    ),
     conditions_vs_control=dict(
         widget_type="ListEdit",
         label="List of conditions to compare to control: ",
         value=[],  # Default value
-    ),   
+    ),
     deltas=dict(
         widget_type="ListEdit",
-        label="List of deltas to consider for equivalence tests: ",
+        label="List of deltas to consider for equivalence tests (minutes): ",
         value=[10, 20, 30, 40],  # Default value
-    ),   
+    ),
 )
 def distribution_comparison(
     requirements: str,
@@ -599,5 +602,5 @@ def distribution_comparison(
         max_cytokinesis_frame,
         conditions_vs_manual,
         conditions_vs_control,
-        deltas
+        deltas,
     )

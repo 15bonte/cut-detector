@@ -2,9 +2,11 @@ import numpy as np
 from scipy.stats import wilcoxon, mannwhitneyu
 import plotly.graph_objs as go
 
+
 def print_v(txt, verbose):
     if verbose:
         print(txt)
+
 
 def wilcoxon_equivalence(data1, data2, delta, verbose):
     """Perform Wilcoxon signed-rank test for equivalence of two paired samples"""
@@ -15,7 +17,7 @@ def wilcoxon_equivalence(data1, data2, delta, verbose):
     _, p_value_2 = wilcoxon(data1, data2 + delta, alternative="less")
     p_value = max(p_value_1, p_value_2)
     if p_value < 0.05:
-        message = f"Wilcoxon signed-rank test: p-value = {round(p_value, 3)} -> Distribution are {delta} frames-close "
+        message = f"Wilcoxon signed-rank test: p-value = {round(p_value, 3)} -> Distribution are {delta} minutes-close "
     else:
         message = f"Wilcoxon signed-rank test: p-value = {round(p_value, 3)} -> No conclusion"
     print_v(message, verbose)
@@ -29,7 +31,7 @@ def mannwhitneyu_equivalence(data1, data2, delta, verbose):
     _, p_value_2 = mannwhitneyu(data1, data2 + delta, alternative="less")
     p_value = max(p_value_1, p_value_2)
     if p_value < 0.05:
-        message = f"Mann-Withney U test: p-value = {round(p_value, 3)} -> Distribution are {delta} frames-close "
+        message = f"Mann-Withney U test: p-value = {round(p_value, 3)} -> Distribution are {delta} minutes-close "
     else:
         message = f"Mann-Withney U test: p-value = {round(p_value, 3)} -> No conclusion"
     print_v(message, verbose)
@@ -44,6 +46,7 @@ def mannwhitneyu_difference(data1, data2, verbose):
         message = f"Mann-Withney U test: p-value = {round(p_value, 3)} -> No conclusion"
     print_v(message, verbose)
     return message, p_value
+
 
 def wilcoxon_difference(data1, data2, verbose):
     _, p_value = wilcoxon(data1, data2)
