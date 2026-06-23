@@ -7,7 +7,8 @@
 [![codecov](https://codecov.io/gh/15bonte/cut-detector/branch/main/graph/badge.svg)](https://codecov.io/gh/15bonte/cut-detector)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/cut-detector)](https://napari-hub.org/plugins/cut-detector)
 
-Automatic micro-tubule cut detector.
+Automatic micro-tubule cut detector. Code associated to the paper "Cut-Detector: A Tool for Automated Temporal Analysis of Late Cytokinetic Events" available from [bioRxiv].
+
 
 https://github.com/user-attachments/assets/2af2e1a6-adf9-4d63-a353-e190c4814d83
 
@@ -121,6 +122,21 @@ Distributed under the terms of the [BSD-3] license,
 
 If you encounter any problems, please [file an issue] along with a detailed description.
 
+## Citation
+
+If you found our work useful, please consider citing:
+
+```
+@article{bonte2025cut,
+  title={Cut-Detector: A Tool for Automated Temporal Analysis of Late Cytokinetic Events},
+  author={Bonte, Thomas and Dubois, Lucas and Gagna, Paul and Dibsy, Rayane and Petrovi{\'c}, An{\dj}ela and Advedissian, Tamara and Serres, Murielle and Cuvelier, Fr{\'e}d{\'e}rique and Crouigneau, Marie and Sassoon, Nathalie and others},
+  journal={bioRxiv},
+  pages={2025--06},
+  year={2025},
+  publisher={Cold Spring Harbor Laboratory}
+}
+```
+
 [napari]: https://github.com/napari/napari
 [Cookiecutter]: https://github.com/audreyr/cookiecutter
 [@napari]: https://github.com/napari
@@ -141,3 +157,4 @@ If you encounter any problems, please [file an issue] along with a detailed desc
 [Fiji]: https://imagej.net/software/fiji/
 [NVIDIA]: https://www.nvidia.com/Download/index.aspx?lang=en-us
 [conda]: https://docs.conda.io/en/latest/
+[bioRxiv]: https://www.biorxiv.org/content/10.1101/2025.06.06.658046v1
