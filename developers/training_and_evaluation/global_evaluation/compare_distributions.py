@@ -1,23 +1,25 @@
 import argparse
 
-from cut_detector.widget_functions.distribution_comparison import perform_distribution_comparison
+from cut_detector.widget_functions.distribution_comparison import (
+    perform_distribution_comparison,
+)
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--matched_csv_file",
-        default=r"C:\Users\messa\OneDrive\Thomas\OneDrive\Documents\Doctorat\Pasteur\Annotations Pasteur final\results - CutD-ALL_matched.csv",
+        default=r"C:\Users\thoma\OneDrive\Documents\Doctorat\Pasteur\Annotations Pasteur final\Not merged\results EXP1- CutD-ALL_matchedALIX.csv",
         help="Matched CSV file",
     )
     parser.add_argument(
         "--manual_csv_file",
-        default=r"C:\Users\messa\OneDrive\Thomas\OneDrive\Documents\Doctorat\Pasteur\Annotations Pasteur final\Manual annotation - Cut_D auto comparaison ALL.csv",
+        default=r"C:\Users\thoma\OneDrive\Documents\Doctorat\Pasteur\Annotations Pasteur final\Not merged\Manual annotation - Cut_D auto comparaison ALLEXP1ALIX.csv",
         help="Manual CSV file",
     )
     parser.add_argument(
         "--save_folder",
-        default=r"C:\Users\messa\OneDrive\Thomas\OneDrive\Documents\Doctorat\Pasteur\Résultats tests statistiques",
+        default=r"C:\Users\thoma\OneDrive\Documents\Doctorat\Pasteur\Résultats tests statistiques",
         help="Path to save the plots",
     )
     parser.add_argument(
@@ -25,14 +27,14 @@ if __name__ == "__main__":
         nargs="*",
         type=str,
         help="List of conditions to compare with manual annotations, among Control, MICAL1, CEP55, Spastin",
-        default=["Control", "MICAL1", "CEP55"],
+        default=["Control", "ALIX"],
     )
     parser.add_argument(
         "--conditions_vs_control",
         nargs="*",
         type=str,
         help="List of conditions to compare to control, among MICAL1, CEP55, Spastin",
-        default=["MICAL1", "CEP55"],
+        default=["ALIX"],
     )
     parser.add_argument(
         "--deltas",
@@ -64,5 +66,5 @@ if __name__ == "__main__":
         mode="cumulative",  # cumulative or box
         show=False,
         save_fig=False,
-        verbose=args.verbose
+        verbose=args.verbose,
     )
