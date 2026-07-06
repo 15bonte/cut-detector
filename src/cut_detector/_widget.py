@@ -92,20 +92,20 @@ def video_whole_process(
         video_name,
         spots_dir_name,
         tracks_dir_name,
+        params,
         mitoses_dir_name,
-        params=params,
     )
     perform_mid_body_detection(
         video,
         video_name,
         mitoses_dir_name,
         tracks_dir_name,
+        params,
         movies_save_dir if save_check_box else None,
         parallel_detection=True,
-        params=params,
     )
     perform_mt_cut_detection(
-        video, video_name, mitoses_dir_name, params=params
+        video, video_name, mitoses_dir_name, params
     )
     save_galleries(video, video_name, mitoses_dir_name, results_save_dir)
 
@@ -147,6 +147,11 @@ def video_whole_process(
         text="Display segmentation and tracking",
         value=False,
     ),
+    pixel_size=dict(
+        widget_type="SpinBox",
+        label="Pixel size (nm): ",
+        value=225,  # Default value
+    ),
 )
 def whole_process(
     img_layer: "napari.layers.Image",
@@ -158,11 +163,12 @@ def whole_process(
     results_save_dir: str,
     debug_mode_check_box: bool,
     display_check_box: bool,
+    pixel_size: float,
 ):
 
     start = time.time()
 
-    params = Parameters()
+    params = Parameters(spatial_resolution=pixel_size)
 
     # Create temporary folders
     spots_dir = tempfile.TemporaryDirectory()
@@ -192,6 +198,7 @@ def whole_process(
     if display_check_box:
         perform_results_saving(
             mitoses_dir.name,
+            params,
             save_dir=results_save_dir,
             video=img_layer.data,
             viewer=viewer,
@@ -201,6 +208,7 @@ def whole_process(
     else:
         perform_results_saving(
             mitoses_dir.name,
+            params,
             save_dir=results_save_dir,
             video=img_layer.data,
             viewer=viewer,
@@ -292,7 +300,7 @@ def whole_process_folder(
         )
 
     # Results saving
-    perform_results_saving(mitoses_dir.name, save_dir=results_save_dir)
+    perform_results_saving(mitoses_dir.name, params, save_dir=results_save_dir)
 
     # Delete temporary folders
     spots_dir.cleanup()
@@ -379,8 +387,8 @@ def mitosis_track_generation(
         img_layer.name,
         spots_load_dir,
         tracks_load_dir,
+        params,
         mitoses_save_dir,
-        params=params,
     )
 
 
@@ -421,9 +429,9 @@ def mid_body_detection(
         img_layer.name,
         exported_mitoses_dir,
         exported_tracks_dir,
+        params,
         movies_save_dir if save_check_box else None,
         parallel_detection=True,
-        params=params,
     )
 
 
@@ -445,7 +453,7 @@ def micro_tubules_cut_detection(
         raw_video,
         img_layer.name,
         exported_mitoses_dir,
-        params=params,
+        params,
     )
 
 
@@ -492,11 +500,11 @@ def results_saving(
 
     perform_results_saving(
         exported_mitoses_dir,
+        params,
         save_dir=results_save_dir,
         video=img_layer.data,
         viewer=viewer,
         cell_tracks=cell_tracks,
-        params=params,
     )
 
 

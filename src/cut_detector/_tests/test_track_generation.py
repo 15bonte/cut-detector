@@ -3,6 +3,7 @@ from skimage import io
 
 from cut_detector._widget import mitosis_track_generation
 from cut_detector.data.tools import get_data_path
+from cut_detector.utils.parameters import Parameters
 from cut_detector.widget_functions.mitosis_track_generation import (
     perform_mitosis_track_generation,
 )
@@ -27,6 +28,7 @@ def test_track_generation():
         "example_video",
         get_data_path("spots"),
         get_data_path("tracks"),
+        Parameters(),
         save=False,
     )
 

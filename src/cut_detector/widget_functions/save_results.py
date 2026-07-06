@@ -16,6 +16,7 @@ from ..utils.mitosis_track import MitosisTrack
 
 def perform_results_saving(
     exported_mitoses_dir: str,
+    params: Parameters,
     show: bool = False,
     save_dir: Optional[str] = None,
     verbose: bool = False,
@@ -23,16 +24,15 @@ def perform_results_saving(
     viewer: Optional["napari.Viewer"] = None,
     segmentation_results: Optional[np.ndarray] = None,
     cell_tracks: Optional[list[CellTrack]] = None,
-    params=Parameters(),
 ) -> None:
     """Perform a series of tests, prints and plots following process.
 
     Parameters
     ----------
-    video : np.ndarray
-        Video. TYXC.
     exported_mitoses_dir : str
         Directory where mitosis tracks are saved.
+    params : Parameters
+        Video parameters.
     show : bool, optional
         Show plots, by default False.
     save_dir : Optional[str], optional

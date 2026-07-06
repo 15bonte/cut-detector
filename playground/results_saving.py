@@ -6,6 +6,7 @@ from typing import Optional
 from cnn_framework.utils.readers.tiff_reader import TiffReader
 
 from cut_detector.data.tools import get_data_path
+from cut_detector.utils.parameters import Parameters
 from cut_detector.utils.tools import re_organize_channels
 from cut_detector.widget_functions.save_results import perform_results_saving
 
@@ -33,6 +34,7 @@ def main(
 
     perform_results_saving(
         mitosis_path,
+        Parameters(),
         show=False,
         save_dir=results_dir,
         verbose=True,

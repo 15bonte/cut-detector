@@ -28,7 +28,7 @@ class MtCutDetectionFactory:
 
     def __init__(
         self,
-        params=Parameters(),
+        params: Parameters,
         margin=50,
     ) -> None:
         self.params = params

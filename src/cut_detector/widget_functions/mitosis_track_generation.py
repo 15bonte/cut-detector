@@ -19,13 +19,13 @@ def perform_mitosis_track_generation(
     video_name: str,
     spots_dir: str,
     tracks_dir: str,
+    params: Parameters,
     mitoses_dir: Optional[str] = None,
     metaphase_model_path: Optional[str] = None,
     hmm_metaphase_parameters_file: Optional[str] = None,
     predictions_file: Optional[str] = None,
     only_predictions_update: bool = False,
     save: bool = True,
-    params=Parameters(),
 ) -> tuple[Union[list[MitosisTrack], None], list[CellSpot], list[CellTrack]]:
     """Perform mitosis track generation.
 
@@ -39,6 +39,8 @@ def perform_mitosis_track_generation(
         Directory where spots are saved.
     tracks_dir : str
         Directory where tracks are saved.
+    params: Parameters
+        Video parameters.
     mitoses_dir : Optional[str], optional
         Directory where mitoses are saved, by default None.
     metaphase_model_path : Optional[str], optional
@@ -51,8 +53,6 @@ def perform_mitosis_track_generation(
         Only update predictions, by default False.
     save : bool, optional
         Save, by default True.
-    params: Parameters, optional
-        Video parameters, by default Parameters().
 
     Returns
     -------

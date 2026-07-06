@@ -6,6 +6,7 @@ from cnn_framework.utils.tools import save_tiff
 from cnn_framework.utils.readers.tiff_reader import TiffReader
 
 
+from cut_detector.utils.parameters import Parameters
 from developers.ground_truth_generation.bridges.semi_images_generation.micro_tubules_augmentations_advanced import (
     MicroTubulesAugmentationAdvanced,
 )
@@ -22,7 +23,8 @@ from developers.training_and_evaluation.binary_bridges_cnn.model_params import (
 
 def main(params, save_dir, debug_plot, circle_radius=11, diff_radius=4.54):
 
-    factory = MtCutDetectionFactoryAdvanced()
+    params = Parameters()
+    factory = MtCutDetectionFactoryAdvanced(params)
     file_paths = os.listdir(params.data_dir)
 
     # Create the save directory if it does not exist

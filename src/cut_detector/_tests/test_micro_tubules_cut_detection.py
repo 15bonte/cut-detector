@@ -3,6 +3,7 @@ from skimage import io
 
 from cut_detector._widget import micro_tubules_cut_detection
 from cut_detector.data.tools import get_data_path
+from cut_detector.utils.parameters import Parameters
 from cut_detector.widget_functions.mt_cut_detection import (
     perform_mt_cut_detection,
 )
@@ -25,6 +26,7 @@ def test_micro_tubules_cut_detection():
         video,
         "example_video",
         get_data_path("mitoses"),
+        Parameters(),
         save=False,
     )
 

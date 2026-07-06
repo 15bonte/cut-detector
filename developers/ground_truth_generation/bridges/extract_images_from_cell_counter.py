@@ -1,6 +1,7 @@
 import os
 import xmltodict
 from bigfish import stack
+from cut_detector.utils.parameters import Parameters
 from munch import Munch
 from cnn_framework.utils.tools import save_tiff
 
@@ -29,7 +30,8 @@ def extract_bridge_images(
     save_dir : str
         Path to the folder where to save the images.
     """
-    margin = MtCutDetectionFactory().margin
+    params = Parameters()
+    margin = MtCutDetectionFactory(params).margin
 
     # Create save_dir if not exists
     if not os.path.exists(save_dir):
