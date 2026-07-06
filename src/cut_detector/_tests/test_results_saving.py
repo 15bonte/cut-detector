@@ -6,6 +6,10 @@ from cut_detector.data.tools import get_data_path
 from cut_detector.utils.parameters import Parameters
 from cut_detector.widget_functions.save_results import perform_results_saving
 
+import pytest
+
+pytestmark = pytest.mark.requires_torch
+
 
 def test_open_results_saving_widget():
     """Test opening the results saving widget."""

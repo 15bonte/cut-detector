@@ -5,12 +5,11 @@
 [![Python Version](https://img.shields.io/pypi/pyversions/cut-detector.svg?color=green)](https://python.org)
 [![codecov](https://codecov.io/gh/15bonte/cut-detector/branch/main/graph/badge.svg)](https://codecov.io/gh/15bonte/cut-detector)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/cut-detector)](https://napari-hub.org/plugins/cut-detector)
-<!-- [![tests](https://github.com/15bonte/cut-detector/workflows/tests/badge.svg)](https://github.com/15bonte/cut-detector/actions) -->
+[![tests](https://github.com/15bonte/cut-detector/workflows/tests/badge.svg)](https://github.com/15bonte/cut-detector/actions)
 
-Automatic micro-tubule cut detector. 
+Automatic micro-tubule cut detector.
 
 Code associated to the paper "Cut-Detector: A Tool for Automated Temporal Analysis of Late Cytokinetic Events" available from [bioRxiv].
-
 
 https://github.com/user-attachments/assets/2af2e1a6-adf9-4d63-a353-e190c4814d83
 
