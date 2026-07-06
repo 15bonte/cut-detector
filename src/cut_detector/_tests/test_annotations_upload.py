@@ -1,6 +1,8 @@
 from cut_detector.data.tools import get_data_path
 from cut_detector.utils.tools import upload_annotations_folder
 
+import pytest
+pytestmark = pytest.mark.requires_torch
 
 def test_annotations_upload():
     """Test manual CellCounter annotations upload."""

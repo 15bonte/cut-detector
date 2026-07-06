@@ -10,6 +10,10 @@ write_to = "src/cut_detector/_version.py"
 line-length = 79
 target-version = ['py39', 'py310']
 
+[tool.pytest.ini_options]
+markers = [
+  "requires_torch: tests that import/use PyTorch",
+]
 
 [tool.ruff]
 line-length = 79

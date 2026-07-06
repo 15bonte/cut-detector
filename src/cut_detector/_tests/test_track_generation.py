@@ -7,6 +7,8 @@ from cut_detector.widget_functions.mitosis_track_generation import (
     perform_mitosis_track_generation,
 )
 
+import pytest
+pytestmark = pytest.mark.requires_torch
 
 def test_open_track_generation_widget():
     """Test opening the track generation widget."""

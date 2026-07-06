@@ -7,6 +7,9 @@ from cut_detector.widget_functions.segmentation_tracking import (
     perform_tracking,
 )
 
+import pytest
+pytestmark = pytest.mark.requires_torch
+
 
 def test_open_track_generation_widget():
     """Test opening the track generation widget."""

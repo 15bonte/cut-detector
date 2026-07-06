@@ -7,6 +7,8 @@ from cut_detector.widget_functions.mt_cut_detection import (
     perform_mt_cut_detection,
 )
 
+import pytest
+pytestmark = pytest.mark.requires_torch
 
 def test_open_micro_tubules_cut_detection_widget():
     """Test opening the micro tubules cut detection widget."""

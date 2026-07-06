@@ -22,8 +22,25 @@ jobs:
     runs-on: ${{ matrix.platform }}
     strategy:
       matrix:
-        platform: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.9", "3.10"]
+        include:
+          - platform: ubuntu-latest
+            python-version: "3.9"
+            run_torch_tests: true
+          - platform: ubuntu-latest
+            python-version: "3.10"
+            run_torch_tests: true
+          - platform: macos-latest
+            python-version: "3.9"
+            run_torch_tests: true
+          - platform: macos-latest
+            python-version: "3.10"
+            run_torch_tests: true
+          - platform: windows-latest
+            python-version: "3.9"
+            run_torch_tests: false
+          - platform: windows-latest
+            python-version: "3.10"
+            run_torch_tests: false
 
     steps:
       - uses: actions/checkout@v3

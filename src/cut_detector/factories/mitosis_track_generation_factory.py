@@ -2,7 +2,6 @@ import json
 import os
 import numpy as np
 
-from ..utils.parameters import Parameters
 from ..utils.metaphase_sequence import MetaphaseSequence
 from ..utils.cell_track import CellTrack
 from ..utils.tools import perform_cnn_inference

@@ -1,5 +1,7 @@
 from cut_detector._widget import whole_process
 
+import pytest
+pytestmark = pytest.mark.requires_torch
 
 def test_open_whole_process_widget():
     """Test opening the whole process widget."""
