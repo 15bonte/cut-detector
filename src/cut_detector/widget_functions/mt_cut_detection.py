@@ -13,12 +13,8 @@ def perform_mt_cut_detection(
     raw_video: np.ndarray,
     video_name: str,
     exported_mitoses_dir: str,
-    hmm_bridges_parameters_file: Optional[str] = os.path.join(
-        get_model_path("hmm"), "hmm_bridges_parameters.npz"
-    ),
-    bridges_mt_cnn_model_path: Optional[str] = get_model_path(
-        "bridges_mt_cnn"
-    ),
+    hmm_bridges_parameters_file: Optional[str] = None,
+    bridges_mt_cnn_model_path: Optional[str] = None,
     save: bool = True,
     params=Parameters(),
 ) -> list[MitosisTrack]:
@@ -41,6 +37,13 @@ def perform_mt_cut_detection(
     params: Parameters, optional
         Video parameters, by default Parameters().
     """
+    if hmm_bridges_parameters_file is None:
+        hmm_bridges_parameters_file = os.path.join(
+            get_model_path("hmm"), "hmm_bridges_parameters.npz"
+        )
+    if bridges_mt_cnn_model_path is None:
+        bridges_mt_cnn_model_path = get_model_path("bridges_mt_cnn")
+
     print("\n### MICRO-TUBULES CUT DETECTION ###")
 
     mitosis_tracks: list[MitosisTrack] = []

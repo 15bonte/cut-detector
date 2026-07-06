@@ -42,12 +42,12 @@ def perform_tracking(
         List of cell spots, list of cell tracks, segmentation results.
     """
 
-    print("### SEGMENTATION & TRACKING ###")
-
     if model_path is None:
         model_path = os.path.join(
             get_model_path("segmentation"), "segmentation_model"
         )
+    
+    print("### SEGMENTATION & TRACKING ###")
 
     segmentation_tracking_factory = SegmentationTrackingFactory(model_path)
     # Swap dimensions from TYXC to TCYX

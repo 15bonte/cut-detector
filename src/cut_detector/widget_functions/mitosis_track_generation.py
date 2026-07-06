@@ -20,10 +20,8 @@ def perform_mitosis_track_generation(
     spots_dir: str,
     tracks_dir: str,
     mitoses_dir: Optional[str] = None,
-    metaphase_model_path: Optional[str] = get_model_path("metaphase_cnn"),
-    hmm_metaphase_parameters_file: Optional[str] = os.path.join(
-        get_model_path("hmm"), "hmm_metaphase_parameters.npz"
-    ),
+    metaphase_model_path: Optional[str] = None,
+    hmm_metaphase_parameters_file: Optional[str] = None,
     predictions_file: Optional[str] = None,
     only_predictions_update: bool = False,
     save: bool = True,
@@ -65,6 +63,13 @@ def perform_mitosis_track_generation(
     list[CellTrack]
         Cell tracks.
     """
+
+    if metaphase_model_path is None:
+        metaphase_model_path = get_model_path("metaphase_cnn")
+    if hmm_metaphase_parameters_file is None:
+        hmm_metaphase_parameters_file = os.path.join(
+            get_model_path("hmm"), "hmm_metaphase_parameters.npz"
+        )
 
     print("\n### CELL DIVISION DETECTION ###")
 
