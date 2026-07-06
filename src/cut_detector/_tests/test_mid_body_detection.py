@@ -7,6 +7,10 @@ from cut_detector.widget_functions.mid_body_detection import (
     perform_mid_body_detection,
 )
 
+import pytest
+
+pytestmark = pytest.mark.requires_torch
+
 
 def test_open_mid_body_detection_widget():
     """Test opening the mid body detection widget."""
