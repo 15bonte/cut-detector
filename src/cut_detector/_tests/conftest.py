@@ -7,16 +7,15 @@ def _is_torch_test_file(path: Path) -> bool:
     return "pytest.mark.requires_torch" in path.read_text(encoding="utf-8")
 
 
-def pytest_ignore_collect(path, config: pytest.Config) -> bool:
+def pytest_ignore_collect(collection_path: Path, config: pytest.Config) -> bool:
     run_torch = os.getenv("RUN_TORCH_TESTS", "1") == "1"
     if run_torch:
         return False
-    file_path = Path(str(path))
-    if file_path.suffix != ".py":
+    if collection_path.suffix != ".py":
         return False
-    if not file_path.name.startswith("test_"):
+    if not collection_path.name.startswith("test_"):
         return False
-    return _is_torch_test_file(file_path)
+    return _is_torch_test_file(collection_path)
 
 def pytest_collection_modifyitems(config, items):
     run_torch = os.getenv("RUN_TORCH_TESTS", "1") == "1"
