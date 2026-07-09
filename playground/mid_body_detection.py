@@ -7,6 +7,7 @@ from typing import Optional
 from cnn_framework.utils.readers.tiff_reader import TiffReader
 
 from cut_detector.data.tools import get_data_path
+from cut_detector.utils.parameters import Parameters
 from cut_detector.utils.tools import re_organize_channels
 from cut_detector.widget_functions.mid_body_detection import (
     perform_mid_body_detection,
@@ -48,6 +49,7 @@ def main(
         video_name,
         mitoses_path,
         tracks_path,
+        Parameters(),
         save=save,
         movies_save_dir=movies_save_dir,
     )

@@ -18,12 +18,12 @@ def perform_mid_body_detection(
     video_name: str,
     exported_mitoses_dir: str,
     exported_tracks_dir: str,
+    params: Parameters,
     movies_save_dir: Optional[str] = None,
     save: bool = True,
     parallel_detection: bool = False,
     detection_method: str = "difference_gaussian",
     target_mitosis_id: Optional[int] = None,
-    params=Parameters(),
 ) -> list[MitosisTrack]:
     """Perform mid-body detection on mitosis tracks.
 
@@ -37,6 +37,8 @@ def perform_mid_body_detection(
         Directory where mitosis tracks are saved.
     exported_tracks_dir : str
         Directory where cell tracks are saved.
+    params : Parameters
+        Video parameters.
     movies_save_dir : Optional[str], optional
         Directory where mitosis movies are saved, by default None.
     save : bool, optional
@@ -47,8 +49,6 @@ def perform_mid_body_detection(
         Detection method to use, by default "difference_gaussian".
     target_mitosis_id : Optional[int], optional
         Target mitosis id to perform mid-body detection on, by default None.
-    params : Parameters, optional
-        Video parameters.
 
     Returns
     -------

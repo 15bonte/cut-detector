@@ -116,7 +116,7 @@ class ResultsSavingFactory:
 
     def __init__(
         self,
-        params=Parameters(),
+        params: Parameters,
         max_frame=np.inf,
     ):
         self.params = params

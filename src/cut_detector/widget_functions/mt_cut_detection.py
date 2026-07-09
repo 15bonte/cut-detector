@@ -13,10 +13,10 @@ def perform_mt_cut_detection(
     raw_video: np.ndarray,
     video_name: str,
     exported_mitoses_dir: str,
+    params: Parameters,
     hmm_bridges_parameters_file: Optional[str] = None,
     bridges_mt_cnn_model_path: Optional[str] = None,
     save: bool = True,
-    params=Parameters(),
 ) -> list[MitosisTrack]:
     """Perform micro-tubules cut detection.
 
@@ -28,14 +28,14 @@ def perform_mt_cut_detection(
         Video name.
     exported_mitoses_dir : str
         Directory where mitosis tracks are saved.
+    params: Parameters
+        Video parameters.
     hmm_bridges_parameters_file : Optional[str], optional
         HMM bridges parameters file.
     bridges_mt_cnn_model_path : Optional[str], optional
         Bridges micro-tubules CNN model path.
     save : bool, optional
         Save updated mitosis tracks, by default True.
-    params: Parameters, optional
-        Video parameters, by default Parameters().
     """
     if hmm_bridges_parameters_file is None:
         hmm_bridges_parameters_file = os.path.join(

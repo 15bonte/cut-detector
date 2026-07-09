@@ -3,6 +3,7 @@ from skimage import io
 
 from cut_detector._widget import results_saving
 from cut_detector.data.tools import get_data_path
+from cut_detector.utils.parameters import Parameters
 from cut_detector.widget_functions.save_results import perform_results_saving
 
 import pytest
@@ -23,6 +24,7 @@ def test_results_saving():
 
     perform_results_saving(
         get_data_path("mitoses"),
+        Parameters(),
         show=False,
         save_dir=get_data_path("results"),
         verbose=True,

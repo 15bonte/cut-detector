@@ -13,6 +13,7 @@ from cut_detector.factories.mt_cut_detection_factory import (
     MtCutDetectionFactory,
 )
 from cut_detector.utils.mitosis_track import MitosisTrack
+from cut_detector.utils.parameters import Parameters
 from cut_detector.utils.tools import re_organize_channels
 
 
@@ -57,7 +58,8 @@ def main(
 
     image = re_organize_channels(image.squeeze())  # TYXC
 
-    factory = MtCutDetectionFactory()
+    params = Parameters()
+    factory = MtCutDetectionFactory(params)
 
     results = factory.update_mt_cut_detection(
         [mitosis_track],

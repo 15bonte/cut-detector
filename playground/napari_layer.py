@@ -8,6 +8,7 @@ from cut_detector.data.tools import get_data_path
 from cut_detector.factories.results_saving_factory import ResultsSavingFactory
 from cut_detector.utils.cell_track import CellTrack
 from cut_detector.utils.mitosis_track import MitosisTrack
+from cut_detector.utils.parameters import Parameters
 
 
 def main(
@@ -60,7 +61,8 @@ def main(
             mitosis_track = MitosisTrack.load(f)
         mitosis_tracks.append(mitosis_track)
 
-    ResultsSavingFactory().generate_napari_tracking_mask(
+    params = Parameters()
+    ResultsSavingFactory(params).generate_napari_tracking_mask(
         mitosis_tracks,
         video,
         viewer,

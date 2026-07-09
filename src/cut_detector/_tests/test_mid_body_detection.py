@@ -3,6 +3,7 @@ from skimage import io
 
 from cut_detector._widget import mid_body_detection
 from cut_detector.data.tools import get_data_path
+from cut_detector.utils.parameters import Parameters
 from cut_detector.widget_functions.mid_body_detection import (
     perform_mid_body_detection,
 )
@@ -29,6 +30,7 @@ def test_mid_body_detection():
         "example_video",
         get_data_path("mitoses"),
         get_data_path("tracks"),
+        params=Parameters(),
         save=False,
         parallel_detection=True,
     )
@@ -44,6 +46,7 @@ def test_mid_body_detection():
         "example_video",
         get_data_path("mitoses"),
         get_data_path("tracks"),
+        params=Parameters(),
         save=False,
         parallel_detection=False,
     )
@@ -52,6 +55,7 @@ def test_mid_body_detection():
         "example_video",
         get_data_path("mitoses"),
         get_data_path("tracks"),
+        params=Parameters(),
         save=False,
         parallel_detection=False,
         detection_method="h_maxima",
