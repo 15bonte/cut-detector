@@ -691,7 +691,7 @@ class MitosisTrack:
         Returns
         ----------
         bridge_images: list[np.array]
-            list of crops around the mid-body, TCYX
+            list of crops around the mid-body, CYX
         frames: list[int]
             list of frames corresponding to each crop
         """

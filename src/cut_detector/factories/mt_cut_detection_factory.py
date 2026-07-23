@@ -1,6 +1,8 @@
 import os
+from matplotlib import pyplot as plt
 import numpy as np
 from tqdm import tqdm
+from skimage.transform import resize
 
 from ..utils.parameters import Parameters
 from ..utils.mt_cut_detection.bridges_mt_model_manager import (
@@ -17,22 +19,22 @@ from ..utils.mitosis_track import MitosisTrack
 
 
 class MtCutDetectionFactory:
-    """
-    Class to detect first and second MT cut.
-
-    Parameters
-    ----------
-    margin : int
-        Number of pixels on each side of the midbody.
-    """
+    """Class to detect first and second MT cut."""
 
     def __init__(
         self,
         params: Parameters,
-        margin=50,
+        margin_nm: int = 50 * 225,
     ) -> None:
+        """
+        Parameters
+        ----------
+        margin_nm : int
+            Number of nanometers on each side of the midbody.
+            The default value is 50 * 225, which corresponds to 50 pixels in the original resolution of the video.
+        """
         self.params = params
-        self.margin = margin
+        self.margin_px = margin_nm // self.params.spatial_resolution
 
     def _is_bridges_classification_impossible(
         self, mitosis_track: MitosisTrack, video: np.ndarray
@@ -254,6 +256,7 @@ class MtCutDetectionFactory:
         mitosis_tracks: list[MitosisTrack],
         video: np.ndarray,
         bridges_mt_cnn_model_path: str,
+        model_input_size: tuple[int, int] = (100, 100),
     ) -> dict[str, dict]:
         """
         Classify bridges using a CNN model.
@@ -266,6 +269,8 @@ class MtCutDetectionFactory:
             Video of the mitosis tracks. TYXC.
         bridges_mt_cnn_model_path : str
             Path to the bridges CNN model.
+        model_input_size : tuple[int, int]
+            Input size of the CNN model. Current model was trained on (100, 100).
 
         Returns
         -------
@@ -281,11 +286,21 @@ class MtCutDetectionFactory:
         }
         for mitosis_track in mitosis_tracks:
             images, frames = mitosis_track.get_bridge_images(
-                video, self.margin
+                video, self.margin_px
             )
+            # Resize images to model input size
+            images = [
+                resize(
+                    image,
+                    (3, model_input_size[0], model_input_size[1]),
+                    anti_aliasing=True,
+                    preserve_range=True,
+                ).astype(np.uint16)
+                for image in images
+            ]  # [CYX]
             sir_tubulin_images = [
                 np.expand_dims(image[0], axis=0) for image in images
-            ]
+            ]  # [TCYX]
             bridges["images"][mitosis_track.id] = sir_tubulin_images
             bridges["frames"][mitosis_track.id] = frames
 

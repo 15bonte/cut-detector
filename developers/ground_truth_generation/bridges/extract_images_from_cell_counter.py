@@ -31,7 +31,10 @@ def extract_bridge_images(
         Path to the folder where to save the images.
     """
     params = Parameters()
-    margin = MtCutDetectionFactory(params).margin
+    margin = MtCutDetectionFactory(params).margin_px
+    print(
+        f"Margin for cropping: {margin} pixels. In practice, images are resized to (100, 100) pixels before running the model inference."
+    )
 
     # Create save_dir if not exists
     if not os.path.exists(save_dir):
