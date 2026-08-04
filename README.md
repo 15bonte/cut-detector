@@ -47,7 +47,7 @@ conda activate cut_detector
 
 ### Package installation
 
-Once in a dedicated environment, our package can be installed via [pip]:
+Once in the dedicated environment, our package can be installed via [pip]:
 
 ```bash
 pip install cut_detector
@@ -76,6 +76,29 @@ The GPU version of torch to be installed can be found [here](https://pytorch.org
 ```bash
 conda install pytorch==1.12.1 torchvision pytorch-cuda=11.6 -c pytorch -c nvidia
 ```
+
+## Getting started
+
+### Launching napari
+
+napari can be launched by just running `napari` in the terminal.
+
+```bash
+conda activate cut_detector
+napari
+```
+
+Once open, click on `Plugins` > `Cut Detector` > `Single Video`.
+
+### Test video
+
+The video test_data.tif can be downloaded from Zenodo for testing. Once downloaded, open it in napari.
+
+### Running Cut Detector
+
+Different options can be selected in the plugin:
+
+- WIP
 
 ## Update
 
