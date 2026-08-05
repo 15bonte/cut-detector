@@ -90,15 +90,25 @@ napari
 
 Once open, click on `Plugins` > `Cut Detector` > `Single Video`.
 
+Note that `Folder` is the equivalent of `Single Video`, but it processes all `.tif` files contained in a specific folder rather than a single video file. `Divisions Matching` and `Distribution Comparison` are more specialized features intended for advanced users and developers. Additional details can be found in the [developers] folder.
+
 ### Test video
 
-The video test_data.tif can be downloaded from Zenodo for testing. Once downloaded, open it in napari.
+The video `test_data.tif` can be downloaded from Zenodo for testing. Once downloaded, open it in napari.
 
 ### Running Cut Detector
 
-Different options can be selected in the plugin:
+Before running the analysis, several settings can be modified:
 
-- WIP
+- `img layer`: The napari layer to be analyzed. By default, this corresponds to the currently opened file.
+- `Use default segmentation model?`: Enabled by default. If you want to use your own Cellpose segmentation model, specify it using the `Select file` button on the following line.
+- `Save cell division movies?`: Option to save individual cell division movies as `.tif` files. These files will be saved in the folder selected using the `Choose directory` button.
+- `Directory to save results`: Use the `Choose directory` button to select the directory where the results will be saved as a `.csv` file.
+- `Debug mode`: If enabled, temporary files and folders are not deleted but instead moved to the results folder. For regular use, it is recommended to leave this option disabled.
+- `Display segmentation and tracking`: If enabled, napari layers displaying the segmentation and tracking results will be created. This option can be useful when the results appear unexpected or incorrect.
+- `Pixel size (nm)`: The default value corresponds to the `test_data.tif` video.
+
+Finally, click on the `Run Whole Process (Single Video)` button to run Cut Detector.
 
 ## Update
 
