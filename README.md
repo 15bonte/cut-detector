@@ -65,16 +65,16 @@ pip install -e .
 
 We highly recommend to use GPU to speed up segmentation. To use your NVIDIA GPU, the first step is to download the dedicated driver from [NVIDIA].
 
-Next we need to remove the CPU version of torch:
+Next, we need to remove the CPU version of `torch`. Note that `numpy` is also removed here to be able to choose its version later with conda, which is required for other dependencies. Run the following command:
 
 ```bash
-pip uninstall torch torchvision
+pip uninstall torch torchvision numpy
 ```
 
-The GPU version of torch to be installed can be found [here](https://pytorch.org/get-started/locally/). You may choose the CUDA version supported by your GPU, and install it with conda. This package has been developed with the version 11.6, installed with this command:
+The GPU version of `torch` to be installed can be found [here](https://pytorch.org/get-started/locally/). You may choose the CUDA version supported by your GPU, and install it with conda. This package has been developed with the version 11.6, installed with this command:
 
 ```bash
-conda install pytorch==1.12.1 torchvision==0.13.1 pytorch-cuda=11.6 -c pytorch -c nvidia
+conda install pytorch==1.12.1 torchvision==0.13.1 numpy==1.26.4 pytorch-cuda=11.6 -c pytorch -c nvidia
 ```
 
 ## Getting started
