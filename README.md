@@ -94,7 +94,7 @@ Note that `Folder` is the equivalent of `Single Video`, but it processes all `.t
 
 ### Test videos
 
-A demo video containing a single cell division can be downloaded [here](https://github.com/15bonte/cut-detector-models/blob/main/data/videos/example_video.tif). We recommend first running Cut-Detector on this video to verify that the installation and setup are working properly.
+A demo video containing a single cell division can be downloaded [here](https://github.com/15bonte/cut-detector-models/blob/main/data/videos/example_video.tif). We recommend first running Cut-Detector on this video to verify that the installation and setup are working properly. Running Cut-Detector on this video takes approximately 2 minutes on a standard CPU and a few seconds on a standard GPU.
 
 For a more realistic analysis, we provide a representative example of our time-lapse microscopy data (test_data.tif) on [Zenodo]. Running Cut-Detector on this video takes approximately 1 hour on a standard CPU and 8 minutes on a standard GPU.
 
