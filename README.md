@@ -45,7 +45,7 @@ conda create --name cut_detector python=3.10 conda=23.10.0
 conda activate cut_detector
 ```
 
-### Package installation
+### CPU installation
 
 Once in the dedicated environment, our package can be installed via [pip]:
 
@@ -61,11 +61,11 @@ cd cut-detector
 pip install -e .
 ```
 
-### GPU
+### GPU installation
 
-We highly recommend to use GPU to speed up segmentation. To use your NVIDIA GPU, the first step is to download the dedicated driver from [NVIDIA].
+We strongly recommend using a GPU to accelerate segmentation. To install Cut-Detector with GPU support, first follow the CPU installation steps.
 
-Next, we need to remove the CPU version of `torch`. Note that `numpy` is also removed here to be able to choose its version later with conda, which is required for other dependencies. Run the following command:
+Next, to use your NVIDIA GPU, the first step is to download the dedicated driver from [NVIDIA]. We then need to remove the CPU version of `torch`. Note that `numpy` is also removed here to be able to choose its version later with `conda`, which is required for other dependencies. Run the following command:
 
 ```bash
 pip uninstall torch torchvision numpy
@@ -74,7 +74,7 @@ pip uninstall torch torchvision numpy
 The GPU version of `torch` to be installed can be found [here](https://pytorch.org/get-started/locally/). You may choose the CUDA version supported by your GPU, and install it with conda. This package has been developed with the version 11.6, installed with this command:
 
 ```bash
-conda install pytorch==1.12.1 torchvision==0.13.1 numpy==1.26.4 pytorch-cuda=11.6 -c pytorch -c nvidia
+conda install pytorch==1.12.1 torchvision==0.13.1 numpy==1.26.4 torchaudio==0.12.1 cudatoolkit=11.6 "mkl=2023.2.0" -c pytorch -c conda-forge
 ```
 
 ## Getting started
@@ -92,9 +92,13 @@ Once open, click on `Plugins` > `Cut Detector` > `Single Video`.
 
 Note that `Folder` is the equivalent of `Single Video`, but it processes all `.tif` files contained in a specific folder rather than a single video file. `Divisions Matching` and `Distribution Comparison` are more specialized features intended for advanced users and developers. Additional details can be found in the [developers] folder.
 
-### Test video
+### Test videos
 
-The video `test_data.tif` can be downloaded from Zenodo for testing. Once downloaded, open it in napari.
+A demo video containing a single cell division can be downloaded [here](https://github.com/15bonte/cut-detector-models/blob/main/data/videos/example_video.tif). We recommend first running Cut-Detector on this video to verify that the installation and setup are working properly.
+
+For a more realistic analysis, we provide a representative example of our time-lapse microscopy data (test_data.tif) on [Zenodo]. Running Cut-Detector on this video takes approximately 1 hour on a standard CPU and 8 minutes on a standard GPU.
+
+Once downloaded, open the video in napari.
 
 ### Running Cut Detector
 
@@ -119,7 +123,7 @@ conda activate cut_detector
 pip install cut-detector --upgrade
 ```
 
-## Definitions
+## Documentation
 
 Each detected cell division is labeled with one of the following categories:
 
@@ -192,3 +196,4 @@ If you found our work useful, please consider citing:
 [NVIDIA]: https://www.nvidia.com/Download/index.aspx?lang=en-us
 [conda]: https://docs.conda.io/en/latest/
 [bioRxiv]: https://www.biorxiv.org/content/10.1101/2025.06.06.658046v1
+[Zenodo]: https://zenodo.org/records/21528406
