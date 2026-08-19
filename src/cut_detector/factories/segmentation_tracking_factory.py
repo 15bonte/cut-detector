@@ -131,12 +131,13 @@ class SegmentationTrackingFactory:
         """
 
         # Cellpose segmentation
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        processing_unit = "cuda" if torch.cuda.is_available() else "cpu"
+        device = torch.device(processing_unit)
         model = models.CellposeModel(
             pretrained_model=self.model_path, device=device
         )
 
-        print("Running Cellpose.")
+        print(f"Running Cellpose using {processing_unit}.")
         start = time.time()
         cellpose_results, flows, _ = model.eval(  # TYX
             video,
