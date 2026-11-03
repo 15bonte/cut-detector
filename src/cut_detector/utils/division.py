@@ -202,6 +202,7 @@ class Division:
         ]
 
         for division in divisions:
+            cd_cut_time = (division.cd_first - division.cd_cytokinesis) * time_resolution
             csv_line = [
                 division.exp,
                 division.video,
@@ -209,17 +210,14 @@ class Division:
                 division.cd_first,
                 division.cytokinesis,
                 division.first,
+                cd_cut_time,
             ]
             if division.is_both():
-                cd_cut_time = (
-                    division.cd_first - division.cd_cytokinesis
-                ) * time_resolution
                 real_cut_time = (
                     division.first - division.cytokinesis
                 ) * time_resolution
                 csv_line.extend(
                     [
-                        cd_cut_time,
                         real_cut_time,
                         (division.cd_cytokinesis - division.cytokinesis)
                         * time_resolution,
